@@ -8,17 +8,15 @@ const extractLess = new ExtractTextPlugin({
 });
 
 module.exports = {
-    entry: './src/main.ts',
+    entry: {
+        lib: './src/lib.ts'
+    },
     output: {
-        filename: 'xrs.js',
+        filename: '[name].js',
         path: path.resolve(__dirname, 'dist')
     },
     module: {
         rules: [{
-            test: /lib\/\.js/,
-            use: 'ts-loader',
-            exclude: /dist|node_modules/
-        }, {
             test: /src\/\.ts/,
             use: 'ts-loader',
             exclude: /dist|node_modules/

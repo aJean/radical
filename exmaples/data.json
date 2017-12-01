@@ -1,0 +1,14 @@
+﻿{
+  "containerId": "container",
+  "title": "test bxl transfer",
+  "sceneGroup": [
+    {
+      "name": "bxl 格式",
+      "id": "scene_0",
+      "panoPath": "./assets/"
+    }
+  ],
+  "defaultEnterSceneId": "scene_0",
+  "enableAnimation": false,
+  "enableDevice": false
+}
