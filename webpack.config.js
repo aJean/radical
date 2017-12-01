@@ -15,7 +15,11 @@ module.exports = {
     },
     module: {
         rules: [{
-            test: /\.ts/,
+            test: /lib\/\.js/,
+            use: 'ts-loader',
+            exclude: /dist|node_modules/
+        }, {
+            test: /src\/\.ts/,
             use: 'ts-loader',
             exclude: /dist|node_modules/
         }, {
