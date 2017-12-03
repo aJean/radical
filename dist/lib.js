@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 1);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -74,7 +74,7 @@
  */
 
 const WebVR = window['WebVR'] = {};
-WebVR.run = function (containerId, dataJsonUrl, control) {
+WebVR.run = function (elem, dataJsonUrl, control) {
     WebVR.controlObj = control;
     /* 执行启动应用时的回调事件*/
     if (control && typeof control.onAppStart === 'function') {
@@ -128,7 +128,7 @@ WebVR.run = function (containerId, dataJsonUrl, control) {
 
     this.textureLoader = new THREE.TextureLoader();
     this.updateArr = [];
-    this.container;
+    this.container = elem;
     this.getCamera = function () {
         return camera;
     };
@@ -147,7 +147,6 @@ WebVR.run = function (containerId, dataJsonUrl, control) {
     };
 
     function onWindowResize() {
-        var elem = WebVR.container = document.getElementById(containerId);
         containerWidth = elem.offsetWidth;
         containerHeight = elem.offsetHeight;
 
@@ -248,6 +247,7 @@ WebVR.run = function (containerId, dataJsonUrl, control) {
         var imageObj = new Image();
         imageObj.setAttribute('crossOrigin', 'anonymous');
         var subImgloadedCount = 0;
+
         imageObj.onload = function () {
             var canvas;
             var context;
@@ -378,7 +378,6 @@ WebVR.run = function (containerId, dataJsonUrl, control) {
     function init() {
         window.addEventListener('resize', onWindowResize, false);
 
-        var elem = WebVR.container = document.getElementById(containerId);
         containerWidth = elem.offsetWidth;
         containerHeight = elem.offsetHeight;
 
@@ -423,11 +422,12 @@ WebVR.run = function (containerId, dataJsonUrl, control) {
 
 
         var defaultEnterScene = getSceneById(opt.defaultEnterSceneId);
-        /* 执行切换场景Scene之前的回调事件*/
+        // 进入场景
         var beforeEnterSceneResult = true;
         if (control && typeof control.beforeEnterScene === 'function') {
             beforeEnterSceneResult = control.beforeEnterScene(null, defaultEnterScene);
         }
+
         if (beforeEnterSceneResult) {
             defaultEnterScene.tex = loadPreviewTex(defaultEnterScene,
                 defaultEnterScene.panoPath + '/',
@@ -532,9 +532,6 @@ WebVR.run = function (containerId, dataJsonUrl, control) {
         if (beforeResult) {
             init();
         }
-        else {
-            return;
-        }
     }
 
 
@@ -556,8 +553,7 @@ WebVR.run = function (containerId, dataJsonUrl, control) {
             beforeLoadJsonResult = control.beforeLoadJson();
         }
         if (beforeLoadJsonResult) {
-            fetch(dataJsonUrl).then(res => res.json())
-                .then(res => {
+            fetchSource(dataJsonUrl).then(res => {
                     opt = res;
                     callInit();
                     // control.loadJsonSuccess();
@@ -568,21 +564,44 @@ WebVR.run = function (containerId, dataJsonUrl, control) {
     }
 };
 
+function fetchSource(url, type) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url);
+        xhr.responseType = type || 'json';
+        xhr.withCredentials = true;
+    
+        xhr.onload = () => resolve(xhr.response);
+        xhr.onerror = () => reject('!!!');
+
+        xhr.send();
+    });
+}
+
+window.onload = function () {
+    const root = document.querySelector('pano');
+    if (root) {
+        const elem = document.createElement('div');
+        elem.style.cssText = 'width: 100vw;height: 100vh;';
+        root.appendChild(elem);
+        WebVR.run(elem, root.getAttribute('source'));
+    }
+};
+
 /* harmony default export */ __webpack_exports__["a"] = (WebVR);
 
 /***/ }),
-/* 1 */,
-/* 2 */
+/* 1 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_main__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_imagePlayerControl__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_labelControl__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_controls_orbitControls__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_controls_deviceOrientationControls__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_plugin_cameraFly__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_imagePlayerControl__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_labelControl__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_controls_orbitControls__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_controls_deviceOrientationControls__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_plugin_cameraFly__ = __webpack_require__(6);
 
 
 
@@ -591,7 +610,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 /***/ }),
-/* 3 */
+/* 2 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -771,7 +790,7 @@ __WEBPACK_IMPORTED_MODULE_0__main__["a" /* default */].ImagePlayerControl = (fun
 }());
 
 /***/ }),
-/* 4 */
+/* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1164,7 +1183,7 @@ __WEBPACK_IMPORTED_MODULE_0__main__["a" /* default */].labelControl = (function 
 }());
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2082,7 +2101,7 @@ THREE.OrbitControls.prototype.constructor = THREE.OrbitControls;
 
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2218,7 +2237,7 @@ THREE.DeviceOrientationControls = function (object, controls) {
 
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

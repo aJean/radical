@@ -12,18 +12,11 @@
             overflow: hidden;
             background: #000;
         }
-        #container {
-            width: 100vw;
-            height: 100vh;
-        }
     </style>
 </head>
 <body>
-    <div id="container"></div>
+    <pano source="./data.json"></pano>
     <script src="../dist/three.js"></script>
     <script src="../dist/lib.js"></script>
-    <script>
-        WebVR.run('container', './data.json');
-    </script>
 </body>
 </html>
