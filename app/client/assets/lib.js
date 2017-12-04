@@ -170,11 +170,13 @@ WebVR.run = function (elem, dataJsonUrl, control) {
         return null;
     }
 
+    // 6 张全景图加载
     function afterNormalSceneLoadCallBack(sceneObj, tex) {
         sceneObj.tex = tex;
         replaceSkyTex(sceneObj);
     }
 
+    // 替换背景贴图
     function replaceSkyTex(sceneObj) {
         var tempTex = scene.background;
         scene.background = sceneObj.tex;
@@ -210,40 +212,30 @@ WebVR.run = function (elem, dataJsonUrl, control) {
         }
     };
 
-    function loadSceneTex(sceneObj, texPath, afterLoadCallBack) {
-        var preStr = texPath + 'mobile_';
-        var post = '.jpg';
-        var urls = [];
-        urls.push(preStr + 'r' + post);
-        urls.push(preStr + 'l' + post);
-        urls.push(preStr + 'u' + post);
-        urls.push(preStr + 'd' + post);
-        urls.push(preStr + 'f' + post);
-        urls.push(preStr + 'b' + post);
-        var tex = cubeTexLoader.load(
-            /* resource URL*/
-            urls,
-            /* Function when resource is loaded*/
-            function (tex) {
-                if (afterLoadCallBack) {
-                    afterLoadCallBack(sceneObj, tex);
-                }
-            },
-            /* Function called when download progresses*/
-            function (xhr) {
+    function loadSceneTex(scene, path, cb) {
+        const url = `${path}images.bxl`;
+        fetchSource(url, 'text').then(ret => {
+            ret = ret.split('~#~');
+            console.log(ret)
+            cubeTexLoader.load(ret, texture => cb(scene, texture));
+        });
+        return;
 
-            },
-            /* Function called when download errors*/
-            function (xhr) {
-
-            }
-        );
-        return tex;
+        const urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(key => `${path}mobile_${key}.bxl`);
+        fetchSources(urls, 'text').then(ret => {
+            cubeTexLoader.load(ret, texture => cb(scene, texture));
+        });
     }
 
-    function loadPreviewTex(sceneObj, texPath, afterLoadCallBack) {
+    function loadPreviewTex(sceneObj, path, afterLoadCallBack) {
+        loadSceneTex(sceneObj, path, (sceneObj, texture) => {
+            texture.needsUpdate = true;
+            afterLoadCallBack(sceneObj, texture);
+        });
+        return;
+
         var texture = new THREE.CubeTexture();
-        var texFilePath = texPath + 'preview.jpg';
+        var texFilePath = path + 'preview.jpg';
         var imageObj = new Image();
         imageObj.setAttribute('crossOrigin', 'anonymous');
         var subImgloadedCount = 0;
@@ -286,7 +278,7 @@ WebVR.run = function (elem, dataJsonUrl, control) {
                     }
                     if (subImgloadedCount === 6) {
                         texture.needsUpdate = true;
-                        loadSceneTex(sceneObj, texPath, afterNormalSceneLoadCallBack);
+                        // loadSceneTex(scene, path, afterNormalSceneLoadCallBack);
                         afterLoadCallBack(sceneObj, texture);
                     }
                 };
@@ -442,18 +434,9 @@ WebVR.run = function (elem, dataJsonUrl, control) {
         }
     }
 
-
+    // 缩略图加载完成
     function afterFirstSceneLoadCallBack(sceneObj, tex) {
-        // var material = new THREE.MeshBasicMaterial({
-        //     envMap: tex,
-        //     transparent: true,
-        //     side: THREE.DoubleSide
-        // });
-
         scene.background = tex;
-        // skyBox = new THREE.SphereGeometry(1000, 70, 70);
-        // skyMesh = new THREE.Mesh(skyBox, material);
-        // scene.add(skyMesh);
 
         /* 执行Init初始化后的回调事件*/
         if (control && typeof control.afterInit === 'function') {
@@ -557,9 +540,10 @@ WebVR.run = function (elem, dataJsonUrl, control) {
                     opt = res;
                     callInit();
                     // control.loadJsonSuccess();
-                }, error => {
+                }).catch(e => {
+                    console.log(e);
                     control.loadJsonError();
-                }).catch(e => console.log(e));
+                });
         }
     }
 };
@@ -576,6 +560,11 @@ function fetchSource(url, type) {
 
         xhr.send();
     });
+}
+
+function fetchSources(urls, type) {
+    const requests = urls.map(url => fetchSource(url, type));
+    return Promise.all(requests);
 }
 
 window.onload = function () {

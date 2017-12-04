@@ -6,7 +6,7 @@ const fs = require('fs');
  */
 
 let dirPath = process.argv.splice(2)[0];
-let status = 0;
+let isstart = true;
 
 if (!dirPath) {
     errorLog('no input files');
@@ -23,36 +23,51 @@ function normalizePath(filePath) {
     return `${path.resolve('./')}/${filePath}`;
 }
 
-function packageFile(filePath) {
-    fs.readFile(dirPath + filePath, (err, data) => {
-        const encodePath = dirPath + '/assets.bxl';
-        const encodeData = '~' + data;
-        const encodeOpts = status ? {flag: 'a'} : null;
+// 保持顺序合并加密
+function encodeOrderFile() {
+    if (!flags.length) {
+        return;
+    }
 
-        !err ? fs.writeFile(encodePath, encodeData, encodeOpts, err => {
-            if (err) {
-                throw new Error(err);
-            }
-        }) : errorLog(err);
-        status++;
+    const filepath = dirPath + '/mobile_' + flags.shift() + '.jpg';
+
+    fs.readFile(filepath, (err, data) => {
+        const encodePath = dirPath + '/images.bxl';
+        const encodeData = 'data:image/jpg;base64,' + data.toString('base64') + '~#~';
+        const encodeOpts = isstart ? null : {flag: 'a'};
+
+        if (err === null) {
+            fs.writeFile(encodePath, encodeData, encodeOpts, err => {
+                err ? errorLog(err) : encodeOrderFile();
+            })
+        } else {
+           errorLog(err); 
+        }
+
+        isstart = false;    
     });
 }
 
+// 分别加密
 function encodeFile(filename) {
-    fs.readFile(dirPath + filename, (err, data) => {
-        const encodePath = `${dirPath}/${filename}.bxl`;
-        const encodeData = 'data:image/jpg;base64,' + data;
+    flags.forEach(str => {
+        const filename = '/mobile_' + str;
+        const filepath = dirPath + filename + '.jpg';
 
-        !err ? fs.writeFile(encodePath, encodeData, err => {
-            if (err) {
-                throw new Error(err);
-            }
-        }) : errorLog(err);
-        status++;
+        fs.readFile(filepath, (err, data) => {
+            const encodePath = `${dirPath}/${filename}.bxl`;
+            const encodeData = 'data:image/jpg;base64,' + data.toString('base64');
+    
+            !err ? fs.writeFile(encodePath, encodeData, err => {
+                if (err) {
+                    throw new Error(err);
+                }
+            }) : errorLog(err);
+        });
     });
 }
 
 dirPath = normalizePath(dirPath);
-// 转换全景图六张
-['b', 'd', 'f', 'l', 'r', 'u'].map(str => `/mobile_${str}.jpg`)
-    .forEach(name => encodeFile(name));
+
+const flags = ['r', 'l', 'u', 'd', 'f', 'b'];
+encodeOrderFile();
