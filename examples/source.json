@@ -1,11 +1,10 @@
 ﻿{
-  "containerId": "container",
   "title": "test bxl transfer",
   "sceneGroup": [
     {
       "name": "bxl 格式",
       "id": "scene_0",
-      "panoPath": "./assets/"
+      "panoPath": "../app/client/assets/img"
     }
   ],
   "defaultEnterSceneId": "scene_0",

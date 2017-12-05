@@ -73,6 +73,10 @@
  * @author liwenhui(liwenhui01@baidu.com)
  */
 
+class WebVR {
+
+}
+
 const WebVR = window['WebVR'] = {};
 WebVR.run = function (elem, dataJsonUrl, control) {
     WebVR.controlObj = control;
