@@ -3,6 +3,7 @@
 {% block resource %}
     {% require "webar:assets/three.js" %}
     {% require "webar:assets/lib.js" %}
+    {% require "webar:assets/aes.js" %}
     
     <style>
         body {

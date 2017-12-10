@@ -73,10 +73,6 @@
  * @author liwenhui(liwenhui01@baidu.com)
  */
 
-class WebVR {
-
-}
-
 const WebVR = window['WebVR'] = {};
 WebVR.run = function (elem, dataJsonUrl, control) {
     WebVR.controlObj = control;
@@ -219,7 +215,12 @@ WebVR.run = function (elem, dataJsonUrl, control) {
     function loadSceneTex(scene, path, cb) {
         const url = `${path}images.bxl`;
         fetchSource(url, 'text').then(ret => {
-            ret = ret.split('~#~');
+            // ret = ret.split('~#~');
+            ret = CryptoJS.AES.decrypt({
+                ciphertext: CryptoJS.enc.Hex.parse(ret),
+                salt: CryptoJS.lib.WordArray.create(0)
+            }, 'baiduid');
+            ret = ret.toString(CryptoJS.enc.Utf8);
             console.log(ret)
             cubeTexLoader.load(ret, texture => cb(scene, texture));
         });

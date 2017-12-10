@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 /**
  * @file img binary package
@@ -23,29 +24,29 @@ function normalizePath(filePath) {
     return `${path.resolve('./')}/${filePath}`;
 }
 
+function convertFile(filepath) {
+    return new Promise((resolve, reject) => {
+        fs.readFile(filepath, (err, data) => {
+            err ? reject(err)
+                : resolve('data:image/jpg;base64,' + data.toString('base64') + '~#~');
+        });
+    });
+}
+
 // 保持顺序合并加密
 function encodeOrderFile() {
-    if (!flags.length) {
-        return;
-    }
+    Promise.all(flags.map(name => convertFile(dirPath + '/mobile_' + name + '.jpg')))
+        .then(ret => {
+            let data = ret.join('');
+            const cipher = crypto.createCipher('aes-256-cbc', 'baiduid');
+            data = cipher.update(data, 'utf8', 'hex') + cipher.final('hex');
 
-    const filepath = dirPath + '/mobile_' + flags.shift() + '.jpg';
-
-    fs.readFile(filepath, (err, data) => {
-        const encodePath = dirPath + '/images.bxl';
-        const encodeData = 'data:image/jpg;base64,' + data.toString('base64') + '~#~';
-        const encodeOpts = isstart ? null : {flag: 'a'};
-
-        if (err === null) {
-            fs.writeFile(encodePath, encodeData, encodeOpts, err => {
-                err ? errorLog(err) : encodeOrderFile();
+            fs.writeFile(dirPath + '/images.bxl', data, err => {
+                if (err) {
+                    throw new Error(err);
+                }
             })
-        } else {
-           errorLog(err); 
-        }
-
-        isstart = false;    
-    });
+        }).catch(e => errorLog(e));
 }
 
 // 分别加密
