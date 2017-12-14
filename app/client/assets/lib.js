@@ -213,7 +213,30 @@ WebVR.run = function (elem, dataJsonUrl, control) {
     };
 
     function loadSceneTex(scene, path, cb) {
-        // @todo 先进行解密, 此时应有去 server fetch key 的操作
+        // generate key & decode       
+        fetchSource(`${path}images.bxl`, 'text').then(ret => {
+            ret = ret.split('~#~');
+
+            if (ret.length) {
+                const data = ret.slice(0, 6);
+                const key = ret[6];
+
+                fetchSource(`getKey?key=${encodeURIComponent(key)}`, 'json').then(ret => {
+                    if (ret.errno == 0) {
+                        const textures = data.map(ciphertext => {
+                            const plaintext = CryptoJS.AES.decrypt({
+                                ciphertext: CryptoJS.enc.Hex.parse(ciphertext),
+                                salt: CryptoJS.lib.WordArray.create(0)
+                            }, ret.key);
+                            return plaintext.toString(CryptoJS.enc.Utf8);
+                        });
+
+                        cubeTexLoader.load(textures, texture => cb(scene, texture));
+                    }
+                });
+            }
+        });
+        return;
         Promise.all([fetchSource(`${path}images.bxl`, 'text'), fetchSource('getKey', 'json')])   
             .then(ret => {
                 const data = ret[0];
@@ -287,8 +310,6 @@ WebVR.run = function (elem, dataJsonUrl, control) {
                     }
                 };
             }
-            ;
-
         };
         imageObj.src = texFilePath;
         return texture;
