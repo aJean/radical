@@ -74,8 +74,11 @@
  */
 
 const WebVR = window['WebVR'] = {};
-WebVR.run = function (elem, dataJsonUrl, control) {
-    WebVR.controlObj = control;
+WebVR.setControl = function (control) {
+    this.control = control;
+};
+WebVR.run = function (elem, dataJsonUrl) {
+    const control = WebVR.control;
     /* 执行启动应用时的回调事件*/
     if (control && typeof control.onAppStart === 'function') {
         control.onAppStart();
@@ -158,7 +161,6 @@ WebVR.run = function (elem, dataJsonUrl, control) {
         setTimeout(function () {
             onWindowResize();
         }, 2000);
-
     }
 
     function getSceneById(sceneId) {
@@ -405,6 +407,8 @@ WebVR.run = function (elem, dataJsonUrl, control) {
         renderer.setFaceCulling(THREE.CullFaceNone);
         WebVR.container.appendChild(renderer.domElement);
 
+        control  && control.mounted();
+
         scene = new THREE.Scene();
         if (opt && opt.fog) {
             scene.fog = new THREE.Fog(opt.fog.color, opt.fog.near, opt.fog.far);
@@ -593,7 +597,8 @@ window.onload = function () {
         const elem = document.createElement('div');
         elem.style.cssText = 'width: 100vw;height: 100vh;';
         root.appendChild(elem);
-        WebVR.run(elem, root.getAttribute('source'));
+        const scope = window[root.getAttribute('scope')];
+        WebVR.run(elem, root.getAttribute('source'), scope);
     }
 };
 
