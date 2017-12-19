@@ -4,13 +4,8 @@
 
 const crypto = require('crypto');
 module.exports = function (req, res) {
-    const publicKey = decodeURIComponent(req.query.key);
-    
-    publicKey ? res.json({
+    res.json({
         errno: 0,
-        key: '21GWou6yRPkc3fY38RA5JcvNGtJ5cXDisuFSDDbswsOMPAZ77szJydTRzA4pGueAr3c27dAUqCJ1LLdItOGIoFNYNJsoDNWFnHjmxDyHwSWenCIA5mSKMXIIwn5KK+peVYHzeCsDg6vHfmEE2ezopbJHlFGeNdWt/tqW75oHLp2aUTwW/WL/StVzXFC91GuYu4OTK9gcNC7iWLpftDU8cN2gk047Ha06CGvbIW4Tffz65RA5P8yU70fVDC/uoqq5fD+JXF8t7hoG5UabIthoxXMB5mLLPMAHTuiXPFk98arzY208KZqcOk2IkXJs4l+usUHGEhquSH2REO0dKq2diQ=='
-    }) : res.json({
-        errno: -1,
-        key: null
+        key: 's+mNYYp+RdIXn5C+5uuIwszOoRMgbrcBPmiktFKsupjNbt6lIIPxUUeTb+apON3OkZPZIj+RJ0vRL+C8F2pCgqQeYKuZXt10TJrC1JNwRXZH3pW3XuJTSD1mPyJ7PXwU1BAQy3Gggn7ndKeTo+I+Qh/FaYFC5cU3WfBUtULpBWsHNzMV1ht7FRM7aEShLrdo42zH/lVV6LnfkUbT6KDpsSgUX5MPa0oEFvfuYiPsBkTlG93kilBap+i6W+cUWLXGi+21Who5EM6ZPQbeBF9HQkNSnt875KjPT0HB8AJ9s+QTMqglZSNBWblAdVvitMGFZ6xXWef5kzTK+osHxYRneA=='
     });
 };
