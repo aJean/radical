@@ -1,8 +1,7 @@
 /**
  * @file 全景3D标签控制器
- * @author liwenhui(liwenhui01@baidu.com)
  */
-/* globals THREE WebVR*/
+
 WebVR.labelControl = (function () {
     var result;
 

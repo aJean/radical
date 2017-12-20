@@ -1,9 +1,8 @@
 {% extends 'webar:page/layout.tpl' %}
 
 {% block resource %}
-    {% require "webar:assets/three.js" %}
-    {% require "webar:assets/lib.js" %}
     {% require "webar:assets/aes.js" %}
+    {% require "webar:assets/three.js" %}
     
     <style>
         body {
@@ -18,10 +17,9 @@
 {% block content %}
     <pano source="/static/webar/assets/source.json"></pano>
     {% script %}
-        WebVR.setControl({
-            mounted() {
-                alert('component attach to dom');
-            }
+        require.async('webar:assets/lib/panoram.js', function(Panrom) {
+            var panrom = new Panrom['default']({el: 'pano'});
+            panrom.run('/static/webar/assets/source.json');
         });
     {% endscript %}
 {% endblock %}

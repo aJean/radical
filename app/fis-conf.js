@@ -1,18 +1,23 @@
 /**
- * @file FIS 配置
- * @author
+ * @file fis3 配置
  */
 
 fis.set('namespace', 'webar');
 fis.set('livereload.port', 35729);
 // 屏蔽静态文件
-fis.set('project.ignore', ['fis.yml', 'package.json', 'upload.py', 'BCLOUD', 'GIT_COMMIT', 'fis-conf.js', 'output/**', 'client/node_modules/**']);
+fis.set('project.ignore', ['fis.yml', 'package.json', 'upload.py', 'BCLOUD', 'GIT_COMMIT', 'fis-conf.js', 'output/**', 'typings/**']);
 // client: es6 -> es5
-fis.match('client/{**.ts,**.tsx,**.jsx,**.es}', {
+fis.match('client/assets/lib/{**.ts,**.tsx,**.js}', {
     parser: fis.plugin('typescript', {
         module: 1,
         target: 1
-    })
+    }),
+    isJsXLike: true,
+    isMod: true
+});
+
+fis.match('/client/assets/lib/**.js', {
+    packTo: '/static/pkg/webar.js'
 });
 
 fis.media('otp').match('*', {

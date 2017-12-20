@@ -1,0 +1,98 @@
+{
+  "_from": "@types/three",
+  "_id": "@types/three@0.84.35",
+  "_inBundle": false,
+  "_integrity": "sha512-DnEts9o/IMYS9a3eWkBx2BY6cq0C2HY/zt6N6uFfOr02eFyherejvygwXQKai4vu8+46sHb6Hf40auL09V76SA==",
+  "_location": "/@types/three",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "@types/three",
+    "name": "@types/three",
+    "escapedName": "@types%2fthree",
+    "scope": "@types",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@types/three/-/three-0.84.35.tgz",
+  "_shasum": "df4645c542cbb93419786f2c49ecd0d85d037991",
+  "_spec": "@types/three",
+  "_where": "/Users/qiaoyue/Sites/bxl/app/client",
+  "bundleDependencies": false,
+  "contributors": [
+    {
+      "name": "Kon",
+      "url": "http://phyzkit.net/"
+    },
+    {
+      "name": "Satoru Kimura",
+      "url": "https://github.com/gyohk"
+    },
+    {
+      "name": "Florent Poujol",
+      "url": "https://github.com/florentpoujol"
+    },
+    {
+      "name": "SereznoKot",
+      "url": "https://github.com/SereznoKot"
+    },
+    {
+      "name": "HouChunlei",
+      "url": "https://github.com/omni360"
+    },
+    {
+      "name": "Ivo",
+      "url": "https://github.com/ivoisbelongtous"
+    },
+    {
+      "name": "David Asmuth",
+      "url": "https://github.com/piranha771"
+    },
+    {
+      "name": "Brandon Roberge, Qinsi ZHU",
+      "url": "https://github.com/qszhusightp"
+    },
+    {
+      "name": "Toshiya Nakakura",
+      "url": "https://github.com/nakakura"
+    },
+    {
+      "name": "Poul Kjeldager Sørensen",
+      "url": "https://github.com/s093294"
+    },
+    {
+      "name": "Stefan Profanter",
+      "url": "https://github.com/Pro"
+    },
+    {
+      "name": "Edmund Fokschaner",
+      "url": "https://github.com/efokschaner"
+    },
+    {
+      "name": "Roelof Jooste",
+      "url": "https://github.com/PsychoSTS"
+    }
+  ],
+  "dependencies": {
+    "@types/webvr-api": "*"
+  },
+  "deprecated": false,
+  "description": "TypeScript definitions for three.js",
+  "license": "MIT",
+  "main": "",
+  "name": "@types/three",
+  "repository": {
+    "type": "git",
+    "url": "https://www.github.com/DefinitelyTyped/DefinitelyTyped.git"
+  },
+  "scripts": {},
+  "typeScriptVersion": "2.0",
+  "typesPublisherContentHash": "33b098d09ead20ef5c1d7641f67f0ddb4eb830618a3a4c3b4bb330910c92f63d",
+  "version": "0.84.35"
+}

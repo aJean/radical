@@ -333,6 +333,7 @@ WebVR.run = function (element, dataJsonUrl, control) {
     }
 
     function afterNormalSceneLoadCallBack(sceneObj, tex) {
+        tex.mapping = THREE.CubeRefractionMapping;
         sceneObj.tex = tex;
         replaceSkyTex(sceneObj);
     }
@@ -347,13 +348,12 @@ WebVR.run = function (element, dataJsonUrl, control) {
         // scene.background.needsUpdate = true;
         // tempTex.dispose();
 
-        var tempTex = skyMesh.material.envMap;
-        skyMesh.material.envMap = sceneObj.tex;
-        skyMesh.material.envMap.needsUpdate = true;
-        tempTex.dispose();
+        if (currentSceneObj === sceneObj) {
+            var tempTex = skyMesh.material.envMap;
+            skyMesh.material.envMap = sceneObj.tex;
+            skyMesh.material.envMap.needsUpdate = true;
+            tempTex.dispose();
 
-        if (currentSceneObj !== sceneObj) {
-            currentSceneObj = sceneObj;
             WebVR.labelControl.showSceneLabel(currentSceneObj);
             /* 执行切换场景Scene后的回调事件*/
             if (control && typeof control.afterEnterScene === 'function') {
@@ -378,18 +378,12 @@ WebVR.run = function (element, dataJsonUrl, control) {
             /* 隐藏场景的标签*/
             WebVR.labelControl.hideSceneLabel(currentSceneObj);
 
+            currentSceneObj = enterScene;
             if (!enterScene.tex) {
                 loadPreviewTex(enterScene, enterScene.panoPath + '/', afterNormalSceneLoadCallBack);
             } else {
                 replaceSkyTex(enterScene);
             }
-            // /* 执行切换场景Scene后的回调事件*/
-            // if (control && typeof control.afterEnterScene === 'function') {
-            //     control.afterEnterScene(enterScene);
-            // }
-            //
-            // /* 触发切换场景后的事件*/
-            // WebVR.container.dispatchEvent(WebVR.Event.ChangeSceneEvent);
         }
     };
 
@@ -421,6 +415,7 @@ WebVR.run = function (element, dataJsonUrl, control) {
         // return;
 
         var texture = new THREE.CubeTexture();
+        texture.mapping = THREE.CubeRefractionMapping;
         var texFilePath = texPath + 'preview.jpg';
         var imageObj = new Image();
         imageObj.setAttribute('crossOrigin', 'anonymous');
@@ -600,7 +595,7 @@ WebVR.run = function (element, dataJsonUrl, control) {
             document.title = opt.title;
         }
 
-        /* 注入参数到control对象*/
+        /* 注入参数到 plugin 对象*/
         if (control) {
             control.camera = camera;
             control.scene = scene;
@@ -628,6 +623,7 @@ WebVR.run = function (element, dataJsonUrl, control) {
         }
     }
 
+    // 插件
     function initDeviceControls() {
         if (isMobile) {
             deviceControls = new THREE.DeviceOrientationControls(camera, controls);
@@ -641,11 +637,13 @@ WebVR.run = function (element, dataJsonUrl, control) {
     function afterFirstSceneLoadCallBack(sceneObj, tex) {
         var material = new THREE.MeshBasicMaterial({
             envMap: tex,
-            side: THREE.DoubleSide
+            side: THREE.BackSide,
+            refractionRatio: 0,
+            reflectivity: 1
         });
 
         // scene.background = tex;
-        skyBox = new THREE.SphereGeometry(2000, 32, 32);
+        skyBox = new THREE.SphereGeometry(2000, 32, 16);
         skyMesh = new THREE.Mesh(skyBox, material);
         scene.add(skyMesh);
 

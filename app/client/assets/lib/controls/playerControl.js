@@ -1,8 +1,7 @@
 /**
  * @file 全景序列帧控制器
- * @author liwenhui(liwenhui01@baidu.com)
  */
-/* globals THREE WebVR*/
+
 WebVR.ImagePlayerControl = (function () {
     var result;
 
