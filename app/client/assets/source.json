@@ -1,13 +1,11 @@
 {
     "title": "test bxl transfer",
-    "sceneGroup": [
-      {
-        "name": "bxl 格式",
+    "sceneGroup": [{
         "id": "test",
+        "name": "bxl 格式",
         "panoPath": "/static/webar/assets/img"
-      }
-    ],
-    "defaultEnterSceneId": "test",
+    }],
+    "defaultSceneId": "test",
     "enableAnimation": false,
     "enableDevice": false
-  }
+}

@@ -1,3 +1,5 @@
+import {decode} from './util';
+
 /**
  * @file fetch request
  */
@@ -21,7 +23,7 @@ export function fetch(url, type?) {
  * @param {string} path 资源路径
  * @param {number} timeout 超时时间
  */
-export function loadPreviewTex(path, timeout?) {
+export function loadPreviewTex(path, timeout) {
     timeout = timeout || 100000;
 
     return new Promise((resolve, reject) => {
@@ -80,7 +82,7 @@ export function loadPreviewTex(path, timeout?) {
                 };
             };
         };
-        image.src = path + 'preview.jpg';
+        image.src = path + '/preview.jpg';
 
         setTimeout(timeout, () => resolve('load images timeout'));
     });
@@ -91,18 +93,13 @@ export function loadPreviewTex(path, timeout?) {
  * @param {string} path 资源路径
  */
 export function loadSceneTex(path) {
-    return Promise.all([fetch(`${path}images.bxl`, 'text'), fetch('webar/getKey', 'json')])   
+    return Promise.all([fetch(`${path}/images.bxl`, 'text'), fetch(`${path}/images.pem`, 'text')])   
         .then(ret => {
-            const buffer = String(ret[0]);
-            const data = buffer.split('~#~').slice(0, 6);
-            const key = ret[1]['key'];
+            const data = String(ret[0]).split('~#~').slice(0, 6);
+            const secretKey = String(ret[1]).replace(/-*[A-Z\s]*-\n?/g, '');
+            // todo: hide secret
+            const key = decode(secretKey, 'skt1winsforever');
 
-            return data.map(ciphertext => {
-                const plaintext = CryptoJS.AES.decrypt({
-                    ciphertext: CryptoJS.enc.Hex.parse(ciphertext),
-                    salt: CryptoJS.lib.WordArray.create(0)
-                }, key);
-                return plaintext.toString(CryptoJS.enc.Utf8);
-            });
+            return data.map(ciphertext => decode(ciphertext, key));
         });
 }
