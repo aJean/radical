@@ -2,7 +2,7 @@
  * @file 陀螺仪控制器
  */
 
-function DeviceOrientationControl(object, controls) {
+function DeviceControl(object, controls) {
     var scope = this;
     var lastSpherical;
 
@@ -124,4 +124,4 @@ function DeviceOrientationControl(object, controls) {
     };
 }
 
-export default DeviceOrientationControl;
+export default DeviceControl;

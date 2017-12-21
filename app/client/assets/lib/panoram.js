@@ -1,5 +1,5 @@
-import OrbitControl from './controls/OrbitControl';
-import DeviceControl from './controls/deviceOrientationControls';
+import OrbitControl from './controls/orbitControl';
+import DeviceControl from './controls/deviceControl';
 import EventEmitter from './event';
 import Log from './log';
 import {fetch, loadPreviewTex, loadSceneTex} from './loader';
@@ -89,7 +89,7 @@ export default class Panoram {
     }
 
     initControl() {
-        const control = this.orbitControl = new OrbitControl(this.camera, this.root);
+        const control = this.orbitControl = new OrbitControl(this.camera, this.webgl.domElement);
 
         control.enableZoom = true;
         control.enablePan = false;
