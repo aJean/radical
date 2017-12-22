@@ -89,17 +89,27 @@ export function loadPreviewTex(path, timeout) {
 }
 
 /**
- * 加载场景 bxl
+ * 加载场景 bxl & 解密
  * @param {string} path 资源路径
  */
 export function loadSceneTex(path) {
     return Promise.all([fetch(`${path}/images.bxl`, 'text'), fetch(`${path}/images.pem`, 'text')])   
         .then(ret => {
-            const data = String(ret[0]).split('~#~').slice(0, 6);
-            const secretKey = String(ret[1]).replace(/-*[A-Z\s]*-\n?/g, '');
-            // todo: hide secret
-            const key = decode(secretKey, 'skt1winsforever');
+            const list = String(ret[0]).split('~#~');
+            const secretData = list.slice(0, 6);
+            const secretEOF = list[6];
 
-            return data.map(ciphertext => decode(ciphertext, key));
+            const secretKey = String(ret[1]).replace(/-*[A-Z\s]*-\n?/g, '');
+            const key = decode(secretKey, 'skt1winsforever');
+            const lines = decode(secretEOF, 'skt1winsforever').split(',');
+            
+            return secretData.map((ciphertext, i) => {
+                const start = lines[i];
+                // find real cipher header
+                const header = ciphertext.substring(0, start);
+                const body = ciphertext.substring(start);
+
+                return decode(header, key) + body;
+            });
         });
 }

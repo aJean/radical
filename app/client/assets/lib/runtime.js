@@ -49,6 +49,6 @@ export default {
             } else {
                 Log.errorLog('load textures error');
             }
-        });
+        }).catch(e => Log.errorLog(e));
     }
 }

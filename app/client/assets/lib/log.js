@@ -1,5 +1,5 @@
 export default {
     errorLog(msg) {
-        console.log('Error: ' + msg);
+        console.error('Error: ' + msg);
     }
 } 
