@@ -6,6 +6,6 @@
         "panoPath": "/static/webar/assets/img"
     }],
     "defaultSceneId": "test",
-    "enableAnimation": false,
+    "enableAnimation": true,
     "enableDevice": false
 }

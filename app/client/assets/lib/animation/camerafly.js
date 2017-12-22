@@ -3,13 +3,15 @@
  */
 
 export default class AnimationFly {
-    enable = false;
+    end = false;
     startTime = 0;
     totleTime = 0;
     lastTime = 0;
 
-    constructor(camera, path, FlyEndCallBack) {
+    constructor(camera) {
         const path = this.path = this.getPath(camera);
+        this.camera = camera;
+
         path.forEach(data => {
             this.totleTime += data.time;
         })
@@ -17,11 +19,6 @@ export default class AnimationFly {
 
     play() {
         this.startTime = Date.now() - this.lastTime;
-        this.enable = true;
-    }
-
-    stop() {
-        this.enable = false;
     }
 
     reset() {
@@ -30,10 +27,11 @@ export default class AnimationFly {
     }
 
     update() {
-        if (!this.enable) {
+        if (this.end) {
             return;
         }
 
+        const camera = this.camera;
         const path = this.path;
         const last = path[path.length - 1];
         const dTime = Date.now() - this.startTime;
@@ -45,14 +43,14 @@ export default class AnimationFly {
 
         for (let data of path) {
             if (dTime <= data.time) {
-                var movePercent = dTime / path[i].time;
+                var movePercent = dTime / data.time;
                 var pX = data.start.position.x + movePercent * (data.end.position.x - data.start.position.x);
                 var pY = data.start.position.y + movePercent * (data.end.position.y - data.start.position.y);
                 var pZ = data.start.position.z + movePercent * (data.end.position.z - data.start.position.z);
 
-                var rX = data.start.rotation.x + movePercent * (data.end.rotation.x - path[i].start.rotation.x);
-                var rY = data.start.rotation.y + movePercent * (data.end.rotation.y - path[i].start.rotation.y);
-                var rZ = data.start.rotation.z + movePercent * (data.end.rotation.z - path[i].start.rotation.z);
+                var rX = data.start.rotation.x + movePercent * (data.end.rotation.x - data.start.rotation.x);
+                var rY = data.start.rotation.y + movePercent * (data.end.rotation.y - data.start.rotation.y);
+                var rZ = data.start.rotation.z + movePercent * (data.end.rotation.z - data.start.rotation.z);
 
                 var fov = data.start.fov + movePercent * (data.end.fov - data.start.fov);
 
@@ -80,12 +78,8 @@ export default class AnimationFly {
         );
 
         camera.updateProjectionMatrix();
-        this.enable = false;
+        this.end = true;
         this.lastTime = 0;
-
-        if (FlyEndCallBack) {
-            FlyEndCallBack();
-        }
     }
 
     getPath(camera) {

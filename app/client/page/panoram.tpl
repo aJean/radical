@@ -15,11 +15,5 @@
 {% endblock %}
 
 {% block content %}
-    <pano source="/static/webar/assets/source.json"></pano>
-    {% script %}
-        require.async('webar:assets/lib/panoram.js', function(Panrom) {
-            var panrom = new Panrom['default']({el: 'pano'});
-            panrom.run('/static/webar/assets/source.json');
-        });
-    {% endscript %}
+    {% widget "webar:widget/app.tpl" %}
 {% endblock %}

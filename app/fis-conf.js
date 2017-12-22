@@ -16,6 +16,15 @@ fis.match('client/assets/lib/{**.ts,**.tsx,**.js}', {
     isMod: true
 });
 
+fis.match('client/widget/{**.ts,**.tsx,**.js}', {
+    parser: fis.plugin('typescript', {
+        module: 1,
+        target: 1
+    }),
+    isJsXLike: true,
+    isMod: true
+});
+
 fis.match('/client/assets/lib/**.js', {
     packTo: '/static/pkg/webar.js'
 });

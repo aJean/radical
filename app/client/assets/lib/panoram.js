@@ -2,7 +2,6 @@ import OrbitControl from './controls/orbitControl';
 import DeviceControl from './controls/deviceControl';
 import EventEmitter from './event';
 import Log from './log';
-import {fetch, loadPreviewTex, loadSceneTex} from './loader';
 import {isMobile} from './util';
 
 /**
@@ -26,51 +25,16 @@ export default class Panoram {
     deviceControl = null;
     event = new EventEmitter();
     loader = new THREE.CubeTextureLoader();
+    pluginList = [];
+    animateList = [];
 
     constructor(opts) {
         this.opts = Object.assign({}, defaultOpts, opts);
+        this.initEnv();
+        this.initControl();
     }
 
-    run(url) {
-        fetch(url).then(ret => {
-            console.log(ret);
-            if (ret && ret.sceneGroup && ret.defaultSceneId) {
-                this.source = ret;
-                this.init();
-                this.initControl();
-    
-                return this.getScene(ret.defaultSceneId);
-            } else {
-                Log.errorLog('load source error');
-            }
-        // 预览场景
-        }).then(scene => {
-            if (scene) {
-                this.currentScene = scene;
-                return loadPreviewTex(scene.panoPath);
-            } else {
-                Log.errorLog('get preview scene error');
-            }
-        // 场景贴图
-        }).then(texture => {
-            if (texture) {
-                this.initMesh(texture);
-                this.animate();
-                return loadSceneTex(this.currentScene.panoPath);
-            } else {
-                Log.errorLog('load preview texture error');
-            }
-        // 完整场景
-        }).then(textures => {
-            if (textures) {
-                this.loader.load(textures, tex => this.replaceTexture(tex));
-            } else {
-                Log.errorLog('load textures error');
-            }
-        });
-    }
-
-    init() {
+    initEnv() {
         const opts = this.opts;
         const root = this.root = document.querySelector(opts.el);
         const width = opts.width || root.clientWidth || window.innerWidth;
@@ -118,8 +82,22 @@ export default class Panoram {
         const geometry = new THREE.SphereGeometry(2000, 32, 16);
         const skyBox = this.skyBox = new THREE.Mesh(geometry, material);
 
-        this.addToScene(skyBox);
+        this.scene.add(skyBox);
         this.dispatch('previewLoaded');
+    }
+
+    /**
+     * 初始化资源配置
+     * @param {Object} source 配置对象 
+     */
+    initSource(source) {
+        const group = source.sceneGroup;
+        const scene = group.find(item => item.id == source.defaultSceneId);
+
+        this.currentScene = scene;
+        this.sceneList = group;
+
+        return scene;
     }
 
     updateControl() {
@@ -139,11 +117,8 @@ export default class Panoram {
         this.orbitControl.reset();
     }
 
-    subscribe(data) {
-        const event = this.event;
-        for (let type in data) {
-            event.on(type, data[type]);
-        }
+    subscribe(type, fn) {
+        this.event.on(type, fn);
     }
 
     dispatch(type, args) {
@@ -154,21 +129,38 @@ export default class Panoram {
      * 安装插件并注入属性
      * @param {Object} plugin 插件对象
      */
-    installPlugin(plugin) {
+    addPlugin(plugin) {
         plugin.panrom = this;
         plugin.canvas = this.webgl.domElement;
+
+        this.pluginList.push(plugin);
     }
 
-    getScene(id) {
-        const group = this.source.sceneGroup;
-        return group.find(item => item.id == id);
+    updatePlugins() {}
+
+    addAnimation(Animaiton) {
+        const animate = new Animaiton(this.camera);
+        animate.play();
+
+        this.animateList.push(animate);
     }
 
-    addToScene(obj) {
-        this.scene.add(obj);
+    updateAnimation() {
+        const list = this.animateList;
+
+        if (list.length) {
+            list.forEach((animate, i) => {
+                if (animate.end) {
+                    list.splice(i, 1);
+                    this.dispatch('animationEnd', animate);
+                } else {
+                    animate.update();
+                }
+            });
+        }
     }
 
-    renderScene(first) {
+    render(first) {
         this.dispatch('beforeRender');
         
         this.webgl.render(this.scene, this.camera);
@@ -188,7 +180,10 @@ export default class Panoram {
 
     animate() {
         this.updateControl();
-        this.renderScene();
+        this.updateAnimation();
+        // this.updatePlugin();
+
+        this.render();
         requestAnimationFrame(this.animate.bind(this));
     }
 
