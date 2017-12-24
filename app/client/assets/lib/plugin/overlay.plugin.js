@@ -1,34 +1,50 @@
 /**
- * @file 全景3D标签控制器
+ * @file 全景覆盖物
  */
 
-var result;
-var locationSpherical = new THREE.Spherical();
-var locationVector = new THREE.Vector3();
+// 全景描述坐标转为世界坐标
+function parseLocation(label, camera) {
+    const location = label.location;
 
-export default class LabelControl {
-    constructor(camera, canvasDom, scene) {
-        this.camera = camera;
-        this.camvasDom = canvasDom;
-        this.scene = scene;
+    if (location.h !== undefined && location.v !== undefined) {
+        const spherical = new THREE.Spherical();
+        const vector = new THREE.Vector3();
+
+        spherical.theta = location.h / 180 * Math.PI;
+        spherical.phi = location.v / 180 * Math.PI;
+        spherical.radius = 1000;
+
+        vector.setFromSpherical(spherical);
+        label.location = {
+            x: camera.position.x - vector.x,
+            y: camera.position.y - vector.y,
+            z: camera.position.z - vector.z
+        };
+    }
+}
+
+export default class Overlay {
+    constructor(panoram, data) {
+        this.panoram = panoram;
+        this.camera = panoram.getCamera();
+        this.scene = panoram.getScene();
+
+        this.data = data;
+        this.loader = new THREE.TextureLoader();
         this.mouse = new THREE.Vector2();
         this.raycaster = new THREE.Raycaster();
+
+        this.bindEvents();
     }
 
-    initLocation(location) {
-        if (location.h !== undefined && location.v !== undefined) {
-            locationSpherical.theta = location.h / 180 * Math.PI;
-            locationSpherical.phi = location.v / 180 * Math.PI;
-            locationSpherical.radius = 1000;
+    bindEvents() {
+        const panoram = this.panoram;
 
-            locationVector.setFromSpherical(locationSpherical);
-            location.x = camera.position.x - locationVector.x;
-            location.y = camera.position.y - locationVector.y;
-            location.z = camera.position.z - locationVector.z;
-        }
+        panoram.subscribe('sceneAttach', secne => {
+
+        });
     }
 
-    /*labelObj clicked*/
     onLabelobjClick(labelObj, e) {
         if (labelObj.onclick) {
             labelObj.onclick(labelObj, e);
@@ -48,48 +64,24 @@ export default class LabelControl {
             }
         }
     }
-    /*text*/
-    createTextLabel(labelObj) {
-        initLocation(labelObj.location);
-        var div = document.createElement('div');
-        div.id = labelObj.id;
-        div.innerHTML = labelObj.labelContent;
-        div.style.position = 'absolute';
-        if (labelObj.textClass) {
-            div.className = labelObj.textClass;
-        } else {
-            div.style.padding = '0px 4px';
-            div.style.backgroundColor = 'rgba(0,0,0,0.3)';
-            div.style.whiteSpace = 'nowrap';
-            div.style.color = '#fff';
-            div.style.borderRadius = '2px';
-            div.style.fontSize = '14px';
-            div.style.height = '20px';
-            div.style.lineHeight = '20px';
-        }
-        div.onclick = function (e) {
-            onLabelobjClick(labelObj, e);
-        };
-        WebVR.container.appendChild(div);
-        labelObj.textDom = div;
-    }
 
-    updateTextLabel(labelObj) {
-        var halfWidth = WebVR.container.clientWidth / 2;
-        var halfHeight = WebVR.container.clientHeight / 2;
-        var vector;
-        var left = 0;
-        var top = 0;
-        var position = new THREE.Vector3(labelObj.location.x, labelObj.location.y, labelObj.location.z);
-        vector = position.project(camera);
+    setPosition(label) {
+        const root = this.panoram.getRoot();
+        const width = root.clientWidth / 2;
+        const height = root.clientHeight / 2;
+        const location = label.location;
+        const element = lable.element;
+
+        const position = new THREE.Vector3(location.x, location.y, location.z);
+        // 视图摄像机坐标
+        const vector = position.project(this.camera);
+
         if (vector.z > 1) {
-            top = -1000;
+            element.stlye.display = 'none';
         } else {
-            left = Math.round(vector.x * halfWidth + halfWidth);
-            top = Math.round(-vector.y * halfHeight + halfHeight);
+            element.stlye.left = Math.round(vector.x * width + width) + 'px';
+            element.stlye.top = Math.round(-vector.y * height + hight) + 'px';
         }
-        labelObj.textDom.style.left = left + 'px';
-        labelObj.textDom.style.top = top + 'px';
     }
 
     hideTextLabel(labelObj) {
@@ -99,32 +91,64 @@ export default class LabelControl {
     showTextLabel(labelObj) {
         labelObj.textDom.style.display = 'block';
     }
+
+    /**
+     * html dom label
+     * @param {Object} label 标签配置对象
+     */
+    createTextLabel(label, handle) {
+        parseLocation(label, this.camera);
+
+        const div = document.createElement('div');
+        div.id = label.id;
+        div.innerHTML = label.content;
+
+        if (label.cls) {
+            div.className = label.textClass;
+        } else {
+            div.style.cssText = 'position: absolute;padding:0 4px;background: rgba(0, 0, 0, .3);white-space: nowrap;'
+                + 'color: #fff;border-radius: 2px;font-size: 14px;height: 20px;line-height: 20px;';
+        }
+
+        div.onclick = function (e) {
+            onLabelobjClick(label, e);
+        };
+        return label.element = div;
+    }
+
     /*img */
-    createImgLabel(labelObj) {
-        var coverTexture = WebVR.textureLoader.load(labelObj.imgUrl);
-        var material = new THREE.MeshBasicMaterial({
-            map: coverTexture,
+    createImgLabel(label) {
+        const camera = this.camera;        
+        const texture = this.loader.load(label.imgurl);
+        const material = new THREE.MeshBasicMaterial({
+            map: texture,
             side: THREE.FrontSide,
             transparent: true
         });
-        var scale = 1; // window.devicePixelRatio ? window.devicePixelRatio : 1;
-        var plane = new THREE.PlaneGeometry(labelObj.imgWidth * scale, labelObj.imgHeight * scale);
-        var imgPlaneMesh = new THREE.Mesh(plane, material);
-        initLocation(labelObj.location);
-        imgPlaneMesh.position.set(labelObj.location.x, labelObj.location.y, labelObj.location.z);
-        imgPlaneMesh.name = labelObj.id;
-        imgPlaneMesh.labelObj = labelObj;
-        if (!labelObj.rotation) {
+        // window.devicePixelRatio ? window.devicePixelRatio : 1;
+        const scale = 1;
+        const plane = new THREE.PlaneGeometry(label.width * scale, label.height * scale);
+        const planeMesh = new THREE.Mesh(plane, material);
+        
+        parseLocation(label, camera)
+        planeMesh.position.set(label.location.x, label.location.y, label.location.z);
+        planeMesh.name = label.id;
+        planeMesh.label = label;
+
+        if (!label.rotation) {
             imgPlaneMesh.lookAt(camera.position);
         } else {
-            imgPlaneMesh.rotation.set(labelObj.rotation.x, labelObj.rotation.y, labelObj.rotation.z);
+            imgPlaneMesh.rotation.set(label.rotation.x, label.rotation.y, label.rotation.z);
         }
-        labelObj.imgPlaneMesh = imgPlaneMesh;
-        if (!labelObj.sceneObj.LabelGroup) {
-            labelObj.sceneObj.LabelGroup = new THREE.Group();
-            labelObj.sceneObj.LabelGroup.name = labelObj.sceneObj.id;
-            scene.add(labelObj.sceneObj.LabelGroup);
+
+        label.planeMesh = planeMesh;
+        const group = new THREE.Group();
+        if (!label.sceneObj.LabelGroup) {
+            label.sceneObj.LabelGroup = new THREE.Group();
+            label.sceneObj.LabelGroup.name = label.sceneObj.id;
+            scene.add(label.sceneObj.LabelGroup);
         }
+
         labelObj.sceneObj.LabelGroup.add(imgPlaneMesh);
     }
 
@@ -257,35 +281,22 @@ export default class LabelControl {
         }
     }
 
-    updateSceneLabel(scene) {
-        if (scene.scene3DLabelGroup && scene.scene3DLabelGroup.length > 0) {
-            for (var i = 0; i < scene.scene3DLabelGroup.length; ++i) {
-                var labelObj = scene.scene3DLabelGroup[i];
-                if (!labelObj.sceneObj) {
-                    labelObj.sceneObj = scene;
-                }
-                switch (labelObj.labelType) {
-                    case 'text':
-                        if (!labelObj.textDom) {
-                            createTextLabel(labelObj);
-                        }
-                        updateTextLabel(labelObj);
-                        break;
-                    case 'img':
-                        if (!labelObj.imgPlaneMesh) {
-                            createImgLabel(labelObj);
-                        }
-                        /*updateImgLabel(labelObj);*/
-                        break;
-                    case 'animation':
-                        if (!labelObj.animationObj) {
-                            createAnimationLabel(labelObj);
-                        }
-                        updateAnimationLabel(labelObj);
-                        break;
-                }
+    createLabel(opts) {
+        const group = opts.labelGroup || [];
+
+        group.forEach(label => {
+            switch (label.type) {
+                case 'text':
+                    this.createTextLabel(label);
+                    break;
+                case 'img':
+                    this.createImgLabel(label);
+                    break;
+                case 'animation':
+                    this.createAnimationLabel(label);
+                    break;
             }
-        }
+        });
     }
 
     hideSceneLabel(scene) {

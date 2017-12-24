@@ -4,11 +4,11 @@
         "id": "test",
         "name": "bxl 格式",
         "panoPath": "/static/webar/assets/img",
-        "scene3DLabelGroup": [{
+        "labelGroup": [{
             "id": "id1",
-            "labelType": "text",
-            "labelContent": "<a style='color:#f00;'>你好啊,scene</a>",
-            "textClass": "textclass asdas",
+            "type": "text",
+            "content": "<a style='color:#f00;'>你好啊,scene</a>",
+            "cls": "textclass asdas",
             "actionType": "scene",
             "sceneId": "scene_1",
             "location": {
@@ -18,14 +18,27 @@
             }
         }, {
             "id": "id2",
-            "labelType": "text",
-            "labelContent": "你好啊,link",
+            "type": "text",
+            "content": "你好啊,link",
             "actionType": "link",
             "linkUrl": "http://www.baidu.com",
             "location": {
                 "x": 300,
                 "y": 0,
                 "z": 800
+            }
+        }, {
+            "id": "id3",
+            "type": "img",
+            "url": "conf/label-img/1.png",
+            "width": 100,
+            "height": 100,
+            "actionType": "link",
+            "linkUrl": "http://www.baidu.com",
+            "location": {
+              "x": 200,
+              "y": 0,
+              "z": -470.07
             }
         }]
     }],

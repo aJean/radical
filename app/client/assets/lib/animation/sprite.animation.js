@@ -1,8 +1,7 @@
 ﻿/**
  * @file 雨雪特效组件
- * @author liwenhui(liwenhui01@baidu.com)
  */
-/* globals THREE WebVR*/
+
 define(function () {
     var create = function (opt) {
         var texPath = opt.texPath;

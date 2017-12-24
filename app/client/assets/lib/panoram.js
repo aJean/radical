@@ -83,7 +83,7 @@ export default class Panoram {
         const skyBox = this.skyBox = new THREE.Mesh(geometry, material);
 
         this.scene.add(skyBox);
-        this.dispatch('previewLoaded');
+        this.dispatch('previewAttach');
     }
 
     /**
@@ -127,16 +127,11 @@ export default class Panoram {
 
     /**
      * 安装插件并注入属性
-     * @param {Object} plugin 插件对象
+     * @param {Object} Plugin 插件 class
      */
-    addPlugin(plugin) {
-        plugin.panrom = this;
-        plugin.canvas = this.webgl.domElement;
-
+    addPlugin(Plugin) {
         this.pluginList.push(plugin);
     }
-
-    updatePlugins() {}
 
     addAnimation(Animaiton) {
         const animate = new Animaiton(this.camera);
@@ -161,12 +156,13 @@ export default class Panoram {
     }
 
     render(first) {
-        this.dispatch('beforeRender');
-        
         this.webgl.render(this.scene, this.camera);
-        this.dispatch('afterRender');
     }
 
+    /**
+     * 渲染场景贴图
+     * @param {Object} texture 场景原图纹理
+     */
     replaceTexture(texture) {
         texture.mapping = THREE.CubeRefractionMapping;
         texture.needsUpdate = true;
@@ -175,13 +171,13 @@ export default class Panoram {
         this.skyBox.material.envMap = texture;
         tempTex.dispose();
 
+        this.dispatch('sceneAttach', this.currentScene);
         // WebVR.labelControl.showSceneLabel(currentSceneObj);
     }
 
     animate() {
         this.updateControl();
         this.updateAnimation();
-        // this.updatePlugin();
 
         this.render();
         requestAnimationFrame(this.animate.bind(this));
@@ -197,5 +193,21 @@ export default class Panoram {
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
         this.webgl.setSize(width, height);
+    }
+
+    getCamera() {
+        return this.camera;
+    }
+
+    getCanvas() {
+        return this.webgl.domElement;
+    }
+
+    getRoot() {
+        return this.root;
+    }
+
+    getScene() {
+        return this.scene;
     }
 }

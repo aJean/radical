@@ -1,6 +1,7 @@
 import Log from './log';
 import {fetch, loadPreviewTex, loadSceneTex} from './loader';
-import AnimationFly from './animation/camerafly';
+import AnimationFly from './animation/fly.animation';
+import Overlay from './plugin/overlay.plugin';
 
 /**
  * 执行环境
@@ -29,6 +30,10 @@ export default {
         // 预览场景
         }).then(scene => {
             if (scene) {
+                if (scene.labelGroup) {
+                    const overlay = new Overlay(panoram, scene.labelGroup);
+                    panoram.addPlugin(overlay);
+                }
                 return loadPreviewTex(scene.panoPath);
             } else {
                 Log.errorLog('get preview scene error');
