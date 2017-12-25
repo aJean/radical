@@ -11,6 +11,11 @@
             overflow: hidden;
             background: #000;
         }
+        .linkButton {
+            padding: 5px;
+            border-radius: 4px;
+            background: #05e61a;
+        }
     </style>
 {% endblock %}
 

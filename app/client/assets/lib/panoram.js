@@ -25,6 +25,7 @@ export default class Panoram {
     deviceControl = null;
     event = new EventEmitter();
     loader = new THREE.CubeTextureLoader();
+    group = [];
     pluginList = [];
     animateList = [];
 
@@ -44,7 +45,8 @@ export default class Panoram {
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(width, height);
-        webgl.setFaceCulling(THREE.CullFaceNone);
+        // 容器 element
+        root.style.cssText = 'position:relative;display:block;';
         root.appendChild(webgl.domElement);
         // 场景, 相机
         this.scene = new THREE.Scene();
@@ -91,11 +93,10 @@ export default class Panoram {
      * @param {Object} source 配置对象 
      */
     initSource(source) {
-        const group = source.sceneGroup;
+        const group = this.group = source.sceneGroup;
         const scene = group.find(item => item.id == source.defaultSceneId);
 
         this.currentScene = scene;
-        this.sceneList = group;
 
         return scene;
     }
@@ -129,7 +130,7 @@ export default class Panoram {
      * 安装插件并注入属性
      * @param {Object} Plugin 插件 class
      */
-    addPlugin(Plugin) {
+    addPlugin(plugin) {
         this.pluginList.push(plugin);
     }
 
@@ -170,9 +171,8 @@ export default class Panoram {
         const tempTex = this.skyBox.material.envMap;
         this.skyBox.material.envMap = texture;
         tempTex.dispose();
-
+        // 触发场景添加事件
         this.dispatch('sceneAttach', this.currentScene);
-        // WebVR.labelControl.showSceneLabel(currentSceneObj);
     }
 
     animate() {
@@ -209,5 +209,17 @@ export default class Panoram {
 
     getScene() {
         return this.scene;
+    }
+
+    addObject(obj) {
+        this.scene.add(obj);
+    }
+
+    /**
+     * 进入下一个场景
+     * @param {string} id 场景的标识
+     */
+    enterNext(id) {
+        const group = this.group;
     }
 }

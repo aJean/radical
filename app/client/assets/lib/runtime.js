@@ -30,8 +30,8 @@ export default {
         // 预览场景
         }).then(scene => {
             if (scene) {
-                if (scene.labelGroup) {
-                    const overlay = new Overlay(panoram, scene.labelGroup);
+                if (scene.overlays) {
+                    const overlay = new Overlay(panoram, scene);
                     panoram.addPlugin(overlay);
                 }
                 return loadPreviewTex(scene.panoPath);

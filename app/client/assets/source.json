@@ -4,11 +4,11 @@
         "id": "test",
         "name": "bxl 格式",
         "panoPath": "/static/webar/assets/img",
-        "labelGroup": [{
+        "overlays": [{
             "id": "id1",
-            "type": "text",
-            "content": "<a style='color:#f00;'>你好啊,scene</a>",
-            "cls": "textclass asdas",
+            "type": "dom",
+            "content": "<a style='color:#f00;'>scene button</a>",
+            "cls": "linkButton",
             "actionType": "scene",
             "sceneId": "scene_1",
             "location": {
@@ -18,27 +18,37 @@
             }
         }, {
             "id": "id2",
-            "type": "text",
-            "content": "你好啊,link",
+            "type": "dom",
+            "content": "你好啊, baidu",
             "actionType": "link",
             "linkUrl": "http://www.baidu.com",
             "location": {
                 "x": 300,
-                "y": 0,
+                "y": 800,
                 "z": 800
             }
         }, {
             "id": "id3",
-            "type": "img",
-            "url": "conf/label-img/1.png",
-            "width": 100,
-            "height": 100,
+            "type": "mesh",
+            "img": "/static/webar/assets/img/chirst.jpeg",
+            "width": 50,
+            "height": 50,
             "actionType": "link",
             "linkUrl": "http://www.baidu.com",
             "location": {
               "x": 200,
               "y": 0,
-              "z": -470.07
+              "z": 0
+            }
+        }, {
+            "id": "id4",
+            "type": "dom",
+            "content": "custom button",
+            "actionType": "custom",
+            "location": {
+                "x": 0,
+                "y": 1200,
+                "z": 800
             }
         }]
     }],

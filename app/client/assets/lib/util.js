@@ -1,6 +1,12 @@
+import Log from './log';
+
 /**
  * @file util
  */
+
+function composeKey(part) {
+    return 'skt1wins' + part;
+}
 
 export const isMobile = function() {
     var check = false;
@@ -9,9 +15,27 @@ export const isMobile = function() {
 }();
 
 export function decode(ciphertext, key) {
+    if (key ^ 1 !== 1) {
+        key = composeKey(Log.timeline);
+    }
+
     const plaintext = CryptoJS.AES.decrypt({
         ciphertext: CryptoJS.enc.Hex.parse(ciphertext),
         salt: CryptoJS.lib.WordArray.create(0)
     }, key);
     return plaintext.toString(CryptoJS.enc.Utf8);
+}
+
+export function parseEOF(EOF) {
+    const ret = EOF.split('*');
+    const domains = ret[1].split(',');
+    let pass = true;
+
+    if (domains.length > 0) {
+        pass = Boolean(domains.find(domain => domain == location.host));
+    }
+    return {
+        line: ret[0],
+        pass: pass
+    }
 }

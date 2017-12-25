@@ -1,4 +1,4 @@
-import {decode} from './util';
+import {decode, parseEOF} from './util';
 
 /**
  * @file fetch request
@@ -97,14 +97,17 @@ export function loadSceneTex(path) {
         .then(ret => {
             const list = String(ret[0]).split('~#~');
             const secretData = list.slice(0, 6);
-            const secretEOF = list[6];
 
-            const secretKey = String(ret[1]).replace(/-*[A-Z\s]*-\n?/g, '');
-            const key = decode(secretKey, 'skt1winsforever');
-            const lines = decode(secretEOF, 'skt1winsforever').split(',');
-            
+            const secretKey = String(ret[1]).replace(/-*[A-Z\s]*-\n?/g, '').split('~#~');
+            const key = decode(secretKey[0], 0xf);
+            const EOF = parseEOF(decode(secretKey[1], 0xe));
+
+            if (!EOF.pass) {
+                throw new Error('incorrect product domian');
+            }
+
             return secretData.map((ciphertext, i) => {
-                const start = lines[i];
+                const start = EOF.line;
                 // find real cipher header
                 const header = ciphertext.substring(0, start);
                 const body = ciphertext.substring(start);

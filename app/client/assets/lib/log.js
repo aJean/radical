@@ -1,5 +1,7 @@
 export default {
+    timeline: 'forever',
+
     errorLog(msg) {
-        console.error('Error: ' + msg);
+        console.error(msg);
     }
 } 
