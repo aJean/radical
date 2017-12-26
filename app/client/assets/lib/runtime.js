@@ -17,7 +17,6 @@ export default {
      */
     run(panoram, url) {
         fetch(url).then(ret => {
-            console.log(ret);
             if (ret && ret.sceneGroup && ret.defaultSceneId) {
                 if (ret.enableAnimation) {
                     panoram.addAnimation(AnimationFly);
@@ -31,8 +30,7 @@ export default {
         }).then(scene => {
             if (scene) {
                 if (scene.overlays) {
-                    const overlay = new Overlay(panoram, scene);
-                    panoram.addPlugin(overlay);
+                    panoram.addPlugin(Overlay, scene);
                 }
                 return loadPreviewTex(scene.panoPath);
             } else {

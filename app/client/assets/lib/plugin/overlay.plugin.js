@@ -43,7 +43,6 @@ export default class Overlay {
 
     bindEvents() {
         const panoram = this.panoram;
-        const canvasDom = panoram.webgl.domElement;        
 
         panoram.subscribe('sceneAttach', scene => {
             // 当前的场景数据
@@ -51,18 +50,12 @@ export default class Overlay {
             this.init(scene);
         });
 
+        panoram.subscribe('renderProcess', scene => {
+            const cache = this.getCache(scene.id);
+            cache.domGroup.forEach(element => this.updateDomOverlay(element));
+        });
 
-        canvasDom.addEventListener('click', this.onCanvasClick.bind(this));
-        return;
-        if (isMobile) {
-            canvasDom.addEventListener('touchend', onTouchend, false);
-            canvasDom.addEventListener('touchmove', onTouchmove, false);
-            canvasDom.addEventListener('touchstart', onTouchstart, false);
-        } else {
-            canvasDom.addEventListener('mouseup', onMouseup, false);
-            canvasDom.addEventListener('mousemove', onMousemove, false);
-            canvasDom.addEventListener('mousedown', onMousedown, false);
-        }
+        panoram.webgl.domElement.addEventListener('click', this.onCanvasClick.bind(this));
     }
 
     init(data) {
@@ -111,43 +104,43 @@ export default class Overlay {
     createDomOverlay(data, cache) {
         parseLocation(data, this.camera);
 
-        const element = document.createElement('div');
-        element.id = data.id;
-        element.innerHTML = data.content;
+        const overlay = document.createElement('div');
+        overlay.id = data.id;
+        overlay.innerHTML = data.content;
 
         if (data.cls) {
-            element.style.position = 'absolute';
-            element.className = data.cls;
+            overlay.style.position = 'absolute';
+            overlay.className = data.cls;
         } else {
-            element.style.cssText = 'position:absolute;padding:0 4px;background: rgba(0, 0, 0, .3);white-space:nowrap;'
+            overlay.style.cssText = 'position:absolute;padding:0 4px;background: rgba(0, 0, 0, .3);white-space:nowrap;'
                 + 'color:#fff;border-radius:2px;font-size:14px;height:20px;line-height: 20px;';
         }
 
-        element.onclick = e => this.onOverlayClick(data, e);
+        overlay.onclick = e => this.onOverlayClick(data, e);
+        overlay.location = data.location;
+        
+        this.panoram.root.appendChild(overlay);
+        this.updateDomOverlay(overlay);
 
-        this.panoram.root.appendChild(element);
-        cache.domGroup.push(data.element = element);
-
-        this.updateDomOverlayPosition(element, data);
+        cache.domGroup.push(overlay);
     }
 
-    updateDomOverlayPosition(element, data) {
+    updateDomOverlay(element) {
         const root = this.panoram.getRoot();
         const width = root.clientWidth / 2;
         const height = root.clientHeight / 2;
-        const location = data.location;
+        const location = element.location;
 
         const position = new THREE.Vector3(location.x, location.y, location.z);
         // world coord to screen coord
         const vector = position.project(this.camera);
 
         if (vector.z > 1) {
-            element.stlye.display = 'none';
+            element.style.display = 'none';
         } else {
-            const left = data.x = Math.round(vector.x * width + width);
-            const top = data.y = Math.round(-vector.y * height + height);
-            element.style.left = left + 'px';
-            element.style.top = top + 'px';
+            element.style.left = Math.round(vector.x * width + width) + 'px';
+            element.style.top = Math.round(-vector.y * height + height) + 'px';
+            element.style.display = 'block';
         }
     }
 

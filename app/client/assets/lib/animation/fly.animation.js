@@ -2,141 +2,83 @@
  * @file 开场动画组组件
  */
 
-export default class AnimationFly {
-    end = false;
-    startTime = 0;
-    totleTime = 0;
-    lastTime = 0;
+function calc (t, b, c, d) { 
+    return c * t / d + b; 
+}
 
-    constructor(camera) {
+export default class AnimationFly {
+    time = 0;
+
+    constructor(panoram) {
+        const camera = panoram.camera;
         const path = this.path = this.getPath(camera);
+
+        this.panoram = panoram;
         this.camera = camera;
 
-        path.forEach(data => {
-            this.totleTime += data.time;
-        })
-    }
-
-    play() {
-        this.startTime = Date.now() - this.lastTime;
-    }
-
-    reset() {
-        this.startTime = Date.now();
-        this.lastTime = 0;
+        panoram.subscribe('renderProcess', this.update, this);
     }
 
     update() {
-        if (this.end) {
-            return;
-        }
-
         const camera = this.camera;
         const path = this.path;
-        const last = path[path.length - 1];
-        const dTime = Date.now() - this.startTime;
-        this.lastTime = dTime;
+        const phase = path[0];
+        let time = this.time;
 
-        if (dTime > this.totleTime) {
-            return;
+        if (!phase) {
+            return this.dispose();
+        }
+
+        if (time > phase.time) {
+            camera.fov = phase.end.fov;
+            camera.position.set(
+                phase.end.px,
+                phase.end.py,
+                phase.end.pz
+            );
+            camera.rotation.set(
+                phase.end.rx,
+                phase.end.ry,
+                phase.end.rz
+            );
+    
+            camera.updateProjectionMatrix();
+            time = this.time = 0;
+            return path.shift();          
         }
 
         for (let data of path) {
-            if (dTime <= data.time) {
-                var movePercent = dTime / data.time;
-                var pX = data.start.position.x + movePercent * (data.end.position.x - data.start.position.x);
-                var pY = data.start.position.y + movePercent * (data.end.position.y - data.start.position.y);
-                var pZ = data.start.position.z + movePercent * (data.end.position.z - data.start.position.z);
+            const px = calc(time, data.start.px, data.end.px - data.start.px, data.time);
+            const py = calc(time, data.start.py, data.end.py - data.start.py, data.time);
+            const pz = calc(time, data.start.pz, data.end.pz - data.start.pz, data.time);
+            const rx = calc(time, data.start.rx, data.end.rx - data.start.rx, data.time);
+            const ry = calc(time, data.start.ry, data.end.ry - data.start.ry, data.time);
+            const rz = calc(time, data.start.rz, data.end.rz - data.start.rz, data.time);
+            const fov = calc(time, data.start.fov, data.end.fov - data.start.fov, data.time);
 
-                var rX = data.start.rotation.x + movePercent * (data.end.rotation.x - data.start.rotation.x);
-                var rY = data.start.rotation.y + movePercent * (data.end.rotation.y - data.start.rotation.y);
-                var rZ = data.start.rotation.z + movePercent * (data.end.rotation.z - data.start.rotation.z);
+            camera.fov = fov;
+            camera.position.set(px, py, pz);
+            camera.rotation.set(rx, ry, rz);
 
-                var fov = data.start.fov + movePercent * (data.end.fov - data.start.fov);
+            this.time += 16;
+            return camera.updateProjectionMatrix();
+        }
+    }
 
-                camera.fov = fov;
-                camera.position.set(pX, pY, pZ);
-                camera.rotation.set(rX, rY, rZ);
-
-                camera.updateProjectionMatrix();
-                return;
-            } else {
-                dTime -= data.time;
-            }
-        };
-
-        camera.fov = last.end.fov;
-        camera.position.set(
-            last.end.position.x,
-            last.end.position.y,
-            last.end.position.z
-        );
-        camera.rotation.set(
-            last.end.rotation.x,
-            last.end.rotation.y,
-            last.end.rotation.z
-        );
-
-        camera.updateProjectionMatrix();
-        this.end = true;
-        this.lastTime = 0;
+    dispose() {
+        this.panoram.dispatch('animationEnd', this);
+        this.panoram.unsubscribe('renderProcess', this.update, this);
     }
 
     getPath(camera) {
         return [{
-            'start': {
-                'fov': 160,
-                'position': {
-                    'x': 0,
-                    'y': 1900,
-                    'z': 0
-                },
-                'rotation': {
-                    'x': -Math.PI / 2,
-                    'y': 0,
-                    'z': 0
-                }
-            },
-            'end': {
-                'fov': 120,
-                'position': {
-                    'x': 0,
-                    'y': 1500,
-                    'z': 0
-                },
-                'rotation': {
-                    'x': -Math.PI / 2,
-                    'y': 0,
-                    'z': Math.PI * 0.8
-                }
-            },
-            'time': '1500'}, {
-            'start': {
-                'fov': 120,
-                'position': {
-                    'x': 0,
-                    'y': 1500,
-                    'z': 0
-                },
-                'rotation': {
-                    'x': -Math.PI / 2,
-                    'y': 0,
-                    'z': Math.PI * 0.8
-                }
-            },
-            'end': {
-                'fov': camera.fov,
-                'position': {
-                    'x': camera.position.x,
-                    'y': camera.position.y,
-                    'z': camera.position.z
-                },
-                'rotation': {
-                    'x': -Math.PI,
-                    'y': 0,
-                    'z': Math.PI
-                }
-            },
-            'time': '1500'}];
+            start: {fov: 160, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
+            end: {fov: 120, px: 0, py: 1500, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8},
+            time: 1500
+        }, {
+            start: {fov: 120, px: 0, py: 1500, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8},
+            end: {fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI},
+            time: 1500
+        }];
     }
 };

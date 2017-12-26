@@ -118,8 +118,12 @@ export default class Panoram {
         this.orbitControl.reset();
     }
 
-    subscribe(type, fn) {
-        this.event.on(type, fn);
+    subscribe(type, fn, context) {
+        this.event.on(type, fn, context);
+    }
+
+    unsubscribe(type, fn, context) {
+        this.event.removeListener(type, fn, context);
     }
 
     dispatch(type, args) {
@@ -127,33 +131,22 @@ export default class Panoram {
     }
 
     /**
-     * 安装插件并注入属性
-     * @param {Object} Plugin 插件 class
+     * 安装动画
+     * @param {Object} Animaiton 
      */
-    addPlugin(plugin) {
-        this.pluginList.push(plugin);
-    }
-
     addAnimation(Animaiton) {
-        const animate = new Animaiton(this.camera);
-        animate.play();
-
+        const animate = new Animaiton(this);
         this.animateList.push(animate);
     }
 
-    updateAnimation() {
-        const list = this.animateList;
-
-        if (list.length) {
-            list.forEach((animate, i) => {
-                if (animate.end) {
-                    list.splice(i, 1);
-                    this.dispatch('animationEnd', animate);
-                } else {
-                    animate.update();
-                }
-            });
-        }
+    /**
+     * 安装插件并注入属性
+     * @param {Object} Plugin 插件 class
+     * @param {Object} data 插件数据
+     */
+    addPlugin(Plugin, data) {
+        const plugin = new Plugin(this, data);
+        this.pluginList.push(plugin);
     }
 
     render(first) {
@@ -177,9 +170,9 @@ export default class Panoram {
 
     animate() {
         this.updateControl();
-        this.updateAnimation();
-
+        this.dispatch('renderProcess', this.currentScene);
         this.render();
+
         requestAnimationFrame(this.animate.bind(this));
     }
 
