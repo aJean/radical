@@ -28,7 +28,7 @@ export function decode(ciphertext, key) {
 
 export function parseEOF(EOF) {
     const ret = EOF.split('*');
-    const domains = ret[1].split(',');
+    const domains = ret[1] ? ret[1].split(',') : [];
     let pass = true;
 
     if (domains.length > 0) {
