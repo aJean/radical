@@ -1,0 +1,58 @@
+{
+    "title": "test bxl transfer",
+    "sceneGroup": [{
+        "id": "test",
+        "name": "bxl 格式",
+        "panoPath": "./",
+        "overlays": [{
+            "id": "id1",
+            "type": "dom",
+            "content": "<a style='color:#f00;'>scene button</a>",
+            "cls": "linkButton",
+            "actionType": "scene",
+            "sceneId": "scene_1",
+            "location": {
+                "x": 0,
+                "y": 0,
+                "z": 300
+            }
+        }, {
+            "id": "id2",
+            "type": "dom",
+            "content": "你好啊, baidu",
+            "actionType": "link",
+            "linkUrl": "http://www.baidu.com",
+            "location": {
+                "x": 300,
+                "y": 800,
+                "z": 800
+            }
+        }, {
+            "id": "id3",
+            "type": "mesh",
+            "img": "./chirst.jpeg",
+            "width": 50,
+            "height": 50,
+            "actionType": "link",
+            "linkUrl": "http://www.baidu.com",
+            "location": {
+              "x": 200,
+              "y": 0,
+              "z": 0
+            }
+        }, {
+            "id": "id4",
+            "type": "dom",
+            "content": "custom button",
+            "actionType": "custom",
+            "location": {
+                "x": 0,
+                "y": 1200,
+                "z": 800
+            }
+        }]
+    }],
+    "defaultSceneId": "test",
+    "enableAnimation": true,
+    "enableDevice": false
+}

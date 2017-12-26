@@ -3,7 +3,7 @@
 *.swp
 *.swo
 .npm
-app/client/node_modules
+node_modules
 logs
 *.log
 npm-debug.log*

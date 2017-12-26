@@ -9,31 +9,19 @@ const extractLess = new ExtractTextPlugin({
 
 module.exports = {
     entry: {
-        lib: './src/lib.ts'
+        lib: './index.ts'
     },
     output: {
         filename: '[name].js',
-        path: path.resolve(__dirname, 'app/client/assets')
+        path: path.resolve(__dirname, 'dist')
     },
     module: {
         rules: [{
-            test: /src\/\.ts/,
+            test: /\.js/,
             use: 'ts-loader',
-            exclude: /dist|node_modules/
-        }, {
-            test: /\.less$/,
-            use: extractLess.extract({
-                use: [{
-                    loader: "css-loader"
-                }, {
-                    loader: "less-loader"
-                }],
-                fallback: "style-loader"
-            }),
             exclude: /dist|node_modules/
         }]
     },
-    plugins: [extractLess],
     resolve: {
         extensions: [".js", ".json", ".ts"]
     }

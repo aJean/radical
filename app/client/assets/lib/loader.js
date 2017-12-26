@@ -4,7 +4,7 @@ import {decode, parseEOF} from './util';
  * @file fetch request
  */
 
-export function fetch(url, type?) {
+export function fetch(url, type) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('GET', url);
