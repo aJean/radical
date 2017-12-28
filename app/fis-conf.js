@@ -29,6 +29,10 @@ fis.match('/client/assets/lib/**.js', {
     packTo: '/static/pkg/webar.js'
 });
 
+fis.match('/client/assets/lib/**.less', {
+    packTo: '/static/pkg/webar.css'
+});
+
 fis.media('otp').match('*', {
     useHash: false,
     useSprite: false,

@@ -26,6 +26,12 @@ function parseLocation(data, camera) {
     }
 }
 
+function setStyle(element, data) {
+    for (let key in data) {
+        element.style[key] = data[key];
+    }
+}
+
 export default class Overlay {
     constructor(panoram, data) {
         this.panoram = panoram;
@@ -33,9 +39,7 @@ export default class Overlay {
 
         this.data = data;
         this.loader = new THREE.TextureLoader();
-        this.mouse = new THREE.Vector2();
         this.raycaster = new THREE.Raycaster();
-
         this.cache = {};
 
         this.bindEvents();
@@ -47,12 +51,13 @@ export default class Overlay {
         panoram.subscribe('sceneAttach', scene => {
             // 当前的场景数据
             this.data = scene;
+            this.removeOverlays();
             this.init(scene);
         });
 
         panoram.subscribe('renderProcess', scene => {
             const cache = this.getCache(scene.id);
-            cache.domGroup.forEach(element => this.updateDomOverlay(element));
+            cache.domGroup.forEach(item => this.updateDomOverlay(item));
         });
 
         panoram.webgl.domElement.addEventListener('click', this.onCanvasClick.bind(this));
@@ -62,6 +67,7 @@ export default class Overlay {
         if (!data.id) {
             data.id = 'panoram' + Date.now();
         }
+        this.lastId = data.id;
 
         const cache = this.getCache(data.id);
         const overlays = data.overlays || [];
@@ -103,44 +109,47 @@ export default class Overlay {
      */
     createDomOverlay(data, cache) {
         parseLocation(data, this.camera);
+        cache.domGroup.push(data);        
 
         const overlay = document.createElement('div');
         overlay.id = data.id;
         overlay.innerHTML = data.content;
+        overlay.className = 'panrom-domoverlay';
 
         if (data.cls) {
-            overlay.style.position = 'absolute';
-            overlay.className = data.cls;
-        } else {
-            overlay.style.cssText = 'position:absolute;padding:0 4px;background: rgba(0, 0, 0, .3);white-space:nowrap;'
-                + 'color:#fff;border-radius:2px;font-size:14px;height:20px;line-height: 20px;';
+            overlay.className += ` ${data.cls}`;
         }
 
         overlay.onclick = e => this.onOverlayClick(data, e);
-        overlay.location = data.location;
-        
         this.panoram.root.appendChild(overlay);
-        this.updateDomOverlay(overlay);
 
-        cache.domGroup.push(overlay);
+        // cache for dom events and animation updates
+        data.overlay = overlay;
+        this.updateDomOverlay(data);
     }
 
-    updateDomOverlay(element) {
+    updateDomOverlay(data) {
         const root = this.panoram.getRoot();
         const width = root.clientWidth / 2;
         const height = root.clientHeight / 2;
-        const location = element.location;
+        const location = data.location;
+        const overlay = data.overlay;
 
         const position = new THREE.Vector3(location.x, location.y, location.z);
         // world coord to screen coord
         const vector = position.project(this.camera);
 
         if (vector.z > 1) {
-            element.style.display = 'none';
+            overlay.style.display = 'none';
         } else {
-            element.style.left = Math.round(vector.x * width + width) + 'px';
-            element.style.top = Math.round(-vector.y * height + height) + 'px';
-            element.style.display = 'block';
+            const x = data.x = Math.round(vector.x * width + width);
+            const y = data.y = Math.round(-vector.y * height + height);
+
+            setStyle(overlay, {
+                left: x + 'px',
+                top: y + 'px',
+                display: 'block'
+            });
         }
     }
 
@@ -210,7 +219,8 @@ export default class Overlay {
         panoram.dispatch('overlayClick', data);
         switch (data.actionType) {
             case 'scene':
-                panoram.enterNext(data.sceneId);
+                // data.id
+                panoram.enterNext(null);
                 break;
             case 'link':
                 window.open(data.linkUrl, '_blank');
@@ -218,43 +228,44 @@ export default class Overlay {
         }
     }
 
-    hideOverlays(scene) {
-        const id = scene.id;
+    removeOverlays() {
+        const cache = this.getCache(this.lastId);
+        delete this.cache[this.lastId];
+        this.lastId = null;
 
-        if (scene.overlays) {
-            const cache = this.getCache(id);
+        cache && this.hideOverlays(cache, true);
+    }
 
-            cache.domGroup.forEach(overlay => this.hideTextOverlay(overlay));
-            cache.meshGroup.forEach(overlay => this.hideImgOverlay(overlay));
+    hideOverlays(data, isclean) {
+        if (data) {
+            const root = this.panoram.getRoot();
+
+            data.domGroup.forEach(item => {
+                const overlay = item.overlay;
+
+                overlay.style.display = 'none';
+                isclean && root.removeChild(overlay);
+            });
+
+            if (data.meshGroup.children) {
+                data.meshGroup.children.forEach(overlay => {
+                    overlay.visible = false;
+                    overlay.material.map.dispose();
+                    isclean && overlay.remove();
+                });
+            }
         }
     }
 
-    showOverlays(scene) {
-        const id = scene.id;
-        
-        if (scene.overlays) {
-            const cache = this.getCache(id);
-
-            cache.domGroup.forEach(overlay => this.showTextOverlay(overlay));
-            cache.meshGroup.forEach(overlay => this.showImgOverlay(overlay));
+    showOverlays(data) {
+        if (data) {
+            data.domGroup.forEach(item => {
+                item.overlay.style.display = 'block';
+            });
+            data.meshGroup.children.forEach(overlay => {
+                overlay.visible = true;
+            });
         }
-    }
-
-    hideTextOverlay(overlay) {
-        overlay.style.display = 'none';
-    }
-
-    showTextOverlay(overlay) {
-        overlay.style.display = 'block';
-    }
-
-    hideImgOverlay(overlay) {
-        overlay.visible = false;
-        overlay.material.map.dispose();
-    }
-
-    showImgOverlay(overlay) {
-        overlay.visible = true;
     }
 
     hideAnimationOverlay(overlay) {

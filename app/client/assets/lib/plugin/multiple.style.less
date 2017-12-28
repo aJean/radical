@@ -1,0 +1,35 @@
+.panoram-multiplescene {
+    position: absolute;
+    left: 0;
+    bottom: 30px;
+    width: 100%;
+    height: 104px;
+    .panoram-multiplescene-outer {
+        margin: 0 100px;
+        padding: 10px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, .5);                
+    }
+    .panoram-multiplescene-inner {
+        font-size: 12px;
+        white-space: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .panoram-multiplescene-item {
+        display: inline-block;
+        border: 2px solid #fff;
+        margin-right: 10px;
+        &:hover {
+            border: 2px solid rgb(38, 112, 248);
+        }
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+    .panoram-multiplescene-img {
+        width: 100px;
+        height: 100px;
+        vertical-align: middle;
+    }
+}

@@ -1,7 +1,9 @@
 import Log from './log';
-import {fetch, loadPreviewTex, loadSceneTex} from './loader';
+import Loader from './loader';
 import AnimationFly from './animation/fly.animation';
 import Overlay from './plugin/overlay.plugin';
+import Multiple from './plugin/multiple.plugin';
+import Layer from './plugin/layer.plugin';
 
 /**
  * 执行环境
@@ -9,6 +11,7 @@ import Overlay from './plugin/overlay.plugin';
 
 export default {
     panoramList: [],
+    cret: null,
 
     /**
      * 环境构造 stream
@@ -16,12 +19,21 @@ export default {
      * @param {string} url 资源地址
      */
     run(panoram, url) {
-        fetch(url).then(ret => {
+        Loader.fetch(url).then(ret => {
             if (ret && ret.sceneGroup && ret.defaultSceneId) {
                 if (ret.enableAnimation) {
                     panoram.addAnimation(AnimationFly);
                 }
 
+                if (ret.multiScene) {
+                    panoram.addPlugin(Multiple, ret.sceneGroup);
+                }
+
+                if (ret.info) {
+                    panoram.addPlugin(Layer, ret.info);
+                }
+
+                Loader.setCret(ret.cretPath);
                 return panoram.initSource(ret);
             } else {
                 Log.errorLog('load source error');
@@ -32,7 +44,7 @@ export default {
                 if (scene.overlays) {
                     panoram.addPlugin(Overlay, scene);
                 }
-                return loadPreviewTex(scene.panoPath);
+                return Loader.loadPreviewTex(scene.imgPath);
             } else {
                 Log.errorLog('get preview scene error');
             }
@@ -41,7 +53,7 @@ export default {
             if (texture) {
                 panoram.initMesh(texture);
                 panoram.animate();
-                return loadSceneTex(panoram.currentScene.panoPath);
+                return Loader.loadSceneTex(panoram.currentScene.bxlPath);
             } else {
                 Log.errorLog('load preview texture error');
             }

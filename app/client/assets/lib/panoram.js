@@ -2,6 +2,7 @@ import OrbitControl from './controls/orbitControl';
 import DeviceControl from './controls/deviceControl';
 import EventEmitter from './event';
 import Log from './log';
+import Loader from './loader';
 import {isMobile} from './util';
 
 /**
@@ -210,9 +211,21 @@ export default class Panoram {
 
     /**
      * 进入下一个场景
-     * @param {string} id 场景的标识
+     * @param {Object} data 场景数据
      */
-    enterNext(id) {
-        const group = this.group;
+    enterNext(data) {
+        if (!data) {
+            return Log.errorLog('no scene data provided');
+        }
+
+        this.currentScene = data;
+        Loader.loadSceneTex(data.bxlPath)
+            .then(textures => {
+                if (textures) {
+                    this.loader.load(textures, tex => this.replaceTexture(tex));
+                } else {
+                    Log.errorLog('load textures error');
+                }
+            }).catch(e => Log.errorLog(e));
     }
 }
