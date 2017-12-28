@@ -10,7 +10,30 @@
     <body>
         <div id="test"></div>
         <script src="./three.js"></script>
-        <script src="./aes.js"></script>
+        <script src="./crypto.js"></script>
         <script src="./lib.js"></script>
+        <script>
+            const panoram = new Panoram({el: '#test'});
+            let testDom;
+
+            panoram.subscribe('animationEnd', animate => {
+                console.log(animate);
+            });
+            // 覆盖物点击事件
+            panoram.subscribe('overlayClick', data => {
+                if (data.actionType == 'custom' && !testDom) {
+                    testDom = document.createElement('div');
+                    testDom.className = 'testlabel';
+                    testDom.innerHTML = 'popup window';
+                    testDom.style.left = data.x + 20 + 'px';
+                    testDom.style.top = data.y + 20 + 'px';
+
+                    panoram.getRoot().appendChild(testDom);
+                }
+            });
+
+            // start
+            Runtime.run(panoram, './source.json');
+        </script>
     </body>
 </html>

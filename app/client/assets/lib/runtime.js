@@ -11,7 +11,6 @@ import Layer from './plugin/layer.plugin';
 
 export default {
     panoramList: [],
-    cret: null,
 
     /**
      * 环境构造 stream
