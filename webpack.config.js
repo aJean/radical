@@ -14,7 +14,7 @@ const uglifyJs = new UglifyJSPlugin({
 
 module.exports = {
     entry: {
-        lib: './index.js'
+        lib: './index.ts'
     },
     output: {
         filename: '[name].js',
@@ -22,7 +22,7 @@ module.exports = {
     },
     module: {
         rules: [{
-            test: /\.js/,
+            test: /\.ts/,
             use: 'ts-loader',
             exclude: /dist|node_modules/
         }, {
