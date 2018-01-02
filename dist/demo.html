@@ -11,27 +11,24 @@
         <div id="test"></div>
         <script src="./lib.js"></script>
         <script>
-            const panoram = new Panoram({el: '#test'});
-            let testDom;
+            // start
+            Runtime.start('./source.json', '#test', {
+                animationEnd: function (animate) {
+                    console.log(animate);
+                },
 
-            panoram.subscribe('animationEnd', animate => {
-                console.log(animate);
-            });
-            // 覆盖物点击事件
-            panoram.subscribe('overlayClick', data => {
-                if (data.actionType == 'custom' && !testDom) {
-                    testDom = document.createElement('div');
-                    testDom.className = 'testlabel';
-                    testDom.innerHTML = 'popup window';
-                    testDom.style.left = data.x + 20 + 'px';
-                    testDom.style.top = data.y + 20 + 'px';
+                overlayClick: function (data) {
+                    if (data.actionType == 'custom') {
+                        const node = document.createElement('div');
+                        node.className = 'testlabel';
+                        node.innerHTML = 'popup window';
+                        node.style.left = data.x + 20 + 'px';
+                        node.style.top = data.y + 20 + 'px';
 
-                    panoram.getRoot().appendChild(testDom);
+                        this.getRoot().appendChild(node);
+                    }
                 }
             });
-
-            // start
-            Runtime.run(panoram, './source.json');
         </script>
     </body>
 </html>

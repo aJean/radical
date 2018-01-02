@@ -32,7 +32,7 @@ export default class Panoram {
     pluginList = [];
     animateList = [];
 
-    constructor(opts) {
+    constructor(opts?) {
         this.opts = Object.assign({}, defaultOpts, opts);
         this.initEnv();
         this.initControl();
@@ -40,7 +40,7 @@ export default class Panoram {
 
     initEnv() {
         const opts = this.opts;
-        const root = this.root = document.querySelector(opts.el);
+        const root = this.root = opts.el;
         const width = opts.width || root.clientWidth || window.innerWidth;
         const height = opts.height || root.clientHeight || window.innerHeight;
         // 渲染器
@@ -99,7 +99,7 @@ export default class Panoram {
         const group = this.group = source.sceneGroup;
         const scene = group.find(item => item.id == source.defaultSceneId);
 
-        this.currentScene = scene;
+        this.currentScene = scene || group[0];
 
         return scene;
     }
