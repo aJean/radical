@@ -185,7 +185,7 @@ export default class Panoram {
         const camera = this.camera;
         const width = opts.width || root.clientWidth || window.innerWidth;
         const height = opts.height || root.clientHeight || window.innerHeight;
-console.log(root.clientHeight)
+
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
         this.webgl.setSize(width, height);
