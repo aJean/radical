@@ -49,7 +49,7 @@ export default class Panoram {
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(width, height);
         // 容器 element
-        root.style.cssText = 'position:relative;display:block;';
+        root.className = 'panoram-root';
         root.appendChild(webgl.domElement);
         // 场景, 相机
         this.scene = new Scene();
@@ -185,7 +185,7 @@ export default class Panoram {
         const camera = this.camera;
         const width = opts.width || root.clientWidth || window.innerWidth;
         const height = opts.height || root.clientHeight || window.innerHeight;
-
+console.log(root.clientHeight)
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
         this.webgl.setSize(width, height);

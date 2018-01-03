@@ -38,7 +38,7 @@
         }, {
             "id": "id3",
             "type": "mesh",
-            "img": "./chirst.jpeg",
+            "img": "./assets/chirst.jpg",
             "width": 50,
             "height": 50,
             "actionType": "link",

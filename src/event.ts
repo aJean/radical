@@ -24,7 +24,7 @@ if (Object.create) {
     // This hack is needed because the `__proto__` property is still inherited in
     // some old browsers like Android 4, iPhone 5.1, Opera 11 and Safari 5.
     //
-    if (!new Events().__proto__) prefix = false;
+    if (!new Events()['__proto__']) prefix = false;
 }
 
 /**

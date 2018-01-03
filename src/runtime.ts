@@ -5,34 +5,49 @@ import AnimationFly from './animation/fly.animation';
 import Overlay from './plugins/overlay.plugin';
 import Multiple from './plugins/multiple.plugin';
 import Layer from './plugins/layer.plugin';
+import { ClearMaskPass } from '../node_modules/@types/three/index';
 
 /**
- * 执行环境
+ * @file 执行环境
  */
 
-let uid = 0;
-const instanceMap = {};
-const Runtime = {
-    getInstance(id) {
-        return instanceMap[id];
-    },
+abstract class EnvQueue {
+    static list = [];
 
-    createRef(el) {
+    static add(fn, context) {
+        this.list.push(fn.bind(context || null));
+    }
+
+    static excute() {
+        this.list.forEach(fn => fn());
+    }
+};
+
+abstract class Runtime {
+    static timeid: any;
+    static uid = 0;
+    static instanceMap = {};
+
+    static getInstance(ref) {
+        return this.instanceMap[ref];
+    }
+
+    static createRef(el) {
         el = (typeof el == 'string') ? document.querySelector(el) : el;
 
         if (!el || !el.parentNode) {
             el = document.body;
         }
 
-        const ref = el.getAttribute('ref') || `panoram_${uid++}`;
+        const ref = el.getAttribute('ref') || `panoram_${this.uid++}`;
         el.setAttribute('ref', ref);
 
-        // todo: more configurable opts
-        const panoram = instanceMap[ref] = new Panoram({el});
+        // TODO: more configurable opts
+        const panoram = this.instanceMap[ref] = new Panoram({el});
         return panoram;
-    },
+    }
 
-    async start(source, el, events?) {
+    static async start(source, el, events?) {
         const config = await Loader.fetch(source);
 
         if (!(config && config['sceneGroup'])) {
@@ -59,17 +74,20 @@ const Runtime = {
             }
         }
 
-        // 设置证书路径
+        // set pem path
         Loader.setCret(config['cretPath']);
+        // add to env queue listeners
+        EnvQueue.add(panoram.resize, panoram);
+        // load and render
         this.run(panoram, panoram.initSource(config));
-    },
+    }
 
     /**
      * 环境构造 stream
      * @param {Object} panoram 全景对象
      * @param {Object} scene 渲染的场景
      */
-    async run(panoram, scene) {  
+    static async run(panoram, scene) {  
         try {
             if (scene.overlays) {
                 panoram.addPlugin(Overlay, scene);
@@ -110,6 +128,13 @@ window.addEventListener('onload', event => {
             Runtime.start(node.getAttribute('source'), node);
         }
     }
+});
+
+window.addEventListener('resize', event => {
+    clearTimeout(Runtime.timeid);
+    Runtime.timeid = setTimeout(function () {
+        EnvQueue.excute();
+    }, 100);
 });
 
 export default Runtime;

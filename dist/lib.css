@@ -1,9 +1,15 @@
+.panoram-root {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
 .panoram-multiplescene {
   position: absolute;
   left: 0;
-  bottom: 30px;
+  bottom: 10px;
   width: 100%;
-  height: 104px;
   z-index: 999;
 }
 .panoram-multiplescene .panoram-multiplescene-outer {

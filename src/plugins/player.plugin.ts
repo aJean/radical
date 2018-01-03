@@ -1,8 +1,8 @@
 /**
  * @file 全景序列帧控制器
  */
-
-WebVR.ImagePlayerControl = (function () {
+/** 
+export default function() {
     var result;
 
     function ImagePlayer(position,
@@ -48,7 +48,7 @@ WebVR.ImagePlayerControl = (function () {
             if (!isPlaying) {
                 return;
             }
-            /*根据时间设置当前帧*/
+            // 根据时间设置当前帧
             if (lastTime > 0) {
                 var currentTime = new Date().getTime();
                 var deltaTime = currentTime - lastTime;
@@ -172,4 +172,4 @@ WebVR.ImagePlayerControl = (function () {
         result = new ImagePlayerControl();
     }
     return result;
-}());
+}*/
