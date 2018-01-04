@@ -79,6 +79,9 @@
         "thumbPath": "./assets/thumb3.jpg"
     }],
     "defaultSceneId": "scene0",
-    "enableAnimation": false,
+    "animation": {
+        "sprite": false,
+        "fly": false
+    },
     "enableDevice": false
 }

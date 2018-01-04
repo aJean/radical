@@ -30,7 +30,6 @@ export default class Panoram {
     loader = new CubeTextureLoader();
     group = [];
     pluginList = [];
-    animateList = [];
 
     constructor(opts?) {
         this.opts = Object.assign({}, defaultOpts, opts);
@@ -131,15 +130,6 @@ export default class Panoram {
 
     dispatch(type, args?) {
         this.event.emit(type, args);
-    }
-
-    /**
-     * 安装动画
-     * @param {Object} Animaiton 
-     */
-    addAnimation(Animaiton) {
-        const animate = new Animaiton(this);
-        this.animateList.push(animate);
     }
 
     /**

@@ -8,18 +8,13 @@ function calc (t, b, c, d) {
 
 export default class AnimationFly {
     path: any;
-    panoram: any;
     camera: any;
     time = 0;
+    type = 'fly';
+    finished = false;
 
-    constructor(panoram) {
-        const camera = panoram.camera;
-        const path = this.path = this.getPath(camera);
-
-        this.panoram = panoram;
-        this.camera = camera;
-
-        panoram.subscribe('renderProcess', this.update, this);
+    constructor(camera) {
+        this.path = this.getPath(this.camera = camera);
     }
 
     update() {
@@ -29,7 +24,7 @@ export default class AnimationFly {
         let time = this.time;
 
         if (!phase) {
-            return this.dispose();
+            return (this.finished = true);
         }
 
         if (time > phase.time) {
@@ -68,11 +63,6 @@ export default class AnimationFly {
         }
     }
 
-    dispose() {
-        this.panoram.dispatch('animationEnd', this);
-        this.panoram.unsubscribe('renderProcess', this.update, this);
-    }
-
     getPath(camera) {
         return [{
             start: {fov: 160, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
@@ -83,5 +73,9 @@ export default class AnimationFly {
             end: {fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI},
             time: 1500
         }];
+    }
+
+    isEnd() {
+        return this.finished;
     }
 };

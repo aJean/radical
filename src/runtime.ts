@@ -1,11 +1,10 @@
 import Panoram from './panoram';
 import Log from './log';
 import Loader from './loader';
-import AnimationFly from './animation/fly.animation';
-import Overlay from './plugins/overlay.plugin';
+import Timeline from './animation/timeline.animation';
 import Multiple from './plugins/multiple.plugin';
+import Overlay from './plugins/overlay.plugin';
 import Layer from './plugins/layer.plugin';
-import { ClearMaskPass } from '../node_modules/@types/three/index';
 
 /**
  * @file 执行环境
@@ -56,8 +55,8 @@ abstract class Runtime {
 
         const panoram = this.createRef(el);
 
-        if (config['enableAnimation']) {
-            panoram.addAnimation(AnimationFly);
+        if (config['animation']) {
+            Timeline.install(config['animation'], panoram);
         }
 
         if (config['multiScene']) {
