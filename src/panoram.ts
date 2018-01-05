@@ -98,9 +98,7 @@ export default class Panoram {
         const group = this.group = source.sceneGroup;
         const scene = group.find(item => item.id == source.defaultSceneId);
 
-        this.currentScene = scene || group[0];
-
-        return scene;
+        return (this.currentScene = scene || group[0]);
     }
 
     updateControl() {

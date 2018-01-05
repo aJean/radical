@@ -4,19 +4,16 @@
         <title></title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="./lib.css">
-        <link rel="stylesheet" href="./test.css">
+        <title>覆盖物与用户事件</title>
+        <link rel="stylesheet" href="../lib.css">
+        <link rel="stylesheet" href="../test.css">
     </head>
     <body>
         <div id="test"></div>
-        <script src="./lib.js"></script>
+        <script src="../lib.js"></script>
         <script>
             // start
-            bxl.start('./source.json', '#test', {
-                animationEnd: function (animate) {
-                    console.log(animate);
-                },
-
+            bxl.start('./overlays.json', '#test', {
                 overlayClick: function (data) {
                     if (data.actionType == 'custom') {
                         const node = document.createElement('div');

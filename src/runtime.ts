@@ -115,7 +115,10 @@ abstract class Runtime {
     }
 };
 
-window.addEventListener('onload', event => {
+const oldOnLoad = window.onload;
+window.onload = function() {
+    oldOnLoad && oldOnLoad.call(this);
+
     let uid = 0;
     const nodeList = document.querySelectorAll('panoram');
 
@@ -127,7 +130,7 @@ window.addEventListener('onload', event => {
             Runtime.start(node.getAttribute('source'), node);
         }
     }
-});
+};
 
 window.addEventListener('resize', event => {
     clearTimeout(Runtime.timeid);

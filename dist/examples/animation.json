@@ -1,0 +1,20 @@
+{
+    "title": "test bxl transfer",
+    "cretPath": "../assets/cret.pem",
+    "info": {
+        "author": "绵阳谊君舞蹈",
+        "logo": "../assets/logo.png"
+    },
+    "sceneGroup": [{
+        "id": "scene0",
+        "name": "罗浮宫",
+        "bxlPath": "../assets/scene0.bxl",
+        "imgPath": "../assets/scene0.jpg",
+        "thumbPath": "../assets/thumb0.jpg"
+    }],
+    "animation": {
+        "fly": true,
+        "sprite": "snow"
+    },
+    "enableDevice": false
+}
