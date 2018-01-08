@@ -1,10 +1,10 @@
 import Panoram from './panoram';
 import Log from './log';
 import Loader from './loader';
-import Timeline from './animation/timeline.animation';
+import Info from './plugins/info.plugin';
 import Multiple from './plugins/multiple.plugin';
-import Overlay from './plugins/overlay.plugin';
-import Layer from './plugins/layer.plugin';
+import Overlays from './overlay/layer.overlay';
+import Timeline from './animation/timeline.animation';
 
 /**
  * @file 执行环境
@@ -64,7 +64,7 @@ abstract class Runtime {
         }
 
         if (config['info']) {
-            panoram.addPlugin(Layer, config['info']);
+            panoram.addPlugin(Info, config['info']);
         }
         // 用户订阅事件
         if (events) {
@@ -89,7 +89,7 @@ abstract class Runtime {
     static async run(panoram, scene) {  
         try {
             if (scene.overlays) {
-                panoram.addPlugin(Overlay, scene);
+                Overlays.install(panoram, scene);
             }
             
             // 加载缩略图

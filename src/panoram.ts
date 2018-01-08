@@ -4,7 +4,7 @@ import DeviceControl from './controls/deviceControl';
 import EventEmitter from './event';
 import Log from './log';
 import Loader from './loader';
-import {isMobile} from './util';
+import Util from './util';
 
 /**
  * @file 全景渲染
@@ -67,7 +67,7 @@ export default class Panoram {
 
         this.setLook();
 
-        if (isMobile) {
+        if (Util.isMobile) {
             this.deviceControl = new DeviceControl(this.camera, control);
         }
     }
@@ -118,11 +118,11 @@ export default class Panoram {
         this.orbitControl.reset();
     }
 
-    subscribe(type, fn, context) {
+    subscribe(type, fn, context?) {
         this.event.on(type, fn, context);
     }
 
-    unsubscribe(type, fn, context) {
+    unsubscribe(type, fn, context?) {
         this.event.removeListener(type, fn, context);
     }
 
@@ -155,7 +155,7 @@ export default class Panoram {
         const tempTex = this.skyBox.material.envMap;
         this.skyBox.material.envMap = texture;
         tempTex.dispose();
-        // 触发场景添加事件
+        // 触发场景切换事件
         this.dispatch('sceneAttach', this.currentScene);
     }
 
@@ -195,8 +195,27 @@ export default class Panoram {
         return this.scene;
     }
 
-    addObject(obj) {
+    getSize() {
+        return {
+            width: this.root.clientWidth,
+            height: this.root.clientHeight
+        };
+    }
+
+    addSceneObject(obj) {
         this.scene.add(obj);
+    }
+
+    removeSceneObject(obj) {
+        this.scene.remove(obj);
+    }
+
+    addDomObject(obj) {
+        this.root.appendChild(obj);
+    }
+
+    removeDomObject(obj) {
+        this.root.removeChild(obj);
     }
 
     /**
@@ -208,11 +227,13 @@ export default class Panoram {
             return Log.errorLog('no scene data provided');
         }
 
-        this.currentScene = data;
         Loader.loadSceneTex(data.bxlPath)
             .then(textures => {
                 if (textures) {
-                    this.loader.load(textures, tex => this.replaceTexture(tex));
+                    this.loader.load(textures, tex => {
+                        this.currentScene = data;
+                        this.replaceTexture(tex);
+                    });
                 } else {
                     Log.errorLog('load textures error');
                 }

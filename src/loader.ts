@@ -1,5 +1,5 @@
 import {CubeTexture, CubeRefractionMapping} from 'three';
-import {decode, parseEOF} from './util';
+import Util from './util';
 
 /**
  * @file fetch request
@@ -118,8 +118,8 @@ export default {
                     secretKey = ret[1];
                 }
 
-                const key = decode(secretKey[0], 0xf);
-                const EOF = parseEOF(decode(secretKey[1], 0xe));
+                const key = Util.decode(secretKey[0], 0xf);
+                const EOF = Util.parseEOF(Util.decode(secretKey[1], 0xe));
 
                 if (!EOF.pass) {
                     throw new Error('incorrect product domian');
@@ -131,7 +131,7 @@ export default {
                     const header = ciphertext.substring(0, start);
                     const body = ciphertext.substring(start);
 
-                    return decode(header, key) + body;
+                    return Util.decode(header, key) + body;
                 });
             });
     }

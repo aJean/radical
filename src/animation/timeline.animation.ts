@@ -30,13 +30,12 @@ export default abstract class Timeline {
     static lines = [];
 
     static install(opts, panoram) {
-        const scene = panoram.getScene();
         const camera = panoram.getCamera();
         this.panoram = panoram;
         // weather
         if (opts.sprite) {
             const sprite = new AnimationSprite(spriteOpts[opts.sprite]);
-            scene.add(sprite.particle);
+            panoram.addSceneObject(sprite.particle);
             this.lines.push(sprite);
         }
         // minor planet
@@ -47,7 +46,7 @@ export default abstract class Timeline {
         // sequence frame 
         if (opts.frame) {
             const frame = new AnimationFrame(camera, opts.frame);
-            scene.add(frame.particle);
+            panoram.addSceneObject(frame.particle);
             this.lines.push(frame);
         }
 

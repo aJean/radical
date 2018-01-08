@@ -1,5 +1,5 @@
 /**
- * @file 遮罩层
+ * @file 版权遮罩层
  */
 
 export default class Layer {
