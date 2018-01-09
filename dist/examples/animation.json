@@ -14,18 +14,10 @@
         "overlays": [{
             "type": "animation",
             "category": "snow"
-        }, {
-            "type": "animation",
-            "category": "frame",
-            "imgPath": "../assets/frames",
-            "count": 11,
-            "px": 0,
-            "py": 100,
-            "pz": 500
         }]
     }],
     "animation": {
-        "fly": false
+        "fly": true
     },
     "enableDevice": false
 }
