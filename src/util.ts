@@ -3,7 +3,7 @@ import {AES, enc, lib, mode} from 'crypto-js';
 import {Spherical, Vector3} from 'three';
 
 /**
- * @file util
+ * @file util tools
  */
 
 function composeKey(part) {

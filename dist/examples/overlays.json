@@ -70,7 +70,16 @@
         "name": "罗浮宫",
         "bxlPath": "../assets/scene2.bxl",
         "imgPath": "../assets/scene2.jpg",
-        "thumbPath": "../assets/thumb2.jpg"        
+        "thumbPath": "../assets/thumb2.jpg",
+        "overlays": [{
+            "type": "animation",
+            "category": "frame",
+            "imgPath": "../assets/frames",
+            "count": 11,
+            "px": 0,
+            "py": 100,
+            "pz": 500
+        }]  
     }, {
         "id": "scene3",
         "name": "罗浮宫",

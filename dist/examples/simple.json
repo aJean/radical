@@ -12,18 +12,5 @@
         "imgPath": "../assets/scene0.jpg",
         "thumbPath": "../assets/thumb0.jpg"
     }],
-    "animation": {
-        "frame": {
-            "imgPath": "../assets/frames",
-            "count": 11,
-            "loop": true,
-            "px": 0,
-            "py": 100,
-            "pz": 500,
-            "rx": 3.14,
-            "ry": 0,
-            "rz": 3.14
-        }
-    },
     "enableDevice": false
 }

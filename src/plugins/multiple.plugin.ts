@@ -1,3 +1,6 @@
+import Util from '../util';
+import util from '../util';
+
 /**
  * 多场景切换插件
  * @require multiple.less
@@ -9,6 +12,7 @@ export default class Multiple {
     root: any;
     outer: any;
     inner: any;
+    activeItem: any;
 
     constructor(panoram, data) {
         this.panoram = panoram;
@@ -32,23 +36,32 @@ export default class Multiple {
             </div>`;
         }).join('');
 
-        inner.innerHTML += inner.innerHTML;
-
         outer.appendChild(inner);
         root.appendChild(outer);
         this.panoram.getRoot().appendChild(root);
+        this.setActive(inner.childNodes[0]);
     }
 
     bindEvent() {
-        this.inner.addEventListener('click', e => {
+        const inner = this.inner;
+
+        inner.addEventListener('click', e => {
             const node = this.findParent(e.target, 'panoram-multiplescene-item');
             const id = node.getAttribute('data-id');
             const scene = this.data[id];
 
             if (scene) {
                 this.panoram.enterNext(scene);
+                this.setActive(node);
             }
         });
+
+        if (!Util.isMobile) {
+            inner.addEventListener('mousewheel', e => {
+                const dis = e.deltaY;
+                inner.scrollLeft += dis;
+            });
+        }
     }
 
     findParent(node, cls) {
@@ -59,5 +72,15 @@ export default class Multiple {
 
             node = node.parentNode;
         }
+    }
+
+    setActive(node) {
+        if (this.activeItem) {
+            const cls = this.activeItem.className;
+            this.activeItem.className = cls.replace(' active', '');
+        }
+
+        node.className += ' active';
+        this.activeItem = node;
     }
 }

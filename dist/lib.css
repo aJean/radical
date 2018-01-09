@@ -1,9 +1,19 @@
+html::-webkit-scrollbar {
+  display: none;
+}
+body {
+  margin: 0;
+}
 .panoram-root {
   display: block;
   position: relative;
   overflow: hidden;
   width: 100vw;
   height: 100vh;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 .panoram-multiplescene {
   position: absolute;
@@ -24,6 +34,9 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+.panoram-multiplescene .panoram-multiplescene-inner::-webkit-scrollbar {
+  display: none;
+}
 .panoram-multiplescene .panoram-multiplescene-item {
   display: inline-block;
   border: 2px solid #fff;
@@ -34,6 +47,9 @@
 }
 .panoram-multiplescene .panoram-multiplescene-item:last-child {
   margin-right: 0;
+}
+.panoram-multiplescene .panoram-multiplescene-item.active {
+  border: 2px solid #00f721 !important;
 }
 .panoram-multiplescene .panoram-multiplescene-img {
   width: 100px;

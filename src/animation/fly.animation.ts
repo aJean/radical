@@ -1,5 +1,5 @@
 ﻿/**
- * @file 开场动画组组件
+ * @file minor planet animation
  */
 
 function calc (t, b, c, d) { 

@@ -4,14 +4,35 @@ import Util from '../util';
 import Log from '../log';
 import DomOverlay from './dom.overlay';
 import MeshOverlay from './mesh.overlay';
+import SpriteOverlay from './sprite.overlay';
+import FrameOverlay from './frame.overlay';
 
 /**
  * @file 管理所有场景下的覆盖物
  */
 
+const AnimationOpts = {
+    rain: {
+        type: 2,
+        size: 15,
+        spriteCount: 1000,
+        speed: 9,
+        colorR: 0.25,
+        colorG: 0.25,
+        colorB: 0.25
+    },
+    snow: {
+        type: 1,
+        spriteCount: 500,
+        colorR: 1,
+        colorG: 1,
+        colorB: 1
+    }
+};
+
 export default abstract class Layer {
     static maps = {};
-    static panoram:Panoram;
+    static panoram: Panoram;
     static cid: number;
     static raycaster = new Raycaster();
 
@@ -27,6 +48,7 @@ export default abstract class Layer {
         panoram.subscribe('renderProcess', scene => {
             const cache = this.getCurrent(scene.id);
             cache.domGroup.forEach(item => this.updateDomOverlay(item));
+            cache.animGroup.forEach(item => item.update());
         });
 
         panoram.getCanvas().addEventListener('click', this.onCanvasClick.bind(this));
@@ -51,7 +73,7 @@ export default abstract class Layer {
                     this.createMeshOverlay(prop, cache);
                     break;
                 case 'animation':
-                    this.createAnimationOverlay();
+                    this.createAnimationOverlay(prop, cache);
                     break;
             }
         });
@@ -107,7 +129,22 @@ export default abstract class Layer {
         cache.meshGroup.add(mesh);
     }
 
-    static createAnimationOverlay() {}
+    /**
+     * 创建动画覆盖物
+     */
+    static createAnimationOverlay(prop, cache) {
+        let item;
+    
+        if (prop.category == 'frame') {
+            prop.lookat = this.panoram.getCamera().position;
+            item = new FrameOverlay(prop);
+        } else {
+            item = new SpriteOverlay(AnimationOpts[prop.category]);
+        }
+
+        this.panoram.addSceneObject(item.particle);
+        cache.animGroup.push(item);
+    }
 
     /**
      * 获取当前的缓存对象
@@ -124,7 +161,8 @@ export default abstract class Layer {
 
             return this.maps[id] = {
                 domGroup: [],
-                meshGroup: group
+                meshGroup: group,
+                animGroup: []
             }
         }
     }
@@ -192,6 +230,11 @@ export default abstract class Layer {
         cache && this.hideOverlays(cache, true);
     }
 
+    /**
+     * 隐藏当前场景下的 overlays
+     * @param {Object} data 缓存数据 
+     * @param {boolean} isclean 是否清除
+     */
     static hideOverlays(data, isclean) {
         const panoram = this.panoram;
 
@@ -202,11 +245,14 @@ export default abstract class Layer {
             });
 
             if (data.meshGroup.children) {
-                data.meshGroup.children.forEach(item => {
-                    item.visible = false;
-                    isclean && panoram.removeSceneObject(item);
-                });
+                data.meshGroup.children.forEach(item => item.visible = false);
+                isclean && panoram.removeSceneObject(data.meshGroup);
             }
+
+            data.animGroup.forEach(item => {
+                item.hide();
+                isclean && panoram.removeSceneObject(item);
+            });
         }
     }
 
@@ -214,6 +260,7 @@ export default abstract class Layer {
         if (data) {
             data.domGroup.forEach(item => item.show());
             data.meshGroup.children.forEach(item => item.visible = true);
+            data.animGroup.forEach(item => item.show());
         }
     }
 }

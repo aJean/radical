@@ -10,11 +10,22 @@
         "name": "罗浮宫",
         "bxlPath": "../assets/scene0.bxl",
         "imgPath": "../assets/scene0.jpg",
-        "thumbPath": "../assets/thumb0.jpg"
+        "thumbPath": "../assets/thumb0.jpg",
+        "overlays": [{
+            "type": "animation",
+            "category": "snow"
+        }, {
+            "type": "animation",
+            "category": "frame",
+            "imgPath": "../assets/frames",
+            "count": 11,
+            "px": 0,
+            "py": 100,
+            "pz": 500
+        }]
     }],
     "animation": {
-        "fly": true,
-        "sprite": "snow"
+        "fly": false
     },
     "enableDevice": false
 }

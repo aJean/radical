@@ -7,7 +7,7 @@ import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh, FrontSide} from '
 
 export default abstract class MeshOverlay {
     data: any;
-    
+
     static create(data) {
         const loader = new TextureLoader();
         const texture = loader.load(data.img);

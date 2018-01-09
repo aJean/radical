@@ -12,10 +12,9 @@ const defaultOpts = {
     inverval: 60
 };
 
-export default class AnimationFrame {
+export default class FrameOverlay {
     textures = [];
-    opts: any;
-    camera: any;
+    data: any;
     limit: number;
     index = 0;
     particle: any;
@@ -23,19 +22,17 @@ export default class AnimationFrame {
     finished = false;
     lastTime = Date.now();
 
-    constructor(camera, opts) {
-        this.camera = camera;
-        this.opts = Object.assign({}, defaultOpts, opts);
-        this.loadTextures();
-        this.createParticle();
+    constructor(data) {
+        this.data = Object.assign({}, defaultOpts, data);
+        this.particle = this.createParticle();
     }
 
     loadTextures() {
         const loader = new TextureLoader();
-        const opts = this.opts;
-        const count = opts.count;
-        const url = opts.imgPath;
-        const limit = this.limit = opts.count;
+        const data = this.data;
+        const count = data.count;
+        const url = data.imgPath;
+        const limit = this.limit = data.count;
 
         for (let i = 0; i < limit; i++) {
             this.textures.push(loader.load(`${url}/${i}.png`));
@@ -43,40 +40,44 @@ export default class AnimationFrame {
     }
 
     createParticle() {
-        const opts = this.opts;        
-        const vector = new Vector3(opts.px, opts.py, opts.pz);
+        this.loadTextures();
+
+        const data = this.data;        
+        const vector = new Vector3(data.px, data.py, data.pz);
         const material = new MeshBasicMaterial({
             map: this.textures[0],
             transparent: true
         });
-        const plane = new PlaneGeometry(opts.width, opts.height);
-        const mesh = this.particle = new Mesh(plane, material);
+        const plane = new PlaneGeometry(data.width, data.height);
+        const mesh = new Mesh(plane, material);
         
         mesh.position.set(vector.x, vector.y, vector.z);
 
-        if (opts.rx) {
-            mesh.rotation.set(opts.rx, opts.ry, opts.rz);
+        if (data.rx) {
+            mesh.rotation.set(data.rx, data.ry, data.rz);
+        } else {
+            mesh.lookAt(data.lookat);
         }
-        
-        mesh.lookAt(this.camera.position);
+
+        return mesh;
     }
 
     update() {
-        if (!this.enable) {
+        if (!this.enable || !this.particle.visible) {
             return;
         }
 
-        const opts = this.opts;
+        const data = this.data;
         const now = Date.now();
         const textures = this.textures;
-        const newIndex = parseInt((now - this.lastTime) / opts.inverval + '');
+        const newIndex = parseInt((now - this.lastTime) / data.inverval + '');
         let texture;
 
         if (newIndex != this.index) {
             if (textures[newIndex]) {
                 texture = textures[this.index = newIndex];
             } else {
-                if (opts.loop) {
+                if (data.loop) {
                     this.lastTime = now;
                     texture = textures[this.index = 0];
                 } else {
@@ -105,5 +106,13 @@ export default class AnimationFrame {
 
     play() {
         this.enable = true;
+    }
+
+    hide() {
+        this.particle.visible = false;
+    }
+
+    show() {
+        this.particle.visible = true;
     }
 }

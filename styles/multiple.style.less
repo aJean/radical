@@ -16,6 +16,9 @@
         white-space: nowrap;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        &::-webkit-scrollbar {
+            display: none;
+        }
     }
     .panoram-multiplescene-item {
         display: inline-block;
@@ -26,6 +29,9 @@
         }
         &:last-child {
             margin-right: 0;
+        }
+        &.active {
+            border: 2px solid rgb(0, 247, 33) !important;
         }
     }
     .panoram-multiplescene-img {
