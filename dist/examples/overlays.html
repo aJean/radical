@@ -14,7 +14,7 @@
         <script>
             // start
             bxl.start('./overlays.json', '#test', {
-                overlayClick: function (data) {
+                'overlay-click': function (data, panoram) {
                     if (data.actionType == 'custom') {
                         const node = document.createElement('div');
                         node.className = 'testlabel';
@@ -22,7 +22,7 @@
                         node.style.left = data.x + 20 + 'px';
                         node.style.top = data.y + 20 + 'px';
 
-                        this.getRoot().appendChild(node);
+                        panoram.addDomObject(node);
                     }
                 }
             });

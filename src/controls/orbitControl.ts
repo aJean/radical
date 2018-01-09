@@ -71,7 +71,7 @@ function OrbitControl(object, domElement) {
      */
     /* current position in spherical coordinates*/
     var spherical = new Spherical();
-    // var sphericalDelta = new THREE.Spherical(1,Math.PI/2, Math.PI );
+    // var sphericalDelta = new THREE.Spherical(1, Math.PI/2, Math.PI );
     var sphericalDelta = new Spherical();
     var scope = this;
     var changeEvent = {
@@ -163,10 +163,12 @@ function OrbitControl(object, domElement) {
                     state = STATE.NONE;
                 }
             }
+            
             if (sphericalNew) {
                 spherical.theta += sphericalNew.theta;
                 spherical.phi += sphericalNew.phi;
             }
+
             spherical.theta += sphericalDelta.theta;
             spherical.phi += sphericalDelta.phi;
             /* restrict theta to be between desired limits*/
@@ -233,9 +235,11 @@ function OrbitControl(object, domElement) {
     function getZoomScale() {
         return Math.pow(0.95, scope.zoomSpeed);
     }
+
     this.rotateLeft = function (angle) {
         rotateLeft(angle);
     };
+
     this.rotateUp = function (angle) {
         rotateUp(angle);
     };
@@ -247,6 +251,7 @@ function OrbitControl(object, domElement) {
     function rotateUp(angle) {
         sphericalDelta.phi -= angle;
     }
+
     var panLeft = (function () {
         var v = new Vector3();
         return function panLeft(distance, objectMatrix) {
@@ -256,6 +261,7 @@ function OrbitControl(object, domElement) {
             panOffset.add(v);
         };
     }());
+
     var panUp = (function () {
         var v = new Vector3();
         return function panUp(distance, objectMatrix) {

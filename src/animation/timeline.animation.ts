@@ -18,7 +18,7 @@ export default abstract class Timeline {
             this.lines.push(fly);
         }
 
-        panoram.subscribe('renderProcess', this.onTimeChange, this);
+        panoram.subscribe('render-process', this.onTimeChange, this);
     }
 
     static onTimeChange() {
@@ -35,6 +35,6 @@ export default abstract class Timeline {
     }
 
     static onAnimationEnd(data) {
-        this.panoram.dispatch('animationEnd', data);
+        this.panoram.dispatch('animation-end', data);
     }
 }

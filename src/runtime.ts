@@ -69,7 +69,7 @@ abstract class Runtime {
         // 用户订阅事件
         if (events) {
             for (let name in events) {
-                panoram.subscribe(name, events[name], panoram);
+                panoram.subscribe(name, events[name]);
             }
         }
 

@@ -87,7 +87,7 @@ export default class Panoram {
         const skyBox = this.skyBox = new Mesh(geometry, material);
 
         this.scene.add(skyBox);
-        this.dispatch('previewAttach');
+        this.dispatch('preview-attach');
     }
 
     /**
@@ -126,8 +126,8 @@ export default class Panoram {
         this.event.removeListener(type, fn, context);
     }
 
-    dispatch(type, args?) {
-        this.event.emit(type, args);
+    dispatch(type, arg1?, arg2?) {
+        this.event.emit(type, arg1, arg2);
     }
 
     /**
@@ -156,12 +156,12 @@ export default class Panoram {
         this.skyBox.material.envMap = texture;
         tempTex.dispose();
         // 触发场景切换事件
-        this.dispatch('sceneAttach', this.currentScene);
+        this.dispatch('scene-attach', this.currentScene);
     }
 
     animate() {
         this.updateControl();
-        this.dispatch('renderProcess', this.currentScene);
+        this.dispatch('render-process', this.currentScene);
         this.render();
 
         requestAnimationFrame(this.animate.bind(this));

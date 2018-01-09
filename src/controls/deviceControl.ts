@@ -63,13 +63,7 @@ function DeviceControl(object, controls) {
             if (lastSpherical) {
                 detaSpherical.theta = spherical.theta - lastSpherical.theta;
                 detaSpherical.phi = -spherical.phi + lastSpherical.phi;
-                // var dis = Math.sqrt(detaSpherical.theta * detaSpherical.theta + detaSpherical.phi * detaSpherical.phi);
-                // if (dis > currentDisLevel){
-                //     controls.update(detaSpherical);
-                //     currentDisLevel = disMin;
-                // } else if (dis < currentDisLevel){
-                //     currentDisLevel = disMax;
-                // }
+                // 将偏移角度传给 orbitControl 计算 camera
                 controls.update(detaSpherical);
             } else {
                 lastSpherical = new Spherical();

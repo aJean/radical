@@ -40,12 +40,12 @@ export default abstract class Layer {
         this.panoram = panoram;
         this.create(data);
 
-        panoram.subscribe('sceneAttach', scene => {
+        panoram.subscribe('scene-attach', scene => {
             this.removeOverlays(); 
             this.create(scene);
         });
 
-        panoram.subscribe('renderProcess', scene => {
+        panoram.subscribe('render-process', scene => {
             const cache = this.getCurrent(scene.id);
             cache.domGroup.forEach(item => this.updateDomOverlay(item));
             cache.animGroup.forEach(item => item.update());
@@ -171,7 +171,9 @@ export default abstract class Layer {
      * 点击 canvas
      */
     static onCanvasClick(event) {
-        const element = this.panoram.webgl.domElement;
+        const panoram = this.panoram;
+        const raycaster = this.raycaster;
+        const element = panoram.webgl.domElement;
         const pos = {
             x: (event.clientX / element.clientWidth) * 2 - 1,
             y: -(event.clientY / element.clientHeight) * 2 + 1
@@ -181,11 +183,13 @@ export default abstract class Layer {
             const group = this.getCurrent(this.cid).meshGroup;
 
             if (group.children) {
-                this.raycaster.setFromCamera(pos, this.panoram.getCamera());
-                const intersects = this.raycaster.intersectObjects(group.children, false);
+                raycaster.setFromCamera(pos, panoram.getCamera());
+                const intersects = raycaster.intersectObjects(group.children, false);
                 if (intersects.length > 0) {
                     this.onOverlayClick(intersects[0].object['data']);
                 }
+            } else {
+                // panoram.dispatch('panoram-click', panoram);
             }
         } catch(e) {
             Log.errorLog(e);
@@ -198,7 +202,7 @@ export default abstract class Layer {
     static onOverlayClick(data, e?) {
         const panoram = this.panoram;
 
-        panoram.dispatch('overlayClick', data);
+        panoram.dispatch('overlay-click', data, panoram);
         switch (data.actionType) {
             case 'scene':
                 // TODO: go next scene
