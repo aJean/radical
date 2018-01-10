@@ -2,7 +2,7 @@
  * @file 版权遮罩层
  */
 
-export default class Layer {
+export default class Info {
     data: any;
     panoram: any;
     

@@ -10,5 +10,9 @@ window['bxl'] = {
 
     getPanoram(ref: string) {
         return Runtime.getInstance(ref);
+    },
+
+    dispose(ref: string) {
+        return Runtime.releaseInstance(ref);
     }
 };

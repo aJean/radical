@@ -62,9 +62,10 @@ export default class Panoram {
         control.enableZoom = true;
         control.enablePan = false;
         control.rotateSpeed = -0.2;
+        // look at front
         control.target = new Vector3(0, 0, 1);
         control.target0 = new Vector3(0, 0, 1);
-
+        // TODO: let user set camera direction ?
         this.setLook();
 
         if (Util.isMobile) {
@@ -107,15 +108,16 @@ export default class Panoram {
         } else {
             this.orbitControl.update();
         }
-        // labelControl ?
     }
 
-    setLook (valueH?, valueV?) {
-        valueH = valueH ? valueH / 180 * Math.PI : Math.PI;
-        valueV = valueV ? valueV / 180 * Math.PI : Math.PI / 2;
+    setLook (lng?, lat?) {
+        if (lng !== undefined) {
+            const theta = (lng) * (Math.PI / 180);
+            const phi = (90 - lat) * (Math.PI / 180);
 
-        this.orbitControl.setSphericalAngle(valueH, valueV);
-        this.orbitControl.reset();
+            this.orbitControl.setSphericalAngle(theta, phi);
+            this.orbitControl.reset();
+        }
     }
 
     subscribe(type, fn, context?) {
@@ -219,10 +221,14 @@ export default class Panoram {
     }
 
     /**
-     * 进入下一个场景
-     * @param {Object} data 场景数据
+     * enter next scene
+     * @param {Object} data scene data or id
      */
     enterNext(data) {
+        if (typeof data === 'string') {
+            data = this.group && this.group.find(item => item.id == data);
+        }
+
         if (!data) {
             return Log.errorLog('no scene data provided');
         }
@@ -238,5 +244,20 @@ export default class Panoram {
                     Log.errorLog('load textures error');
                 }
             }).catch(e => Log.errorLog(e));
+    }
+
+    dispose() {
+        function cleanup(parent, target) {
+            if (target.children.length) {
+                target.children.forEach(item => cleanup(target, item));
+            } else if (parent) {
+                parent.remove(target);
+            }
+        }
+
+        cleanup(null, this.scene);
+        this.event.removeAllListeners();
+        this.webgl.dispose();
+        this.root.innerHTML = '';
     }
 }

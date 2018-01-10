@@ -18,11 +18,10 @@
             "content": "<a style='color:#f00;'>scene button</a>",
             "cls": "my-linkbutton",
             "actionType": "scene",
-            "sceneId": "scene_1",
+            "sceneId": "scene1",
             "location": {
-                "x": 0,
-                "y": 0,
-                "z": 300
+                "lng": 0,
+                "lat": 0
             }
         }, {
             "id": "id2",

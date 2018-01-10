@@ -31,6 +31,11 @@ abstract class Runtime {
         return this.instanceMap[ref];
     }
 
+    static releaseInstance(ref) {
+        const panoram = this.instanceMap[ref];
+        panoram && panoram.dispose();
+    }
+
     static createRef(el) {
         el = (typeof el == 'string') ? document.querySelector(el) : el;
 

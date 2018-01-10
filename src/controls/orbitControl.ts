@@ -116,9 +116,9 @@ function OrbitControl(object, domElement) {
     this.getAzimuthalAngle = function () {
         return spherical.theta;
     };
-    this.setSphericalAngle = function (valueH, valueV) {
-        spherical.phi = valueV;
-        spherical.theta = valueH;
+    this.setSphericalAngle = function (theta, phi) {
+        spherical.theta = theta;
+        spherical.phi = phi;
     };
     this.saveState = function () {
         scope.target0.copy(scope.target);
@@ -176,6 +176,7 @@ function OrbitControl(object, domElement) {
             /* restrict phi to be between desired limits*/
             spherical.phi = Math.max(scope.minPolarAngle, Math.min(scope.maxPolarAngle, spherical.phi));
             spherical.makeSafe();
+            // 缩放
             if (scale !== 1) {
                 scope.object.fov *= scale;
                 if (scope.object.fov > scope.maxFov) {
@@ -430,7 +431,7 @@ function OrbitControl(object, domElement) {
         rotateStart.copy(rotateEnd);
         scope.update();
     }
-
+    // 两指缩放
     function handleTouchMoveDolly(event) {
         var dx = event.touches[0].pageX - event.touches[1].pageX;
         var dy = event.touches[0].pageY - event.touches[1].pageY;

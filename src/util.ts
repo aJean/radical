@@ -6,10 +6,7 @@ import {Spherical, Vector3} from 'three';
  * @file util tools
  */
 
-function composeKey(part) {
-    return 'skt1wins' + part;
-}
-
+const composeKey = part => ('skt1wins' + part);
 export default {
     isMobile: function() {
         var check = false;
@@ -57,26 +54,33 @@ export default {
 
     /**
      * 全景曲面描述坐标转化为世界坐标
-     * @param {Object} data 
+     * location.lng [0, 360] location.lat [90, -90]
+     * @param {Object} data
      * @param {Object} camera 
      */
     parseLocation(data, camera) {
         const location = data.location;
-    
-        if (location.h !== undefined && location.v !== undefined) {
-            const spherical = new Spherical();
-            const vector = new Vector3();
-    
-            spherical.theta = location.h / 180 * Math.PI;
-            spherical.phi = location.v / 180 * Math.PI;
-            spherical.radius = 1000;
-    
-            vector.setFromSpherical(spherical);
+        // 经度
+        if (location.lng !== undefined) {
+            const vector = this.calcSpherical(location.lng, location.lat);
+
             data.location = {
-                x: camera.position.x - vector.x,
-                y: camera.position.y - vector.y,
-                z: camera.position.z - vector.z
+                x: vector.x,
+                y: vector.y,
+                z: vector.z
             };
         }
+    },
+
+    calcSpherical(lng, lat) {
+        const spherical = new Spherical();
+        const vector = new Vector3();
+
+        spherical.theta = (lng) * (Math.PI / 180);
+        spherical.phi = (90 - lat) * (Math.PI / 180);
+        spherical.radius = 1000;
+
+        vector.setFromSpherical(spherical);
+        return vector;
     }
 };

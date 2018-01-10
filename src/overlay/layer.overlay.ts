@@ -205,8 +205,7 @@ export default abstract class Layer {
         panoram.dispatch('overlay-click', data, panoram);
         switch (data.actionType) {
             case 'scene':
-                // TODO: go next scene
-                panoram.enterNext(null);
+                panoram.enterNext(data.sceneId);
                 break;
             case 'link':
                 window.open(data.linkUrl, '_blank');
