@@ -1,11 +1,15 @@
-const webpack = require('webpack')
+/**
+ * @file local compile
+ */
+
+const webpack = require('webpack');
 const path = require('path');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 const extractLess = new ExtractTextPlugin({
-    filename: "[name].css",
-    disable: process.env.NODE_ENV === "development"
+    filename: '[name].css',
+    disable: process.env.NODE_ENV === 'development'
 });
 
 const uglifyJs = new UglifyJSPlugin({
@@ -33,7 +37,7 @@ module.exports = {
         }]
     },
     resolve: {
-        extensions: [".js", ".json", ".ts"]
+        extensions: ['.js', '.json', '.ts']
     },
     plugins: [extractLess, uglifyJs]
 };

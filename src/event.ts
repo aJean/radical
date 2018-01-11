@@ -272,7 +272,7 @@ EventEmitter.prototype.removeListener = function removeListener(event, fn, conte
     }
 
     var listeners = this._events[evt];
-
+ 
     if (listeners.fn) {
         if (
             listeners.fn === fn &&

@@ -37,9 +37,9 @@ function OrbitControl(object, domElement) {
     this.zoomSpeed = 1.0;
     /* Set to false to disable rotating*/
     this.enableRotate = true;
-    this.rotateSpeed = -1.0;
+    this.rotateSpeed = -0.2;
     /* Set to false to disable panning*/
-    this.enablePan = true;
+    this.enablePan = false;
     this.keyPanSpeed = 7.0;
     /* pixels moved per arrow key push*/
     /* Set to true to automatically rotate around the target*/
@@ -48,7 +48,7 @@ function OrbitControl(object, domElement) {
     this.autoRotateSpeed = 2.0;
     /* 30 seconds per round when fps is 60*/
     /* Set to false to disable use of the keys*/
-    this.enableKeys = true;
+    this.enableKeys = false;
     /* The four arrow keys*/
     this.keys = {
         LEFT: 37,

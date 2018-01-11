@@ -170,13 +170,13 @@ export default abstract class Layer {
     /**
      * 点击 canvas
      */
-    static onCanvasClick(event) {
+    static onCanvasClick(evt) {
         const panoram = this.panoram;
         const raycaster = this.raycaster;
-        const element = panoram.webgl.domElement;
+        const element = panoram.getCanvas();
         const pos = {
-            x: (event.clientX / element.clientWidth) * 2 - 1,
-            y: -(event.clientY / element.clientHeight) * 2 + 1
+            x: (evt.clientX / element.clientWidth) * 2 - 1,
+            y: -(evt.clientY / element.clientHeight) * 2 + 1
         };
         
         try {
@@ -185,7 +185,8 @@ export default abstract class Layer {
             if (group.children) {
                 raycaster.setFromCamera(pos, panoram.getCamera());
                 const intersects = raycaster.intersectObjects(group.children, false);
-                if (intersects.length > 0) {
+                
+                if (intersects.length) {
                     this.onOverlayClick(intersects[0].object['data']);
                 }
             } else {

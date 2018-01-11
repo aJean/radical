@@ -58,10 +58,6 @@ export default class Panoram {
 
     initControl() {
         const control = this.orbitControl = new OrbitControl(this.camera, this.webgl.domElement);
-
-        control.enableZoom = true;
-        control.enablePan = false;
-        control.rotateSpeed = -0.2;
         // look at front
         control.target = new Vector3(0, 0, 1);
         control.target0 = new Vector3(0, 0, 1);
@@ -125,7 +121,7 @@ export default class Panoram {
     }
 
     unsubscribe(type, fn, context?) {
-        this.event.removeListener(type, fn, context);
+        this.event.off(type, fn, context);
     }
 
     dispatch(type, arg1?, arg2?) {
@@ -149,8 +145,9 @@ export default class Panoram {
     /**
      * 渲染场景贴图
      * @param {Object} texture 场景原图纹理
+     * @param {boolean} slient 安静模式
      */
-    replaceTexture(texture) {
+    replaceTexture(texture, slient?) {
         texture.mapping = CubeRefractionMapping;
         texture.needsUpdate = true;
 
@@ -158,7 +155,7 @@ export default class Panoram {
         this.skyBox.material.envMap = texture;
         tempTex.dispose();
         // 触发场景切换事件
-        this.dispatch('scene-attach', this.currentScene);
+        !slient && this.dispatch('scene-attach', this.currentScene);
     }
 
     animate() {
@@ -202,6 +199,10 @@ export default class Panoram {
             width: this.root.clientWidth,
             height: this.root.clientHeight
         };
+    }
+    
+    getLookAtTarget() {
+        return this.orbitControl.target;
     }
 
     addSceneObject(obj) {

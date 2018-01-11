@@ -3,6 +3,7 @@ import Log from './log';
 import Loader from './loader';
 import Info from './plugins/info.plugin';
 import Multiple from './plugins/multiple.plugin';
+import Wormhole from './plugins/wormhole.plugin';
 import Overlays from './overlay/layer.overlay';
 import Timeline from './animation/timeline.animation';
 
@@ -71,6 +72,10 @@ abstract class Runtime {
         if (config['info']) {
             panoram.addPlugin(Info, config['info']);
         }
+
+        if (config['wormhole']) {
+            panoram.addPlugin(Wormhole, config['wormhole']);
+        }
         // 用户订阅事件
         if (events) {
             for (let name in events) {
@@ -107,10 +112,13 @@ abstract class Runtime {
             panoram.initMesh(thumbImg);
             panoram.animate();
 
-            // 加载场景资源图
+            // first time load scene bxl
             const textures =  await Loader.loadSceneTex(panoram.currentScene.bxlPath);
             if (textures) {
-                panoram.loader.load(textures, tex => panoram.replaceTexture(tex));
+                panoram.loader.load(textures, tex => {
+                    panoram.dispatch('scene-init');
+                    panoram.replaceTexture(tex, true);
+                });
             } else {
                 Log.errorLog('load textures error');
             }

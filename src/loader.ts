@@ -57,7 +57,7 @@ export default {
                     subImage['idx'] = i;
                     subImage.onload = function () {
                         count++;
-                        /* 加载顺序 r l u d f b */
+                        // attach order: right -> left -> up -> down -> front -> back
                         switch (this['idx']) {
                             case 0:
                                 texture.images[1] = this;
@@ -82,16 +82,12 @@ export default {
                         if (count === 6) {
                             texture.mapping = CubeRefractionMapping;
                             texture.needsUpdate = true;
-
-                            /* 触发完成加载preview的事件*/
-                            // WebVR.container.dispatchEvent(WebVR.Event.LoadPreviewSuccessEvent);
                             resolve(texture);
                         }
                     };
                 };
             };
             image.src = url;
-
             setTimeout(timeout, () => resolve('load images timeout'));
         });
     },

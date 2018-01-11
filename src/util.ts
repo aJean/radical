@@ -14,6 +14,11 @@ export default {
         return check;
     }(),
 
+    /**
+     * 解密
+     * @param {string} ciphertext 密文
+     * @param {string} key 密钥
+     */
     decode(ciphertext, key) {
         if ((key ^ 1) !== 1) {
             key = composeKey(Log.timeline);
@@ -43,12 +48,6 @@ export default {
         return {
             line: ret[0],
             pass: pass
-        }
-    },
-
-    injectStyle(element, data) {
-        for (let key in data) {
-            element.style[key] = data[key];
         }
     },
 
