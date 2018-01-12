@@ -5,6 +5,7 @@ import {Vector3, Vector2, MOUSE, Spherical, EventDispatcher, Quaternion, Perspec
  */
 
 function OrbitControl(object, domElement) {
+    /* camera */
     this.object = object;
     this.domElement = (domElement !== undefined) ? domElement : document;
     /* Set to false to disable this control*/
@@ -45,7 +46,7 @@ function OrbitControl(object, domElement) {
     /* Set to true to automatically rotate around the target*/
     /* If auto-rotate is enabled, you must call controls.update() in your animation loop*/
     this.autoRotate = false;
-    this.autoRotateSpeed = 2.0;
+    this.autoRotateSpeed = 1.0;
     /* 30 seconds per round when fps is 60*/
     /* Set to false to disable use of the keys*/
     this.enableKeys = false;
@@ -113,18 +114,22 @@ function OrbitControl(object, domElement) {
     this.getPolarAngle = function () {
         return spherical.phi;
     };
+
     this.getAzimuthalAngle = function () {
         return spherical.theta;
     };
+
     this.setSphericalAngle = function (theta, phi) {
         spherical.theta = theta;
         spherical.phi = phi;
     };
+
     this.saveState = function () {
         scope.target0.copy(scope.target);
         scope.position0.copy(scope.object.position);
         scope.zoom0 = scope.object.zoom;
     };
+
     this.reset = function () {
         scope.target.copy(scope.target0);
         scope.object.position.copy(scope.position0);
@@ -134,6 +139,7 @@ function OrbitControl(object, domElement) {
         scope.update();
         state = STATE.NONE;
     };
+
     /* this method is exposed, but perhaps it would be better if we can make it private...*/
     this.update = (function () {
         var offset = new Vector3();
@@ -217,6 +223,7 @@ function OrbitControl(object, domElement) {
             return false;
         };
     }());
+
     this.dispose = function () {
         scope.domElement.removeEventListener('contextmenu', onContextMenu, false);
         scope.domElement.removeEventListener('mousedown', onMouseDown, false);
@@ -272,6 +279,7 @@ function OrbitControl(object, domElement) {
             panOffset.add(v);
         };
     }());
+
     /* deltaX and deltaY are in pixels; right and down are positive*/
     var pan = (function () {
         var offset = new Vector3();

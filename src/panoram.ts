@@ -1,4 +1,4 @@
-import {WebGLRenderer, Scene, CubeTextureLoader, PerspectiveCamera, Vector3, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping} from 'three';
+import {WebGLRenderer, Scene, CubeTextureLoader, PerspectiveCamera, Vector3, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Math as TMath} from 'three';
 import OrbitControl from './controls/orbitControl';
 import DeviceControl from './controls/deviceControl';
 import EventEmitter from './event';
@@ -16,7 +16,6 @@ const defaultOpts = {
 };
 
 export default class Panoram {
-    source = null;
     opts = null;
     root = null;
     webgl = null;
@@ -31,7 +30,7 @@ export default class Panoram {
     group = [];
     pluginList = [];
 
-    constructor(opts?) {
+    constructor(opts) {
         this.opts = Object.assign({}, defaultOpts, opts);
         this.initEnv();
         this.initControl();
@@ -57,13 +56,15 @@ export default class Panoram {
     }
 
     initControl() {
+        const vector = new Vector3(0, 0, 1);
         const control = this.orbitControl = new OrbitControl(this.camera, this.webgl.domElement);
         // look at front
-        control.target = new Vector3(0, 0, 1);
-        control.target0 = new Vector3(0, 0, 1);
+        control.target = vector;
+        control.target0 = vector.clone();
+        control.autoRotate = this.opts.autoRotate;
         // TODO: let user set camera direction ?
         this.setLook();
-
+        // gyro
         if (Util.isMobile) {
             this.deviceControl = new DeviceControl(this.camera, control);
         }

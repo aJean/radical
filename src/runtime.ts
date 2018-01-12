@@ -37,7 +37,7 @@ abstract class Runtime {
         panoram && panoram.dispose();
     }
 
-    static createRef(el) {
+    static createRef(el, opts) {
         el = (typeof el == 'string') ? document.querySelector(el) : el;
 
         if (!el || !el.parentNode) {
@@ -48,7 +48,7 @@ abstract class Runtime {
         el.setAttribute('ref', ref);
 
         // TODO: more configurable opts
-        const panoram = this.instanceMap[ref] = new Panoram({el});
+        const panoram = this.instanceMap[ref] = new Panoram({el, ...opts});
         return panoram;
     }
 
@@ -59,7 +59,7 @@ abstract class Runtime {
             return Log.errorLog('load source error');
         }
 
-        const panoram = this.createRef(el);
+        const panoram = this.createRef(el, config['panoram']);
 
         if (config['animation']) {
             Timeline.install(config['animation'], panoram);
