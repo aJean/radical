@@ -15,7 +15,7 @@
         "overlays": [{
             "id": "id1",
             "type": "dom",
-            "content": "<a style='color:#f00;'>scene button</a>",
+            "content": "<a style='color:#f00;'>进入场景2</a>",
             "cls": "my-linkbutton",
             "actionType": "scene",
             "sceneId": "scene1",

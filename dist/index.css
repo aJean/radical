@@ -1,0 +1,45 @@
+body::-webkit-scrollbar {
+    display:none;
+}
+
+.testlabel {
+    position: absolute;
+    padding: 10px;
+    color: #fff;
+    border: 2px solid #bfc;
+    background: rgba(0, 0, 0, .5);
+}
+
+.container-fluid {
+    margin-top: 20px;
+}
+
+.sidebar {
+    padding: 0px;
+    padding-left: 10px;
+    overflow: hidden;
+    border-right: 1px solid #eee;
+}
+
+.frame {
+    position: relative;
+}
+
+.frame iframe {
+    position: relative;
+    width: 100%;
+    height: 90vh;
+    border: 2px solid rgb(24, 145, 245);
+}
+
+.nav-item {
+    margin-bottom: 20px;
+}
+
+.tip {
+    position: absolute;
+    left: 50%;
+    top: 48%;
+    text-indent: -50px;
+    z-index: 1;
+}
