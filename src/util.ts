@@ -52,14 +52,14 @@ export default {
     },
 
     /**
-     * 全景曲面描述坐标转化为世界坐标
+     * 解析数据地理位置
      * location.lng [0, 360] location.lat [90, -90]
      * @param {Object} data
      * @param {Object} camera 
      */
     parseLocation(data, camera) {
         const location = data.location;
-        // 经度
+        // 经纬度
         if (location.lng !== undefined) {
             const vector = this.calcSpherical(location.lng, location.lat);
 
@@ -71,12 +71,18 @@ export default {
         }
     },
 
+    /**
+     * 球面坐标转化成世界坐标
+     * @param lng 
+     * @param lat 
+     */
     calcSpherical(lng, lat) {
         const spherical = new Spherical();
         const vector = new Vector3();
 
         spherical.theta = (lng) * (Math.PI / 180);
         spherical.phi = (90 - lat) * (Math.PI / 180);
+        // 暂时使用半径 1000 的 内切球
         spherical.radius = 1000;
 
         vector.setFromSpherical(spherical);

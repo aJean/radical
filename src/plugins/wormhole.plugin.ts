@@ -1,4 +1,4 @@
-import {CubeTextureLoader, Raycaster, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping} from 'three';
+import {CubeTextureLoader, Raycaster, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Vector3} from 'three';
 import Loader from '../loader';
 import Panoram from '../panoram';
 import Log from '../log';
@@ -7,6 +7,9 @@ import Tween from '../animation/tween.animation';
 
 /**
  * @file wormhole space through effection
+ * 在全景天空盒中, 相机指向 (0, 0, 1), 即右手坐标系 z 轴正方向
+ * 在盒内实际上看的是反向贴图
+ * 穿梭后要将相机恢复
  */
 
 export default class Wormhole {
@@ -16,7 +19,8 @@ export default class Wormhole {
     vector: any;
     texture: any;
     box: any;
-    isActive = false;
+    backTexture: any;
+    direction = true;
     raycaster = new Raycaster();
 
     constructor(panoram: Panoram, data) {
@@ -25,7 +29,6 @@ export default class Wormhole {
         this.onDetect = evt => this.detect(evt);
 
         panoram.subscribe('scene-init', this.create, this);
-        panoram.getCanvas().addEventListener('click', this.onDetect);
     }
 
     create() {
@@ -48,12 +51,19 @@ export default class Wormhole {
                     material.envMap = this.texture = tex;
                     box.position.set(vector.x, vector.y, vector.z);
                     panoram.addSceneObject(box);
-                    panoram.subscribe('render-process', this.motion, this);
+                    this.bindEvents();
                 });
             } else {
                 Log.errorLog('load textures error');
             }
         }).catch(e => Log.errorLog(e));
+    }
+
+    bindEvents() {
+        const panoram = this.panoram;
+
+        panoram.getCanvas().addEventListener('click', this.onDetect);
+        panoram.subscribe('render-process', this.rotate, this);
     }
 
     detect(evt) {
@@ -70,12 +80,11 @@ export default class Wormhole {
         const intersects = raycaster.intersectObjects([this.box]);
 
         if (intersects.length) {
-            // this.isActive = true;
             const vector = panoram.getLookAtTarget();
             const target = this.vector.clone();
-            target.z += 100;
-
-
+            // camera lookAt.z > camera position.z
+            target.z += this.direction ? 100 : -100;
+ 
             // camera lookAt
             new Tween(vector).to(target).effect('quintEaseIn', 1000)
                 .start(['x', 'y', 'z'], panoram)
@@ -84,15 +93,11 @@ export default class Wormhole {
                     new Tween(camera.position).to(this.vector).effect('quadEaseOut', 1000)
                         .start(['x', 'y', 'z'], panoram)
                         .complete(() => {
-                            this.upgrade();
+                            this.finish();
+                            this.addBackDoor();
                         });
                 });
         }
-    }
-
-    motion() {
-        this.rotate();
-        this.isActive && this.through();
     }
 
     rotate() {
@@ -101,32 +106,37 @@ export default class Wormhole {
         this.box.rotation.z += 0.01;
     }
 
-    through() {
-        const camera = this.panoram.getCamera();
-        const vector = this.vector;
-
-        if (camera.position.z < vector.z - 100) {
-            camera.position.z += 10;
-            camera.lookAt(vector);
-        } else {
-            camera.position.z = 0;
-            this.upgrade();
-        }
-    }
-
-    upgrade() {
+    finish() {
         const panoram = this.panoram;
 
         panoram.unsubscribe('scene-init', this.create, this);
-        panoram.unsubscribe('render-process', this.motion, this);
+        panoram.unsubscribe('render-process', this.rotate, this);
 
-        panoram.replaceTexture(this.texture);
+        this.backTexture = panoram.skyBox.material.envMap;
+        panoram.skyBox.material.envMap = this.texture;
         panoram.removeSceneObject(this.box);
 
         panoram.getCamera().position.set(0, 0, 0);
-        panoram.getLookAtTarget().set(0, 0, 1);
+        panoram.getLookAtTarget().set(0, 0, this.direction ? 1 : -1);
 
         panoram.removeSceneObject(this.box);
         panoram.getCanvas().removeEventListener('click', this.onDetect);
+    }
+
+    addBackDoor() {
+        const geometry = new SphereGeometry(100, 32, 16);
+        const material = new MeshBasicMaterial({
+            side: BackSide,
+            refractionRatio: 0,
+            reflectivity: 1
+        });
+        material.envMap = this.texture = this.backTexture;
+        const box = this.box = new Mesh(geometry, material);
+        const vector = this.vector = Util.calcSpherical(this.direction ? -180 : this.data.lng, 0);
+        box.position.set(vector.x, vector.y, vector.z);
+
+        this.direction = !this.direction;
+        this.panoram.addSceneObject(box);
+        this.bindEvents();
     }
 }

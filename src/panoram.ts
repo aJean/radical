@@ -222,6 +222,12 @@ export default class Panoram {
         this.root.removeChild(obj);
     }
 
+    reset() {
+        const camera = this.camera;
+        camera.fov = this.opts.fov;
+        camera.updateProjectionMatrix();
+    }
+
     /**
      * enter next scene
      * @param {Object} data scene data or id
