@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Multiple | bxl</title>
+	<title>DomOverlay | bxl</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,13 +56,13 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_plugins_multiple_plugin_.html">&quot;plugins/multiple.plugin&quot;</a>
+					<a href="../modules/_overlay_dom_overlay_.html">&quot;overlay/dom.overlay&quot;</a>
 				</li>
 				<li>
-					<a href="_plugins_multiple_plugin_.multiple.html">Multiple</a>
+					<a href="_overlay_dom_overlay_.domoverlay.html">DomOverlay</a>
 				</li>
 			</ul>
-			<h1>Class Multiple</h1>
+			<h1>Class DomOverlay</h1>
 		</div>
 	</div>
 </header>
@@ -71,12 +71,9 @@
 		<div class="col-8 col-content">
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>多场景切换插件</p>
-					</div>
 					<dl class="tsd-comment-tags">
-						<dt>require</dt>
-						<dd><p>multiple.less</p>
+						<dt>file</dt>
+						<dd><p>dom element overlay</p>
 						</dd>
 					</dl>
 				</div>
@@ -85,7 +82,7 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Multiple</span>
+						<span class="target">DomOverlay</span>
 					</li>
 				</ul>
 			</section>
@@ -96,27 +93,23 @@
 						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_plugins_multiple_plugin_.multiple.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_overlay_dom_overlay_.domoverlay.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_plugins_multiple_plugin_.multiple.html#activeitem" class="tsd-kind-icon">active<wbr>Item</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_plugins_multiple_plugin_.multiple.html#data" class="tsd-kind-icon">data</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_plugins_multiple_plugin_.multiple.html#inner" class="tsd-kind-icon">inner</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_plugins_multiple_plugin_.multiple.html#outer" class="tsd-kind-icon">outer</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_plugins_multiple_plugin_.multiple.html#panoram" class="tsd-kind-icon">panoram</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_plugins_multiple_plugin_.multiple.html#root" class="tsd-kind-icon">root</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_overlay_dom_overlay_.domoverlay.html#data" class="tsd-kind-icon">data</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_overlay_dom_overlay_.domoverlay.html#elem" class="tsd-kind-icon">elem</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_plugins_multiple_plugin_.multiple.html#bindevent" class="tsd-kind-icon">bind<wbr>Event</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_plugins_multiple_plugin_.multiple.html#createdom" class="tsd-kind-icon">create<wbr>Dom</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_plugins_multiple_plugin_.multiple.html#findparent" class="tsd-kind-icon">find<wbr>Parent</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_plugins_multiple_plugin_.multiple.html#setactive" class="tsd-kind-icon">set<wbr>Active</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_overlay_dom_overlay_.domoverlay.html#create" class="tsd-kind-icon">create</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_overlay_dom_overlay_.domoverlay.html#hide" class="tsd-kind-icon">hide</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_overlay_dom_overlay_.domoverlay.html#show" class="tsd-kind-icon">show</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_overlay_dom_overlay_.domoverlay.html#update" class="tsd-kind-icon">update</a></li>
 							</ul>
 						</section>
 					</div>
@@ -128,25 +121,22 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Multiple<span class="tsd-signature-symbol">(</span>panoram<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_plugins_multiple_plugin_.multiple.html" class="tsd-signature-type">Multiple</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Dom<wbr>Overlay<span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_overlay_dom_overlay_.domoverlay.html" class="tsd-signature-type">DomOverlay</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/plugins/multiple.plugin.ts#L15">plugins/multiple.plugin.ts:15</a></li>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/dom.overlay.ts#L7">overlay/dom.overlay.ts:7</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>panoram: <span class="tsd-signature-type">any</span></h5>
-								</li>
-								<li>
 									<h5>data: <span class="tsd-signature-type">any</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_plugins_multiple_plugin_.multiple.html" class="tsd-signature-type">Multiple</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_overlay_dom_overlay_.domoverlay.html" class="tsd-signature-type">DomOverlay</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -154,62 +144,22 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="activeitem" class="tsd-anchor"></a>
-					<h3>active<wbr>Item</h3>
-					<div class="tsd-signature tsd-kind-icon">active<wbr>Item<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/plugins/multiple.plugin.ts#L15">plugins/multiple.plugin.ts:15</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="data" class="tsd-anchor"></a>
 					<h3>data</h3>
 					<div class="tsd-signature tsd-kind-icon">data<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/plugins/multiple.plugin.ts#L11">plugins/multiple.plugin.ts:11</a></li>
+							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/dom.overlay.ts#L6">overlay/dom.overlay.ts:6</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="inner" class="tsd-anchor"></a>
-					<h3>inner</h3>
-					<div class="tsd-signature tsd-kind-icon">inner<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+					<a name="elem" class="tsd-anchor"></a>
+					<h3>elem</h3>
+					<div class="tsd-signature tsd-kind-icon">elem<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/plugins/multiple.plugin.ts#L14">plugins/multiple.plugin.ts:14</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="outer" class="tsd-anchor"></a>
-					<h3>outer</h3>
-					<div class="tsd-signature tsd-kind-icon">outer<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/plugins/multiple.plugin.ts#L13">plugins/multiple.plugin.ts:13</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="panoram" class="tsd-anchor"></a>
-					<h3>panoram</h3>
-					<div class="tsd-signature tsd-kind-icon">panoram<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/plugins/multiple.plugin.ts#L10">plugins/multiple.plugin.ts:10</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="root" class="tsd-anchor"></a>
-					<h3>root</h3>
-					<div class="tsd-signature tsd-kind-icon">root<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/plugins/multiple.plugin.ts#L12">plugins/multiple.plugin.ts:12</a></li>
+							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/dom.overlay.ts#L7">overlay/dom.overlay.ts:7</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -217,82 +167,82 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="bindevent" class="tsd-anchor"></a>
-					<h3>bind<wbr>Event</h3>
+					<a name="create" class="tsd-anchor"></a>
+					<h3>create</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">bind<wbr>Event<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">HTMLDivElement</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/plugins/multiple.plugin.ts#L45">plugins/multiple.plugin.ts:45</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="createdom" class="tsd-anchor"></a>
-					<h3>create<wbr>Dom</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Dom<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/plugins/multiple.plugin.ts#L24">plugins/multiple.plugin.ts:24</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="findparent" class="tsd-anchor"></a>
-					<h3>find<wbr>Parent</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">find<wbr>Parent<span class="tsd-signature-symbol">(</span>node<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, cls<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/plugins/multiple.plugin.ts#L67">plugins/multiple.plugin.ts:67</a></li>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/dom.overlay.ts#L14">overlay/dom.overlay.ts:14</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>node: <span class="tsd-signature-type">any</span></h5>
-								</li>
-								<li>
-									<h5>cls: <span class="tsd-signature-type">any</span></h5>
+									<h5>data: <span class="tsd-signature-type">any</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">HTMLDivElement</span></h4>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="setactive" class="tsd-anchor"></a>
-					<h3>set<wbr>Active</h3>
+					<a name="hide" class="tsd-anchor"></a>
+					<h3>hide</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">set<wbr>Active<span class="tsd-signature-symbol">(</span>node<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">hide<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/plugins/multiple.plugin.ts#L77">plugins/multiple.plugin.ts:77</a></li>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/dom.overlay.ts#L38">overlay/dom.overlay.ts:38</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="show" class="tsd-anchor"></a>
+					<h3>show</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">show<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/dom.overlay.ts#L42">overlay/dom.overlay.ts:42</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="update" class="tsd-anchor"></a>
+					<h3>update</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">update<span class="tsd-signature-symbol">(</span>x<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, y<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/dom.overlay.ts#L27">overlay/dom.overlay.ts:27</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>node: <span class="tsd-signature-type">any</span></h5>
+									<h5>x: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>y: <span class="tsd-signature-type">any</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -331,7 +281,7 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_log_.html">"log"</a>
 					</li>
-					<li class=" tsd-kind-external-module">
+					<li class="current tsd-kind-external-module">
 						<a href="../modules/_overlay_dom_overlay_.html">"overlay/dom.overlay"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -352,7 +302,7 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_plugins_info_plugin_.html">"plugins/info.plugin"</a>
 					</li>
-					<li class="current tsd-kind-external-module">
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_plugins_multiple_plugin_.html">"plugins/multiple.plugin"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -371,40 +321,28 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_plugins_multiple_plugin_.multiple.html" class="tsd-kind-icon">Multiple</a>
+						<a href="_overlay_dom_overlay_.domoverlay.html" class="tsd-kind-icon">Dom<wbr>Overlay</a>
 						<ul>
 							<li class=" tsd-kind-constructor tsd-parent-kind-class">
-								<a href="_plugins_multiple_plugin_.multiple.html#constructor" class="tsd-kind-icon">constructor</a>
+								<a href="_overlay_dom_overlay_.domoverlay.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="_plugins_multiple_plugin_.multiple.html#activeitem" class="tsd-kind-icon">active<wbr>Item</a>
+								<a href="_overlay_dom_overlay_.domoverlay.html#data" class="tsd-kind-icon">data</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="_plugins_multiple_plugin_.multiple.html#data" class="tsd-kind-icon">data</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="_plugins_multiple_plugin_.multiple.html#inner" class="tsd-kind-icon">inner</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="_plugins_multiple_plugin_.multiple.html#outer" class="tsd-kind-icon">outer</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="_plugins_multiple_plugin_.multiple.html#panoram" class="tsd-kind-icon">panoram</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="_plugins_multiple_plugin_.multiple.html#root" class="tsd-kind-icon">root</a>
+								<a href="_overlay_dom_overlay_.domoverlay.html#elem" class="tsd-kind-icon">elem</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_plugins_multiple_plugin_.multiple.html#bindevent" class="tsd-kind-icon">bind<wbr>Event</a>
+								<a href="_overlay_dom_overlay_.domoverlay.html#create" class="tsd-kind-icon">create</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_plugins_multiple_plugin_.multiple.html#createdom" class="tsd-kind-icon">create<wbr>Dom</a>
+								<a href="_overlay_dom_overlay_.domoverlay.html#hide" class="tsd-kind-icon">hide</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_plugins_multiple_plugin_.multiple.html#findparent" class="tsd-kind-icon">find<wbr>Parent</a>
+								<a href="_overlay_dom_overlay_.domoverlay.html#show" class="tsd-kind-icon">show</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_plugins_multiple_plugin_.multiple.html#setactive" class="tsd-kind-icon">set<wbr>Active</a>
+								<a href="_overlay_dom_overlay_.domoverlay.html#update" class="tsd-kind-icon">update</a>
 							</li>
 						</ul>
 					</li>

@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>&quot;runtime&quot; | bxl</title>
+	<title>MeshOverlay | bxl</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,71 +56,95 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="_runtime_.html">&quot;runtime&quot;</a>
+					<a href="../modules/_overlay_mesh_overlay_.html">&quot;overlay/mesh.overlay&quot;</a>
+				</li>
+				<li>
+					<a href="_overlay_mesh_overlay_.meshoverlay.html">MeshOverlay</a>
 				</li>
 			</ul>
-			<h1>External module &quot;runtime&quot;</h1>
+			<h1>Class MeshOverlay</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<dl class="tsd-comment-tags">
+						<dt>file</dt>
+						<dd><p>mesh overlay, static return three mesh object</p>
+						</dd>
+						<dt>todo</dt>
+						<dd><p>normalization object</p>
+						</dd>
+					</dl>
+				</div>
+			</section>
+			<section class="tsd-panel tsd-hierarchy">
+				<h3>Hierarchy</h3>
+				<ul class="tsd-hierarchy">
+					<li>
+						<span class="target">MeshOverlay</span>
+					</li>
+				</ul>
+			</section>
 			<section class="tsd-panel-group tsd-index-group">
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>Classes</h3>
+							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported"><a href="../classes/_runtime_.envqueue.html" class="tsd-kind-icon">Env<wbr>Queue</a></li>
-								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/_runtime_.runtime.html" class="tsd-kind-icon">Runtime</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_overlay_mesh_overlay_.meshoverlay.html#data" class="tsd-kind-icon">data</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section tsd-is-not-exported">
-							<h3>Variables</h3>
+						<section class="tsd-index-section ">
+							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="_runtime_.html#oldonload" class="tsd-kind-icon">old<wbr>OnLoad</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_overlay_mesh_overlay_.meshoverlay.html#create" class="tsd-kind-icon">create</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
-				<h2>Variables</h2>
-				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-					<a name="oldonload" class="tsd-anchor"></a>
-					<h3>old<wbr>OnLoad</h3>
-					<div class="tsd-signature tsd-kind-icon">old<wbr>OnLoad<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span><span class="tsd-signature-symbol"> =&nbsp;window.onload</span></div>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="data" class="tsd-anchor"></a>
+					<h3>data</h3>
+					<div class="tsd-signature tsd-kind-icon">data<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/runtime.ts#L131">runtime.ts:131</a></li>
+							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/mesh.overlay.ts#L9">overlay/mesh.overlay.ts:9</a></li>
 						</ul>
 					</aside>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter-siganture">
-								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-variable tsd-is-not-exported">
-									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>this<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Window</span>, ev<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Event</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span></li>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="create" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> create</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">create<span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Mesh</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/mesh.overlay.ts#L11">overlay/mesh.overlay.ts:11</a></li>
 								</ul>
-								<ul class="tsd-descriptions">
-									<li class="tsd-description">
-										<h4 class="tsd-parameters-title">Parameters</h4>
-										<ul class="tsd-parameters">
-											<li>
-												<h5>this: <span class="tsd-signature-type">Window</span></h5>
-											</li>
-											<li>
-												<h5>ev: <span class="tsd-signature-type">Event</span></h5>
-											</li>
-										</ul>
-										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
-									</li>
-								</ul>
-							</li>
-						</ul>
-					</div>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>data: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Mesh</span></h4>
+						</li>
+					</ul>
 				</section>
 			</section>
 		</div>
@@ -131,75 +155,81 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_animation_fly_animation_.html">"animation/fly.animation"</a>
+						<a href="../modules/_animation_fly_animation_.html">"animation/fly.animation"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_animation_timeline_animation_.html">"animation/timeline.animation"</a>
+						<a href="../modules/_animation_timeline_animation_.html">"animation/timeline.animation"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_animation_tween_animation_.html">"animation/tween.animation"</a>
+						<a href="../modules/_animation_tween_animation_.html">"animation/tween.animation"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_controls_devicecontrol_.html">"controls/device<wbr>Control"</a>
+						<a href="../modules/_controls_devicecontrol_.html">"controls/device<wbr>Control"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_controls_orbitcontrol_.html">"controls/orbit<wbr>Control"</a>
+						<a href="../modules/_controls_orbitcontrol_.html">"controls/orbit<wbr>Control"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_event_.html">"event"</a>
+						<a href="../modules/_event_.html">"event"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_loader_.html">"loader"</a>
+						<a href="../modules/_loader_.html">"loader"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_log_.html">"log"</a>
+						<a href="../modules/_log_.html">"log"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_overlay_dom_overlay_.html">"overlay/dom.overlay"</a>
+						<a href="../modules/_overlay_dom_overlay_.html">"overlay/dom.overlay"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_overlay_frame_overlay_.html">"overlay/frame.overlay"</a>
+						<a href="../modules/_overlay_frame_overlay_.html">"overlay/frame.overlay"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_overlay_layer_overlay_.html">"overlay/layer.overlay"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_overlay_mesh_overlay_.html">"overlay/mesh.overlay"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_overlay_sprite_overlay_.html">"overlay/sprite.overlay"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_panoram_.html">"panoram"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_plugins_info_plugin_.html">"plugins/info.plugin"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_plugins_multiple_plugin_.html">"plugins/multiple.plugin"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_plugins_wormhole_plugin_.html">"plugins/wormhole.plugin"</a>
+						<a href="../modules/_overlay_layer_overlay_.html">"overlay/layer.overlay"</a>
 					</li>
 					<li class="current tsd-kind-external-module">
-						<a href="_runtime_.html">"runtime"</a>
+						<a href="../modules/_overlay_mesh_overlay_.html">"overlay/mesh.overlay"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_util_.html">"util"</a>
+						<a href="../modules/_overlay_sprite_overlay_.html">"overlay/sprite.overlay"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_panoram_.html">"panoram"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_plugins_info_plugin_.html">"plugins/info.plugin"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_plugins_multiple_plugin_.html">"plugins/multiple.plugin"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_plugins_wormhole_plugin_.html">"plugins/wormhole.plugin"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_runtime_.html">"runtime"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_util_.html">"util"</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../classes/_runtime_.envqueue.html" class="tsd-kind-icon">Env<wbr>Queue</a>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_overlay_mesh_overlay_.meshoverlay.html" class="tsd-kind-icon">Mesh<wbr>Overlay</a>
+						<ul>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_overlay_mesh_overlay_.meshoverlay.html#data" class="tsd-kind-icon">data</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="_overlay_mesh_overlay_.meshoverlay.html#create" class="tsd-kind-icon">create</a>
+							</li>
+						</ul>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="../classes/_runtime_.runtime.html" class="tsd-kind-icon">Runtime</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_runtime_.html#oldonload" class="tsd-kind-icon">old<wbr>OnLoad</a>
-					</li>
+				</ul>
+				<ul class="after-current">
 				</ul>
 			</nav>
 		</div>

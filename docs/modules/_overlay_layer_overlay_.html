@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>&quot;panoram&quot; | bxl</title>
+	<title>&quot;overlay/layer.overlay&quot; | bxl</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,10 +56,10 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="_panoram_.html">&quot;panoram&quot;</a>
+					<a href="_overlay_layer_overlay_.html">&quot;overlay/layer.overlay&quot;</a>
 				</li>
 			</ul>
-			<h1>External module &quot;panoram&quot;</h1>
+			<h1>External module &quot;overlay/layer.overlay&quot;</h1>
 		</div>
 	</div>
 </header>
@@ -73,13 +73,13 @@
 						<section class="tsd-index-section ">
 							<h3>Classes</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/_panoram_.panoram.html" class="tsd-kind-icon">Panoram</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/_overlay_layer_overlay_.layer.html" class="tsd-kind-icon">Layer</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Object literals</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-object-literal tsd-parent-kind-external-module tsd-is-not-exported"><a href="_panoram_.html#defaultopts" class="tsd-kind-icon">default<wbr>Opts</a></li>
+								<li class="tsd-kind-object-literal tsd-parent-kind-external-module tsd-is-not-exported"><a href="_overlay_layer_overlay_.html#animationopts" class="tsd-kind-icon">Animation<wbr>Opts</a></li>
 							</ul>
 						</section>
 					</div>
@@ -88,40 +88,160 @@
 			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
 				<h2>Object literals</h2>
 				<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-external-module tsd-is-not-exported">
-					<a name="defaultopts" class="tsd-anchor"></a>
-					<h3>default<wbr>Opts</h3>
-					<div class="tsd-signature tsd-kind-icon">default<wbr>Opts<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<a name="animationopts" class="tsd-anchor"></a>
+					<h3>Animation<wbr>Opts</h3>
+					<div class="tsd-signature tsd-kind-icon">Animation<wbr>Opts<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/panoram.ts#L13">panoram.ts:13</a></li>
+							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L14">overlay/layer.overlay.ts:14</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<dl class="tsd-comment-tags">
 							<dt>file</dt>
-							<dd><p>全景渲染</p>
+							<dd><p>管理所有场景下的覆盖物</p>
 							</dd>
 						</dl>
 					</div>
-					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
-						<a name="defaultopts.fog" class="tsd-anchor"></a>
-						<h3>fog</h3>
-						<div class="tsd-signature tsd-kind-icon">fog<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> =&nbsp;null</span></div>
+					<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="animationopts.rain" class="tsd-anchor"></a>
+						<h3>rain</h3>
+						<div class="tsd-signature tsd-kind-icon">rain<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/panoram.ts#L15">panoram.ts:15</a></li>
+								<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L15">overlay/layer.overlay.ts:15</a></li>
 							</ul>
 						</aside>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="animationopts.rain.colorb" class="tsd-anchor"></a>
+							<h3>colorB</h3>
+							<div class="tsd-signature tsd-kind-icon">colorB<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0.25</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L22">overlay/layer.overlay.ts:22</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="animationopts.rain.colorg" class="tsd-anchor"></a>
+							<h3>colorG</h3>
+							<div class="tsd-signature tsd-kind-icon">colorG<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0.25</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L21">overlay/layer.overlay.ts:21</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="animationopts.rain.colorr" class="tsd-anchor"></a>
+							<h3>colorR</h3>
+							<div class="tsd-signature tsd-kind-icon">colorR<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0.25</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L20">overlay/layer.overlay.ts:20</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="animationopts.rain.size" class="tsd-anchor"></a>
+							<h3>size</h3>
+							<div class="tsd-signature tsd-kind-icon">size<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;15</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L17">overlay/layer.overlay.ts:17</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="animationopts.rain.speed" class="tsd-anchor"></a>
+							<h3>speed</h3>
+							<div class="tsd-signature tsd-kind-icon">speed<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;9</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L19">overlay/layer.overlay.ts:19</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="animationopts.rain.spritecount" class="tsd-anchor"></a>
+							<h3>sprite<wbr>Count</h3>
+							<div class="tsd-signature tsd-kind-icon">sprite<wbr>Count<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;1000</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L18">overlay/layer.overlay.ts:18</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="animationopts.rain.type" class="tsd-anchor"></a>
+							<h3>type</h3>
+							<div class="tsd-signature tsd-kind-icon">type<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;2</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L16">overlay/layer.overlay.ts:16</a></li>
+								</ul>
+							</aside>
+						</section>
 					</section>
-					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
-						<a name="defaultopts.fov" class="tsd-anchor"></a>
-						<h3>fov</h3>
-						<div class="tsd-signature tsd-kind-icon">fov<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;55</span></div>
+					<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="animationopts.snow" class="tsd-anchor"></a>
+						<h3>snow</h3>
+						<div class="tsd-signature tsd-kind-icon">snow<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/panoram.ts#L14">panoram.ts:14</a></li>
+								<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L24">overlay/layer.overlay.ts:24</a></li>
 							</ul>
 						</aside>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="animationopts.snow.colorb-1" class="tsd-anchor"></a>
+							<h3>colorB</h3>
+							<div class="tsd-signature tsd-kind-icon">colorB<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;1</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L29">overlay/layer.overlay.ts:29</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="animationopts.snow.colorg-1" class="tsd-anchor"></a>
+							<h3>colorG</h3>
+							<div class="tsd-signature tsd-kind-icon">colorG<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;1</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L28">overlay/layer.overlay.ts:28</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="animationopts.snow.colorr-1" class="tsd-anchor"></a>
+							<h3>colorR</h3>
+							<div class="tsd-signature tsd-kind-icon">colorR<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;1</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L27">overlay/layer.overlay.ts:27</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="animationopts.snow.spritecount-1" class="tsd-anchor"></a>
+							<h3>sprite<wbr>Count</h3>
+							<div class="tsd-signature tsd-kind-icon">sprite<wbr>Count<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;500</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L26">overlay/layer.overlay.ts:26</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="animationopts.snow.type-1" class="tsd-anchor"></a>
+							<h3>type</h3>
+							<div class="tsd-signature tsd-kind-icon">type<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;1</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/overlay/layer.overlay.ts#L25">overlay/layer.overlay.ts:25</a></li>
+								</ul>
+							</aside>
+						</section>
 					</section>
 				</section>
 			</section>
@@ -162,7 +282,7 @@
 					<li class=" tsd-kind-external-module">
 						<a href="_overlay_frame_overlay_.html">"overlay/frame.overlay"</a>
 					</li>
-					<li class=" tsd-kind-external-module">
+					<li class="current tsd-kind-external-module">
 						<a href="_overlay_layer_overlay_.html">"overlay/layer.overlay"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -171,7 +291,7 @@
 					<li class=" tsd-kind-external-module">
 						<a href="_overlay_sprite_overlay_.html">"overlay/sprite.overlay"</a>
 					</li>
-					<li class="current tsd-kind-external-module">
+					<li class=" tsd-kind-external-module">
 						<a href="_panoram_.html">"panoram"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -194,10 +314,10 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="../classes/_panoram_.panoram.html" class="tsd-kind-icon">Panoram</a>
+						<a href="../classes/_overlay_layer_overlay_.layer.html" class="tsd-kind-icon">Layer</a>
 					</li>
 					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_panoram_.html#defaultopts" class="tsd-kind-icon">default<wbr>Opts</a>
+						<a href="_overlay_layer_overlay_.html#animationopts" class="tsd-kind-icon">Animation<wbr>Opts</a>
 					</li>
 				</ul>
 			</nav>

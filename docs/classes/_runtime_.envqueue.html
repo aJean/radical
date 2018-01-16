@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>&quot;animation/sprite.animation&quot; | bxl</title>
+	<title>EnvQueue | bxl</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,16 +56,115 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="_animation_sprite_animation_.html">&quot;animation/sprite.animation&quot;</a>
+					<a href="../modules/_runtime_.html">&quot;runtime&quot;</a>
+				</li>
+				<li>
+					<a href="_runtime_.envqueue.html">EnvQueue</a>
 				</li>
 			</ul>
-			<h1>External module &quot;animation/sprite.animation&quot;</h1>
+			<h1>Class EnvQueue</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<dl class="tsd-comment-tags">
+						<dt>file</dt>
+						<dd><p>执行环境</p>
+						</dd>
+					</dl>
+				</div>
+			</section>
+			<section class="tsd-panel tsd-hierarchy">
+				<h3>Hierarchy</h3>
+				<ul class="tsd-hierarchy">
+					<li>
+						<span class="target">EnvQueue</span>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static tsd-is-not-exported"><a href="_runtime_.envqueue.html#list" class="tsd-kind-icon">list</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Methods</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static tsd-is-not-exported"><a href="_runtime_.envqueue.html#add" class="tsd-kind-icon">add</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static tsd-is-not-exported"><a href="_runtime_.envqueue.html#excute" class="tsd-kind-icon">excute</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-static tsd-is-not-exported">
+					<a name="list" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> list</h3>
+					<div class="tsd-signature tsd-kind-icon">list<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> =&nbsp;[]</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/runtime.ts#L15">runtime.ts:15</a></li>
+						</ul>
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static tsd-is-not-exported">
+					<a name="add" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> add</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">add<span class="tsd-signature-symbol">(</span>fn<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, context<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/runtime.ts#L17">runtime.ts:17</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>fn: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>context: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static tsd-is-not-exported">
+					<a name="excute" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> excute</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">excute<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/aJean/bxl/blob/11e63aa/src/runtime.ts#L21">runtime.ts:21</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 			<nav class="tsd-navigation primary">
@@ -74,51 +173,90 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_animation_fly_animation_.html">"animation/fly.animation"</a>
+						<a href="../modules/_animation_fly_animation_.html">"animation/fly.animation"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_animation_timeline_animation_.html">"animation/timeline.animation"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_animation_tween_animation_.html">"animation/tween.animation"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_controls_devicecontrol_.html">"controls/device<wbr>Control"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_controls_orbitcontrol_.html">"controls/orbit<wbr>Control"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_event_.html">"event"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_loader_.html">"loader"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_log_.html">"log"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_overlay_dom_overlay_.html">"overlay/dom.overlay"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_overlay_frame_overlay_.html">"overlay/frame.overlay"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_overlay_layer_overlay_.html">"overlay/layer.overlay"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_overlay_mesh_overlay_.html">"overlay/mesh.overlay"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_overlay_sprite_overlay_.html">"overlay/sprite.overlay"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_panoram_.html">"panoram"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_plugins_info_plugin_.html">"plugins/info.plugin"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_plugins_multiple_plugin_.html">"plugins/multiple.plugin"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_plugins_wormhole_plugin_.html">"plugins/wormhole.plugin"</a>
 					</li>
 					<li class="current tsd-kind-external-module">
-						<a href="_animation_sprite_animation_.html">"animation/sprite.animation"</a>
+						<a href="../modules/_runtime_.html">"runtime"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_controls_devicecontrol_.html">"controls/device<wbr>Control"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_controls_orbitcontrol_.html">"controls/orbit<wbr>Control"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_event_.html">"event"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_loader_.html">"loader"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_log_.html">"log"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_panoram_.html">"panoram"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_plugins_layer_plugin_.html">"plugins/layer.plugin"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_plugins_multiple_plugin_.html">"plugins/multiple.plugin"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_plugins_overlay_plugin_.html">"plugins/overlay.plugin"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_plugins_player_plugin_.html">"plugins/player.plugin"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_runtime_.html">"runtime"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_util_.html">"util"</a>
+						<a href="../modules/_util_.html">"util"</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="_runtime_.envqueue.html" class="tsd-kind-icon">Env<wbr>Queue</a>
+						<ul>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-static tsd-is-not-exported">
+								<a href="_runtime_.envqueue.html#list" class="tsd-kind-icon">list</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static tsd-is-not-exported">
+								<a href="_runtime_.envqueue.html#add" class="tsd-kind-icon">add</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static tsd-is-not-exported">
+								<a href="_runtime_.envqueue.html#excute" class="tsd-kind-icon">excute</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="after-current">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_runtime_.runtime.html" class="tsd-kind-icon">Runtime</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_runtime_.html#oldonload" class="tsd-kind-icon">old<wbr>OnLoad</a>
+					</li>
 				</ul>
 			</nav>
 		</div>
