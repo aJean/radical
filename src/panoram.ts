@@ -264,6 +264,7 @@ export default class Panoram {
         }
 
         cleanup(null, this.scene);
+        this.dispatch('render-dispose');
         this.event.removeAllListeners();
         this.webgl.dispose();
         this.root.innerHTML = '';
