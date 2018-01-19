@@ -5,13 +5,8 @@ import Util from './util';
  * @file fetch request
  */
 
-const CREDENTIALS = {};
+let CREDENTIALS;
 export default {
-    setCret(url?, value?) {
-        url && (CREDENTIALS['url'] = url);
-        value && (CREDENTIALS['value'] = value);
-    },
-
     fetch(url, type?) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
@@ -92,27 +87,23 @@ export default {
         });
     },
 
+    loadCret(url) {
+        return CREDENTIALS ? CREDENTIALS : (CREDENTIALS = Promise.resolve(this.fetch(url, 'text')
+            .then(ret => CREDENTIALS = String(ret).replace(/-*[A-Z\s]*-\n?/g, '').split('~#~'))));
+    },
+
     /**
      * 加载场景 bxl & 解密
      * @param {string} url 资源路径
      */
     loadSceneTex(url) {
-        const requests = [this.fetch(url, 'text')];
-
-        CREDENTIALS['value'] ? requests.push(CREDENTIALS['value'])
-            : requests.push(this.fetch(CREDENTIALS['url'], 'text'));
+        const requests = [this.fetch(url, 'text'), CREDENTIALS];
 
         return Promise.all(requests)
             .then(ret => {
                 const list = String(ret[0]).split('~#~');
                 const secretData = list.slice(0, 6);
-                let secretKey;
-                // 如果已经请求过证书
-                if (!CREDENTIALS['value']) {
-                    secretKey = CREDENTIALS['value'] = String(ret[1]).replace(/-*[A-Z\s]*-\n?/g, '').split('~#~');
-                } else {
-                    secretKey = ret[1];
-                }
+                const secretKey = ret[1];
 
                 const key = Util.decode(secretKey[0], 0xf);
                 const EOF = Util.parseEOF(Util.decode(secretKey[1], 0xe));

@@ -5,6 +5,7 @@ import EventEmitter from './event';
 import Log from './log';
 import Loader from './loader';
 import Util from './util';
+import Tween from './animation/tween.animation';
 
 /**
  * @file 全景渲染
@@ -34,37 +35,41 @@ export default class Panoram {
         this.opts = Object.assign({}, defaultOpts, opts);
         this.initEnv();
         this.initControl();
+        this.dispatch('render-init', this);
     }
 
     initEnv() {
         const opts = this.opts;
         const root = this.root = opts.el;
-        const width = opts.width || root.clientWidth || window.innerWidth;
-        const height = opts.height || root.clientHeight || window.innerHeight;
+        const size = this.calcSize(opts, root);
         // 渲染器
         const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
-        webgl.setSize(width, height);
+        webgl.setSize(size.width, size.height);
         // 容器 element
         root.className = 'panoram-root';
         root.appendChild(webgl.domElement);
         // 场景, 相机
         this.scene = new Scene();
-        this.camera = new PerspectiveCamera(opts.fov, width / height, 0.1, 10000);
+        this.camera = new PerspectiveCamera(opts.fov, size.aspect, 0.1, 10000);
         // fog ?
     }
 
+    /**
+     * 初始化场景控制器和陀螺仪
+     */
     initControl() {
+        const opts = this.opts;
         const vector = new Vector3(0, 0, 1);
         const control = this.orbitControl = new OrbitControl(this.camera, this.webgl.domElement);
         // look at front
         control.target = vector;
         control.target0 = vector.clone();
-        control.autoRotate = this.opts.autoRotate;
-        // TODO: let user set camera direction ?
-        this.setLook();
-        // gyro
+        control.autoRotate = opts.autoRotate;
+        // look at angle
+        this.setLook(opts.lng, opts.lat);
+        // mobile gyro
         if (Util.isMobile) {
             this.deviceControl = new DeviceControl(this.camera, control);
         }
@@ -85,7 +90,7 @@ export default class Panoram {
         const skyBox = this.skyBox = new Mesh(geometry, material);
 
         this.scene.add(skyBox);
-        this.dispatch('preview-attach');
+        this.dispatch('scene-init', this);
     }
 
     /**
@@ -99,6 +104,18 @@ export default class Panoram {
         return (this.currentScene = scene || group[0]);
     }
 
+    calcSize(opts, elem) {
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+        let width = parseInt(opts.width) || elem.clientWidth || winWidth;
+        let height = parseInt(opts.height) || elem.clientHeight || winHeight;
+
+        /%$/.test(opts.width) && (width = width / 100 * winWidth);
+        /%$/.test(opts.height) && (height = height / 100 * winHeight);
+
+        return {width, height, aspect: width / height};
+    }
+
     updateControl() {
         if (this.deviceControl && this.deviceControl.enabled) {
             this.deviceControl.update();
@@ -107,14 +124,34 @@ export default class Panoram {
         }
     }
 
-    setLook (lng?, lat?) {
-        if (lng !== undefined) {
-            const theta = (lng) * (Math.PI / 180);
-            const phi = (90 - lat) * (Math.PI / 180);
+    /**
+     * 设置相机角度, 相机方向 (0, 0, -1), z 轴正方向为中心点
+     * 与 overlay 球面描述坐标保持一致
+     * @param {number} lng 经度 [-180, 180] 
+     * @param {number} lat 纬度 [-90, 90]
+     */
+    setLook(lng?, lat?) {
+        const control = this.orbitControl;
 
-            this.orbitControl.setSphericalAngle(theta, phi);
-            this.orbitControl.reset();
+        if (lng !== undefined && lat !== undefined) {
+            const theta = lng * (Math.PI / 180);
+            const phi = lat * (Math.PI / 180);
+
+            this.camera.position.set(0, 0, 0);
+            control.rotateUp(-phi);
+            control.rotateLeft(-theta);
         }
+    }
+
+    /**
+     * 设置视角
+     * @param {number} fov 视角
+     * @param {number} duration 时长
+     */
+    setFov(fov, duration) {
+        const camera = this.getCamera();        
+        new Tween(camera).to({fov: 55}).effect('quadEaseOut', duration || 1000)
+            .start(['fov'], this).process(() => camera.updateProjectionMatrix());
     }
 
     subscribe(type, fn, context?) {
@@ -156,27 +193,24 @@ export default class Panoram {
         this.skyBox.material.envMap = texture;
         tempTex.dispose();
         // 触发场景切换事件
-        !slient && this.dispatch('scene-attach', this.currentScene);
+        !slient && this.dispatch('scene-attach', this.currentScene, this);
     }
 
     animate() {
         this.updateControl();
-        this.dispatch('render-process', this.currentScene);
+        this.dispatch('render-process', this.currentScene, this);
         this.render();
 
         requestAnimationFrame(this.animate.bind(this));
     }
 
     resize() {
-        const opts = this.opts;
-        const root = this.root;
         const camera = this.camera;
-        const width = opts.width || root.clientWidth || window.innerWidth;
-        const height = opts.height || root.clientHeight || window.innerHeight;
+        const size = this.calcSize({}, this.root);
 
-        camera.aspect = width / height;
+        camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
-        this.webgl.setSize(width, height);
+        this.webgl.setSize(size.width, size.height);
     }
 
     getCamera() {
@@ -202,6 +236,9 @@ export default class Panoram {
         };
     }
     
+    /**
+     * 获取 camera lookat 目标的 vector3 obj
+     */
     getLookAtTarget() {
         return this.orbitControl.target;
     }
@@ -264,7 +301,7 @@ export default class Panoram {
         }
 
         cleanup(null, this.scene);
-        this.dispatch('render-dispose');
+        this.dispatch('render-dispose', this);
         this.event.removeAllListeners();
         this.webgl.dispose();
         this.root.innerHTML = '';

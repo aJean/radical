@@ -40,6 +40,7 @@ export default class Tween {
     obj: any;
     target: any;
     fn: Function;
+    onProcess: Function;
     onComplete: Function;
     record = {};
     startTime = 0;
@@ -61,14 +62,14 @@ export default class Tween {
             this.startTime = Date.now();
             this.panoram = panoram;
             keys.forEach(key => this.record[key] = this.obj[key]);
-            panoram.subscribe('render-process', this.process, this);
+            panoram.subscribe('render-process', this.animate, this);
         }
 
         return this;
     }
 
     stop() {
-        this.panoram.unsubscribe('render-process', this.process, this);
+        this.panoram.unsubscribe('render-process', this.animate, this);
     }
 
     effect(type, duration?) {
@@ -80,11 +81,15 @@ export default class Tween {
         return this;
     }
 
+    process(fn) {
+        this.onProcess = fn;
+    }
+
     complete(fn) {
         this.onComplete = fn;
     }
 
-    process() {
+    animate() {
         try {
             const t = Date.now() - this.startTime;
             const obj = this.obj;
@@ -95,10 +100,9 @@ export default class Tween {
             
             if (t < duration) {
                 this.forEach(record, key => {
-                    const c = Math.abs(target[key] - record[key]);
-                    const b = record[key];
-
-                    obj[key] = fn(t, record[key], target[key] - record[key], duration);
+                    const val = fn(t, record[key], target[key] - record[key], duration);
+                    this.onProcess && this.onProcess(obj[key], val);
+                    obj[key] = val;
                 });
             } else {
                 this.forEach(record, key => obj[key] = target[key]);

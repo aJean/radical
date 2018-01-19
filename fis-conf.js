@@ -10,7 +10,8 @@ function push(receiver, to) {
 }
 
 fis.set('namespace', 'bxl');
-fis.set('project.ignore', ['package.json', 'package-lock.json', 'tsconfig.json', 'npm-debug.log', 'build.sh', 'BCLOUD', 'GIT_COMMIT', 'fis-conf.js', 'typings/**', 'output/**', 'receiver.js', 'node_modules/**']);
+fis.set('project.ignore', ['package.json', 'package-lock.json', 'tsconfig.json', 'npm-debug.log', 'build.sh',
+    'BCLOUD', 'GIT_COMMIT', 'fis-conf.js', 'typings/**', 'output/**', 'receiver.js', 'node_modules/**']);
 
 fis.media('remote').match('/dist/(**.{html,js,json,css,bxl,pem,png,jpg})', {
     optimizer: null,

@@ -1,0 +1,18 @@
+{
+    "title": "test bxl transfer",
+    "cretPath": "../assets/cret.pem",
+    "panoram": {
+        "width": "100%",
+        "height": "100%",
+        "fov": 85,
+        "lng": 0,
+        "lat": 20
+    },
+    "sceneGroup": [{
+        "id": "scene0",
+        "name": "罗浮宫",
+        "bxlPath": "../assets/weather/images.bxl",
+        "imgPath": "../assets/weather/preview.jpg"
+    }],
+    "enableDevice": false
+}

@@ -119,11 +119,6 @@ function OrbitControl(object, domElement) {
         return spherical.theta;
     };
 
-    this.setSphericalAngle = function (theta, phi) {
-        spherical.theta = theta;
-        spherical.phi = phi;
-    };
-
     this.saveState = function () {
         scope.target0.copy(scope.target);
         scope.position0.copy(scope.object.position);

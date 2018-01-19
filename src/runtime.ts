@@ -84,7 +84,7 @@ abstract class Runtime {
         }
 
         // set pem path
-        Loader.setCret(config['cretPath']);
+        Loader.loadCret(config['cretPath']);
         // add to env queue listeners
         EnvQueue.add(panoram.resize, panoram);
         // load and render
@@ -115,10 +115,7 @@ abstract class Runtime {
             // first time load scene bxl
             const textures =  await Loader.loadSceneTex(panoram.currentScene.bxlPath);
             if (textures) {
-                panoram.loader.load(textures, tex => {
-                    panoram.dispatch('scene-init');
-                    panoram.replaceTexture(tex, true);
-                });
+                panoram.loader.load(textures, tex => panoram.replaceTexture(tex, true));
             } else {
                 Log.errorLog('load textures error');
             }
@@ -128,9 +125,9 @@ abstract class Runtime {
     }
 };
 
-const oldOnLoad = window.onload;
+const pastLoad = window.onload;
 window.onload = function() {
-    oldOnLoad && oldOnLoad.call(this);
+    pastLoad && pastLoad.call(this);
 
     let uid = 0;
     const nodeList = document.querySelectorAll('panoram');
@@ -142,7 +139,7 @@ window.onload = function() {
         if (auto) {
             Runtime.start(node.getAttribute('source'), node);
         }
-    }
+    }  
 };
 
 window.addEventListener('resize', event => {
