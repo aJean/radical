@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>AMD 方式加载</title>
+        <link rel="stylesheet" href="../lib.css">
+        <link rel="stylesheet" href="../index.css">
+    </head>
+    <body>
+        <script src="../require.js"></script>
+        <div id="test"></div>
+        <script>
+            requirejs.config({
+        　　　　paths: {"bxl": "../lib"}
+        　　});
+            requirejs(['bxl'], function (bxl) {
+                bxl.start('./animation.json', '#test');
+            });
+        </script>
+    </body>
+</html>

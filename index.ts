@@ -3,7 +3,7 @@ import './styles/multiple.style.less';
 import './styles/overlay.style.less';
 import Runtime from './src/runtime';
 
-window['bxl'] = {
+export default {
     start(source, el, events?) {
         Runtime.start(source, el, events);
     },
