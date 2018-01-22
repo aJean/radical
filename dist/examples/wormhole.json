@@ -6,8 +6,8 @@
         "logo": "../assets/logo.png"
     },
     "wormhole": {
-        "lng": -20,
-        "lat": 10,
+        "lng": -160,
+        "lat": 80,
         "bxlPath": "../assets/scene1.bxl"
     },
     "sceneGroup": [{

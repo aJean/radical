@@ -132,7 +132,7 @@ export default class Wormhole {
         });
         material.envMap = this.texture = this.backTexture;
         const box = this.box = new Mesh(geometry, material);
-        const vector = this.vector = Util.calcSpherical(this.direction ? -180 : this.data.lng, 0);
+        const vector = this.vector = Util.calcSpherical(this.direction ? 0 : this.data.lng, 90);
         box.position.set(vector.x, vector.y, vector.z);
 
         this.direction = !this.direction;

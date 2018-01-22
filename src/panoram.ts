@@ -125,22 +125,38 @@ export default class Panoram {
     }
 
     /**
-     * 设置相机角度, 相机方向 (0, 0, -1), z 轴正方向为中心点
-     * 与 overlay 球面描述坐标保持一致
+     * 设置相机角度, 相机方向 (0, 0, -1), 初始 z 轴正方向 (180, 90)
      * @param {number} lng 经度 [-180, 180] 
-     * @param {number} lat 纬度 [-90, 90]
+     * @param {number} lat 纬度 [0, 180]
      */
     setLook(lng?, lat?) {
         const control = this.orbitControl;
 
         if (lng !== undefined && lat !== undefined) {
-            const theta = lng * (Math.PI / 180);
-            const phi = lat * (Math.PI / 180);
+            lng = 180 - lng;
+            lat = 90 - lat;
 
-            this.camera.position.set(0, 0, 0);
-            control.rotateUp(-phi);
-            control.rotateLeft(-theta);
+            const phi = lat * (Math.PI / 180);
+            const theta = lng * (Math.PI / 180);
+
+            control.reset();
+            control.rotateUp(phi);
+            control.rotateLeft(theta);
         }
+    }
+    
+    /**
+     * 获取相机角度
+     */
+    getLook() {
+        const control = this.orbitControl;
+        const phi = control.getPolarAngle();
+        const theta = control.getAzimuthalAngle();
+
+        return {
+            lng: theta * 180 / Math.PI,
+            lat: phi * 180 / Math.PI
+        };
     }
 
     /**
@@ -152,6 +168,13 @@ export default class Panoram {
         const camera = this.getCamera();        
         new Tween(camera).to({fov: 55}).effect('quadEaseOut', duration || 1000)
             .start(['fov'], this).process(() => camera.updateProjectionMatrix());
+    }
+
+    /**
+     * 获取视角
+     */
+    getFov() {
+        return this.getCamera().fov;
     }
 
     subscribe(type, fn, context?) {

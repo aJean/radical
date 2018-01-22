@@ -20,8 +20,8 @@
             "actionType": "scene",
             "sceneId": "scene1",
             "location": {
-                "lng": 0,
-                "lat": 0
+                "lng": 180,
+                "lat": 90
             }
         }, {
             "id": "id2",

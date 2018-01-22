@@ -5,8 +5,8 @@
         "width": "100%",
         "height": "100%",
         "fov": 85,
-        "lng": 0,
-        "lat": 20
+        "lng": 180,
+        "lat": 110
     },
     "sceneGroup": [{
         "id": "scene0",

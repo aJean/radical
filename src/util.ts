@@ -73,17 +73,17 @@ export default {
 
     /**
      * 球面坐标转化成世界坐标
-     * @param lng 
-     * @param lat 
+     * @param {number} lng 经度
+     * @param {number} lat 纬度
+     * @param {number} radius 半径
      */
-    calcSpherical(lng, lat) {
+    calcSpherical(lng, lat, radius?) {
         const spherical = new Spherical();
         const vector = new Vector3();
 
-        spherical.theta = (lng) * (Math.PI / 180);
-        spherical.phi = (90 - lat) * (Math.PI / 180);
-        // 暂时使用半径 1000 的 内切球
-        spherical.radius = 1000;
+        spherical.theta = (180 + lng) * (Math.PI / 180);
+        spherical.phi = lat * (Math.PI / 180);
+        spherical.radius = radius !== undefined ? radius : 1000;
 
         vector.setFromSpherical(spherical);
         return vector;
