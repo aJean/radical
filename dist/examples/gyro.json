@@ -2,11 +2,11 @@
     "title": "test bxl transfer",
     "cretPath": "../assets/cret.pem",
     "info": {
-        "author": "scene - 自动旋转"
+        "author": "陀螺仪 - 请使用手机浏览",
+        "logo": "../assets/logo-gyro.png"
     },
     "panoram": {
-        "fov": 55,
-        "autoRotate": true
+        "gyro": true
     },
     "sceneGroup": [{
         "id": "scene0",
@@ -14,5 +14,6 @@
         "bxlPath": "../assets/scene0.bxl",
         "imgPath": "../assets/scene0.jpg",
         "thumbPath": "../assets/thumb0.jpg"
-    }]
+    }],
+    "enableDevice": false
 }

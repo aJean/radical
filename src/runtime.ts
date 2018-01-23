@@ -63,6 +63,8 @@ abstract class Runtime {
 
         if (config['animation']) {
             Timeline.install(config['animation'], panoram);
+        } else {
+            panoram.noTimeline();
         }
 
         if (config['multiScene']) {

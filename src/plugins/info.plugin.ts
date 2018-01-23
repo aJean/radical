@@ -17,8 +17,10 @@ export default class Info {
         const root = document.createElement('div');
         root.className = "panrom-info";
 
-        root.innerHTML = `<img src="${this.data.logo}" width="70">
-            <div class="panrom-info-name">${this.data.author}</div>`;
+        if (this.data.logo) {
+            root.innerHTML +=  `<img src="${this.data.logo}" width="70">`;
+        }
+        root.innerHTML += `<div class="panrom-info-name">${this.data.author}</div>`;
 
         this.panoram.getRoot().appendChild(root);
     }

@@ -2,8 +2,7 @@
     "title": "test bxl transfer",
     "cretPath": "../assets/cret.pem",
     "info": {
-        "author": "绵阳谊君舞蹈",
-        "logo": "../assets/logo.png"
+        "author": "wormhole - 空间穿越效果"
     },
     "wormhole": {
         "lng": -160,
@@ -16,6 +15,5 @@
         "bxlPath": "../assets/scene0.bxl",
         "imgPath": "../assets/scene0.jpg",
         "thumbPath": "../assets/thumb0.jpg"
-    }],
-    "enableDevice": false
+    }]
 }

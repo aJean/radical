@@ -2,8 +2,7 @@
     "title": "test bxl transfer",
     "cretPath": "../assets/cret.pem",
     "info": {
-        "author": "绵阳谊君舞蹈",
-        "logo": "../assets/logo.png"
+        "author": "plants - 入场动画"
     },
     "sceneGroup": [{
         "id": "scene0",
@@ -18,6 +17,5 @@
     }],
     "animation": {
         "fly": true
-    },
-    "enableDevice": false
+    }
 }

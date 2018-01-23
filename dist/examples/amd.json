@@ -2,11 +2,7 @@
     "title": "test bxl transfer",
     "cretPath": "../assets/cret.pem",
     "info": {
-        "author": "scene - 自动旋转"
-    },
-    "panoram": {
-        "fov": 55,
-        "autoRotate": true
+        "author": "AMD - 异步模块加载"
     },
     "sceneGroup": [{
         "id": "scene0",
@@ -14,5 +10,6 @@
         "bxlPath": "../assets/scene0.bxl",
         "imgPath": "../assets/scene0.jpg",
         "thumbPath": "../assets/thumb0.jpg"
-    }]
+    }],
+    "enableDevice": false
 }

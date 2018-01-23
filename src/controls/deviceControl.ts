@@ -1,123 +1,112 @@
-import {PerspectiveCamera, Vector3, Euler, Quaternion, Spherical, Math as TMath} from 'three';
+import {PerspectiveCamera, Vector3, Euler, Quaternion, Spherical, Math as TMath, Camera} from 'three';
 
 /**
  * @file 陀螺仪控制器
  */
 
-function DeviceControl(object, controls) {
-    var scope = this;
-    var lastSpherical;
+export default class DeviceControl {
+    control: any;
+    onDeviceOrientationChangeEvent: any;
+    onScreenOrientationChangeEvent: any;
+    camera: any;
+    lastSpherical: any;
+    enabled = false;
+    deviceOrientation: any = {};
+    screenOrientation = 0;
+    alphaOffsetAngle = 0;
+    zee = new Vector3(0, 0, 1);
+    euler = new Euler();
+    q0 = new Quaternion();
+    // - PI/2 around the x-axis
+    q1 = new Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+    spherical = new Spherical();
+    detaSpherical = new Spherical();
 
-    this.object = object;
-    this.object.rotation.reorder('YXZ');
+    constructor(camera, control) {
+        camera.rotation.reorder('YXZ');
+        control.update();
 
-    this.enabled = false;
-
-    this.deviceOrientation = {};
-    this.screenOrientation = 0;
-
-    this.alphaOffsetAngle = 0;
-
-    this.camera = new PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 10000);
-
-
-    var onDeviceOrientationChangeEvent = function (event) {
-        scope.deviceOrientation = event;
-    };
-
-    var onScreenOrientationChangeEvent = function () {
-        scope.screenOrientation = window.orientation || 0;
-    };
-
-    /* The angles alpha, beta and gamma form a set of intrinsic Tait-Bryan angles of type Z-X'-Y''*/
-    var setObjectQuaternion = (function () {
-        var zee = new Vector3(0, 0, 1);
-        var euler = new Euler();
-        var q0 = new Quaternion();
-        // - PI/2 around the x-axis
-        var q1 = new Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
-        var lookAt;
-
-        var spherical = new Spherical();
-        var detaSpherical = new Spherical();
-
-        var disMin = 0.002;
-        var disMax = 0.008;
-        var currentDisLevel = disMax;
-
-        return function (quaternion, alpha, beta, gamma, orient) {
-            // 'ZXY' for the device, but 'YXZ' for us
-            euler.set(beta, alpha, -gamma, 'YXZ');
-            // orient the device
-            quaternion.setFromEuler(euler);
-            // camera looks out the back of the device, not the top
-            quaternion.multiply(q1);
-            // adjust for screen orientation
-            quaternion.multiply(q0.setFromAxisAngle(zee, -orient));
-
-            lookAt = scope.camera.getWorldDirection();
-            spherical.setFromVector3(lookAt);
-
-            spherical.setFromVector3(lookAt);
-
-            if (lastSpherical) {
-                detaSpherical.theta = spherical.theta - lastSpherical.theta;
-                detaSpherical.phi = -spherical.phi + lastSpherical.phi;
-                // 将偏移角度传给 orbitControl 计算 camera
-                controls.update(detaSpherical);
-            } else {
-                lastSpherical = new Spherical();
-            }
-
-            lastSpherical.theta = spherical.theta;
-            lastSpherical.phi = spherical.phi;
+        this.camera = camera.clone();
+        this.control = control;
+        this.onDeviceOrientationChangeEvent = event => {
+            this.deviceOrientation = event;
         };
 
-    }());
+        this.onScreenOrientationChangeEvent = event => {
+            this.screenOrientation = Number(window.orientation) || 0;
+        };
+    }
 
-    this.connect = function () {
-        // run once on load
-        onScreenOrientationChangeEvent();
+    /** 
+     * The angles alpha, beta and gamma form a set of intrinsic Tait-Bryan angles of type Z-X-Y
+     */
+    setObjectQuaternion(quaternion, alpha, beta, gamma, orient) {
+        // 'ZXY' for the device, but 'YXZ' for us
+        this.euler.set(beta, alpha, -gamma, 'YXZ');
+        // orient the device
+        quaternion.setFromEuler(this.euler);
+        // camera looks out the back of the device, not the top
+        quaternion.multiply(this.q1);
+        // adjust for screen orientation
+        quaternion.multiply(this.q0.setFromAxisAngle(this.zee, -orient));
+        // 相机初始观看方向向量
+        this.spherical.setFromVector3(this.camera.getWorldDirection());
 
-        window.addEventListener('orientationchange', onScreenOrientationChangeEvent, false);
-        window.addEventListener('deviceorientation', onDeviceOrientationChangeEvent, false);
-        scope.enabled = true;
-    };
+        const spherical = this.spherical;
+        const detaSpherical = this.detaSpherical;
+        let lastSpherical = this.lastSpherical;
 
-    this.disconnect = function () {
-        window.removeEventListener('orientationchange', onScreenOrientationChangeEvent, false);
-        window.removeEventListener('deviceorientation', onDeviceOrientationChangeEvent, false);
-
-        scope.enabled = false;
-        lastSpherical = null;
-        scope.deviceOrientation = {};
-        scope.screenOrientation = 0;
-    };
-
-    this.update = function () {
-        if (scope.enabled === false) {
-            return;
+        // 计算设备方向的增量
+        if (lastSpherical) {
+            detaSpherical.theta = spherical.theta - lastSpherical.theta;
+            detaSpherical.phi = -spherical.phi + lastSpherical.phi;
+            // 将偏移角度传给 orbitControl 计算 camera
+            this.control.update(detaSpherical);
+        } else {
+            lastSpherical = this.lastSpherical = new Spherical();
         }
 
-        var alpha = scope.deviceOrientation.alpha ? TMath.degToRad(scope.deviceOrientation.alpha) : 0;
-        var beta = scope.deviceOrientation.beta ? TMath.degToRad(scope.deviceOrientation.beta) : 0; // X'
-        var gamma = scope.deviceOrientation.gamma ? TMath.degToRad(scope.deviceOrientation.gamma) : 0; // Y''
-        var orient = scope.screenOrientation ? TMath.degToRad(scope.screenOrientation) : 0; // O
+        lastSpherical.theta = spherical.theta;
+        lastSpherical.phi = spherical.phi;
+    }
+
+    connect() {
+        // run once on load
+        this.onScreenOrientationChangeEvent();
+        this.enabled = true;
+
+        window.addEventListener('orientationchange', this.onScreenOrientationChangeEvent, false);
+        window.addEventListener('deviceorientation', this.onDeviceOrientationChangeEvent, false);
+    }
+
+    disconnect() {
+        window.removeEventListener('orientationchange', this.onScreenOrientationChangeEvent, false);
+        window.removeEventListener('deviceorientation', this.onDeviceOrientationChangeEvent, false);
+
+        this.enabled = false;
+        this.lastSpherical = null;
+        this.deviceOrientation = {};
+        this.screenOrientation = 0;
+    }
+
+    update() {
+        // z
+        const alpha = this.deviceOrientation.alpha ? TMath.degToRad(this.deviceOrientation.alpha) : 0;
+        // x
+        const beta = this.deviceOrientation.beta ? TMath.degToRad(this.deviceOrientation.beta) : 0;
+        // y
+        const gamma = this.deviceOrientation.gamma ? TMath.degToRad(this.deviceOrientation.gamma) : 0;
+        const orient = this.screenOrientation ? TMath.degToRad(this.screenOrientation) : 0;
 
         if (alpha === 0 && beta === 0 && gamma === 0 && orient === 0) {
             return;
         }
-        setObjectQuaternion(scope.camera.quaternion, alpha, beta, gamma, orient);
-    };
 
-    this.updateAlphaOffsetAngle = function (angle) {
+        this.setObjectQuaternion(this.camera.quaternion, alpha, beta, gamma, orient);
+    }
+
+    updateAlphaOffsetAngle(angle) {
         this.alphaOffsetAngle = angle;
         this.update();
-    };
-
-    this.dispose = function () {
-        this.disconnect();
-    };
+    }
 }
-
-export default DeviceControl;

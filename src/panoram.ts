@@ -6,6 +6,7 @@ import Log from './log';
 import Loader from './loader';
 import Util from './util';
 import Tween from './animation/tween.animation';
+import deviceControl from './controls/deviceControl';
 
 /**
  * @file 全景渲染
@@ -13,7 +14,8 @@ import Tween from './animation/tween.animation';
 
 const defaultOpts = {
     fov: 55,
-    fog: null
+    fog: null,
+    gyro: false
 };
 
 export default class Panoram {
@@ -69,9 +71,16 @@ export default class Panoram {
         control.autoRotate = opts.autoRotate;
         // look at angle
         this.setLook(opts.lng, opts.lat);
-        // mobile gyro
-        if (Util.isMobile) {
+        // enable gyro
+        if (opts.gyro) {
             this.deviceControl = new DeviceControl(this.camera, control);
+        }
+    }
+
+    stopControl() {
+        if (this.deviceControl) {
+            this.deviceControl.disconnect();
+            delete this.deviceControl;
         }
     }
 
@@ -314,6 +323,15 @@ export default class Panoram {
             }).catch(e => Log.errorLog(e));
     }
 
+    /** 
+     * 开场动画结束
+     */
+    noTimeline() {
+        if (this.deviceControl && !this.deviceControl.enabled) {
+            this.deviceControl.connect();
+        }
+    }
+
     dispose() {
         function cleanup(parent, target) {
             if (target.children.length) {
@@ -325,6 +343,7 @@ export default class Panoram {
 
         cleanup(null, this.scene);
         this.dispatch('render-dispose', this);
+        this.stopControl();
         this.event.removeAllListeners();
         this.webgl.dispose();
         this.root.innerHTML = '';

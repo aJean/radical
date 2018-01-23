@@ -35,6 +35,9 @@ export default abstract class Timeline {
     }
 
     static onAnimationEnd(data) {
-        this.panoram.dispatch('animation-end', data);
+        const panoram = this.panoram;
+
+        panoram.noTimeline();
+        panoram.dispatch('animation-end', data);
     }
 }

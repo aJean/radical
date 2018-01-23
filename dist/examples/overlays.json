@@ -3,8 +3,7 @@
     "cretPath": "../assets/cret.pem",
     "multiScene": true,
     "info": {
-        "author": "绵阳谊君舞蹈",
-        "logo": "../assets/logo.png"
+        "author": "覆盖物 + 帧动画 (scene3)"
     },
     "sceneGroup": [{
         "id": "scene0",
@@ -85,6 +84,5 @@
         "bxlPath": "../assets/scene3.bxl",
         "imgPath": "../assets/scene3.jpg",
         "thumbPath": "../assets/thumb3.jpg"
-    }],
-    "enableDevice": false
+    }]
 }
