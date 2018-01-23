@@ -1,5 +1,6 @@
 import {CubeTexture, CubeRefractionMapping} from 'three';
 import Util from './util';
+import Log from './log';
 
 /**
  * @file fetch request
@@ -120,6 +121,6 @@ export default {
 
                     return Util.decode(header, key) + body;
                 });
-            });
+            }).catch(e => Log.output('decode failure'));
     }
 }

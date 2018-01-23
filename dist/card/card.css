@@ -1,0 +1,120 @@
+html::-webkit-scrollbar {
+    display: none
+}
+
+body {
+    margin: 0;
+}
+
+#scene {
+    width: 100vw;
+    height: 30vh;
+    overflow: visible;   
+}
+
+header {
+    line-height: 62px;
+    text-align: center;
+    background: #fff;
+}
+
+header img {
+    vertical-align: middle;
+}
+
+.search {
+    position: relative;
+    height: 40px;
+    margin: 0 15px;
+    border: 1px solid #c7c7c7;
+}
+
+.search .search-prix {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #fff url(//m.baidu.com/se/static/img/iphone/vs_tab_icons.png);
+    background-position: 1px 0;
+    background-repeat: no-repeat;
+    background-size: 289px 18px;
+    width: 20px;
+    height: 18px;
+}
+
+.search input {
+    position: absolute;
+    top: 0px;
+    left: 30px;
+    right: 82px;
+    height: 40px;
+    padding: 0 5px;
+    outline: none;
+    border: none;
+    font-size: 16px;
+    vertical-align: middle;
+    background: #fff;
+}
+
+.search button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: #38f;
+    text-align: center;
+    width: 82px;
+    height: 40px;
+    background: #fff;
+    border: none;
+    border-left: 1px solid #f1f1f1;
+    letter-spacing: -1px;
+    box-sizing: border-box;
+    font-size: 14px;
+    font-weight: 700;
+    outline: 0;
+}
+
+header .rs {
+    margin: 0 15px;
+    line-height: 40px;
+    text-align: left;
+    color: #999;
+    overflow-x: auto;
+}
+
+header .rs span {
+    margin-right: 20px;
+}
+
+header .rs .active {
+    color: #38f;
+}
+
+.anim {
+    position: relative;
+    transition: 1s transform ease-out;
+    z-index: 20;
+}
+
+.content {
+    padding: 15px;
+    background: #fff;    
+}
+
+.weather-img {
+    height: 250px;
+    background: url(./weather.png) no-repeat center center;
+    background-size: cover;
+}
+
+.weather-concern {
+    height: 80px;
+    margin-top: 20px;
+    background: url(./concern.png) no-repeat center center;
+    background-size: contain;
+}
+
+.weather-report {
+    height: 300px;
+    background: url(./report.png) no-repeat center center;
+    background-size: contain;
+}

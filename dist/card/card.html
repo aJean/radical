@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>自动渲染全景</title>
+        <link rel="stylesheet" href="../lib.css">
+        <link rel="stylesheet" href="./card.css">
+    </head>
+    <body>
+        <script src="../lib.js"></script>
+        <header class="anim">
+            <img src="//m.baidu.com/se/static/img/iphone/logo.png" width="101" height="31">
+            <div class="search">
+                <span class="search-prix"></span><input type="text" value="百度">
+                <button>百度一下</button>
+            </div>
+            <div class="rs">
+                <span class="active">全部</span>
+                <span>咨询</span>
+                <span>图片</span>
+                <span>问答</span>
+                <span>贴吧</span>
+                <span>文库</span>
+            </div>
+        </header>
+        <div id="scene" ref="mytest"></div>
+        <section class="content anim">
+            <div class="weather-img"></div>
+            <div class="weather-concern"></div>
+            <div class="weather-report"></div>
+        </section>
+    </body>
+
+    <script>
+        function find(selector) {
+            return document.querySelector(selector);
+        }
+
+
+        const elem = find('#scene');
+        const s1 = find('header');
+        const s2 = find('.content');
+        let canvas;
+        let panoram;
+
+        // start
+        bxl.start('./card.json', '#scene', {
+            'scene-init': function(obj) {
+                panoram = obj;
+                canvas = panoram.getCanvas();
+                canvas.style.position = 'relative';
+                canvas.style.top = '-144px';
+            }
+        });
+
+        elem.onclick = function () {
+            window.scroll(0, 0);
+            const top1 = s1.getBoundingClientRect().bottom;
+            const top2 = window.innerHeight - s2.getBoundingClientRect().top;
+
+            s1.style.transform = 'translate3d(0px, -' + top1 + 'px, 0px)';
+            s2.style.transform = 'translate3d(0px, ' + top2 + 'px, 0px)';
+            panoram.setFov(55);
+
+            setTimeout(function() {
+                // elem.style.cssText = 'position:fixed;left:0;top:0;right:0;bottom:0;z-index:100;'
+                // canvas.style.top = 0;
+            }, 1000);
+        };
+    </script>
+</html>

@@ -56,7 +56,7 @@ abstract class Runtime {
         const config = await Loader.fetch(source);
 
         if (!(config && config['sceneGroup'])) {
-            return Log.errorLog('load source error');
+            return Log.output('load source error');
         }
 
         const panoram = this.createRef(el, config['panoram']);
@@ -106,7 +106,7 @@ abstract class Runtime {
             const thumbImg = await Loader.loadPreviewTex(scene.imgPath);
 
             if (!thumbImg) {
-                return Log.errorLog('load preview texture error');
+                return Log.output('load preview texture error');
             }
 
             panoram.initMesh(thumbImg);
@@ -117,10 +117,10 @@ abstract class Runtime {
             if (textures) {
                 panoram.loader.load(textures, tex => panoram.replaceTexture(tex, true));
             } else {
-                Log.errorLog('load textures error');
+                Log.output('load textures error');
             }
         } catch(e) {
-            Log.errorLog(e)
+            Log.output(e)
         }
     }
 };
