@@ -1,12 +1,11 @@
 import {WebGLRenderer, Scene, CubeTextureLoader, PerspectiveCamera, Vector3, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Math as TMath} from 'three';
 import OrbitControl from './controls/orbitControl';
-import DeviceControl from './controls/deviceControl';
+import GyroControl from './controls/gyroControl';
 import EventEmitter from './event';
 import Log from './log';
 import Loader from './loader';
 import Util from './util';
 import Tween from './animation/tween.animation';
-import deviceControl from './controls/deviceControl';
 
 /**
  * @file 全景渲染
@@ -26,7 +25,7 @@ export default class Panoram {
     camera = null;
     skyBox = null;
     orbitControl = null;
-    deviceControl = null;
+    gyroControl = null;
     currentScene = null;
     event = new EventEmitter();
     loader = new CubeTextureLoader();
@@ -73,14 +72,14 @@ export default class Panoram {
         this.setLook(opts.lng, opts.lat);
         // enable gyro
         if (opts.gyro) {
-            this.deviceControl = new DeviceControl(this.camera, control);
+            this.gyroControl = new GyroControl(this.camera, control);
         }
     }
 
     stopControl() {
-        if (this.deviceControl) {
-            this.deviceControl.disconnect();
-            delete this.deviceControl;
+        if (this.gyroControl) {
+            this.gyroControl.disconnect();
+            delete this.gyroControl;
         }
     }
 
@@ -126,8 +125,8 @@ export default class Panoram {
     }
 
     updateControl() {
-        if (this.deviceControl && this.deviceControl.enabled) {
-            this.deviceControl.update();
+        if (this.gyroControl && this.gyroControl.enabled) {
+            this.gyroControl.update();
         } else {
             this.orbitControl.update();
         }
@@ -327,8 +326,8 @@ export default class Panoram {
      * 开场动画结束
      */
     noTimeline() {
-        if (this.deviceControl && !this.deviceControl.enabled) {
-            this.deviceControl.connect();
+        if (this.gyroControl && !this.gyroControl.enabled) {
+            this.gyroControl.connect();
         }
     }
 
