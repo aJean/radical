@@ -14,10 +14,10 @@ export default {
     },
 
     infoLog(msg) {
-        console.info(formatMsg(msg));
+        console.info(msg);
     },
 
     errorLog(msg) {
-        console.error(formatMsg(msg));
+        console.error(msg);
     }
 } 

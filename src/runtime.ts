@@ -116,9 +116,9 @@ abstract class Runtime {
             panoram.animate();
 
             // first time load scene bxl
-            const textures = await myLoader.loadTexture(scene.bxlPath || scene.texPath);
-            if (textures) {
-                panoram.replaceTexture(textures, true);
+            const texture = await myLoader.loadTexture(scene.bxlPath || scene.texPath);
+            if (texture) {
+                panoram.replaceTexture(texture, true);
             } else {
                 Log.output('load textures error');
             }

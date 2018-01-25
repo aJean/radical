@@ -309,10 +309,10 @@ export default class Panoram {
         }
 
         myLoader.loadTexture(data.bxlPath || data.texPath)
-            .then(textures => {
-                if (textures) {
+            .then(texture => {
+                if (texture) {
                     this.currentScene = data;
-                    this.replaceTexture(textures);
+                    this.replaceTexture(texture);
                 } else {
                     Log.output('load textures error');
                 }

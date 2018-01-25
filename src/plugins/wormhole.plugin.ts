@@ -1,4 +1,4 @@
-import {CubeTextureLoader, Raycaster, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Vector3} from 'three';
+import {Texture, CubeTextureLoader, Raycaster, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Vector3} from 'three';
 import ResourceLoader from '../loaders/resource.loader';
 import Panoram from '../panoram';
 import Log from '../log';
@@ -45,18 +45,13 @@ export default class Wormhole {
         const box = this.box = new Mesh(geometry, material);
         const vector = this.vector = Util.calcSpherical(data.lng, data.lat);
 
-        myLoader.loadTexture(data.bxlPath || data.texPath).then(textures => {
-            if (textures) {
-                cubeLoader.load(textures, tex => {
-                    tex.mapping = CubeRefractionMapping;
-                    material.envMap = this.texture = tex;
-                    box.position.set(vector.x, vector.y, vector.z);
-                    panoram.addSceneObject(box);
-                    this.bindEvents();
-                });
-            } else {
-                Log.errorLog('load textures error');
-            }
+        myLoader.loadTexture(data.bxlPath || data.texPath).then((texture: Texture) => {
+            texture.mapping = CubeRefractionMapping;
+            material.envMap = this.texture = texture;
+            box.position.set(vector.x, vector.y, vector.z);
+
+            panoram.addSceneObject(box);
+            this.bindEvents();
         }).catch(e => Log.errorLog(e));
     }
 
