@@ -8,6 +8,7 @@ const defaultOpts = {
     useCache: false
 };
 let cret;
+
 export default abstract class BaseLoader {
     cret: any;    
     cache: any;
