@@ -7,7 +7,6 @@ function formatMsg(msg) {
 }
 
 export default {
-    timeline: 'forever',
     debug: false,
 
     output(msg) {

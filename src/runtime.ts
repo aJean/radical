@@ -1,6 +1,6 @@
 import Panoram from './panoram';
 import Log from './log';
-import Loader from './loader';
+import ResourceLoader from './loaders/resource.loader';
 import Info from './plugins/info.plugin';
 import Multiple from './plugins/multiple.plugin';
 import Wormhole from './plugins/wormhole.plugin';
@@ -11,6 +11,7 @@ import Timeline from './animation/timeline.animation';
  * @file 执行环境
  */
 
+const myLoader = new ResourceLoader();
 abstract class EnvQueue {
     static list = [];
 
@@ -53,7 +54,7 @@ abstract class Runtime {
     }
 
     static async start(source, el, events?) {
-        const config = await Loader.fetch(source);
+        const config = await myLoader.fetchUrl(source);
 
         if (!(config && config['sceneGroup'])) {
             return Log.output('load source error');
@@ -86,7 +87,7 @@ abstract class Runtime {
         }
 
         // set pem path
-        Loader.loadCret(config['cretPath']);
+        myLoader.loadCret(config['cretPath']);
         // add to env queue listeners
         EnvQueue.add(panoram.resize, panoram);
         // load and render
@@ -105,7 +106,7 @@ abstract class Runtime {
             }
             
             // 加载缩略图
-            const thumbImg = await Loader.loadPreviewTex(scene.imgPath);
+            const thumbImg = await myLoader.loadTexture(scene.imgPath, 'canvas');
 
             if (!thumbImg) {
                 return Log.output('load preview texture error');
@@ -115,9 +116,9 @@ abstract class Runtime {
             panoram.animate();
 
             // first time load scene bxl
-            const textures =  await Loader.loadSceneTex(panoram.currentScene.bxlPath);
+            const textures = await myLoader.loadTexture(scene.bxlPath || scene.texPath);
             if (textures) {
-                panoram.loader.load(textures, tex => panoram.replaceTexture(tex, true));
+                panoram.replaceTexture(textures, true);
             } else {
                 Log.output('load textures error');
             }

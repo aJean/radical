@@ -1,5 +1,5 @@
 import {CubeTextureLoader, Raycaster, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Vector3} from 'three';
-import Loader from '../loader';
+import ResourceLoader from '../loaders/resource.loader';
 import Panoram from '../panoram';
 import Log from '../log';
 import Util from '../util';
@@ -12,6 +12,7 @@ import Tween from '../animation/tween.animation';
  * 穿梭后要将相机恢复
  */
 
+const myLoader = new ResourceLoader();
 export default class Wormhole {
     panoram: Panoram;
     onDetect: Function;
@@ -34,7 +35,7 @@ export default class Wormhole {
     create() {
         const data = this.data;
         const panoram = this.panoram;
-        const loader = new CubeTextureLoader();
+        const cubeLoader = new CubeTextureLoader();
         const geometry = new SphereGeometry(100, 32, 16);
         const material = new MeshBasicMaterial({
             side: BackSide,
@@ -44,9 +45,9 @@ export default class Wormhole {
         const box = this.box = new Mesh(geometry, material);
         const vector = this.vector = Util.calcSpherical(data.lng, data.lat);
 
-        Loader.loadSceneTex(data.bxlPath).then(textures => {
+        myLoader.loadTexture(data.bxlPath || data.texPath).then(textures => {
             if (textures) {
-                loader.load(textures, tex => {
+                cubeLoader.load(textures, tex => {
                     tex.mapping = CubeRefractionMapping;
                     material.envMap = this.texture = tex;
                     box.position.set(vector.x, vector.y, vector.z);

@@ -1,4 +1,3 @@
-import Log from './log';
 import {AES, enc, lib, mode} from 'crypto-js';
 import {Spherical, Vector3} from 'three';
 
@@ -21,7 +20,7 @@ export default {
      */
     decode(ciphertext, key) {
         if ((key ^ 1) !== 1) {
-            key = composeKey(Log.timeline);
+            key = composeKey('forever');
         }
     
         const plaintext = AES.decrypt({

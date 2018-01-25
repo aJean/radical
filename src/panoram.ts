@@ -1,10 +1,10 @@
-import {WebGLRenderer, Scene, CubeTextureLoader, PerspectiveCamera, Vector3, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Math as TMath} from 'three';
+import {WebGLRenderer, Scene, PerspectiveCamera, Vector3, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Math as TMath} from 'three';
 import OrbitControl from './controls/orbitControl';
 import GyroControl from './controls/gyroControl';
 import EventEmitter from './event';
 import Log from './log';
-import Loader from './loader';
 import Util from './util';
+import ResourceLoader from './loaders/resource.loader';
 import Tween from './animation/tween.animation';
 
 /**
@@ -16,7 +16,7 @@ const defaultOpts = {
     fog: null,
     gyro: false
 };
-
+const myLoader = new ResourceLoader();
 export default class Panoram {
     opts = null;
     root = null;
@@ -28,7 +28,6 @@ export default class Panoram {
     gyroControl = null;
     currentScene = null;
     event = new EventEmitter();
-    loader = new CubeTextureLoader();
     group = [];
     pluginList = [];
 
@@ -306,20 +305,18 @@ export default class Panoram {
         }
 
         if (!data) {
-            return Log.errorLog('no scene data provided');
+            return Log.output('no scene data provided');
         }
 
-        Loader.loadSceneTex(data.bxlPath)
+        myLoader.loadTexture(data.bxlPath || data.texPath)
             .then(textures => {
                 if (textures) {
-                    this.loader.load(textures, tex => {
-                        this.currentScene = data;
-                        this.replaceTexture(tex);
-                    });
+                    this.currentScene = data;
+                    this.replaceTexture(textures);
                 } else {
-                    Log.errorLog('load textures error');
+                    Log.output('load textures error');
                 }
-            }).catch(e => Log.errorLog(e));
+            }).catch(e => Log.output(e));
     }
 
     /** 
