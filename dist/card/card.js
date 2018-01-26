@@ -16,6 +16,12 @@ bxl.start('./card.json', '.scene', {
                     height: oheight
                 });
                 panoram.setFov(85);
+                setTimeout(function() {
+                    $root.css({
+                        position: 'static'
+                    });
+                    $copy.remove();
+                }, 1000);
                 flag = 0;
             } else {
                 $root.css({
