@@ -48,7 +48,7 @@ export default class Panoram {
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(size.width, size.height);
         // 容器 element
-        root.className = 'panoram-root';
+        root.className += root.className ? ' panoram-root' : 'panoram-root';
         root.appendChild(webgl.domElement);
         // 场景, 相机
         this.scene = new Scene();
@@ -173,7 +173,7 @@ export default class Panoram {
      */
     setFov(fov, duration) {
         const camera = this.getCamera();        
-        new Tween(camera).to({fov: 55}).effect('quadEaseOut', duration || 1000)
+        new Tween(camera).to({fov}).effect('quadEaseOut', duration || 1000)
             .start(['fov'], this).process(() => camera.updateProjectionMatrix());
     }
 
