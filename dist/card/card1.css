@@ -12,7 +12,6 @@ body {
     overflow: visible;
     transition: transform 1s ease-out, height 1s ease-out;
     z-index: 20;
-    background: rgb(253, 250, 78);
     overflow: hidden;
 }
 
