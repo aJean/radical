@@ -3,6 +3,8 @@
  */
 
 export interface IPluggableOverlay {
+    type: string;
+    
     create(): any;
 
     update(x?: number, y?: number): void;

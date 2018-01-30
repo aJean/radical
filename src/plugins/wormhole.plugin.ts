@@ -3,7 +3,7 @@ import ResourceLoader from '../loaders/resource.loader';
 import Panoram from '../panoram';
 import Log from '../log';
 import Util from '../util';
-import Tween from '../animation/tween.animation';
+import Tween from '../animations/tween.animation';
 
 /**
  * @file wormhole space through effection

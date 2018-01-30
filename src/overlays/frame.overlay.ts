@@ -22,6 +22,7 @@ export default class FrameOverlay implements IPluggableOverlay {
     enable = true;
     finished = false;
     lastTime = Date.now();
+    type = "frame";
 
     constructor(data) {
         this.data = Object.assign({}, defaultOpts, data);
@@ -35,7 +36,7 @@ export default class FrameOverlay implements IPluggableOverlay {
         const url = data.imgPath;
         const limit = this.limit = data.count;
 
-        for (let i = 0; i < limit; i++) {
+        for (let i = 1; i <= limit; i++) {
             this.textures.push(loader.load(`${url}/${i}.png`));
         }
     }

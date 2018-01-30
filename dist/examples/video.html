@@ -9,7 +9,16 @@
         <link rel="stylesheet" href="../index.css">
     </head>
     <body>
-        <panoram source="./video.json" auto="true"></panoram>
+        <div id="test"></div>
         <script src="../lib.js"></script>
+        <script>
+            bxl.start('./video.json', '#test', {
+                'overlay-click': function (instance, panoram) {
+                    if (instance.type == 'video') {
+                        instance.play();
+                    }
+                }
+            });
+        </script>
     </body>
 </html>

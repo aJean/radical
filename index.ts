@@ -1,7 +1,11 @@
 import './styles/panoram.style.less';
 import './styles/multiple.style.less';
-import './styles/overlay.style.less';
+import './styles/overlays.style.less';
 import Runtime from './src/runtime';
+
+/**
+ * @file lib index.ts
+ */
 
 export default {
     start(source, el, events?) {

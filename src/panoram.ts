@@ -5,7 +5,7 @@ import EventEmitter from './event';
 import Log from './log';
 import Util from './util';
 import ResourceLoader from './loaders/resource.loader';
-import Tween from './animation/tween.animation';
+import Tween from './animations/tween.animation';
 
 /**
  * @file 全景渲染

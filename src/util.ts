@@ -59,7 +59,7 @@ export default {
     parseLocation(data, camera) {
         const location = data.location;
         // 经纬度
-        if (location.lng !== undefined) {
+        if (location && location.lng !== undefined) {
             const vector = this.calcSpherical(location.lng, location.lat);
 
             data.location = {
@@ -86,5 +86,16 @@ export default {
 
         vector.setFromSpherical(spherical);
         return vector;
+    },
+
+    /**
+     * 世界坐标转为屏幕2维坐标
+     * @param {Object} location 世界坐标系
+     * @param {Object} camera 场景相机
+     */
+    calcScreenPosition(location, camera) {
+        const position = new Vector3(location.x, location.y, location.z);
+        // world coord to screen coord
+        return position.project(camera);
     }
 };

@@ -7,6 +7,7 @@ import {IPluggableOverlay} from './interface.overlay';
 export default class DomOverlay implements IPluggableOverlay {
     data: any;
     elem: any;
+    type = "dom";
 
     constructor(data) {
         this.data = data;

@@ -2,7 +2,7 @@
     "title": "test bxl transfer",
     "cretPath": "../assets/cret.pem",
     "info": {
-        "author": "视频播放"
+        "author": "视频播放 - 点击播放"
     },
     "sceneGroup": [{
         "id": "scene0",
@@ -13,8 +13,10 @@
         "overlays": [{
             "id": "sintel",
             "type": "video",
-            "actionType": "scene",
+            "actionType": "video",
+            "loop": false,
             "src": "../assets/video/sintel.mp4",
+            "img": "../assets/video/video.png",
             "location": {
                 "lng": 180,
                 "lat": 90

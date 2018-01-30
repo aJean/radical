@@ -14,7 +14,9 @@
         <script>
             // start
             bxl.start('./overlays.json', '#test', {
-                'overlay-click': function (data, panoram) {
+                'overlay-click': function (instance, panoram) {
+                    const data = instance.data;
+    
                     if (data.actionType == 'custom') {
                         const node = document.createElement('div');
                         node.className = 'testlabel';

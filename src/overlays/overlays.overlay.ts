@@ -49,10 +49,14 @@ export default abstract class Overlays {
         panoram.subscribe('render-process', scene => {
             const cache = this.getCurrent(scene.id);
             cache.domGroup.forEach(item => this.updateDomOverlay(item));
-            cache.animGroup.forEach(item => item.update());
+            cache.meshGroup.forEach(item => item.update());
         });
 
-        panoram.getCanvas().addEventListener('click', this.onCanvasClick.bind(this));
+        panoram.subscribe('overlay-click', data => {
+
+        });
+
+        panoram.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
     }
 
     static create(data) {
@@ -90,7 +94,7 @@ export default abstract class Overlays {
         Util.parseLocation(prop, this.panoram.getCamera());
 
         const item = new DomOverlay(prop);
-        item.elem.onclick = e => this.onOverlayClick(item.data);
+        item.elem.onclick = e => this.onOverlayHandle(item);
         cache.domGroup.push(item);
 
         this.panoram.addDomObject(item.elem);
@@ -101,10 +105,11 @@ export default abstract class Overlays {
      * 不断更新 dom overlay 的屏幕坐标
      */
     static updateDomOverlay(item) {
-        const root = this.panoram.getRoot();
+        const panoram = this.panoram;
+        const root = panoram.getRoot();
         const width = root.clientWidth / 2;
         const height = root.clientHeight / 2;
-        const position = this.getScreenPosition(item.data.location);
+        const position = Util.calcScreenPosition(item.data.location, panoram.getCamera());
         // z > 1 is backside
         if (position.z > 1) {
             item.hide();
@@ -122,15 +127,17 @@ export default abstract class Overlays {
         const camera = this.panoram.getCamera();
 
         Util.parseLocation(prop, camera);
-        const mesh = MeshOverlay.create(prop);
+        const item = new MeshOverlay(prop);
+        const particle = item.particle;
 
         if (!prop.rotation) {
-            mesh.lookAt(camera.position);
+            particle.lookAt(camera.position);
         } else {
-            mesh.rotation.set(prop.rotation.x, prop.rotation.y, prop.rotation.z);
+            particle.rotation.set(prop.rotation.x, prop.rotation.y, prop.rotation.z);
         }
-
-        cache.meshGroup.add(mesh);
+        // 加入可检测分组
+        cache.detects.add(particle);
+        cache.meshGroup.push(item);
     }
 
     /**
@@ -150,7 +157,7 @@ export default abstract class Overlays {
         }
 
         panoram.addSceneObject(item.particle);
-        cache.animGroup.push(item);
+        cache.meshGroup.push(item);
     }
 
     /**
@@ -164,8 +171,8 @@ export default abstract class Overlays {
         prop.lookat = camera.position;
         const item = new VideoOverlay(prop);
 
-        panoram.addSceneObject(item.particle);
-        cache.videoGroup.push(item);
+        cache.detects.add(item.particle);
+        cache.meshGroup.push(item);
     }
 
     /**
@@ -182,10 +189,9 @@ export default abstract class Overlays {
             this.panoram.addSceneObject(group);
 
             return this.maps[id] = {
+                detects: group,
                 domGroup: [],
-                meshGroup: group,
-                animGroup: [],
-                videoGroup: []
+                meshGroup: []
             }
         }
     }
@@ -193,7 +199,7 @@ export default abstract class Overlays {
     /**
      * 点击 canvas
      */
-    static onCanvasClick(evt) {
+    static onCanvasHandle(evt) {
         const panoram = this.panoram;
         const raycaster = this.raycaster;
         const element = panoram.getCanvas();
@@ -203,16 +209,14 @@ export default abstract class Overlays {
         };
         
         try {
-            const group = this.getCurrent(this.cid).meshGroup;
+            const group = this.getCurrent(this.cid).detects;
 
             if (group.children) {
                 raycaster.setFromCamera(pos, panoram.getCamera());
                 const intersects = raycaster.intersectObjects(group.children, false);
-                
-                if (intersects.length) {
-                    this.onOverlayClick(intersects[0].object['data']);
-                }
+                intersects.length && this.onOverlayHandle(intersects[0].object['instance']);
             } else {
+                // nescessary to dispatch ???
                 // panoram.dispatch('panoram-click', panoram);
             }
         } catch(e) {
@@ -221,12 +225,12 @@ export default abstract class Overlays {
     }
 
     /**
-     * 点击覆盖物
+     * 点击覆盖物, dispatch except scene, link
      */
-    static onOverlayClick(data, e?) {
+    static onOverlayHandle(instance) {
         const panoram = this.panoram;
+        const data = instance.data;
 
-        panoram.dispatch('overlay-click', data, panoram);
         switch (data.actionType) {
             case 'scene':
                 panoram.enterNext(data.sceneId);
@@ -234,16 +238,9 @@ export default abstract class Overlays {
             case 'link':
                 window.open(data.linkUrl, '_blank');
                 break;
+            default:
+                panoram.dispatch('overlay-click', instance, panoram);
         }
-    }
-
-    /**
-     * 获取屏幕坐标
-     */
-    static getScreenPosition(location) {
-        const position = new Vector3(location.x, location.y, location.z);
-        // world coord to screen coord
-        return position.project(this.panoram.getCamera());
     }
 
     /**
@@ -274,18 +271,19 @@ export default abstract class Overlays {
                 }
             });
 
-            if (data.meshGroup.children) {
-                data.meshGroup.children.forEach(item => item.visible = false);
-                isclean && panoram.removeSceneObject(data.meshGroup);
-            }
-
-            data.animGroup.forEach(item => {
+            data.meshGroup.forEach(item => {
                 item.hide();
                 if (isclean) {
                     item.dispose();
-                    panoram.removeSceneObject(item);
+                    panoram.removeSceneObject(item.particle);
                 }
             });
+
+            if (isclean && data.detects.children) {
+                data.detects.remove(...data.detects.children);
+                panoram.removeSceneObject(data.detects);
+            }
+
         }
     }
 
@@ -296,8 +294,7 @@ export default abstract class Overlays {
     static showOverlays(data) {
         if (data) {
             data.domGroup.forEach(item => item.show());
-            data.meshGroup.children.forEach(item => item.visible = true);
-            data.animGroup.forEach(item => item.show());
+            data.meshGroup.forEach(item => item.show());
         }
     }
 }

@@ -4,8 +4,8 @@ import ResourceLoader from './loaders/resource.loader';
 import Info from './plugins/info.plugin';
 import Multiple from './plugins/multiple.plugin';
 import Wormhole from './plugins/wormhole.plugin';
-import Overlays from './overlay/overlays.overlay';
-import Timeline from './animation/timeline.animation';
+import Overlays from './overlays/overlays.overlay';
+import Timeline from './animations/timeline.animation';
 
 /**
  * @file 执行环境
@@ -182,7 +182,7 @@ const onEnvResize = event => {
     clearTimeout(Runtime.timeid);
     Runtime.timeid = setTimeout(function () {
         EnvQueue.excute();
-    }, 100);
+    }, 200);
 };
 window.addEventListener('resize', onEnvResize);
 
