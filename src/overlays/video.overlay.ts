@@ -2,7 +2,7 @@ import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
 import {IPluggableOverlay} from './interface.overlay';
 
 /**
- * 视频播放
+ * @file 视频播放
  */
 
 const defaultOpts = {
