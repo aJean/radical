@@ -6,6 +6,7 @@ import DomOverlay from './dom.overlay';
 import MeshOverlay from './mesh.overlay';
 import SpriteOverlay from './sprite.overlay';
 import FrameOverlay from './frame.overlay';
+import VideoOverlay from './video.overlay';
 
 /**
  * @file 管理所有场景下的覆盖物
@@ -30,7 +31,7 @@ const AnimationOpts = {
     }
 };
 
-export default abstract class Layer {
+export default abstract class Overlays {
     static maps = {};
     static panoram: Panoram;
     static cid: number;
@@ -75,6 +76,9 @@ export default abstract class Layer {
                 case 'animation':
                     this.createAnimationOverlay(prop, cache);
                     break;
+                case 'video':
+                    this.createVideoOverlay(prop, cache);
+                    break;
             }
         });
     }
@@ -101,7 +105,7 @@ export default abstract class Layer {
         const width = root.clientWidth / 2;
         const height = root.clientHeight / 2;
         const position = this.getScreenPosition(item.data.location);
-
+        // z > 1 is backside
         if (position.z > 1) {
             item.hide();
         } else {
@@ -133,17 +137,35 @@ export default abstract class Layer {
      * 创建动画覆盖物
      */
     static createAnimationOverlay(prop, cache) {
+        const panoram = this.panoram;
+        const camera = panoram.getCamera();
         let item;
     
+        Util.parseLocation(prop, camera);
         if (prop.category == 'frame') {
-            prop.lookat = this.panoram.getCamera().position;
+            prop.lookat = camera.position;
             item = new FrameOverlay(prop);
         } else {
             item = new SpriteOverlay(AnimationOpts[prop.category]);
         }
 
-        this.panoram.addSceneObject(item.particle);
+        panoram.addSceneObject(item.particle);
         cache.animGroup.push(item);
+    }
+
+    /**
+     * 创建视频覆盖物
+     */
+    static createVideoOverlay(prop, cache) {
+        const panoram = this.panoram;
+        const camera = panoram.getCamera();
+
+        Util.parseLocation(prop, camera);
+        prop.lookat = camera.position;
+        const item = new VideoOverlay(prop);
+
+        panoram.addSceneObject(item.particle);
+        cache.videoGroup.push(item);
     }
 
     /**
@@ -162,7 +184,8 @@ export default abstract class Layer {
             return this.maps[id] = {
                 domGroup: [],
                 meshGroup: group,
-                animGroup: []
+                animGroup: [],
+                videoGroup: []
             }
         }
     }
@@ -245,7 +268,10 @@ export default abstract class Layer {
         if (data) {
             data.domGroup.forEach(item => {
                 item.hide();
-                isclean && panoram.removeDomObject(item.elem);
+                if (isclean) {
+                    item.dispose();
+                    panoram.removeDomObject(item.elem);
+                }
             });
 
             if (data.meshGroup.children) {
@@ -255,11 +281,18 @@ export default abstract class Layer {
 
             data.animGroup.forEach(item => {
                 item.hide();
-                isclean && panoram.removeSceneObject(item);
+                if (isclean) {
+                    item.dispose();
+                    panoram.removeSceneObject(item);
+                }
             });
         }
     }
 
+    /**
+     * 展示 overlays
+     * @todo 加入缓存机制, 这个方法才有意义, 当前是 remove + create
+     */
     static showOverlays(data) {
         if (data) {
             data.domGroup.forEach(item => item.show());

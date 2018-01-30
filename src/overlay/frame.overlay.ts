@@ -1,4 +1,5 @@
-import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh, Vector3} from 'three';
+import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
+import {IPluggableOverlay} from './interface.overlay';
 
 /**
  * @file 全景序列帧控制器
@@ -12,7 +13,7 @@ const defaultOpts = {
     inverval: 60
 };
 
-export default class FrameOverlay {
+export default class FrameOverlay implements IPluggableOverlay {
     textures = [];
     data: any;
     limit: number;
@@ -24,7 +25,7 @@ export default class FrameOverlay {
 
     constructor(data) {
         this.data = Object.assign({}, defaultOpts, data);
-        this.particle = this.createParticle();
+        this.particle = this.create();
     }
 
     loadTextures() {
@@ -39,11 +40,11 @@ export default class FrameOverlay {
         }
     }
 
-    createParticle() {
+    create() {
         this.loadTextures();
 
-        const data = this.data;        
-        const vector = new Vector3(data.px, data.py, data.pz);
+        const data = this.data;
+        const location = data.location;      
         const material = new MeshBasicMaterial({
             map: this.textures[0],
             transparent: true
@@ -51,7 +52,7 @@ export default class FrameOverlay {
         const plane = new PlaneGeometry(data.width, data.height);
         const mesh = new Mesh(plane, material);
         
-        mesh.position.set(vector.x, vector.y, vector.z);
+        mesh.position.set(location.x, location.y, location.z);
 
         if (data.rx) {
             mesh.rotation.set(data.rx, data.ry, data.rz);
@@ -114,5 +115,9 @@ export default class FrameOverlay {
 
     show() {
         this.particle.visible = true;
+    }
+
+    dispose() {
+        this.particle.geometry.dispose();
     }
 }

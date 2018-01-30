@@ -1,4 +1,5 @@
 import {Geometry, TextureLoader, PointsMaterial, Vector3, AdditiveBlending, DoubleSide, Points} from 'three';
+import {IPluggableOverlay} from './interface.overlay';
 
 /**
  * @file 雨雪特效 overlay
@@ -17,7 +18,7 @@ function calcPos() {
     return Math.random() * 1400 - 700;
 }
 
-class SpriteOverlay {
+class SpriteOverlay implements IPluggableOverlay {
     data: any;
     particle: Points;
     type = 'sprite';
@@ -82,6 +83,10 @@ class SpriteOverlay {
 
     hide() {
         this.particle.visible = false;
+    }
+
+    dispose() {
+        this.particle.geometry.dispose();
     }
 }
 

@@ -4,7 +4,7 @@ import ResourceLoader from './loaders/resource.loader';
 import Info from './plugins/info.plugin';
 import Multiple from './plugins/multiple.plugin';
 import Wormhole from './plugins/wormhole.plugin';
-import Overlays from './overlay/layer.overlay';
+import Overlays from './overlay/overlays.overlay';
 import Timeline from './animation/timeline.animation';
 
 /**
@@ -16,11 +16,24 @@ abstract class EnvQueue {
     static list = [];
 
     static add(fn, context) {
-        this.list.push(fn.bind(context || null));
+        this.list.push({
+            context: context,
+            fn: fn.bind(context)
+        });
     }
 
     static excute() {
-        this.list.forEach(fn => fn());
+        this.list.forEach(item => item.fn());
+    }
+
+    static remove(context) {
+        const list = this.list;
+        const index = list.find(item => item.context == context);
+        list.splice(index, 1);
+    }
+
+    static len() {
+        return this.list.length;
     }
 };
 
@@ -29,15 +42,35 @@ abstract class Runtime {
     static uid = 0;
     static instanceMap = {};
 
+    /**
+     * 获取全景对象, use after scene-init
+     * @param {string} ref 
+     */
     static getInstance(ref) {
         return this.instanceMap[ref];
     }
 
+    /**
+     * 释放一个全景对象
+     * @param {string} ref 
+     */
     static releaseInstance(ref) {
         const panoram = this.instanceMap[ref];
-        panoram && panoram.dispose();
+        if (panoram) {
+            panoram.dispose();
+            EnvQueue.remove(panoram);
+        }
+
+        if (!EnvQueue.len()) {
+            window.removeEventListener('resize', onEnvResize);
+        }
     }
 
+    /**
+     * 创建全景对象
+     * @param {Element} el root 元素
+     * @param {Object} opts 配置 
+     */
     static createRef(el, opts) {
         el = (typeof el == 'string') ? document.querySelector(el) : el;
 
@@ -145,11 +178,12 @@ window.onload = function() {
     }  
 };
 
-window.addEventListener('resize', event => {
+const onEnvResize = event => {
     clearTimeout(Runtime.timeid);
     Runtime.timeid = setTimeout(function () {
         EnvQueue.excute();
     }, 100);
-});
+};
+window.addEventListener('resize', onEnvResize);
 
 export default Runtime;

@@ -1,4 +1,4 @@
-import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh, FrontSide} from 'three';
+import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
 
 /**
  * @file mesh overlay, static return three mesh object
@@ -14,7 +14,6 @@ export default abstract class MeshOverlay {
 
         const material = new MeshBasicMaterial({
             map: texture,
-            side: FrontSide,
             transparent: true
         });
 

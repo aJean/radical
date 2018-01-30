@@ -1,17 +1,20 @@
+import {IPluggableOverlay} from './interface.overlay';
+
 /**
  * @file dom element overlay
  */
 
-export default class DomOverlay {
+export default class DomOverlay implements IPluggableOverlay {
     data: any;
     elem: any;
 
     constructor(data) {
         this.data = data;
-        this.elem = this.create(data);
+        this.elem = this.create();
     }
 
-    create(data) {
+    create() {
+        const data = this.data;
         const node = document.createElement('div'); 
         node.id = data.id;
         node.innerHTML = data.content;
@@ -24,7 +27,7 @@ export default class DomOverlay {
         return node;
     }
 
-    update(x, y) {
+    update(x: number, y: number): any {
         const elem = this.elem;
         const data = this.data;
 
@@ -42,4 +45,6 @@ export default class DomOverlay {
     show() {
         this.elem.style.display = 'block';
     }
+
+    dispose() {}
 }

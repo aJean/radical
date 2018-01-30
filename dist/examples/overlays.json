@@ -74,9 +74,10 @@
             "category": "frame",
             "imgPath": "../assets/frames",
             "count": 11,
-            "px": 0,
-            "py": 100,
-            "pz": 500
+            "location": {
+                "lng": -160,
+                "lat": 75
+            }
         }]  
     }, {
         "id": "scene3",
