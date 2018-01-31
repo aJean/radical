@@ -7,9 +7,9 @@
     "sceneGroup": [{
         "id": "scene0",
         "name": "罗浮宫",
-        "bxlPath": "../assets/scene0.bxl",
-        "imgPath": "../assets/scene0.jpg",
-        "thumbPath": "../assets/thumb0.jpg",
+        "bxlPath": "../assets/scene0/scene0.bxl",
+        "imgPath": "../assets/scene0/scene0.jpg",
+        "thumbPath": "../assets/scene0/thumb0.jpg",
         "overlays": [{
             "type": "animation",
             "category": "snow"

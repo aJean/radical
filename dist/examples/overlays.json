@@ -8,9 +8,9 @@
     "sceneGroup": [{
         "id": "scene0",
         "name": "罗浮宫",
-        "bxlPath": "../assets/scene0.bxl",
-        "imgPath": "../assets/scene0.jpg",
-        "thumbPath": "../assets/thumb0.jpg",
+        "bxlPath": "../assets/scene0/scene0.bxl",
+        "imgPath": "../assets/scene0/scene0.jpg",
+        "thumbPath": "../assets/scene0/thumb0.jpg",
         "overlays": [{
             "id": "id1",
             "type": "dom",
@@ -60,15 +60,15 @@
     }, {
         "id": "scene1",
         "name": "罗浮宫",
-        "bxlPath": "../assets/scene1.bxl",
-        "imgPath": "../assets/scene1.jpg",
-        "thumbPath": "../assets/thumb1.jpg"
+        "bxlPath": "../assets/scene1/scene1.bxl",
+        "imgPath": "../assets/scene1/scene1.jpg",
+        "thumbPath": "../assets/scene1/thumb1.jpg"
     }, {
         "id": "scene2",
         "name": "罗浮宫",
-        "bxlPath": "../assets/scene2.bxl",
-        "imgPath": "../assets/scene2.jpg",
-        "thumbPath": "../assets/thumb2.jpg",
+        "bxlPath": "../assets/scene2/scene2.bxl",
+        "imgPath": "../assets/scene2/scene2.jpg",
+        "thumbPath": "../assets/scene2/thumb2.jpg",
         "overlays": [{
             "type": "animation",
             "category": "frame",
@@ -82,8 +82,8 @@
     }, {
         "id": "scene3",
         "name": "罗浮宫",
-        "bxlPath": "../assets/scene3.bxl",
-        "imgPath": "../assets/scene3.jpg",
-        "thumbPath": "../assets/thumb3.jpg"
+        "bxlPath": "../assets/scene3/scene3.bxl",
+        "imgPath": "../assets/scene3/scene3.jpg",
+        "thumbPath": "../assets/scene3/thumb3.jpg"
     }]
 }
