@@ -70,6 +70,7 @@ export default class Tween {
 
     stop() {
         this.panoram.unsubscribe('render-process', this.animate, this);
+        return this;
     }
 
     effect(type, duration?) {
@@ -83,10 +84,12 @@ export default class Tween {
 
     process(fn) {
         this.onProcess = fn;
+        return this;
     }
 
     complete(fn) {
         this.onComplete = fn;
+        return this;
     }
 
     animate() {
