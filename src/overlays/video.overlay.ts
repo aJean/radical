@@ -1,22 +1,23 @@
 import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
 import {IPluggableOverlay} from './interface.overlay';
+import Layer from '../ui/layer.ui';
 
 /**
  * @file 视频播放
  */
 
 const defaultOpts = {
-    width: 50,
-    height: 50,
+    width: 30,
+    height: 30,
     loop: false,
-    auto: true,
-    inverval: 60
+    auto: true
 };
 export default class videoOverlay implements IPluggableOverlay {
     data: any;
     particle: any;
     video: any;
     type = "video";
+    layer: Layer;
 
     constructor(data) {
         this.data = Object.assign({}, defaultOpts, data);
@@ -33,9 +34,18 @@ export default class videoOverlay implements IPluggableOverlay {
         video.autoplay = false;
         video.loop = data.loop;
         video.controls = true;
-        video.style.display = 'none';
         video.setAttribute('webkit-playsinlin', 'true');
-        document.body.appendChild(video);
+
+        const layer = this.layer = new Layer({
+            hide: true,
+            closeBtn: true,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            effect: 'scale',
+            onLayerClose: () => this.stop()
+        });
+        layer.setContent(video);
+        layer.appendTo(document.body);
 
         const texture = new TextureLoader().load(data.img);
         const material = new MeshBasicMaterial({
@@ -57,10 +67,12 @@ export default class videoOverlay implements IPluggableOverlay {
     update() {}
 
     play() {
-        const video = this.video;
+        this.layer.show();
+        this.video.play();
+    }
 
-        video.webkitRequestFullScreen();
-        video.play();
+    stop() {
+        this.video.pause();
     }
 
     show() {

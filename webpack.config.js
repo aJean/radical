@@ -29,6 +29,9 @@ module.exports = {
     },
     module: {
         rules: [{
+            test: /\.(eot|woff|woff2|ttf|svg|png|jpg)$/,
+            loader: 'url-loader?limit=30000&name=[name].[ext]'
+        }, {
             test: /\.ts/,
             use: 'ts-loader',
             exclude: /dist|node_modules/

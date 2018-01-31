@@ -1,0 +1,43 @@
+/* web ui */
+
+@font-face {
+    font-family: "Icons";
+    src: url('./icons.ttf') format('truetype');
+}
+
+.panoram-icon {
+    display: inline-block;
+    opacity: 1;
+    font-family: 'Icons';
+    font-size: 18px;
+    text-align: center;
+    -webkit-font-smoothing: antialiased;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+  
+.panoram-icon:before {
+    background: none !important;
+}
+
+.panoram-layer {
+    position: absolute;
+    z-index: 999;
+    box-shadow: 3px 3px 2px rgba(0, 0, 0, .6);
+    -webkit-transition: transform 1s ease-out;
+    -webkit-transform: translateZ(0);
+    .panoram-layer-close {
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        padding: 10px;
+        background: #fff;
+        z-index: 1;
+    }
+    .panoram-layer-close:before {
+        content: "\f2d3";
+    }
+    .panoram-layer-content {
+        overflow: hidden;
+    }
+}

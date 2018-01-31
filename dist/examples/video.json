@@ -16,10 +16,10 @@
             "actionType": "video",
             "loop": false,
             "src": "../assets/video/sintel.mp4",
-            "img": "../assets/video/video.png",
+            "img": "../assets/video/sign.png",
             "location": {
                 "lng": 180,
-                "lat": 90
+                "lat": 105
             }
         }]
     }]

@@ -1,6 +1,7 @@
 import './styles/panoram.style.less';
 import './styles/multiple.style.less';
 import './styles/overlays.style.less';
+import './styles/ui.style.less';
 import Runtime from './src/runtime';
 
 /**

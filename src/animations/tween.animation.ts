@@ -2,7 +2,7 @@ import Panoram from '../panoram';
 import Log from '../log';
 
 /**
- * @file 预设的一些动画
+ * @file js frame animation
  */
 
 const EFFECT = {
