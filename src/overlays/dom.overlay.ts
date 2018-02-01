@@ -1,4 +1,4 @@
-import {IPluggableOverlay} from './interface.overlay';
+import {IPluggableOverlay} from '../interface/overlay.interface';
 
 /**
  * @file dom element overlay

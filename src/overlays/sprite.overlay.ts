@@ -1,5 +1,5 @@
 import {Geometry, TextureLoader, PointsMaterial, Vector3, AdditiveBlending, DoubleSide, Points} from 'three';
-import {IPluggableOverlay} from './interface.overlay';
+import {IPluggableOverlay} from '../interface/overlay.interface';
 
 /**
  * @file 雨雪特效 overlay

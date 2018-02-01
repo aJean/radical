@@ -1,5 +1,5 @@
 import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
-import {IPluggableOverlay} from './interface.overlay';
+import {IPluggableOverlay} from '../interface/overlay.interface';
 import Layer from '../ui/layer.ui';
 
 /**
@@ -85,7 +85,8 @@ export default class videoOverlay implements IPluggableOverlay {
 
     dispose() {
         delete this.particle['instance'];
+        this.video.pause();
         this.particle.geometry.dispose();
-        document.body.removeChild(this.video);
+        this.layer.dispose();
     }
 }

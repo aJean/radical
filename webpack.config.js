@@ -38,12 +38,12 @@ module.exports = {
         }, {
             test: /\.less$/,
             exclude: /node_modules/,
-            loader: ExtractTextPlugin.extract([{loader: 'css-loader'},
+            loader: ExtractTextPlugin.extract([{loader: 'css-loader', options: { minimize: true }},
                 {loader: 'less-loader'}])
         }]
     },
     resolve: {
         extensions: ['.js', '.json', '.ts']
     },
-    plugins: [extractLess, uglifyJs]
+    plugins: [extractLess]
 };

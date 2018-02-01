@@ -52,10 +52,6 @@ export default abstract class Overlays {
             cache.meshGroup.forEach(item => item.update());
         });
 
-        panoram.subscribe('overlay-click', data => {
-
-        });
-
         panoram.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
     }
 
@@ -216,7 +212,7 @@ export default abstract class Overlays {
                 const intersects = raycaster.intersectObjects(group.children, false);
                 intersects.length && this.onOverlayHandle(intersects[0].object['instance']);
             } else {
-                // nescessary to dispatch ???
+                // TODO: nescessary to dispatch ???
                 // panoram.dispatch('panoram-click', panoram);
             }
         } catch(e) {
@@ -225,18 +221,25 @@ export default abstract class Overlays {
     }
 
     /**
-     * 点击覆盖物, dispatch except scene, link
+     * 点击覆盖物
      */
     static onOverlayHandle(instance) {
         const panoram = this.panoram;
         const data = instance.data;
-
+        
         switch (data.actionType) {
             case 'scene':
                 panoram.enterNext(data.sceneId);
                 break;
             case 'link':
                 window.open(data.linkUrl, '_blank');
+                break;
+            // let Multiple plugin control
+            case 'multiple':
+                panoram.dispatch('multiple-active', data);
+                break;
+            case 'video':
+                instance.play();
                 break;
             default:
                 panoram.dispatch('overlay-click', instance, panoram);

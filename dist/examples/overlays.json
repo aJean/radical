@@ -14,9 +14,9 @@
         "overlays": [{
             "id": "id1",
             "type": "dom",
-            "content": "<a style='color:#f00;'>进入场景2</a>",
+            "actionType": "multiple",
+            "content": "<a style='color:#e3b;'>进入场景2</a>",
             "cls": "my-linkbutton",
-            "actionType": "scene",
             "sceneId": "scene1",
             "location": {
                 "lng": 180,
@@ -25,8 +25,8 @@
         }, {
             "id": "id2",
             "type": "dom",
-            "content": "你好啊, baidu",
             "actionType": "link",
+            "content": "你好啊, baidu",
             "linkUrl": "http://www.baidu.com",
             "location": {
                 "x": 300,
@@ -36,10 +36,10 @@
         }, {
             "id": "id3",
             "type": "mesh",
+            "actionType": "link",
             "img": "../assets/chirst.jpg",
             "width": 50,
             "height": 50,
-            "actionType": "link",
             "linkUrl": "http://www.baidu.com",
             "location": {
               "x": 200,
@@ -49,8 +49,8 @@
         }, {
             "id": "id4",
             "type": "dom",
-            "content": "custom button",
             "actionType": "custom",
+            "content": "custom button",
             "location": {
                 "x": 0,
                 "y": 1200,

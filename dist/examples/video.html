@@ -12,13 +12,7 @@
         <div id="test"></div>
         <script src="../lib.js"></script>
         <script>
-            bxl.start('./video.json', '#test', {
-                'overlay-click': function (instance, panoram) {
-                    if (instance.type == 'video') {
-                        instance.play();
-                    }
-                }
-            });
+            bxl.start('./video.json', '#test');
         </script>
     </body>
 </html>

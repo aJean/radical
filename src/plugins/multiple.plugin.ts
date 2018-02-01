@@ -1,27 +1,28 @@
 import Util from '../util';
-import util from '../util';
+import {IPluggableUi} from '../interface/ui.interface';
 
 /**
  * 多场景切换插件
  * @require multiple.less
  */
 
-export default class Multiple {
+export default class Multiple implements IPluggableUi{
     panoram: any;
     data: any;
     root: any;
     outer: any;
     inner: any;
     activeItem: any;
+    container: HTMLElement;
 
     constructor(panoram, data) {
         this.panoram = panoram;
         this.data = data;
-        this.createDom();
+        this.create();
         this.bindEvent();
     }
 
-    createDom() {
+    create() {
         const root = this.root = document.createElement('div');
         const outer = this.outer = document.createElement('div');
         const inner = this.inner = document.createElement('div');
@@ -38,29 +39,59 @@ export default class Multiple {
 
         outer.appendChild(inner);
         root.appendChild(outer);
-        this.panoram.getRoot().appendChild(root);
         this.setActive(inner.childNodes[0]);
+        // add to panoram root
+        this.appendTo(this.panoram.getRoot());
+    }
+
+    getElement() {
+        return this.root;
+    }
+
+    appendTo(container) {
+        this.container = container;
+        container.appendChild(this.root);
     }
 
     bindEvent() {
         const inner = this.inner;
 
-        inner.addEventListener('click', e => {
-            const node = this.findParent(e.target, 'panoram-multiplescene-item');
+        this.onClickHandle = this.onClickHandle.bind(this);
+        this.onWheelHandle = this.onWheelHandle.bind(this);
+
+        inner.addEventListener('click', this.onClickHandle);
+        inner.addEventListener('mousewheel', this.onWheelHandle);
+        // 管理 actionType 为 multiple 的 overlay 
+        this.panoram.subscribe('multiple-active', this.onMultipleActive, this);
+    }
+
+    onClickHandle(e) {
+        const node = this.findParent(e.target, 'panoram-multiplescene-item');
+      
+        if (node) {
             const id = node.getAttribute('data-id');
             const scene = this.data[id];
-
+    
             if (scene) {
                 this.panoram.enterNext(scene);
                 this.setActive(node);
             }
-        });
+        }
+    }
 
-        if (!Util.isMobile) {
-            inner.addEventListener('mousewheel', e => {
-                const dis = e.deltaY;
-                inner.scrollLeft += dis;
-            });
+    onWheelHandle(e) {
+        const dis = e.deltaY;
+        this.inner.scrollLeft += dis;
+    }
+
+    onMultipleActive(data) {
+        const scene = this.data.find(item => item.id == data.sceneId);
+        const index = this.data.indexOf(scene);
+        const node = this.inner.querySelector(`div[data-id="${index}"]`);
+
+        if (scene && node) {
+            this.panoram.enterNext(scene);
+            this.setActive(node);
         }
     }
 
@@ -82,5 +113,22 @@ export default class Multiple {
 
         node.className += ' active';
         this.activeItem = node;
+    }
+
+    show() {
+        this.root.style.display = 'block';
+    }
+
+    hide() {
+        this.root.style.display = 'none';
+    }
+
+    dispose() {
+        this.inner.removeEventListener('click', this.onClickHandle);
+        this.inner.removeEventListener('mousewheel', this.onWheelHandle);
+        this.panoram.unSubscribe('multiple-active', this.onMultipleActive, this);
+
+        this.root.innerHTML = '';
+        this.container.removeChild(this.root);
     }
 }

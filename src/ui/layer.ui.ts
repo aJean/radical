@@ -1,3 +1,6 @@
+import {IPluggableUi} from '../interface/ui.interface';
+import CssAnimation from '../animations/css.animation';
+
 /**
  * @file dom layer
  */
@@ -10,15 +13,22 @@ const defaultOpts = {
     x: 0,
     y: 0
 };
-export default class Layer {
+export default class Layer implements IPluggableUi {
     data: any;
     root: HTMLElement;
     content: HTMLElement;
+    container: HTMLElement;
+    anim: CssAnimation;
 
     constructor(opts?) {
         this.data = Object.assign({}, defaultOpts, opts);
         this.create();
-        this.resetEffect();
+
+        this.anim = new CssAnimation(this.root, {
+            prop: 'transform',
+            timing: 'ease-out',
+            value: 'scale(0)'
+        });
     }
 
     create() {
@@ -44,20 +54,8 @@ export default class Layer {
         this.setPostion(data);
     }
 
-    attchEffect() {
-        const data = this.data;
-
-        if (data.effect == 'scale') {
-            this.root.style.webkitTransform = 'scale(1)';
-        }
-    }
-
-    resetEffect() {
-        const data = this.data;
-
-        if (data.effect == 'scale') {
-            this.root.style.webkitTransform = 'scale(0)';
-        }
+    getElement() {
+        return this.root;
     }
 
     setSize(data) {
@@ -75,19 +73,35 @@ export default class Layer {
     }
 
     appendTo(container) {
+        this.container = container;
         container.appendChild(this.root);
     }
 
     show() {
+        const data = this.data;
         this.root.style.display = 'block';
-        setTimeout(() => this.attchEffect(), 20);
+
+        if (data.effect === 'scale') {
+            setTimeout(() => this.anim.start('scale(1)'), 20);
+        }
     }
 
     hide() {
         const data = this.data;
         data.onLayerClose && data.onLayerClose();
-        this.resetEffect();
 
-        setTimeout(() => this.root.style.display = 'none', 1000);
+        if (data.effect === 'scale') {
+            this.anim.start('scale(0)').complete(() => this.root.style.display = 'none');
+        } else {
+            this.root.style.display = 'none';
+        }
+    }
+
+    dispose() {
+        const root = this.root;
+
+        root.style.display = 'none'
+        root.innerHTML = '';
+        this.container.removeChild(this.root);
     }
 }

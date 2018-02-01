@@ -1,5 +1,5 @@
 import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
-import {IPluggableOverlay} from './interface.overlay';
+import {IPluggableOverlay} from '../interface/overlay.interface';
 
 /**
  * @file 全景序列帧控制器
