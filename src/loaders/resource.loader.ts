@@ -29,7 +29,7 @@ class ResourceLoader extends BaseLoader {
 
                     return Util.decode(header, key) + body;
                 });
-
+                
                 return new Promise((resolve, reject) => {
                     cubeLoader.load(base64s, tex => resolve(tex), null, e => reject(e));
                 });
@@ -74,7 +74,7 @@ function loadCanvas(url, timeout?) {
         image.setAttribute('crossOrigin', 'anonymous');
 
         let count = 0;
-        image.onload = function () {
+        image.onload = () => {
             let canvas;
             let context;
             const tileWidth = image.width;
@@ -121,8 +121,10 @@ function loadCanvas(url, timeout?) {
                 };
             };
         };
+        
+        image.onerror = () => reject('load preview error');
         image.src = url;
-        setTimeout(timeout, () => reject('load images timeout'));
+        setTimeout(timeout, () => reject('load preview timeout'));
     }).catch(e => Log.output(e));
 }
 

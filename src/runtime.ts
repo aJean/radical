@@ -137,23 +137,16 @@ abstract class Runtime {
             if (scene.overlays) {
                 Overlays.install(panoram, scene);
             }
-            
+
             // 加载缩略图
             const thumbImg = await myLoader.loadTexture(scene.imgPath, 'canvas');
 
-            if (!thumbImg) {
-                return Log.output('load preview texture error');
-            }
+            if (thumbImg) {
+                panoram.initMesh(thumbImg);
+                panoram.animate();
 
-            panoram.initMesh(thumbImg);
-            panoram.animate();
-
-            // first time load scene bxl
-            const texture = await myLoader.loadTexture(scene.bxlPath || scene.texPath);
-            if (texture) {
+                const texture = await myLoader.loadTexture(scene.bxlPath || scene.texPath);
                 panoram.replaceTexture(texture, true);
-            } else {
-                Log.output('load textures error');
             }
         } catch(e) {
             Log.output(e)
