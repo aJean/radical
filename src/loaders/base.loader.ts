@@ -1,6 +1,6 @@
 /**
  * @file resource loader
- * @todo cache, proxy
+ * TODO: cache, proxy
  */
 
 const defaultOpts = {

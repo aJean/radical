@@ -3,6 +3,10 @@ import BaseLoader from './base.loader';
 import Util from '../util';
 import Log from '../log';
 
+/**
+ * @file 资源加载器, 支持预览, bxl, image 三种格式
+ */
+
 const cubeLoader = new CubeTextureLoader();
 class ResourceLoader extends BaseLoader {
     loadBxl(url) {
