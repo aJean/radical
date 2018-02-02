@@ -3,7 +3,6 @@ import {IPluggableUi} from '../interface/ui.interface';
 
 /**
  * 多场景切换插件
- * @require multiple.less
  */
 
 export default class Multiple implements IPluggableUi{

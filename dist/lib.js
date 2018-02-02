@@ -48611,6 +48611,9 @@ var __extends = (this && this.__extends) || (function () {
 
 
 
+/**
+ * @file 资源加载器, 支持预览, bxl, image 三种格式
+ */
 var cubeLoader = new __WEBPACK_IMPORTED_MODULE_0_three__["e" /* CubeTextureLoader */]();
 var ResourceLoader = /** @class */ (function (_super) {
     __extends(ResourceLoader, _super);
@@ -48825,6 +48828,32 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         var position = new __WEBPACK_IMPORTED_MODULE_1_three__["A" /* Vector3 */](location.x, location.y, location.z);
         // world coord to screen coord
         return position.project(camera);
+    },
+    /**
+     * 计算画布大小
+     * @param {Object} opts 配置参数
+     * @param {HTMLElement} elem 容器元素
+     */
+    calcRenderSize: function (opts, elem) {
+        var winWidth = window.innerWidth;
+        var winHeight = window.innerHeight;
+        var width = parseInt(opts.width) || elem.clientWidth || winWidth;
+        var height = parseInt(opts.height) || elem.clientHeight || winHeight;
+        /%$/.test(opts.width) && (width = width / 100 * winWidth);
+        /%$/.test(opts.height) && (height = height / 100 * winHeight);
+        return { width: width, height: height, aspect: width / height };
+    },
+    /**
+     * 删除 object3d 对象
+     */
+    cleanup: function (parent, target) {
+        var _this = this;
+        if (target.children.length) {
+            target.children.forEach(function (item) { return _this.cleanup(target, item); });
+        }
+        else if (parent) {
+            parent.remove(target);
+        }
     }
 });
 
@@ -49955,8 +49984,8 @@ var Runtime = /** @class */ (function () {
     };
     /**
      * 创建全景对象
-     * @param {Element} el root 元素
-     * @param {Object} opts 配置
+     * @param {HTMLElement} el root 元素
+     * @param {Object} opts
      */
     Runtime.createRef = function (el, opts) {
         el = (typeof el == 'string') ? document.querySelector(el) : el;
@@ -49965,22 +49994,22 @@ var Runtime = /** @class */ (function () {
         }
         var ref = el.getAttribute('ref') || "panoram_" + this.uid++;
         el.setAttribute('ref', ref);
-        // TODO: more configurable opts
-        var panoram = this.instanceMap[ref] = new __WEBPACK_IMPORTED_MODULE_0__panoram__["a" /* default */](__assign({ el: el }, opts));
-        return panoram;
+        return this.instanceMap[ref] = new __WEBPACK_IMPORTED_MODULE_0__panoram__["a" /* default */](__assign({ el: el }, opts));
     };
-    Runtime.start = function (source, el, events) {
+    Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
-            var config, panoram, name_1;
+            var config, panoram, data, name_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, myLoader.fetchUrl(source)];
+                    case 0: return [4 /*yield*/, myLoader.fetchUrl(url)];
                     case 1:
                         config = _a.sent();
                         if (!(config && config['sceneGroup'])) {
                             return [2 /*return*/, __WEBPACK_IMPORTED_MODULE_1__log__["a" /* default */].output('load source error')];
                         }
                         panoram = this.createRef(el, config['panoram']);
+                        data = this.findScene(config);
+                        __WEBPACK_IMPORTED_MODULE_6__overlays_overlays_overlay__["a" /* default */].install(panoram);
                         if (config['animation']) {
                             __WEBPACK_IMPORTED_MODULE_7__animations_timeline_animation__["a" /* default */].install(config['animation'], panoram);
                         }
@@ -50007,7 +50036,7 @@ var Runtime = /** @class */ (function () {
                         // add to env queue listeners
                         EnvQueue.add(panoram.resize, panoram);
                         // load and render
-                        this.run(panoram, panoram.initSource(config));
+                        this.run(panoram, data);
                         return [2 /*return*/];
                 }
             });
@@ -50016,28 +50045,24 @@ var Runtime = /** @class */ (function () {
     /**
      * 环境构造 stream
      * @param {Object} panoram 全景对象
-     * @param {Object} scene 渲染的场景
+     * @param {Object} data 等待渲染的场景数据
      */
-    Runtime.run = function (panoram, scene) {
+    Runtime.run = function (panoram, data) {
         return __awaiter(this, void 0, void 0, function () {
-            var thumbImg, texture, e_1;
+            var thumbImg, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 4, , 5]);
-                        if (scene.overlays) {
-                            __WEBPACK_IMPORTED_MODULE_6__overlays_overlays_overlay__["a" /* default */].install(panoram, scene);
-                        }
-                        return [4 /*yield*/, myLoader.loadTexture(scene.imgPath, 'canvas')];
+                        return [4 /*yield*/, myLoader.loadTexture(data.imgPath, 'canvas')];
                     case 1:
                         thumbImg = _a.sent();
                         if (!thumbImg) return [3 /*break*/, 3];
-                        panoram.initMesh(thumbImg);
-                        panoram.animate();
-                        return [4 /*yield*/, myLoader.loadTexture(scene.bxlPath || scene.texPath)];
+                        panoram.initPreview(thumbImg);
+                        return [4 /*yield*/, panoram.enterNext(data)];
                     case 2:
-                        texture = _a.sent();
-                        panoram.replaceTexture(texture, true);
+                        _a.sent();
+                        panoram.animate();
                         _a.label = 3;
                     case 3: return [3 /*break*/, 5];
                     case 4:
@@ -50048,6 +50073,15 @@ var Runtime = /** @class */ (function () {
                 }
             });
         });
+    };
+    /**
+   * 初始化资源配置
+   * @param {Object} source 资源配置对象
+   */
+    Runtime.findScene = function (source) {
+        var group = source.sceneGroup;
+        var scene = group.find(function (item) { return item.id == source.defaultSceneId; });
+        return (scene || group[0]);
     };
     Runtime.uid = 0;
     Runtime.instanceMap = {};
@@ -50087,8 +50121,10 @@ window.addEventListener('resize', onEnvResize);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__controls_gyroControl__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__event__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__log__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__loaders_resource_loader__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__animations_tween_animation__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__util__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__loaders_resource_loader__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__ = __webpack_require__(14);
+
 
 
 
@@ -50100,11 +50136,13 @@ window.addEventListener('resize', onEnvResize);
  * @file 全景渲染
  */
 var defaultOpts = {
+    el: undefined,
     fov: 55,
-    fog: null,
-    gyro: false
+    gyro: false,
+    width: null,
+    height: null
 };
-var myLoader = new __WEBPACK_IMPORTED_MODULE_5__loaders_resource_loader__["a" /* default */]();
+var myLoader = new __WEBPACK_IMPORTED_MODULE_6__loaders_resource_loader__["a" /* default */]();
 var Panoram = /** @class */ (function () {
     function Panoram(opts) {
         this.opts = null;
@@ -50115,19 +50153,18 @@ var Panoram = /** @class */ (function () {
         this.skyBox = null;
         this.orbitControl = null;
         this.gyroControl = null;
-        this.currentScene = null;
+        this.currentData = null;
         this.event = new __WEBPACK_IMPORTED_MODULE_3__event__["a" /* default */]();
         this.group = [];
         this.pluginList = [];
         this.opts = Object.assign({}, defaultOpts, opts);
         this.initEnv();
-        this.initControl();
         this.dispatch('render-init', this);
     }
     Panoram.prototype.initEnv = function () {
         var opts = this.opts;
         var root = this.root = opts.el;
-        var size = this.calcSize(opts, root);
+        var size = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].calcRenderSize(opts, root);
         // 渲染器
         var webgl = this.webgl = new __WEBPACK_IMPORTED_MODULE_0_three__["B" /* WebGLRenderer */]({ alpha: true, antialias: true });
         webgl.autoClear = true;
@@ -50139,37 +50176,35 @@ var Panoram = /** @class */ (function () {
         // 场景, 相机
         this.scene = new __WEBPACK_IMPORTED_MODULE_0_three__["v" /* Scene */]();
         this.camera = new __WEBPACK_IMPORTED_MODULE_0_three__["p" /* PerspectiveCamera */](opts.fov, size.aspect, 0.1, 10000);
-        // fog ?
-    };
-    /**
-     * 初始化场景控制器和陀螺仪
-     */
-    Panoram.prototype.initControl = function () {
-        var opts = this.opts;
+        // 场景控制器
         var vector = new __WEBPACK_IMPORTED_MODULE_0_three__["A" /* Vector3 */](0, 0, 1);
-        var control = this.orbitControl = new __WEBPACK_IMPORTED_MODULE_1__controls_orbitControl__["a" /* default */](this.camera, this.webgl.domElement);
-        // look at front
-        control.target = vector;
-        control.target0 = vector.clone();
-        control.autoRotate = opts.autoRotate;
-        // look at angle
-        this.setLook(opts.lng, opts.lat);
-        // enable gyro
+        var control = this.orbitControl = new __WEBPACK_IMPORTED_MODULE_1__controls_orbitControl__["a" /* default */](this.camera, webgl.domElement);
+        // 陀螺仪控制器
         if (opts.gyro) {
             this.gyroControl = new __WEBPACK_IMPORTED_MODULE_2__controls_gyroControl__["a" /* default */](this.camera, control);
         }
+        // look at front
+        control.target = vector;
+        control.target0 = vector.clone();
     };
-    Panoram.prototype.stopControl = function () {
-        if (this.gyroControl) {
-            this.gyroControl.disconnect();
-            delete this.gyroControl;
+    Panoram.prototype.resetEnv = function (data) {
+        var camera = this.camera;
+        var orbitControl = this.orbitControl;
+        // scene rotate
+        orbitControl.autoRotate = data.autoRotate;
+        // scene fov
+        if (data.fov !== undefined) {
+            camera.fov = data.fov;
+            camera.updateProjectionMatrix();
         }
+        // look at angle
+        this.setLook(data.lng, data.lat);
     };
     /**
      * 渲染预览图纹理
      * @param {Object} texture 纹理贴图
      */
-    Panoram.prototype.initMesh = function (texture) {
+    Panoram.prototype.initPreview = function (texture) {
         var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
             envMap: texture,
             side: __WEBPACK_IMPORTED_MODULE_0_three__["b" /* BackSide */],
@@ -50182,23 +50217,8 @@ var Panoram = /** @class */ (function () {
         this.dispatch('scene-init', this);
     };
     /**
-     * 初始化资源配置
-     * @param {Object} source 配置对象
+     * 在渲染帧中更新控制器
      */
-    Panoram.prototype.initSource = function (source) {
-        var group = this.group = source.sceneGroup;
-        var scene = group.find(function (item) { return item.id == source.defaultSceneId; });
-        return (this.currentScene = scene || group[0]);
-    };
-    Panoram.prototype.calcSize = function (opts, elem) {
-        var winWidth = window.innerWidth;
-        var winHeight = window.innerHeight;
-        var width = parseInt(opts.width) || elem.clientWidth || winWidth;
-        var height = parseInt(opts.height) || elem.clientHeight || winHeight;
-        /%$/.test(opts.width) && (width = width / 100 * winWidth);
-        /%$/.test(opts.height) && (height = height / 100 * winHeight);
-        return { width: width, height: height, aspect: width / height };
-    };
     Panoram.prototype.updateControl = function () {
         if (this.gyroControl && this.gyroControl.enabled) {
             this.gyroControl.update();
@@ -50243,7 +50263,7 @@ var Panoram = /** @class */ (function () {
      */
     Panoram.prototype.setFov = function (fov, duration) {
         var camera = this.getCamera();
-        new __WEBPACK_IMPORTED_MODULE_6__animations_tween_animation__["a" /* default */](camera).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
+        new __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__["a" /* default */](camera).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
             .start(['fov'], this).process(function () { return camera.updateProjectionMatrix(); });
     };
     /**
@@ -50251,6 +50271,15 @@ var Panoram = /** @class */ (function () {
      */
     Panoram.prototype.getFov = function () {
         return this.getCamera().fov;
+    };
+    /**
+     * 安装插件并注入属性
+     * @param {Object} Plugin 插件 class
+     * @param {Object} data 插件数据
+     */
+    Panoram.prototype.addPlugin = function (Plugin, data) {
+        var plugin = new Plugin(this, data);
+        this.pluginList.push(plugin);
     };
     Panoram.prototype.subscribe = function (type, fn, context) {
         this.event.on(type, fn, context);
@@ -50262,40 +50291,28 @@ var Panoram = /** @class */ (function () {
         this.event.emit(type, arg1, arg2);
     };
     /**
-     * 安装插件并注入属性
-     * @param {Object} Plugin 插件 class
-     * @param {Object} data 插件数据
-     */
-    Panoram.prototype.addPlugin = function (Plugin, data) {
-        var plugin = new Plugin(this, data);
-        this.pluginList.push(plugin);
-    };
-    Panoram.prototype.render = function () {
-        this.webgl.render(this.scene, this.camera);
-    };
-    /**
      * 渲染场景贴图
      * @param {Object} texture 场景原图纹理
      * @param {boolean} slient 安静模式
      */
-    Panoram.prototype.replaceTexture = function (texture, slient) {
+    Panoram.prototype.replaceTexture = function (texture) {
         texture.mapping = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
         texture.needsUpdate = true;
         var tempTex = this.skyBox.material.envMap;
         this.skyBox.material.envMap = texture;
         tempTex.dispose();
         // 触发场景切换事件
-        !slient && this.dispatch('scene-attach', this.currentScene, this);
+        this.dispatch('scene-attach', this.currentData, this);
     };
     Panoram.prototype.animate = function () {
         this.updateControl();
-        this.dispatch('render-process', this.currentScene, this);
-        this.render();
+        this.dispatch('render-process', this.currentData, this);
+        this.webgl.render(this.scene, this.camera);
         requestAnimationFrame(this.animate.bind(this));
     };
     Panoram.prototype.resize = function () {
         var camera = this.camera;
-        var size = this.calcSize({}, this.root);
+        var size = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].calcRenderSize(this.opts, this.root);
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.webgl.setSize(size.width, size.height);
@@ -50312,27 +50329,33 @@ var Panoram = /** @class */ (function () {
     Panoram.prototype.getScene = function () {
         return this.scene;
     };
-    Panoram.prototype.getSize = function () {
-        return {
-            width: this.root.clientWidth,
-            height: this.root.clientHeight
-        };
-    };
     /**
      * 获取 camera lookat 目标的 vector3 obj
      */
     Panoram.prototype.getLookAtTarget = function () {
         return this.orbitControl.target;
     };
+    /**
+     * 添加 object3d 对象
+     */
     Panoram.prototype.addSceneObject = function (obj) {
         this.scene.add(obj);
     };
+    /**
+     * 删除 object3d 对象
+     */
     Panoram.prototype.removeSceneObject = function (obj) {
         this.scene.remove(obj);
     };
+    /**
+     * 添加 dom 对象
+     */
     Panoram.prototype.addDomObject = function (obj) {
         this.root.appendChild(obj);
     };
+    /**
+     * 删除 dom 对象
+     */
     Panoram.prototype.removeDomObject = function (obj) {
         this.root.removeChild(obj);
     };
@@ -50353,37 +50376,34 @@ var Panoram = /** @class */ (function () {
         if (!data) {
             return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('no scene data provided');
         }
-        myLoader.loadTexture(data.bxlPath || data.texPath)
+        return myLoader.loadTexture(data.bxlPath || data.texPath)
             .then(function (texture) {
-            if (texture) {
-                _this.currentScene = data;
-                _this.replaceTexture(texture);
-            }
-            else {
-                __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('load textures error');
-            }
-        }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output(e); });
+            _this.currentData = data;
+            _this.resetEnv(data);
+            _this.replaceTexture(texture);
+        }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('load source texture fail'); });
+    };
+    Panoram.prototype.startGyroControl = function () {
+        if (this.gyroControl && !this.gyroControl.enabled) {
+            this.gyroControl.connect();
+        }
+    };
+    Panoram.prototype.stopGyroControl = function () {
+        if (this.gyroControl) {
+            this.gyroControl.disconnect();
+            delete this.gyroControl;
+        }
     };
     /**
      * 开场动画结束
      */
     Panoram.prototype.noTimeline = function () {
-        if (this.gyroControl && !this.gyroControl.enabled) {
-            this.gyroControl.connect();
-        }
+        this.startGyroControl();
     };
     Panoram.prototype.dispose = function () {
-        function cleanup(parent, target) {
-            if (target.children.length) {
-                target.children.forEach(function (item) { return cleanup(target, item); });
-            }
-            else if (parent) {
-                parent.remove(target);
-            }
-        }
-        cleanup(null, this.scene);
+        __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].cleanup(null, this.scene);
+        this.stopGyroControl();
         this.dispatch('render-dispose', this);
-        this.stopControl();
         this.event.removeAllListeners();
         this.webgl.dispose();
         this.root.innerHTML = '';
@@ -51457,7 +51477,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 "use strict";
 /**
  * @file resource loader
- * @todo cache, proxy
+ * TODO: cache, proxy
  */
 var defaultOpts = {
     proxy: '',
@@ -54949,7 +54969,6 @@ var Info = /** @class */ (function () {
 "use strict";
 /**
  * 多场景切换插件
- * @require multiple.less
  */
 var Multiple = /** @class */ (function () {
     function Multiple(panoram, data) {
@@ -55219,10 +55238,9 @@ var AnimationOpts = {
 var Overlays = /** @class */ (function () {
     function Overlays() {
     }
-    Overlays.install = function (panoram, data) {
+    Overlays.install = function (panoram) {
         var _this = this;
         this.panoram = panoram;
-        this.create(data);
         panoram.subscribe('scene-attach', function (scene) {
             _this.removeOverlays();
             _this.create(scene);

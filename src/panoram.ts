@@ -12,9 +12,11 @@ import Tween from './animations/tween.animation';
  */
 
 const defaultOpts = {
+    el: undefined,
     fov: 55,
-    fog: null,
-    gyro: false
+    gyro: false,
+    width: null,
+    height: null
 };
 const myLoader = new ResourceLoader();
 export default class Panoram {
@@ -26,7 +28,7 @@ export default class Panoram {
     skyBox = null;
     orbitControl = null;
     gyroControl = null;
-    currentScene = null;
+    currentData = null;
     event = new EventEmitter();
     group = [];
     pluginList = [];
@@ -34,14 +36,13 @@ export default class Panoram {
     constructor(opts) {
         this.opts = Object.assign({}, defaultOpts, opts);
         this.initEnv();
-        this.initControl();
         this.dispatch('render-init', this);
     }
 
     initEnv() {
         const opts = this.opts;
         const root = this.root = opts.el;
-        const size = this.calcSize(opts, root);
+        const size = Util.calcRenderSize(opts, root);
         // 渲染器
         const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});
         webgl.autoClear = true;
@@ -53,40 +54,37 @@ export default class Panoram {
         // 场景, 相机
         this.scene = new Scene();
         this.camera = new PerspectiveCamera(opts.fov, size.aspect, 0.1, 10000);
-        // fog ?
-    }
-
-    /**
-     * 初始化场景控制器和陀螺仪
-     */
-    initControl() {
-        const opts = this.opts;
+        // 场景控制器
         const vector = new Vector3(0, 0, 1);
-        const control = this.orbitControl = new OrbitControl(this.camera, this.webgl.domElement);
-        // look at front
-        control.target = vector;
-        control.target0 = vector.clone();
-        control.autoRotate = opts.autoRotate;
-        // look at angle
-        this.setLook(opts.lng, opts.lat);
-        // enable gyro
+        const control = this.orbitControl = new OrbitControl(this.camera, webgl.domElement);
+        // 陀螺仪控制器
         if (opts.gyro) {
             this.gyroControl = new GyroControl(this.camera, control);
         }
+        // look at front
+        control.target = vector;
+        control.target0 = vector.clone();
     }
 
-    stopControl() {
-        if (this.gyroControl) {
-            this.gyroControl.disconnect();
-            delete this.gyroControl;
+    resetEnv(data) {
+        const camera = this.camera;
+        const orbitControl = this.orbitControl;
+        // scene rotate
+        orbitControl.autoRotate = data.autoRotate;
+        // scene fov
+        if (data.fov !== undefined) {
+            camera.fov = data.fov;
+            camera.updateProjectionMatrix()
         }
+        // look at angle
+        this.setLook(data.lng, data.lat);
     }
 
     /**
      * 渲染预览图纹理
      * @param {Object} texture 纹理贴图 
      */
-    initMesh(texture) {
+    initPreview(texture) {
         const material = new MeshBasicMaterial({
             envMap: texture,
             side: BackSide,
@@ -101,28 +99,8 @@ export default class Panoram {
     }
 
     /**
-     * 初始化资源配置
-     * @param {Object} source 配置对象 
+     * 在渲染帧中更新控制器
      */
-    initSource(source) {
-        const group = this.group = source.sceneGroup;
-        const scene = group.find(item => item.id == source.defaultSceneId);
-
-        return (this.currentScene = scene || group[0]);
-    }
-
-    calcSize(opts, elem) {
-        const winWidth = window.innerWidth;
-        const winHeight = window.innerHeight;
-        let width = parseInt(opts.width) || elem.clientWidth || winWidth;
-        let height = parseInt(opts.height) || elem.clientHeight || winHeight;
-
-        /%$/.test(opts.width) && (width = width / 100 * winWidth);
-        /%$/.test(opts.height) && (height = height / 100 * winHeight);
-
-        return {width, height, aspect: width / height};
-    }
-
     updateControl() {
         if (this.gyroControl && this.gyroControl.enabled) {
             this.gyroControl.update();
@@ -184,6 +162,16 @@ export default class Panoram {
         return this.getCamera().fov;
     }
 
+    /**
+     * 安装插件并注入属性
+     * @param {Object} Plugin 插件 class
+     * @param {Object} data 插件数据
+     */
+    addPlugin(Plugin, data) {
+        const plugin = new Plugin(this, data);
+        this.pluginList.push(plugin);
+    }
+
     subscribe(type, fn, context?) {
         this.event.on(type, fn, context);
     }
@@ -197,25 +185,11 @@ export default class Panoram {
     }
 
     /**
-     * 安装插件并注入属性
-     * @param {Object} Plugin 插件 class
-     * @param {Object} data 插件数据
-     */
-    addPlugin(Plugin, data) {
-        const plugin = new Plugin(this, data);
-        this.pluginList.push(plugin);
-    }
-
-    render() {
-        this.webgl.render(this.scene, this.camera);
-    }
-
-    /**
      * 渲染场景贴图
      * @param {Object} texture 场景原图纹理
      * @param {boolean} slient 安静模式
      */
-    replaceTexture(texture, slient?) {
+    replaceTexture(texture) {
         texture.mapping = CubeRefractionMapping;
         texture.needsUpdate = true;
 
@@ -223,20 +197,20 @@ export default class Panoram {
         this.skyBox.material.envMap = texture;
         tempTex.dispose();
         // 触发场景切换事件
-        !slient && this.dispatch('scene-attach', this.currentScene, this);
+        this.dispatch('scene-attach', this.currentData, this);
     }
 
     animate() {
         this.updateControl();
-        this.dispatch('render-process', this.currentScene, this);
-        this.render();
+        this.dispatch('render-process', this.currentData, this);
+        this.webgl.render(this.scene, this.camera);
 
         requestAnimationFrame(this.animate.bind(this));
     }
 
     resize() {
         const camera = this.camera;
-        const size = this.calcSize({}, this.root);
+        const size =  Util.calcRenderSize(this.opts, this.root);
 
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
@@ -259,13 +233,6 @@ export default class Panoram {
         return this.scene;
     }
 
-    getSize() {
-        return {
-            width: this.root.clientWidth,
-            height: this.root.clientHeight
-        };
-    }
-    
     /**
      * 获取 camera lookat 目标的 vector3 obj
      */
@@ -273,18 +240,30 @@ export default class Panoram {
         return this.orbitControl.target;
     }
 
+    /**
+     * 添加 object3d 对象
+     */
     addSceneObject(obj) {
         this.scene.add(obj);
     }
 
+    /**
+     * 删除 object3d 对象
+     */
     removeSceneObject(obj) {
         this.scene.remove(obj);
     }
 
+    /**
+     * 添加 dom 对象
+     */
     addDomObject(obj) {
         this.root.appendChild(obj);
     }
 
+    /**
+     * 删除 dom 对象
+     */
     removeDomObject(obj) {
         this.root.removeChild(obj);
     }
@@ -308,38 +287,39 @@ export default class Panoram {
             return Log.output('no scene data provided');
         }
 
-        myLoader.loadTexture(data.bxlPath || data.texPath)
+        return myLoader.loadTexture(data.bxlPath || data.texPath)
             .then(texture => {
-                if (texture) {
-                    this.currentScene = data;
-                    this.replaceTexture(texture);
-                } else {
-                    Log.output('load textures error');
-                }
-            }).catch(e => Log.output(e));
+                this.currentData = data;
+                this.resetEnv(data);
+                this.replaceTexture(texture);
+            }).catch(e => Log.output('load source texture fail'));
+    }
+
+    startGyroControl() {
+        if (this.gyroControl && !this.gyroControl.enabled) {
+            this.gyroControl.connect();
+        }
+    }
+
+    stopGyroControl() {
+        if (this.gyroControl) {
+            this.gyroControl.disconnect();
+            delete this.gyroControl;
+        }
     }
 
     /** 
      * 开场动画结束
      */
     noTimeline() {
-        if (this.gyroControl && !this.gyroControl.enabled) {
-            this.gyroControl.connect();
-        }
+       this.startGyroControl();
     }
 
     dispose() {
-        function cleanup(parent, target) {
-            if (target.children.length) {
-                target.children.forEach(item => cleanup(target, item));
-            } else if (parent) {
-                parent.remove(target);
-            }
-        }
+        Util.cleanup(null, this.scene);
 
-        cleanup(null, this.scene);
+        this.stopGyroControl();
         this.dispatch('render-dispose', this);
-        this.stopControl();
         this.event.removeAllListeners();
         this.webgl.dispose();
         this.root.innerHTML = '';

@@ -97,5 +97,33 @@ export default {
         const position = new Vector3(location.x, location.y, location.z);
         // world coord to screen coord
         return position.project(camera);
+    },
+
+    /**
+     * 计算画布大小
+     * @param {Object} opts 配置参数
+     * @param {HTMLElement} elem 容器元素 
+     */
+    calcRenderSize(opts, elem) {
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+        let width = parseInt(opts.width) || elem.clientWidth || winWidth;
+        let height = parseInt(opts.height) || elem.clientHeight || winHeight;
+
+        /%$/.test(opts.width) && (width = width / 100 * winWidth);
+        /%$/.test(opts.height) && (height = height / 100 * winHeight);
+
+        return {width, height, aspect: width / height};
+    },
+
+    /**
+     * 删除 object3d 对象 
+     */
+    cleanup(parent, target) {
+        if (target.children.length) {
+            target.children.forEach(item => this.cleanup(target, item));
+        } else if (parent) {
+            parent.remove(target);
+        }
     }
 };

@@ -68,8 +68,8 @@ abstract class Runtime {
 
     /**
      * 创建全景对象
-     * @param {Element} el root 元素
-     * @param {Object} opts 配置 
+     * @param {HTMLElement} el root 元素
+     * @param {Object} opts
      */
     static createRef(el, opts) {
         el = (typeof el == 'string') ? document.querySelector(el) : el;
@@ -81,19 +81,20 @@ abstract class Runtime {
         const ref = el.getAttribute('ref') || `panoram_${this.uid++}`;
         el.setAttribute('ref', ref);
 
-        // TODO: more configurable opts
-        const panoram = this.instanceMap[ref] = new Panoram({el, ...opts});
-        return panoram;
+        return this.instanceMap[ref] = new Panoram({el, ...opts});
     }
 
-    static async start(source, el, events?) {
-        const config = await myLoader.fetchUrl(source);
+    static async start(url, el, events?) {
+        const config = await myLoader.fetchUrl(url);
 
         if (!(config && config['sceneGroup'])) {
             return Log.output('load source error');
         }
 
         const panoram = this.createRef(el, config['panoram']);
+        const data = this.findScene(config);
+
+        Overlays.install(panoram);
 
         if (config['animation']) {
             Timeline.install(config['animation'], panoram);
@@ -124,33 +125,38 @@ abstract class Runtime {
         // add to env queue listeners
         EnvQueue.add(panoram.resize, panoram);
         // load and render
-        this.run(panoram, panoram.initSource(config));
+        this.run(panoram, data);
     }
 
     /**
      * 环境构造 stream
      * @param {Object} panoram 全景对象
-     * @param {Object} scene 渲染的场景
+     * @param {Object} data 等待渲染的场景数据
      */
-    static async run(panoram, scene) {  
+    static async run(panoram, data) {  
         try {
-            if (scene.overlays) {
-                Overlays.install(panoram, scene);
-            }
-
             // 加载缩略图
-            const thumbImg = await myLoader.loadTexture(scene.imgPath, 'canvas');
-
+            const thumbImg = await myLoader.loadTexture(data.imgPath, 'canvas');
+            // 加载原图
             if (thumbImg) {
-                panoram.initMesh(thumbImg);
+                panoram.initPreview(thumbImg);
+                await panoram.enterNext(data);
                 panoram.animate();
-
-                const texture = await myLoader.loadTexture(scene.bxlPath || scene.texPath);
-                panoram.replaceTexture(texture, true);
             }
         } catch(e) {
             Log.output(e)
         }
+    }
+
+      /**
+     * 初始化资源配置
+     * @param {Object} source 资源配置对象
+     */
+    static findScene(source) {
+        const group = source.sceneGroup;
+        const scene = group.find(item => item.id == source.defaultSceneId);
+
+        return (scene || group[0]);
     }
 };
 

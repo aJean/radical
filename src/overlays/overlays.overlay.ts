@@ -37,9 +37,8 @@ export default abstract class Overlays {
     static cid: number;
     static raycaster = new Raycaster();
 
-    static install(panoram: Panoram, data) {
+    static install(panoram: Panoram) {
         this.panoram = panoram;
-        this.create(data);
 
         panoram.subscribe('scene-attach', scene => {
             this.removeOverlays(); 
