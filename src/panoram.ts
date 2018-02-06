@@ -200,6 +200,9 @@ export default class Panoram {
         this.dispatch('scene-attach', this.currentData, this);
     }
 
+    /**
+     * 帧渲染
+     */
     animate() {
         this.updateControl();
         this.dispatch('render-process', this.currentData, this);
@@ -217,20 +220,46 @@ export default class Panoram {
         this.webgl.setSize(size.width, size.height);
     }
 
+    /**
+     * 获取相机
+     */
     getCamera() {
         return this.camera;
     }
 
+    /**
+     * 获取画布元素
+     */
     getCanvas() {
         return this.webgl.domElement;
     }
 
+    /**
+     * 获取容器元素
+     */
     getRoot() {
         return this.root;
     }
 
+    /**
+     * 获取场景对象
+     */
     getScene() {
         return this.scene;
+    }
+
+    /**
+     * 开始旋转
+     */
+    startRotate() {
+        this.orbitControl.autoRotate = true;
+    }
+
+    /**
+     * 停止旋转
+     */
+    stopRotate() {
+        this.orbitControl.autoRotate = false;
     }
 
     /**

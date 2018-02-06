@@ -158,6 +158,10 @@ abstract class Runtime {
 
         return (scene || group[0]);
     }
+
+    static addOverlay(panoram, ) {
+
+    }
 };
 
 const pastLoad = window.onload;

@@ -52,7 +52,7 @@ export default {
 
     /**
      * 解析数据地理位置
-     * location.lng [0, 360] location.lat [90, -90]
+     * location.lng [-180, 180] location.lat [0, 180]
      * @param {Object} data
      * @param {Object} camera 
      */
