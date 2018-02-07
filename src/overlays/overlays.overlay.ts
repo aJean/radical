@@ -31,18 +31,18 @@ const AnimationOpts = {
     }
 };
 
-export default abstract class Overlays {
-    static maps = {};
-    static panoram: Panoram;
-    static cid: number;
-    static raycaster = new Raycaster();
+export default class Overlays {
+    maps = {};
+    panoram: Panoram;
+    cid: number;
+    raycaster = new Raycaster();
 
-    static install(panoram: Panoram) {
+    constructor(panoram: Panoram) {
         this.panoram = panoram;
 
         panoram.subscribe('scene-attach', scene => {
-            this.removeOverlays(); 
-            this.create(scene);
+            this.removeOverlays();
+            this.init(scene);
         });
 
         panoram.subscribe('render-process', scene => {
@@ -54,13 +54,17 @@ export default abstract class Overlays {
         panoram.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
     }
 
-    static create(data) {
+    init(data) {
+        // scene cache id
         if (!data.id) {
             data.id = 'panoram' + Date.now();
         }
 
         this.cid = data.id;
+        this.create(data);
+    }
 
+    create(data) {
         const cache = this.getCurrent(this.cid);
         const props = data.overlays || [];
 
@@ -85,7 +89,7 @@ export default abstract class Overlays {
     /**
      * 创建 dom 覆盖物并添加进 maps
      */
-    static createDomOverlay(prop, cache) {
+    createDomOverlay(prop, cache) {
         Util.parseLocation(prop, this.panoram.getCamera());
 
         const item = new DomOverlay(prop);
@@ -99,7 +103,7 @@ export default abstract class Overlays {
     /**
      * 不断更新 dom overlay 的屏幕坐标
      */
-    static updateDomOverlay(item) {
+    updateDomOverlay(item) {
         const panoram = this.panoram;
         const root = panoram.getRoot();
         const width = root.clientWidth / 2;
@@ -118,7 +122,7 @@ export default abstract class Overlays {
     /**
      * 创建 mesh 覆盖物
      */
-    static createMeshOverlay(prop, cache) {
+    createMeshOverlay(prop, cache) {
         const camera = this.panoram.getCamera();
 
         Util.parseLocation(prop, camera);
@@ -138,7 +142,7 @@ export default abstract class Overlays {
     /**
      * 创建动画覆盖物
      */
-    static createAnimationOverlay(prop, cache) {
+    createAnimationOverlay(prop, cache) {
         const panoram = this.panoram;
         const camera = panoram.getCamera();
         let item;
@@ -158,7 +162,7 @@ export default abstract class Overlays {
     /**
      * 创建视频覆盖物
      */
-    static createVideoOverlay(prop, cache) {
+    createVideoOverlay(prop, cache) {
         const panoram = this.panoram;
         const camera = panoram.getCamera();
 
@@ -174,7 +178,7 @@ export default abstract class Overlays {
      * 获取当前的缓存对象
      * @param {any} id 场景id
      */
-    static getCurrent(id) {
+    getCurrent(id) {
         const data = this.maps[id];
 
         if (data) {
@@ -194,7 +198,7 @@ export default abstract class Overlays {
     /**
      * 点击 canvas
      */
-    static onCanvasHandle(evt) {
+    onCanvasHandle(evt) {
         const panoram = this.panoram;
         const raycaster = this.raycaster;
         const element = panoram.getCanvas();
@@ -222,7 +226,7 @@ export default abstract class Overlays {
     /**
      * 点击覆盖物
      */
-    static onOverlayHandle(instance) {
+    onOverlayHandle(instance) {
         const panoram = this.panoram;
         const data = instance.data;
         
@@ -248,7 +252,7 @@ export default abstract class Overlays {
     /**
      * 删除当前场景下的所有 overlays
      */
-    static removeOverlays() {
+    removeOverlays() {
         const cache = this.getCurrent(this.cid);
         delete this.maps[this.cid];
         this.cid = null;
@@ -261,7 +265,7 @@ export default abstract class Overlays {
      * @param {Object} data 缓存数据 
      * @param {boolean} isclean 是否清除
      */
-    static hideOverlays(data, isclean) {
+    hideOverlays(data, isclean) {
         const panoram = this.panoram;
 
         if (data) {
@@ -293,7 +297,7 @@ export default abstract class Overlays {
      * 展示 overlays
      * @todo 加入缓存机制, 这个方法才有意义, 当前是 remove + create
      */
-    static showOverlays(data) {
+    showOverlays(data) {
         if (data) {
             data.domGroup.forEach(item => item.show());
             data.meshGroup.forEach(item => item.show());

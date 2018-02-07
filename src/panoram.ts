@@ -6,6 +6,7 @@ import Log from './log';
 import Util from './util';
 import ResourceLoader from './loaders/resource.loader';
 import Tween from './animations/tween.animation';
+import Overlays from './overlays/overlays.overlay';
 
 /**
  * @file 全景渲染
@@ -20,6 +21,7 @@ const defaultOpts = {
 };
 const myLoader = new ResourceLoader();
 export default class Panoram {
+    overlays: Overlays;
     opts = null;
     root = null;
     webgl = null;
@@ -35,22 +37,25 @@ export default class Panoram {
 
     constructor(opts) {
         this.opts = Object.assign({}, defaultOpts, opts);
+    
         this.initEnv();
         this.dispatch('render-init', this);
     }
 
     initEnv() {
         const opts = this.opts;
-        const root = this.root = opts.el;
-        const size = Util.calcRenderSize(opts, root);
+        const container = opts.el;
+        const size = Util.calcRenderSize(opts, container);
+        const root = this.root = Util.createElement('<div class="panoram-root" style="width:'
+            + size.width + 'px;height:' + size.height + 'px;"></div>');
         // 渲染器
         const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(size.width, size.height);
-        // 容器 element
-        root.className += root.className ? ' panoram-root' : 'panoram-root';
+        // 容器
         root.appendChild(webgl.domElement);
+        container.appendChild(root);
         // 场景, 相机
         this.scene = new Scene();
         this.camera = new PerspectiveCamera(opts.fov, size.aspect, 0.1, 10000);
@@ -64,6 +69,8 @@ export default class Panoram {
         // look at front
         control.target = vector;
         control.target0 = vector.clone();
+        // bind overlays events
+        this.overlays = new Overlays(this);        
     }
 
     resetEnv(data) {
@@ -72,12 +79,10 @@ export default class Panoram {
         // scene rotate
         orbitControl.autoRotate = data.autoRotate;
         // scene fov
-        if (data.fov !== undefined) {
-            camera.fov = data.fov;
-            camera.updateProjectionMatrix()
-        }
+        camera.fov = data.fov || this.opts.fov;
+        camera.updateProjectionMatrix()
         // look at angle
-        this.setLook(data.lng, data.lat);
+        this.setLook(data.lng || 180, data.lat || 90);
     }
 
     /**
@@ -163,6 +168,15 @@ export default class Panoram {
     }
 
     /**
+     * 恢复视角
+     */
+    resetFov() {
+        const camera = this.camera;
+        camera.fov = this.opts.fov;
+        camera.updateProjectionMatrix();
+    }
+
+    /**
      * 安装插件并注入属性
      * @param {Object} Plugin 插件 class
      * @param {Object} data 插件数据
@@ -211,7 +225,10 @@ export default class Panoram {
         requestAnimationFrame(this.animate.bind(this));
     }
 
-    resize() {
+    /**
+     * 窗口变化响应事件
+     */
+    onResize() {
         const camera = this.camera;
         const size =  Util.calcRenderSize(this.opts, this.root);
 
@@ -297,10 +314,8 @@ export default class Panoram {
         this.root.removeChild(obj);
     }
 
-    reset() {
-        const camera = this.camera;
-        camera.fov = this.opts.fov;
-        camera.updateProjectionMatrix();
+    addOverlay(data) {
+        this.overlays.create(data);
     }
 
     /**

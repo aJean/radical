@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>自动渲染全景</title>
+        <link rel="stylesheet" href="../lib.css">
+        <link rel="stylesheet" href="../index.css">
+    </head>
+    <body>
+        <div id="test" ref="mytest"></div>
+        <div class="overlay-panel">
+            <button>添加 overlay</button>
+        </div>
+        <script src="../lib.js"></script>
+        <script>
+            bxl.start('./add.json', '#test', {
+                'overlay-click': function (node) {
+                    console.log(node.data);
+                }
+            });
+
+            document.querySelector('.overlay-panel button').addEventListener('click', function () {
+                const panoram = bxl.getPanoram('mytest');
+                panoram.addOverlay({
+                    'overlays': [{
+                        id: '2q',
+                        type: 'dom',
+                        actionType: 'custom',
+                        content: '<strong>动态热点</strong>',
+                        location: {
+                            lng: 180,
+                            lat: 100
+                        }
+                    }]
+                });
+             });
+        </script>
+    </body>
+</html>

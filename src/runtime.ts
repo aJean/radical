@@ -4,7 +4,6 @@ import ResourceLoader from './loaders/resource.loader';
 import Info from './plugins/info.plugin';
 import Multiple from './plugins/multiple.plugin';
 import Wormhole from './plugins/wormhole.plugin';
-import Overlays from './overlays/overlays.overlay';
 import Timeline from './animations/timeline.animation';
 
 /**
@@ -80,7 +79,7 @@ abstract class Runtime {
 
         const ref = el.getAttribute('ref') || `panoram_${this.uid++}`;
         el.setAttribute('ref', ref);
-
+        
         return this.instanceMap[ref] = new Panoram({el, ...opts});
     }
 
@@ -93,8 +92,6 @@ abstract class Runtime {
 
         const panoram = this.createRef(el, config['panoram']);
         const data = this.findScene(config);
-
-        Overlays.install(panoram);
 
         if (config['animation']) {
             Timeline.install(config['animation'], panoram);
@@ -123,7 +120,7 @@ abstract class Runtime {
         // set pem path
         myLoader.loadCret(config['cretPath']);
         // add to env queue listeners
-        EnvQueue.add(panoram.resize, panoram);
+        EnvQueue.add(panoram.onResize, panoram);
         // load and render
         this.run(panoram, data);
     }

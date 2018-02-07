@@ -83,7 +83,7 @@
         "id": "scene3",
         "name": "罗浮宫",
         "fov": 100,
-        "lng": 20,
+        "lng": 180,
         "lat": 90,
         "bxlPath": "../assets/scene3/scene3.bxl",
         "imgPath": "../assets/scene3/scene3.jpg",

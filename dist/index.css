@@ -47,3 +47,11 @@ body {
     text-indent: -50px;
     z-index: 1;
 }
+
+.overlay-panel {
+    position: absolute;
+    top: 30px;
+    right: 20px;
+    padding: 20px;
+    border: 1px solid #f0860d;
+}
