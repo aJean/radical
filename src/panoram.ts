@@ -115,23 +115,20 @@ export default class Panoram {
     }
 
     /**
-     * 设置相机角度, 相机方向 (0, 0, -1), 初始 z 轴正方向 (180, 90)
-     * @param {number} lng 经度 [-180, 180] 
-     * @param {number} lat 纬度 [0, 180]
+     * 设置相机角度, 相机方向 (0, 0, -1), 相对初始 z 轴正方向 (180, 90)
+     * @param {number} lng 横向角度
+     * @param {number} lat 纵向角度
      */
     setLook(lng?, lat?) {
         const control = this.orbitControl;
 
         if (lng !== undefined && lat !== undefined) {
-            lng = 180 - lng;
-            lat = 90 - lat;
-
-            const phi = lat * (Math.PI / 180);
-            const theta = lng * (Math.PI / 180);
+            const theta = (180 - lng) * (Math.PI / 180);
+            const phi = (90 - lat) * (Math.PI / 180);
 
             control.reset();
-            control.rotateUp(phi);
             control.rotateLeft(theta);
+            control.rotateUp(phi);
         }
     }
     
@@ -140,8 +137,8 @@ export default class Panoram {
      */
     getLook() {
         const control = this.orbitControl;
-        const phi = control.getPolarAngle();
         const theta = control.getAzimuthalAngle();
+        const phi = control.getPolarAngle();
 
         return {
             lng: theta * 180 / Math.PI,
@@ -314,7 +311,22 @@ export default class Panoram {
         this.root.removeChild(obj);
     }
 
-    addOverlay(data) {
+    /**
+     * 添加热点覆盖物, 目前支持 mesh
+     */
+    addOverlay(location, text) {
+        const data = {
+            'overlays': [{
+                type: 'dom',
+                actionType: 'custom',
+                content: '<strong>动态热点</strong>',
+                location: {
+                    lng: location.lng,
+                    lat: location.lat
+                }
+            }]
+        };
+
         this.overlays.create(data);
     }
 

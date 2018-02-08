@@ -13,7 +13,16 @@
         "fov": 100,
         "bxlPath": "../assets/scene3/scene3.bxl",
         "imgPath": "../assets/scene3/scene3.jpg",
-        "thumbPath": "../assets/scene3/thumb3.jpg"
+        "thumbPath": "../assets/scene3/thumb3.jpg",
+        "overlays": [{
+            "type": "dom",
+            "actionType": "custom",
+            "content": "定位",
+            "location": {
+                "lng": 20,
+                "lat": 10
+            }
+        }]
     }],
     "enableDevice": false
 }

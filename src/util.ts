@@ -65,7 +65,7 @@ export default {
         const location = data.location;
         // 经纬度
         if (location && location.lng !== undefined) {
-            const vector = this.calcSpherical(location.lng, location.lat);
+            const vector = this.calcSphereToWorld(location.lng, location.lat);
 
             data.location = {
                 x: vector.x,
@@ -81,12 +81,12 @@ export default {
      * @param {number} lat 纬度
      * @param {number} radius 半径
      */
-    calcSpherical(lng, lat, radius?) {
+    calcSphereToWorld(lng, lat, radius?) {
         const spherical = new Spherical();
         const vector = new Vector3();
 
-        spherical.theta = (180 + lng) * (Math.PI / 180);
-        spherical.phi = lat * (Math.PI / 180);
+        spherical.theta = lng * (Math.PI / 180);
+        spherical.phi = (90 - lat) * (Math.PI / 180);
         spherical.radius = radius !== undefined ? radius : 1000;
 
         vector.setFromSpherical(spherical);
@@ -94,14 +94,27 @@ export default {
     },
 
     /**
-     * 世界坐标转为屏幕2维坐标
+     * 世界坐标转为屏幕坐标
      * @param {Object} location 世界坐标系
      * @param {Object} camera 场景相机
      */
-    calcScreenPosition(location, camera) {
-        const position = new Vector3(location.x, location.y, location.z);
-        // world coord to screen coord
-        return position.project(camera);
+    calcWorldToScreen(location, camera) {
+        const vector = new Vector3(location.x, location.y, location.z);
+        return vector.project(camera);
+    },
+
+    /**
+     * 屏幕坐标转为球面坐标
+     */
+    calcScreenToSphere(location, camera) {
+        const vector = new Vector3(location.x, location.y, 0).unproject(camera);
+        const spherical = new Spherical();
+        spherical.setFromVector3(vector);
+
+        return {
+            lng: spherical.theta * 180 / Math.PI,
+            lat: 90 - spherical.phi * 180 / Math.PI
+        };
     },
 
     /**

@@ -16,11 +16,10 @@
             "type": "dom",
             "actionType": "multiple",
             "content": "<a style='color:#e3b;'>进入场景2</a>",
-            "cls": "my-linkbutton",
             "sceneId": "scene1",
             "location": {
-                "lng": 180,
-                "lat": 90
+                "lng": 0,
+                "lat": 0
             }
         }, {
             "id": "id2",
@@ -29,9 +28,8 @@
             "content": "你好啊, baidu",
             "linkUrl": "http://www.baidu.com",
             "location": {
-                "x": 300,
-                "y": 800,
-                "z": 800
+                "lng": 20,
+                "lat": 30
             }
         }, {
             "id": "id3",
@@ -42,9 +40,8 @@
             "height": 50,
             "linkUrl": "http://www.baidu.com",
             "location": {
-              "x": 200,
-              "y": 0,
-              "z": 0
+                "lng": 180,
+                "lat": 0
             }
         }, {
             "id": "id4",
@@ -52,9 +49,8 @@
             "actionType": "custom",
             "content": "custom button",
             "location": {
-                "x": 0,
-                "y": 1200,
-                "z": 800
+                "lng": -20,
+                "lat": 10
             }
         }]
     }, {
@@ -69,14 +65,15 @@
         "bxlPath": "../assets/scene2/scene2.bxl",
         "imgPath": "../assets/scene2/scene2.jpg",
         "thumbPath": "../assets/scene2/thumb2.jpg",
+        "fov": 100,
         "overlays": [{
             "type": "animation",
             "category": "frame",
             "imgPath": "../assets/frames",
             "count": 11,
             "location": {
-                "lng": -160,
-                "lat": 75
+                "lng": 20,
+                "lat": 25
             }
         }]  
     }, {

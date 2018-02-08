@@ -11,30 +11,30 @@
     <body>
         <div id="test" ref="mytest"></div>
         <div class="overlay-panel">
-            <button>添加 overlay</button>
+            <p><button class="add">添加 overlay</button></p>
+            <div class="show-point"></div>
+            <p><button class="lookat">获取相机角度</button></p>
+            <div class="show-lookat"></div>
         </div>
         <script src="../lib.js"></script>
         <script>
+            let pos;
             bxl.start('./add.json', '#test', {
-                'overlay-click': function (node) {
-                    console.log(node.data);
+                'panoram-click': function (data) {
+                    pos = data;
+                    document.querySelector('.overlay-panel .show-point').innerHTML = `<p>x: ${data.x.toFixed(2)}</p><p>y: ${data.y.toFixed(2)}</p>`;
                 }
             });
 
-            document.querySelector('.overlay-panel button').addEventListener('click', function () {
+            document.querySelector('.overlay-panel .add').addEventListener('click', function () {
                 const panoram = bxl.getPanoram('mytest');
-                panoram.addOverlay({
-                    'overlays': [{
-                        id: '2q',
-                        type: 'dom',
-                        actionType: 'custom',
-                        content: '<strong>动态热点</strong>',
-                        location: {
-                            lng: 180,
-                            lat: 100
-                        }
-                    }]
-                });
+                panoram.addOverlay(pos, '动态热点');
+             });
+
+             document.querySelector('.overlay-panel .lookat').addEventListener('click', function () {
+                const panoram = bxl.getPanoram('mytest');
+                const point = panoram.getLook();
+                document.querySelector('.overlay-panel .show-lookat').innerHTML = `<p>lng: ${point.lng.toFixed(2)}</p><p>lat: ${point.lat.toFixed(2)}</p>`;
              });
         </script>
     </body>

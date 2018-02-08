@@ -845,7 +845,7 @@ return /******/ (function(modules) { // webpackBootstrap
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(3));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(2));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -1725,6 +1725,143 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 /* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+	if (true) {
+		// CommonJS
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(9), __webpack_require__(10));
+	}
+	else if (typeof define === "function" && define.amd) {
+		// AMD
+		define(["./core", "./sha1", "./hmac"], factory);
+	}
+	else {
+		// Global (browser)
+		factory(root.CryptoJS);
+	}
+}(this, function (CryptoJS) {
+
+	(function () {
+	    // Shortcuts
+	    var C = CryptoJS;
+	    var C_lib = C.lib;
+	    var Base = C_lib.Base;
+	    var WordArray = C_lib.WordArray;
+	    var C_algo = C.algo;
+	    var MD5 = C_algo.MD5;
+
+	    /**
+	     * This key derivation function is meant to conform with EVP_BytesToKey.
+	     * www.openssl.org/docs/crypto/EVP_BytesToKey.html
+	     */
+	    var EvpKDF = C_algo.EvpKDF = Base.extend({
+	        /**
+	         * Configuration options.
+	         *
+	         * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
+	         * @property {Hasher} hasher The hash algorithm to use. Default: MD5
+	         * @property {number} iterations The number of iterations to perform. Default: 1
+	         */
+	        cfg: Base.extend({
+	            keySize: 128/32,
+	            hasher: MD5,
+	            iterations: 1
+	        }),
+
+	        /**
+	         * Initializes a newly created key derivation function.
+	         *
+	         * @param {Object} cfg (Optional) The configuration options to use for the derivation.
+	         *
+	         * @example
+	         *
+	         *     var kdf = CryptoJS.algo.EvpKDF.create();
+	         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8 });
+	         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8, iterations: 1000 });
+	         */
+	        init: function (cfg) {
+	            this.cfg = this.cfg.extend(cfg);
+	        },
+
+	        /**
+	         * Derives a key from a password.
+	         *
+	         * @param {WordArray|string} password The password.
+	         * @param {WordArray|string} salt A salt.
+	         *
+	         * @return {WordArray} The derived key.
+	         *
+	         * @example
+	         *
+	         *     var key = kdf.compute(password, salt);
+	         */
+	        compute: function (password, salt) {
+	            // Shortcut
+	            var cfg = this.cfg;
+
+	            // Init hasher
+	            var hasher = cfg.hasher.create();
+
+	            // Initial values
+	            var derivedKey = WordArray.create();
+
+	            // Shortcuts
+	            var derivedKeyWords = derivedKey.words;
+	            var keySize = cfg.keySize;
+	            var iterations = cfg.iterations;
+
+	            // Generate key
+	            while (derivedKeyWords.length < keySize) {
+	                if (block) {
+	                    hasher.update(block);
+	                }
+	                var block = hasher.update(password).finalize(salt);
+	                hasher.reset();
+
+	                // Iterations
+	                for (var i = 1; i < iterations; i++) {
+	                    block = hasher.finalize(block);
+	                    hasher.reset();
+	                }
+
+	                derivedKey.concat(block);
+	            }
+	            derivedKey.sigBytes = keySize * 4;
+
+	            return derivedKey;
+	        }
+	    });
+
+	    /**
+	     * Derives a key from a password.
+	     *
+	     * @param {WordArray|string} password The password.
+	     * @param {WordArray|string} salt A salt.
+	     * @param {Object} cfg (Optional) The configuration options to use for this computation.
+	     *
+	     * @return {WordArray} The derived key.
+	     *
+	     * @static
+	     *
+	     * @example
+	     *
+	     *     var key = CryptoJS.EvpKDF(password, salt);
+	     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8 });
+	     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8, iterations: 1000 });
+	     */
+	    C.EvpKDF = function (password, salt, cfg) {
+	        return EvpKDF.create(cfg).compute(password, salt);
+	    };
+	}());
+
+
+	return CryptoJS.EvpKDF;
+
+}));
+
+/***/ }),
+/* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -47705,169 +47842,7 @@ function CanvasRenderer() {
 
 
 /***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-;(function (root, factory, undef) {
-	if (true) {
-		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(9), __webpack_require__(10));
-	}
-	else if (typeof define === "function" && define.amd) {
-		// AMD
-		define(["./core", "./sha1", "./hmac"], factory);
-	}
-	else {
-		// Global (browser)
-		factory(root.CryptoJS);
-	}
-}(this, function (CryptoJS) {
-
-	(function () {
-	    // Shortcuts
-	    var C = CryptoJS;
-	    var C_lib = C.lib;
-	    var Base = C_lib.Base;
-	    var WordArray = C_lib.WordArray;
-	    var C_algo = C.algo;
-	    var MD5 = C_algo.MD5;
-
-	    /**
-	     * This key derivation function is meant to conform with EVP_BytesToKey.
-	     * www.openssl.org/docs/crypto/EVP_BytesToKey.html
-	     */
-	    var EvpKDF = C_algo.EvpKDF = Base.extend({
-	        /**
-	         * Configuration options.
-	         *
-	         * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
-	         * @property {Hasher} hasher The hash algorithm to use. Default: MD5
-	         * @property {number} iterations The number of iterations to perform. Default: 1
-	         */
-	        cfg: Base.extend({
-	            keySize: 128/32,
-	            hasher: MD5,
-	            iterations: 1
-	        }),
-
-	        /**
-	         * Initializes a newly created key derivation function.
-	         *
-	         * @param {Object} cfg (Optional) The configuration options to use for the derivation.
-	         *
-	         * @example
-	         *
-	         *     var kdf = CryptoJS.algo.EvpKDF.create();
-	         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8 });
-	         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8, iterations: 1000 });
-	         */
-	        init: function (cfg) {
-	            this.cfg = this.cfg.extend(cfg);
-	        },
-
-	        /**
-	         * Derives a key from a password.
-	         *
-	         * @param {WordArray|string} password The password.
-	         * @param {WordArray|string} salt A salt.
-	         *
-	         * @return {WordArray} The derived key.
-	         *
-	         * @example
-	         *
-	         *     var key = kdf.compute(password, salt);
-	         */
-	        compute: function (password, salt) {
-	            // Shortcut
-	            var cfg = this.cfg;
-
-	            // Init hasher
-	            var hasher = cfg.hasher.create();
-
-	            // Initial values
-	            var derivedKey = WordArray.create();
-
-	            // Shortcuts
-	            var derivedKeyWords = derivedKey.words;
-	            var keySize = cfg.keySize;
-	            var iterations = cfg.iterations;
-
-	            // Generate key
-	            while (derivedKeyWords.length < keySize) {
-	                if (block) {
-	                    hasher.update(block);
-	                }
-	                var block = hasher.update(password).finalize(salt);
-	                hasher.reset();
-
-	                // Iterations
-	                for (var i = 1; i < iterations; i++) {
-	                    block = hasher.finalize(block);
-	                    hasher.reset();
-	                }
-
-	                derivedKey.concat(block);
-	            }
-	            derivedKey.sigBytes = keySize * 4;
-
-	            return derivedKey;
-	        }
-	    });
-
-	    /**
-	     * Derives a key from a password.
-	     *
-	     * @param {WordArray|string} password The password.
-	     * @param {WordArray|string} salt A salt.
-	     * @param {Object} cfg (Optional) The configuration options to use for this computation.
-	     *
-	     * @return {WordArray} The derived key.
-	     *
-	     * @static
-	     *
-	     * @example
-	     *
-	     *     var key = CryptoJS.EvpKDF(password, salt);
-	     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8 });
-	     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8, iterations: 1000 });
-	     */
-	    C.EvpKDF = function (password, salt, cfg) {
-	        return EvpKDF.create(cfg).compute(password, salt);
-	    };
-	}());
-
-
-	return CryptoJS.EvpKDF;
-
-}));
-
-/***/ }),
 /* 4 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/**
- * @file logs & 统计
- */
-function formatMsg(msg) {
-    return (typeof msg === 'string') ? new Error(msg) : msg;
-}
-/* harmony default export */ __webpack_exports__["a"] = ({
-    debug: false,
-    output: function (msg) {
-        return this.debug ? this.errorLog(msg) : this.infoLog(msg);
-    },
-    infoLog: function (msg) {
-        console.info(msg);
-    },
-    errorLog: function (msg) {
-        console.error(msg);
-    }
-});
-
-
-/***/ }),
-/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function (root, factory) {
@@ -48007,7 +47982,7 @@ function formatMsg(msg) {
 }));
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function (root, factory) {
@@ -48280,135 +48255,32 @@ function formatMsg(msg) {
 }));
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_crypto_js__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_crypto_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_crypto_js__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_three__ = __webpack_require__(2);
-
-
 /**
- * @file util tools
+ * @file logs & 统计
  */
-var composeKey = function (part) { return ('skt1wins' + part); };
+function formatMsg(msg) {
+    return (typeof msg === 'string') ? new Error(msg) : msg;
+}
 /* harmony default export */ __webpack_exports__["a"] = ({
-    /**
-     * 创建 dom 元素
-     * @param {string} domstring
-     */
-    createElement: function (domstring) {
-        var elem = document.createElement('div');
-        elem.innerHTML = domstring;
-        return elem.firstChild;
+    debug: false,
+    output: function (msg) {
+        return this.debug ? this.errorLog(msg) : this.infoLog(msg);
     },
-    /**
-     * 解密
-     * @param {string} ciphertext 密文
-     * @param {string} key 密钥
-     */
-    decode: function (ciphertext, key) {
-        if ((key ^ 1) !== 1) {
-            key = composeKey('forever');
-        }
-        var plaintext = __WEBPACK_IMPORTED_MODULE_0_crypto_js__["AES"].decrypt({
-            iv: null,
-            ciphertext: __WEBPACK_IMPORTED_MODULE_0_crypto_js__["enc"].Hex.parse(ciphertext),
-            salt: __WEBPACK_IMPORTED_MODULE_0_crypto_js__["lib"].WordArray.create(0)
-        }, key);
-        return plaintext.toString(__WEBPACK_IMPORTED_MODULE_0_crypto_js__["enc"].Utf8);
+    infoLog: function (msg) {
+        console.info(msg);
     },
-    /**
-     * 解析文件结束符, 域名规则检验
-     * @param {string} EOF
-     */
-    parseEOF: function (EOF) {
-        var ret = EOF.split('*');
-        var domains = ret[1] ? ret[1].split(',') : [];
-        var pass = true;
-        if (domains.length > 0) {
-            pass = Boolean(domains.find(function (domain) { return domain == location.host; }));
-        }
-        return {
-            line: ret[0],
-            pass: pass
-        };
-    },
-    /**
-     * 解析数据地理位置
-     * location.lng [-180, 180] location.lat [0, 180]
-     * @param {Object} data
-     * @param {Object} camera
-     */
-    parseLocation: function (data, camera) {
-        var location = data.location;
-        // 经纬度
-        if (location && location.lng !== undefined) {
-            var vector = this.calcSpherical(location.lng, location.lat);
-            data.location = {
-                x: vector.x,
-                y: vector.y,
-                z: vector.z
-            };
-        }
-    },
-    /**
-     * 球面坐标转化成世界坐标
-     * @param {number} lng 经度
-     * @param {number} lat 纬度
-     * @param {number} radius 半径
-     */
-    calcSpherical: function (lng, lat, radius) {
-        var spherical = new __WEBPACK_IMPORTED_MODULE_1_three__["x" /* Spherical */]();
-        var vector = new __WEBPACK_IMPORTED_MODULE_1_three__["A" /* Vector3 */]();
-        spherical.theta = (180 + lng) * (Math.PI / 180);
-        spherical.phi = lat * (Math.PI / 180);
-        spherical.radius = radius !== undefined ? radius : 1000;
-        vector.setFromSpherical(spherical);
-        return vector;
-    },
-    /**
-     * 世界坐标转为屏幕2维坐标
-     * @param {Object} location 世界坐标系
-     * @param {Object} camera 场景相机
-     */
-    calcScreenPosition: function (location, camera) {
-        var position = new __WEBPACK_IMPORTED_MODULE_1_three__["A" /* Vector3 */](location.x, location.y, location.z);
-        // world coord to screen coord
-        return position.project(camera);
-    },
-    /**
-     * 计算画布大小
-     * @param {Object} opts 配置参数
-     * @param {HTMLElement} elem 容器元素
-     */
-    calcRenderSize: function (opts, elem) {
-        var winWidth = window.innerWidth;
-        var winHeight = window.innerHeight;
-        var width = parseInt(opts.width) || elem.clientWidth || winWidth;
-        var height = parseInt(opts.height) || elem.clientHeight || winHeight;
-        /%$/.test(opts.width) && (width = width / 100 * winWidth);
-        /%$/.test(opts.height) && (height = height / 100 * winHeight);
-        return { width: width, height: height, aspect: width / height };
-    },
-    /**
-     * 删除 object3d 对象
-     */
-    cleanup: function (parent, target) {
-        var _this = this;
-        if (target.children.length) {
-            target.children.forEach(function (item) { return _this.cleanup(target, item); });
-        }
-        else if (parent) {
-            parent.remove(target);
-        }
+    errorLog: function (msg) {
+        console.error(msg);
     }
 });
 
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function (root, factory) {
@@ -48715,6 +48587,145 @@ var composeKey = function (part) { return ('skt1wins' + part); };
 	return CryptoJS;
 
 }));
+
+/***/ }),
+/* 8 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_crypto_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_crypto_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_crypto_js__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_three__ = __webpack_require__(3);
+
+
+/**
+ * @file util tools
+ */
+var composeKey = function (part) { return ('skt1wins' + part); };
+/* harmony default export */ __webpack_exports__["a"] = ({
+    /**
+     * 创建 dom 元素
+     * @param {string} domstring
+     */
+    createElement: function (domstring) {
+        var elem = document.createElement('div');
+        elem.innerHTML = domstring;
+        return elem.firstChild;
+    },
+    /**
+     * 解密
+     * @param {string} ciphertext 密文
+     * @param {string} key 密钥
+     */
+    decode: function (ciphertext, key) {
+        if ((key ^ 1) !== 1) {
+            key = composeKey('forever');
+        }
+        var plaintext = __WEBPACK_IMPORTED_MODULE_0_crypto_js__["AES"].decrypt({
+            iv: null,
+            ciphertext: __WEBPACK_IMPORTED_MODULE_0_crypto_js__["enc"].Hex.parse(ciphertext),
+            salt: __WEBPACK_IMPORTED_MODULE_0_crypto_js__["lib"].WordArray.create(0)
+        }, key);
+        return plaintext.toString(__WEBPACK_IMPORTED_MODULE_0_crypto_js__["enc"].Utf8);
+    },
+    /**
+     * 解析文件结束符, 域名规则检验
+     * @param {string} EOF
+     */
+    parseEOF: function (EOF) {
+        var ret = EOF.split('*');
+        var domains = ret[1] ? ret[1].split(',') : [];
+        var pass = true;
+        if (domains.length > 0) {
+            pass = Boolean(domains.find(function (domain) { return domain == location.host; }));
+        }
+        return {
+            line: ret[0],
+            pass: pass
+        };
+    },
+    /**
+     * 解析数据地理位置
+     * location.lng [-180, 180] location.lat [0, 180]
+     * @param {Object} data
+     * @param {Object} camera
+     */
+    parseLocation: function (data, camera) {
+        var location = data.location;
+        // 经纬度
+        if (location && location.lng !== undefined) {
+            var vector = this.calcSphereToWorld(location.lng, location.lat);
+            data.location = {
+                x: vector.x,
+                y: vector.y,
+                z: vector.z
+            };
+        }
+    },
+    /**
+     * 球面坐标转化成世界坐标
+     * @param {number} lng 经度
+     * @param {number} lat 纬度
+     * @param {number} radius 半径
+     */
+    calcSphereToWorld: function (lng, lat, radius) {
+        var spherical = new __WEBPACK_IMPORTED_MODULE_1_three__["x" /* Spherical */]();
+        var vector = new __WEBPACK_IMPORTED_MODULE_1_three__["A" /* Vector3 */]();
+        spherical.theta = lng * (Math.PI / 180);
+        spherical.phi = (90 - lat) * (Math.PI / 180);
+        spherical.radius = radius !== undefined ? radius : 1000;
+        vector.setFromSpherical(spherical);
+        return vector;
+    },
+    /**
+     * 世界坐标转为屏幕坐标
+     * @param {Object} location 世界坐标系
+     * @param {Object} camera 场景相机
+     */
+    calcWorldToScreen: function (location, camera) {
+        var vector = new __WEBPACK_IMPORTED_MODULE_1_three__["A" /* Vector3 */](location.x, location.y, location.z);
+        return vector.project(camera);
+    },
+    /**
+     * 屏幕坐标转为球面坐标
+     */
+    calcScreenToSphere: function (location, camera) {
+        var vector = new __WEBPACK_IMPORTED_MODULE_1_three__["A" /* Vector3 */](location.x, location.y, 0).unproject(camera);
+        var spherical = new __WEBPACK_IMPORTED_MODULE_1_three__["x" /* Spherical */]();
+        spherical.setFromVector3(vector);
+        return {
+            lng: spherical.theta * 180 / Math.PI,
+            lat: 90 - spherical.phi * 180 / Math.PI
+        };
+    },
+    /**
+     * 计算画布大小
+     * @param {Object} opts 配置参数
+     * @param {HTMLElement} elem 容器元素
+     */
+    calcRenderSize: function (opts, elem) {
+        var winWidth = window.innerWidth;
+        var winHeight = window.innerHeight;
+        var width = parseInt(opts.width) || elem.clientWidth || winWidth;
+        var height = parseInt(opts.height) || elem.clientHeight || winHeight;
+        /%$/.test(opts.width) && (width = width / 100 * winWidth);
+        /%$/.test(opts.height) && (height = height / 100 * winHeight);
+        return { width: width, height: height, aspect: width / height };
+    },
+    /**
+     * 删除 object3d 对象
+     */
+    cleanup: function (parent, target) {
+        var _this = this;
+        if (target.children.length) {
+            target.children.forEach(function (item) { return _this.cleanup(target, item); });
+        }
+        else if (parent) {
+            parent.remove(target);
+        }
+    }
+});
+
 
 /***/ }),
 /* 9 */
@@ -49024,10 +49035,10 @@ var composeKey = function (part) { return ('skt1wins' + part); };
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__base_loader__ = __webpack_require__(49);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__util__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__log__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__util__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__log__ = __webpack_require__(6);
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -49375,7 +49386,7 @@ function loadCanvas(url, timeout) {
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(7));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -49701,7 +49712,7 @@ function loadCanvas(url, timeout) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__log__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__log__ = __webpack_require__(6);
 
 /**
  * @file js frame animation
@@ -49877,12 +49888,12 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__panoram__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__log__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__log__ = __webpack_require__(6);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__loaders_resource_loader__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_info_plugin__ = __webpack_require__(50);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_multiple_plugin__ = __webpack_require__(51);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_wormhole_plugin__ = __webpack_require__(52);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__animations_timeline_animation__ = __webpack_require__(61);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_info_plugin__ = __webpack_require__(51);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_multiple_plugin__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_wormhole_plugin__ = __webpack_require__(53);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__animations_timeline_animation__ = __webpack_require__(54);
 var __assign = (this && this.__assign) || Object.assign || function(t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
         s = arguments[i];
@@ -50120,15 +50131,15 @@ window.addEventListener('resize', onEnvResize);
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controls_orbitControl__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__controls_gyroControl__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__event__ = __webpack_require__(24);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__log__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__util__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__log__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__util__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__loaders_resource_loader__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__ = __webpack_require__(53);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__ = __webpack_require__(50);
 
 
 
@@ -50236,20 +50247,18 @@ var Panoram = /** @class */ (function () {
         }
     };
     /**
-     * 设置相机角度, 相机方向 (0, 0, -1), 初始 z 轴正方向 (180, 90)
-     * @param {number} lng 经度 [-180, 180]
-     * @param {number} lat 纬度 [0, 180]
+     * 设置相机角度, 相机方向 (0, 0, -1), 相对初始 z 轴正方向 (180, 90)
+     * @param {number} lng 横向角度
+     * @param {number} lat 纵向角度
      */
     Panoram.prototype.setLook = function (lng, lat) {
         var control = this.orbitControl;
         if (lng !== undefined && lat !== undefined) {
-            lng = 180 - lng;
-            lat = 90 - lat;
-            var phi = lat * (Math.PI / 180);
-            var theta = lng * (Math.PI / 180);
+            var theta = (180 - lng) * (Math.PI / 180);
+            var phi = (90 - lat) * (Math.PI / 180);
             control.reset();
-            control.rotateUp(phi);
             control.rotateLeft(theta);
+            control.rotateUp(phi);
         }
     };
     /**
@@ -50257,8 +50266,8 @@ var Panoram = /** @class */ (function () {
      */
     Panoram.prototype.getLook = function () {
         var control = this.orbitControl;
-        var phi = control.getPolarAngle();
         var theta = control.getAzimuthalAngle();
+        var phi = control.getPolarAngle();
         return {
             lng: theta * 180 / Math.PI,
             lat: phi * 180 / Math.PI
@@ -50405,7 +50414,21 @@ var Panoram = /** @class */ (function () {
     Panoram.prototype.removeDomObject = function (obj) {
         this.root.removeChild(obj);
     };
-    Panoram.prototype.addOverlay = function (data) {
+    /**
+     * 添加热点覆盖物, 目前支持 mesh
+     */
+    Panoram.prototype.addOverlay = function (location, text) {
+        var data = {
+            'overlays': [{
+                    type: 'dom',
+                    actionType: 'custom',
+                    content: '<strong>动态热点</strong>',
+                    location: {
+                        lng: location.lng,
+                        lat: location.lat
+                    }
+                }]
+        };
         this.overlays.create(data);
     };
     /**
@@ -50462,7 +50485,7 @@ var Panoram = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
 
 /**
  * @file 全景相机控制器
@@ -51099,7 +51122,7 @@ OrbitControl.prototype.constructor = OrbitControl;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
 
 /**
  * @file 陀螺仪控制器
@@ -51521,7 +51544,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8), __webpack_require__(26), __webpack_require__(27), __webpack_require__(5), __webpack_require__(6), __webpack_require__(9), __webpack_require__(12), __webpack_require__(28), __webpack_require__(13), __webpack_require__(29), __webpack_require__(30), __webpack_require__(31), __webpack_require__(10), __webpack_require__(32), __webpack_require__(3), __webpack_require__(1), __webpack_require__(33), __webpack_require__(34), __webpack_require__(35), __webpack_require__(36), __webpack_require__(37), __webpack_require__(38), __webpack_require__(39), __webpack_require__(40), __webpack_require__(41), __webpack_require__(42), __webpack_require__(43), __webpack_require__(44), __webpack_require__(45), __webpack_require__(46), __webpack_require__(47), __webpack_require__(48));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(7), __webpack_require__(26), __webpack_require__(27), __webpack_require__(4), __webpack_require__(5), __webpack_require__(9), __webpack_require__(12), __webpack_require__(28), __webpack_require__(13), __webpack_require__(29), __webpack_require__(30), __webpack_require__(31), __webpack_require__(10), __webpack_require__(32), __webpack_require__(2), __webpack_require__(1), __webpack_require__(33), __webpack_require__(34), __webpack_require__(35), __webpack_require__(36), __webpack_require__(37), __webpack_require__(38), __webpack_require__(39), __webpack_require__(40), __webpack_require__(41), __webpack_require__(42), __webpack_require__(43), __webpack_require__(44), __webpack_require__(45), __webpack_require__(46), __webpack_require__(47), __webpack_require__(48));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -51864,7 +51887,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8), __webpack_require__(13));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(7), __webpack_require__(13));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -51952,7 +51975,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(7));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -53377,7 +53400,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(5), __webpack_require__(6), __webpack_require__(3), __webpack_require__(1));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(4), __webpack_require__(5), __webpack_require__(2), __webpack_require__(1));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -53614,7 +53637,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(5), __webpack_require__(6), __webpack_require__(3), __webpack_require__(1));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(4), __webpack_require__(5), __webpack_require__(2), __webpack_require__(1));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -54389,7 +54412,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(5), __webpack_require__(6), __webpack_require__(3), __webpack_require__(1));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(4), __webpack_require__(5), __webpack_require__(2), __webpack_require__(1));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -54533,7 +54556,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(5), __webpack_require__(6), __webpack_require__(3), __webpack_require__(1));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(4), __webpack_require__(5), __webpack_require__(2), __webpack_require__(1));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -54730,7 +54753,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(5), __webpack_require__(6), __webpack_require__(3), __webpack_require__(1));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(4), __webpack_require__(5), __webpack_require__(2), __webpack_require__(1));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -54983,6 +55006,298 @@ var BaseLoader = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__util__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__log__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__dom_overlay__ = __webpack_require__(59);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__mesh_overlay__ = __webpack_require__(60);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__sprite_overlay__ = __webpack_require__(61);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__frame_overlay__ = __webpack_require__(62);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__video_overlay__ = __webpack_require__(63);
+
+
+
+
+
+
+
+
+/**
+ * @file 管理所有场景下的覆盖物
+ */
+var AnimationOpts = {
+    rain: {
+        type: 2,
+        size: 15,
+        spriteCount: 1000,
+        speed: 9,
+        colorR: 0.25,
+        colorG: 0.25,
+        colorB: 0.25
+    },
+    snow: {
+        type: 1,
+        spriteCount: 500,
+        colorR: 1,
+        colorG: 1,
+        colorB: 1
+    }
+};
+var Overlays = /** @class */ (function () {
+    function Overlays(panoram) {
+        var _this = this;
+        this.maps = {};
+        this.raycaster = new __WEBPACK_IMPORTED_MODULE_0_three__["u" /* Raycaster */]();
+        this.panoram = panoram;
+        panoram.subscribe('scene-attach', function (scene) {
+            _this.removeOverlays();
+            _this.init(scene);
+        });
+        panoram.subscribe('render-process', function (scene) {
+            var cache = _this.getCurrent(scene.id);
+            cache.domGroup.forEach(function (item) { return _this.updateDomOverlay(item); });
+            cache.meshGroup.forEach(function (item) { return item.update(); });
+        });
+        panoram.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
+    }
+    Overlays.prototype.init = function (data) {
+        // scene cache id
+        if (!data.id) {
+            data.id = 'panoram' + Date.now();
+        }
+        this.cid = data.id;
+        this.create(data);
+    };
+    Overlays.prototype.create = function (data) {
+        var _this = this;
+        var cache = this.getCurrent(this.cid);
+        var props = data.overlays || [];
+        props.forEach(function (prop) {
+            switch (prop.type) {
+                case 'dom':
+                    _this.createDomOverlay(prop, cache);
+                    break;
+                case 'mesh':
+                    _this.createMeshOverlay(prop, cache);
+                    break;
+                case 'animation':
+                    _this.createAnimationOverlay(prop, cache);
+                    break;
+                case 'video':
+                    _this.createVideoOverlay(prop, cache);
+                    break;
+            }
+        });
+    };
+    /**
+     * 创建 dom 覆盖物并添加进 maps
+     */
+    Overlays.prototype.createDomOverlay = function (prop, cache) {
+        var _this = this;
+        __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, this.panoram.getCamera());
+        var item = new __WEBPACK_IMPORTED_MODULE_3__dom_overlay__["a" /* default */](prop);
+        item.elem.onclick = function (e) { return _this.onOverlayHandle(item); };
+        cache.domGroup.push(item);
+        this.panoram.addDomObject(item.elem);
+        this.updateDomOverlay(item);
+    };
+    /**
+     * 不断更新 dom overlay 的屏幕坐标
+     */
+    Overlays.prototype.updateDomOverlay = function (item) {
+        var panoram = this.panoram;
+        var root = panoram.getRoot();
+        var width = root.clientWidth / 2;
+        var height = root.clientHeight / 2;
+        var position = __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].calcWorldToScreen(item.data.location, panoram.getCamera());
+        // z > 1 is backside
+        if (position.z > 1) {
+            item.hide();
+        }
+        else {
+            var x = Math.round(position.x * width + width);
+            var y = Math.round(-position.y * height + height);
+            item.update(x, y);
+        }
+    };
+    /**
+     * 创建 mesh 覆盖物
+     */
+    Overlays.prototype.createMeshOverlay = function (prop, cache) {
+        var camera = this.panoram.getCamera();
+        __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, camera);
+        var item = new __WEBPACK_IMPORTED_MODULE_4__mesh_overlay__["a" /* default */](prop);
+        var particle = item.particle;
+        if (!prop.rotation) {
+            particle.lookAt(camera.position);
+        }
+        else {
+            particle.rotation.set(prop.rotation.x, prop.rotation.y, prop.rotation.z);
+        }
+        // 加入可检测分组
+        cache.detects.add(particle);
+        cache.meshGroup.push(item);
+    };
+    /**
+     * 创建动画覆盖物
+     */
+    Overlays.prototype.createAnimationOverlay = function (prop, cache) {
+        var panoram = this.panoram;
+        var camera = panoram.getCamera();
+        var item;
+        __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, camera);
+        if (prop.category == 'frame') {
+            prop.lookat = camera.position;
+            item = new __WEBPACK_IMPORTED_MODULE_6__frame_overlay__["a" /* default */](prop);
+        }
+        else {
+            item = new __WEBPACK_IMPORTED_MODULE_5__sprite_overlay__["a" /* default */](AnimationOpts[prop.category]);
+        }
+        panoram.addSceneObject(item.particle);
+        cache.meshGroup.push(item);
+    };
+    /**
+     * 创建视频覆盖物
+     */
+    Overlays.prototype.createVideoOverlay = function (prop, cache) {
+        var panoram = this.panoram;
+        var camera = panoram.getCamera();
+        __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, camera);
+        prop.lookat = camera.position;
+        var item = new __WEBPACK_IMPORTED_MODULE_7__video_overlay__["a" /* default */](prop);
+        cache.detects.add(item.particle);
+        cache.meshGroup.push(item);
+    };
+    /**
+     * 获取当前的缓存对象
+     * @param {any} id 场景id
+     */
+    Overlays.prototype.getCurrent = function (id) {
+        var data = this.maps[id];
+        if (data) {
+            return data;
+        }
+        else {
+            var group = new __WEBPACK_IMPORTED_MODULE_0_three__["j" /* Group */]();
+            this.panoram.addSceneObject(group);
+            return this.maps[id] = {
+                detects: group,
+                domGroup: [],
+                meshGroup: []
+            };
+        }
+    };
+    /**
+     * 点击 canvas
+     */
+    Overlays.prototype.onCanvasHandle = function (evt) {
+        var panoram = this.panoram;
+        var camera = panoram.getCamera();
+        var raycaster = this.raycaster;
+        var element = panoram.getCanvas();
+        var pos = {
+            x: (evt.clientX / element.clientWidth) * 2 - 1,
+            y: -(evt.clientY / element.clientHeight) * 2 + 1
+        };
+        var vector = __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].calcScreenToSphere(pos, camera);
+        try {
+            var group = this.getCurrent(this.cid).detects;
+            if (group.children) {
+                raycaster.setFromCamera(pos, camera);
+                var intersects = raycaster.intersectObjects(group.children, false);
+                intersects.length ? this.onOverlayHandle(intersects[0].object['instance'])
+                    : panoram.dispatch('panoram-click', vector, panoram);
+            }
+            else {
+                panoram.dispatch('panoram-click', vector, panoram);
+            }
+        }
+        catch (e) {
+            __WEBPACK_IMPORTED_MODULE_2__log__["a" /* default */].output(e);
+        }
+    };
+    /**
+     * 点击覆盖物
+     */
+    Overlays.prototype.onOverlayHandle = function (instance) {
+        var panoram = this.panoram;
+        var data = instance.data;
+        switch (data.actionType) {
+            case 'scene':
+                panoram.enterNext(data.sceneId);
+                break;
+            case 'link':
+                window.open(data.linkUrl, '_blank');
+                break;
+            // let Multiple plugin control
+            case 'multiple':
+                panoram.dispatch('multiple-active', data);
+                break;
+            case 'video':
+                instance.play();
+                break;
+            default:
+                panoram.dispatch('overlay-click', instance, panoram);
+        }
+    };
+    /**
+     * 删除当前场景下的所有 overlays
+     */
+    Overlays.prototype.removeOverlays = function () {
+        var cache = this.getCurrent(this.cid);
+        delete this.maps[this.cid];
+        this.cid = null;
+        cache && this.hideOverlays(cache, true);
+    };
+    /**
+     * 隐藏当前场景下的 overlays
+     * @param {Object} data 缓存数据
+     * @param {boolean} isclean 是否清除
+     */
+    Overlays.prototype.hideOverlays = function (data, isclean) {
+        var panoram = this.panoram;
+        if (data) {
+            data.domGroup.forEach(function (item) {
+                item.hide();
+                if (isclean) {
+                    item.dispose();
+                    panoram.removeDomObject(item.elem);
+                }
+            });
+            data.meshGroup.forEach(function (item) {
+                item.hide();
+                if (isclean) {
+                    item.dispose();
+                    panoram.removeSceneObject(item.particle);
+                }
+            });
+            if (isclean && data.detects.children) {
+                (_a = data.detects).remove.apply(_a, data.detects.children);
+                panoram.removeSceneObject(data.detects);
+            }
+        }
+        var _a;
+    };
+    /**
+     * 展示 overlays
+     * @todo 加入缓存机制, 这个方法才有意义, 当前是 remove + create
+     */
+    Overlays.prototype.showOverlays = function (data) {
+        if (data) {
+            data.domGroup.forEach(function (item) { return item.show(); });
+            data.meshGroup.forEach(function (item) { return item.show(); });
+        }
+    };
+    return Overlays;
+}());
+/* harmony default export */ __webpack_exports__["a"] = (Overlays);
+
+
+/***/ }),
+/* 51 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /**
  * @file 版权遮罩层
  */
@@ -55007,7 +55322,7 @@ var Info = /** @class */ (function () {
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -55112,14 +55427,14 @@ var Multiple = /** @class */ (function () {
 
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__loaders_resource_loader__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__log__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__log__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__animations_tween_animation__ = __webpack_require__(14);
 
 
@@ -55155,7 +55470,7 @@ var Wormhole = /** @class */ (function () {
             reflectivity: 1
         });
         var box = this.box = new __WEBPACK_IMPORTED_MODULE_0_three__["m" /* Mesh */](geometry, material);
-        var vector = this.vector = __WEBPACK_IMPORTED_MODULE_3__util__["a" /* default */].calcSpherical(data.lng, data.lat);
+        var vector = this.vector = __WEBPACK_IMPORTED_MODULE_3__util__["a" /* default */].calcSphereToWorld(data.lng, data.lat);
         myLoader.loadTexture(data.bxlPath || data.texPath).then(function (texture) {
             texture.mapping = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
             material.envMap = _this.texture = texture;
@@ -55226,7 +55541,7 @@ var Wormhole = /** @class */ (function () {
         });
         material.envMap = this.texture = this.backTexture;
         var box = this.box = new __WEBPACK_IMPORTED_MODULE_0_three__["m" /* Mesh */](geometry, material);
-        var vector = this.vector = __WEBPACK_IMPORTED_MODULE_3__util__["a" /* default */].calcSpherical(this.direction ? 0 : this.data.lng, 90);
+        var vector = this.vector = __WEBPACK_IMPORTED_MODULE_3__util__["a" /* default */].calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
         box.position.set(vector.x, vector.y, vector.z);
         this.direction = !this.direction;
         this.panoram.addSceneObject(box);
@@ -55238,297 +55553,128 @@ var Wormhole = /** @class */ (function () {
 
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__util__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__log__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__dom_overlay__ = __webpack_require__(54);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__mesh_overlay__ = __webpack_require__(55);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__sprite_overlay__ = __webpack_require__(56);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__frame_overlay__ = __webpack_require__(57);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__video_overlay__ = __webpack_require__(58);
-
-
-
-
-
-
-
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__fly_animation__ = __webpack_require__(55);
 
 /**
- * @file 管理所有场景下的覆盖物
+ * @file animation timeline
+ * @example 入场动画, camera 动画, 全局动画
  */
-var AnimationOpts = {
-    rain: {
-        type: 2,
-        size: 15,
-        spriteCount: 1000,
-        speed: 9,
-        colorR: 0.25,
-        colorG: 0.25,
-        colorB: 0.25
-    },
-    snow: {
-        type: 1,
-        spriteCount: 500,
-        colorR: 1,
-        colorG: 1,
-        colorB: 1
+var Timeline = /** @class */ (function () {
+    function Timeline() {
     }
-};
-var Overlays = /** @class */ (function () {
-    function Overlays(panoram) {
-        var _this = this;
-        this.maps = {};
-        this.raycaster = new __WEBPACK_IMPORTED_MODULE_0_three__["u" /* Raycaster */]();
+    Timeline.install = function (opts, panoram) {
+        var camera = panoram.getCamera();
         this.panoram = panoram;
-        panoram.subscribe('scene-attach', function (scene) {
-            _this.removeOverlays();
-            _this.init(scene);
-        });
-        panoram.subscribe('render-process', function (scene) {
-            var cache = _this.getCurrent(scene.id);
-            cache.domGroup.forEach(function (item) { return _this.updateDomOverlay(item); });
-            cache.meshGroup.forEach(function (item) { return item.update(); });
-        });
-        panoram.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
-    }
-    Overlays.prototype.init = function (data) {
-        // scene cache id
-        if (!data.id) {
-            data.id = 'panoram' + Date.now();
+        // minor planet
+        if (opts.fly) {
+            var fly = new __WEBPACK_IMPORTED_MODULE_0__fly_animation__["a" /* default */](camera);
+            this.lines.push(fly);
         }
-        this.cid = data.id;
-        this.create(data);
+        panoram.subscribe('render-process', this.onTimeChange, this);
     };
-    Overlays.prototype.create = function (data) {
+    Timeline.onTimeChange = function () {
         var _this = this;
-        var cache = this.getCurrent(this.cid);
-        var props = data.overlays || [];
-        props.forEach(function (prop) {
-            switch (prop.type) {
-                case 'dom':
-                    _this.createDomOverlay(prop, cache);
-                    break;
-                case 'mesh':
-                    _this.createMeshOverlay(prop, cache);
-                    break;
-                case 'animation':
-                    _this.createAnimationOverlay(prop, cache);
-                    break;
-                case 'video':
-                    _this.createVideoOverlay(prop, cache);
-                    break;
-            }
-        });
-    };
-    /**
-     * 创建 dom 覆盖物并添加进 maps
-     */
-    Overlays.prototype.createDomOverlay = function (prop, cache) {
-        var _this = this;
-        __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, this.panoram.getCamera());
-        var item = new __WEBPACK_IMPORTED_MODULE_3__dom_overlay__["a" /* default */](prop);
-        item.elem.onclick = function (e) { return _this.onOverlayHandle(item); };
-        cache.domGroup.push(item);
-        this.panoram.addDomObject(item.elem);
-        this.updateDomOverlay(item);
-    };
-    /**
-     * 不断更新 dom overlay 的屏幕坐标
-     */
-    Overlays.prototype.updateDomOverlay = function (item) {
-        var panoram = this.panoram;
-        var root = panoram.getRoot();
-        var width = root.clientWidth / 2;
-        var height = root.clientHeight / 2;
-        var position = __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].calcScreenPosition(item.data.location, panoram.getCamera());
-        // z > 1 is backside
-        if (position.z > 1) {
-            item.hide();
-        }
-        else {
-            var x = Math.round(position.x * width + width);
-            var y = Math.round(-position.y * height + height);
-            item.update(x, y);
-        }
-    };
-    /**
-     * 创建 mesh 覆盖物
-     */
-    Overlays.prototype.createMeshOverlay = function (prop, cache) {
-        var camera = this.panoram.getCamera();
-        __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, camera);
-        var item = new __WEBPACK_IMPORTED_MODULE_4__mesh_overlay__["a" /* default */](prop);
-        var particle = item.particle;
-        if (!prop.rotation) {
-            particle.lookAt(camera.position);
-        }
-        else {
-            particle.rotation.set(prop.rotation.x, prop.rotation.y, prop.rotation.z);
-        }
-        // 加入可检测分组
-        cache.detects.add(particle);
-        cache.meshGroup.push(item);
-    };
-    /**
-     * 创建动画覆盖物
-     */
-    Overlays.prototype.createAnimationOverlay = function (prop, cache) {
-        var panoram = this.panoram;
-        var camera = panoram.getCamera();
-        var item;
-        __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, camera);
-        if (prop.category == 'frame') {
-            prop.lookat = camera.position;
-            item = new __WEBPACK_IMPORTED_MODULE_6__frame_overlay__["a" /* default */](prop);
-        }
-        else {
-            item = new __WEBPACK_IMPORTED_MODULE_5__sprite_overlay__["a" /* default */](AnimationOpts[prop.category]);
-        }
-        panoram.addSceneObject(item.particle);
-        cache.meshGroup.push(item);
-    };
-    /**
-     * 创建视频覆盖物
-     */
-    Overlays.prototype.createVideoOverlay = function (prop, cache) {
-        var panoram = this.panoram;
-        var camera = panoram.getCamera();
-        __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, camera);
-        prop.lookat = camera.position;
-        var item = new __WEBPACK_IMPORTED_MODULE_7__video_overlay__["a" /* default */](prop);
-        cache.detects.add(item.particle);
-        cache.meshGroup.push(item);
-    };
-    /**
-     * 获取当前的缓存对象
-     * @param {any} id 场景id
-     */
-    Overlays.prototype.getCurrent = function (id) {
-        var data = this.maps[id];
-        if (data) {
-            return data;
-        }
-        else {
-            var group = new __WEBPACK_IMPORTED_MODULE_0_three__["j" /* Group */]();
-            this.panoram.addSceneObject(group);
-            return this.maps[id] = {
-                detects: group,
-                domGroup: [],
-                meshGroup: []
-            };
-        }
-    };
-    /**
-     * 点击 canvas
-     */
-    Overlays.prototype.onCanvasHandle = function (evt) {
-        var panoram = this.panoram;
-        var raycaster = this.raycaster;
-        var element = panoram.getCanvas();
-        var pos = {
-            x: (evt.clientX / element.clientWidth) * 2 - 1,
-            y: -(evt.clientY / element.clientHeight) * 2 + 1
-        };
-        try {
-            var group = this.getCurrent(this.cid).detects;
-            if (group.children) {
-                raycaster.setFromCamera(pos, panoram.getCamera());
-                var intersects = raycaster.intersectObjects(group.children, false);
-                intersects.length && this.onOverlayHandle(intersects[0].object['instance']);
+        var lines = this.lines;
+        lines.forEach(function (anim, i) {
+            if (anim.isEnd()) {
+                _this.onAnimationEnd(anim);
+                lines.splice(i, 1);
             }
             else {
-                // TODO: nescessary to dispatch ???
-                // panoram.dispatch('panoram-click', panoram);
+                anim.update();
             }
-        }
-        catch (e) {
-            __WEBPACK_IMPORTED_MODULE_2__log__["a" /* default */].errorLog(e);
-        }
+        });
     };
-    /**
-     * 点击覆盖物
-     */
-    Overlays.prototype.onOverlayHandle = function (instance) {
+    Timeline.onAnimationEnd = function (data) {
         var panoram = this.panoram;
-        var data = instance.data;
-        switch (data.actionType) {
-            case 'scene':
-                panoram.enterNext(data.sceneId);
-                break;
-            case 'link':
-                window.open(data.linkUrl, '_blank');
-                break;
-            // let Multiple plugin control
-            case 'multiple':
-                panoram.dispatch('multiple-active', data);
-                break;
-            case 'video':
-                instance.play();
-                break;
-            default:
-                panoram.dispatch('overlay-click', instance, panoram);
-        }
+        panoram.noTimeline();
+        panoram.dispatch('animation-end', data);
     };
-    /**
-     * 删除当前场景下的所有 overlays
-     */
-    Overlays.prototype.removeOverlays = function () {
-        var cache = this.getCurrent(this.cid);
-        delete this.maps[this.cid];
-        this.cid = null;
-        cache && this.hideOverlays(cache, true);
-    };
-    /**
-     * 隐藏当前场景下的 overlays
-     * @param {Object} data 缓存数据
-     * @param {boolean} isclean 是否清除
-     */
-    Overlays.prototype.hideOverlays = function (data, isclean) {
-        var panoram = this.panoram;
-        if (data) {
-            data.domGroup.forEach(function (item) {
-                item.hide();
-                if (isclean) {
-                    item.dispose();
-                    panoram.removeDomObject(item.elem);
-                }
-            });
-            data.meshGroup.forEach(function (item) {
-                item.hide();
-                if (isclean) {
-                    item.dispose();
-                    panoram.removeSceneObject(item.particle);
-                }
-            });
-            if (isclean && data.detects.children) {
-                (_a = data.detects).remove.apply(_a, data.detects.children);
-                panoram.removeSceneObject(data.detects);
-            }
-        }
-        var _a;
-    };
-    /**
-     * 展示 overlays
-     * @todo 加入缓存机制, 这个方法才有意义, 当前是 remove + create
-     */
-    Overlays.prototype.showOverlays = function (data) {
-        if (data) {
-            data.domGroup.forEach(function (item) { return item.show(); });
-            data.meshGroup.forEach(function (item) { return item.show(); });
-        }
-    };
-    return Overlays;
+    Timeline.lines = [];
+    return Timeline;
 }());
-/* harmony default export */ __webpack_exports__["a"] = (Overlays);
+/* harmony default export */ __webpack_exports__["a"] = (Timeline);
 
 
 /***/ }),
-/* 54 */
+/* 55 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/**
+ * @file minor planet animation
+ */
+function calc(t, b, c, d) {
+    return c * t / d + b;
+}
+var AnimationFly = /** @class */ (function () {
+    function AnimationFly(camera) {
+        this.time = 0;
+        this.type = 'fly';
+        this.finished = false;
+        this.path = this.getPath(this.camera = camera);
+    }
+    AnimationFly.prototype.update = function () {
+        var camera = this.camera;
+        var path = this.path;
+        var phase = path[0];
+        var time = this.time;
+        if (!phase) {
+            return (this.finished = true);
+        }
+        if (time > phase.time) {
+            camera.fov = phase.end.fov;
+            camera.position.set(phase.end.px, phase.end.py, phase.end.pz);
+            camera.rotation.set(phase.end.rx, phase.end.ry, phase.end.rz);
+            camera.updateProjectionMatrix();
+            time = this.time = 0;
+            return path.shift();
+        }
+        for (var _i = 0, path_1 = path; _i < path_1.length; _i++) {
+            var data = path_1[_i];
+            var px = calc(time, data.start.px, data.end.px - data.start.px, data.time);
+            var py = calc(time, data.start.py, data.end.py - data.start.py, data.time);
+            var pz = calc(time, data.start.pz, data.end.pz - data.start.pz, data.time);
+            var rx = calc(time, data.start.rx, data.end.rx - data.start.rx, data.time);
+            var ry = calc(time, data.start.ry, data.end.ry - data.start.ry, data.time);
+            var rz = calc(time, data.start.rz, data.end.rz - data.start.rz, data.time);
+            var fov = calc(time, data.start.fov, data.end.fov - data.start.fov, data.time);
+            camera.fov = fov;
+            camera.position.set(px, py, pz);
+            camera.rotation.set(rx, ry, rz);
+            this.time += 16;
+            return camera.updateProjectionMatrix();
+        }
+    };
+    AnimationFly.prototype.getPath = function (camera) {
+        return [{
+                start: { fov: 160, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
+                end: { fov: 120, px: 0, py: 1500, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
+                time: 1500
+            }, {
+                start: { fov: 120, px: 0, py: 1500, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
+                end: { fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI },
+                time: 1500
+            }];
+    };
+    AnimationFly.prototype.isEnd = function () {
+        return this.finished;
+    };
+    return AnimationFly;
+}());
+/* harmony default export */ __webpack_exports__["a"] = (AnimationFly);
+;
+
+
+/***/ }),
+/* 56 */,
+/* 57 */,
+/* 58 */,
+/* 59 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -55574,11 +55720,11 @@ var DomOverlay = /** @class */ (function () {
 
 
 /***/ }),
-/* 55 */
+/* 60 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
 
 /**
  * @file mesh overlay, static return three mesh object
@@ -55623,11 +55769,11 @@ var MeshOverlay = /** @class */ (function () {
 
 
 /***/ }),
-/* 56 */
+/* 61 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
 
 /**
  * @file 雨雪特效 overlay
@@ -55705,11 +55851,11 @@ var rainTexture = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAAB
 
 
 /***/ }),
-/* 57 */
+/* 62 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
 
 /**
  * @file 全景序列帧控制器
@@ -55816,12 +55962,12 @@ var FrameOverlay = /** @class */ (function () {
 
 
 /***/ }),
-/* 58 */
+/* 63 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ui_layer_ui__ = __webpack_require__(59);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ui_layer_ui__ = __webpack_require__(64);
 
 
 /**
@@ -55899,11 +56045,11 @@ var videoOverlay = /** @class */ (function () {
 
 
 /***/ }),
-/* 59 */
+/* 64 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__animations_css_animation__ = __webpack_require__(60);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__animations_css_animation__ = __webpack_require__(65);
 
 /**
  * @file dom layer
@@ -55995,7 +56141,7 @@ var Layer = /** @class */ (function () {
 
 
 /***/ }),
-/* 60 */
+/* 65 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -56046,124 +56192,6 @@ var CssAnimation = /** @class */ (function () {
     return CssAnimation;
 }());
 /* harmony default export */ __webpack_exports__["a"] = (CssAnimation);
-
-
-/***/ }),
-/* 61 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__fly_animation__ = __webpack_require__(62);
-
-/**
- * @file animation timeline
- * @example 入场动画, camera 动画, 全局动画
- */
-var Timeline = /** @class */ (function () {
-    function Timeline() {
-    }
-    Timeline.install = function (opts, panoram) {
-        var camera = panoram.getCamera();
-        this.panoram = panoram;
-        // minor planet
-        if (opts.fly) {
-            var fly = new __WEBPACK_IMPORTED_MODULE_0__fly_animation__["a" /* default */](camera);
-            this.lines.push(fly);
-        }
-        panoram.subscribe('render-process', this.onTimeChange, this);
-    };
-    Timeline.onTimeChange = function () {
-        var _this = this;
-        var lines = this.lines;
-        lines.forEach(function (anim, i) {
-            if (anim.isEnd()) {
-                _this.onAnimationEnd(anim);
-                lines.splice(i, 1);
-            }
-            else {
-                anim.update();
-            }
-        });
-    };
-    Timeline.onAnimationEnd = function (data) {
-        var panoram = this.panoram;
-        panoram.noTimeline();
-        panoram.dispatch('animation-end', data);
-    };
-    Timeline.lines = [];
-    return Timeline;
-}());
-/* harmony default export */ __webpack_exports__["a"] = (Timeline);
-
-
-/***/ }),
-/* 62 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/**
- * @file minor planet animation
- */
-function calc(t, b, c, d) {
-    return c * t / d + b;
-}
-var AnimationFly = /** @class */ (function () {
-    function AnimationFly(camera) {
-        this.time = 0;
-        this.type = 'fly';
-        this.finished = false;
-        this.path = this.getPath(this.camera = camera);
-    }
-    AnimationFly.prototype.update = function () {
-        var camera = this.camera;
-        var path = this.path;
-        var phase = path[0];
-        var time = this.time;
-        if (!phase) {
-            return (this.finished = true);
-        }
-        if (time > phase.time) {
-            camera.fov = phase.end.fov;
-            camera.position.set(phase.end.px, phase.end.py, phase.end.pz);
-            camera.rotation.set(phase.end.rx, phase.end.ry, phase.end.rz);
-            camera.updateProjectionMatrix();
-            time = this.time = 0;
-            return path.shift();
-        }
-        for (var _i = 0, path_1 = path; _i < path_1.length; _i++) {
-            var data = path_1[_i];
-            var px = calc(time, data.start.px, data.end.px - data.start.px, data.time);
-            var py = calc(time, data.start.py, data.end.py - data.start.py, data.time);
-            var pz = calc(time, data.start.pz, data.end.pz - data.start.pz, data.time);
-            var rx = calc(time, data.start.rx, data.end.rx - data.start.rx, data.time);
-            var ry = calc(time, data.start.ry, data.end.ry - data.start.ry, data.time);
-            var rz = calc(time, data.start.rz, data.end.rz - data.start.rz, data.time);
-            var fov = calc(time, data.start.fov, data.end.fov - data.start.fov, data.time);
-            camera.fov = fov;
-            camera.position.set(px, py, pz);
-            camera.rotation.set(rx, ry, rz);
-            this.time += 16;
-            return camera.updateProjectionMatrix();
-        }
-    };
-    AnimationFly.prototype.getPath = function (camera) {
-        return [{
-                start: { fov: 160, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
-                end: { fov: 120, px: 0, py: 1500, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
-                time: 1500
-            }, {
-                start: { fov: 120, px: 0, py: 1500, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
-                end: { fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI },
-                time: 1500
-            }];
-    };
-    AnimationFly.prototype.isEnd = function () {
-        return this.finished;
-    };
-    return AnimationFly;
-}());
-/* harmony default export */ __webpack_exports__["a"] = (AnimationFly);
-;
 
 
 /***/ })

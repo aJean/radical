@@ -108,7 +108,7 @@ export default class Overlays {
         const root = panoram.getRoot();
         const width = root.clientWidth / 2;
         const height = root.clientHeight / 2;
-        const position = Util.calcScreenPosition(item.data.location, panoram.getCamera());
+        const position = Util.calcWorldToScreen(item.data.location, panoram.getCamera());
         // z > 1 is backside
         if (position.z > 1) {
             item.hide();
@@ -200,26 +200,28 @@ export default class Overlays {
      */
     onCanvasHandle(evt) {
         const panoram = this.panoram;
+        const camera = panoram.getCamera();
         const raycaster = this.raycaster;
         const element = panoram.getCanvas();
         const pos = {
             x: (evt.clientX / element.clientWidth) * 2 - 1,
             y: -(evt.clientY / element.clientHeight) * 2 + 1
         };
+        const vector = Util.calcScreenToSphere(pos, camera);
         
         try {
             const group = this.getCurrent(this.cid).detects;
 
             if (group.children) {
-                raycaster.setFromCamera(pos, panoram.getCamera());
+                raycaster.setFromCamera(pos, camera);
                 const intersects = raycaster.intersectObjects(group.children, false);
-                intersects.length && this.onOverlayHandle(intersects[0].object['instance']);
+                intersects.length ? this.onOverlayHandle(intersects[0].object['instance'])
+                    : panoram.dispatch('panoram-click', vector, panoram);
             } else {
-                // TODO: nescessary to dispatch ???
-                // panoram.dispatch('panoram-click', panoram);
+                panoram.dispatch('panoram-click', vector, panoram);
             }
         } catch(e) {
-            Log.errorLog(e);
+            Log.output(e);
         }
     }
 

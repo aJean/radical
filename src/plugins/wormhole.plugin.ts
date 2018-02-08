@@ -43,7 +43,7 @@ export default class Wormhole {
             reflectivity: 1
         });
         const box = this.box = new Mesh(geometry, material);
-        const vector = this.vector = Util.calcSpherical(data.lng, data.lat);
+        const vector = this.vector = Util.calcSphereToWorld(data.lng, data.lat);
 
         myLoader.loadTexture(data.bxlPath || data.texPath).then((texture: Texture) => {
             texture.mapping = CubeRefractionMapping;
@@ -128,7 +128,7 @@ export default class Wormhole {
         });
         material.envMap = this.texture = this.backTexture;
         const box = this.box = new Mesh(geometry, material);
-        const vector = this.vector = Util.calcSpherical(this.direction ? 0 : this.data.lng, 90);
+        const vector = this.vector = Util.calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
         box.position.set(vector.x, vector.y, vector.z);
 
         this.direction = !this.direction;

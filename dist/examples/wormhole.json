@@ -5,8 +5,8 @@
         "author": "wormhole - 空间穿越效果"
     },
     "wormhole": {
-        "lng": -160,
-        "lat": 80,
+        "lng": 15,
+        "lat": 10,
         "bxlPath": "../assets/scene1/scene1.bxl"
     },
     "sceneGroup": [{
