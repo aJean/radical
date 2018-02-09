@@ -9,32 +9,42 @@
         <link rel="stylesheet" href="../index.css">
     </head>
     <body>
-        <div id="test" ref="mytest"></div>
+        <div id="test" ref="mytest" style="margin-right:175px;"></div>
         <div class="overlay-panel">
             <p><button class="add">添加 overlay</button></p>
-            <div class="show-point"></div>
+            <div class="show-point">
+                <p>点击 lng: <span></span></p>
+                <p>点击 lat: <span></span></p>
+            </div>
             <p><button class="lookat">获取相机角度</button></p>
-            <div class="show-lookat"></div>
+            <div class="show-lookat">
+                <p>相机 lng: <span></span></p>
+                <p>相机 lat: <span></span></p>
+            </div>
         </div>
+        <script src="../zepto.js"></script>
         <script src="../lib.js"></script>
         <script>
             let pos;
             bxl.start('./add.json', '#test', {
                 'panoram-click': function (data) {
                     pos = data;
-                    document.querySelector('.overlay-panel .show-point').innerHTML = `<p>x: ${data.x.toFixed(2)}</p><p>y: ${data.y.toFixed(2)}</p>`;
+                    $('.show-point span').first().html(data.lng.toFixed(2));
+                    $('.show-point span').last().html(data.lat.toFixed(2));
                 }
             });
 
-            document.querySelector('.overlay-panel .add').addEventListener('click', function () {
+            $('.overlay-panel .add').on('click', function () {
                 const panoram = bxl.getPanoram('mytest');
-                panoram.addOverlay(pos, '动态热点');
+                pos && panoram.addOverlay(pos, '动态热点');
              });
 
-             document.querySelector('.overlay-panel .lookat').addEventListener('click', function () {
+             $('.overlay-panel .lookat').on('click', function () {
                 const panoram = bxl.getPanoram('mytest');
                 const point = panoram.getLook();
-                document.querySelector('.overlay-panel .show-lookat').innerHTML = `<p>lng: ${point.lng.toFixed(2)}</p><p>lat: ${point.lat.toFixed(2)}</p>`;
+
+                $('.show-lookat span').first().html(point.lng.toFixed(2));
+                $('.show-lookat span').last().html(point.lat.toFixed(2));
              });
         </script>
     </body>

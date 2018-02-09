@@ -51,8 +51,9 @@ body {
 .overlay-panel {
     position: absolute;
     top: 30px;
-    right: 20px;
-    padding: 20px;
+    right: 10px;
+    width: 130px;
+    padding: 10px;
     border: 1px solid #f0860d;
 }
 

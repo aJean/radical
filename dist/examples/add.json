@@ -4,9 +4,6 @@
     "info": {
         "author": "添加覆盖物"
     },
-    "panoram": {
-        "width": "80%"
-    },
     "sceneGroup": [{
         "id": "scene3",
         "name": "博物馆",

@@ -107,7 +107,7 @@ export default {
      * 屏幕坐标转为球面坐标
      */
     calcScreenToSphere(location, camera) {
-        const vector = new Vector3(location.x, location.y, 0).unproject(camera);
+        const vector = new Vector3(location.x, location.y, 0.99).unproject(camera);
         const spherical = new Spherical();
         spherical.setFromVector3(vector);
 

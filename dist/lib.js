@@ -845,7 +845,7 @@ return /******/ (function(modules) { // webpackBootstrap
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(2));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(3));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -1725,143 +1725,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 /* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-;(function (root, factory, undef) {
-	if (true) {
-		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(9), __webpack_require__(10));
-	}
-	else if (typeof define === "function" && define.amd) {
-		// AMD
-		define(["./core", "./sha1", "./hmac"], factory);
-	}
-	else {
-		// Global (browser)
-		factory(root.CryptoJS);
-	}
-}(this, function (CryptoJS) {
-
-	(function () {
-	    // Shortcuts
-	    var C = CryptoJS;
-	    var C_lib = C.lib;
-	    var Base = C_lib.Base;
-	    var WordArray = C_lib.WordArray;
-	    var C_algo = C.algo;
-	    var MD5 = C_algo.MD5;
-
-	    /**
-	     * This key derivation function is meant to conform with EVP_BytesToKey.
-	     * www.openssl.org/docs/crypto/EVP_BytesToKey.html
-	     */
-	    var EvpKDF = C_algo.EvpKDF = Base.extend({
-	        /**
-	         * Configuration options.
-	         *
-	         * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
-	         * @property {Hasher} hasher The hash algorithm to use. Default: MD5
-	         * @property {number} iterations The number of iterations to perform. Default: 1
-	         */
-	        cfg: Base.extend({
-	            keySize: 128/32,
-	            hasher: MD5,
-	            iterations: 1
-	        }),
-
-	        /**
-	         * Initializes a newly created key derivation function.
-	         *
-	         * @param {Object} cfg (Optional) The configuration options to use for the derivation.
-	         *
-	         * @example
-	         *
-	         *     var kdf = CryptoJS.algo.EvpKDF.create();
-	         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8 });
-	         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8, iterations: 1000 });
-	         */
-	        init: function (cfg) {
-	            this.cfg = this.cfg.extend(cfg);
-	        },
-
-	        /**
-	         * Derives a key from a password.
-	         *
-	         * @param {WordArray|string} password The password.
-	         * @param {WordArray|string} salt A salt.
-	         *
-	         * @return {WordArray} The derived key.
-	         *
-	         * @example
-	         *
-	         *     var key = kdf.compute(password, salt);
-	         */
-	        compute: function (password, salt) {
-	            // Shortcut
-	            var cfg = this.cfg;
-
-	            // Init hasher
-	            var hasher = cfg.hasher.create();
-
-	            // Initial values
-	            var derivedKey = WordArray.create();
-
-	            // Shortcuts
-	            var derivedKeyWords = derivedKey.words;
-	            var keySize = cfg.keySize;
-	            var iterations = cfg.iterations;
-
-	            // Generate key
-	            while (derivedKeyWords.length < keySize) {
-	                if (block) {
-	                    hasher.update(block);
-	                }
-	                var block = hasher.update(password).finalize(salt);
-	                hasher.reset();
-
-	                // Iterations
-	                for (var i = 1; i < iterations; i++) {
-	                    block = hasher.finalize(block);
-	                    hasher.reset();
-	                }
-
-	                derivedKey.concat(block);
-	            }
-	            derivedKey.sigBytes = keySize * 4;
-
-	            return derivedKey;
-	        }
-	    });
-
-	    /**
-	     * Derives a key from a password.
-	     *
-	     * @param {WordArray|string} password The password.
-	     * @param {WordArray|string} salt A salt.
-	     * @param {Object} cfg (Optional) The configuration options to use for this computation.
-	     *
-	     * @return {WordArray} The derived key.
-	     *
-	     * @static
-	     *
-	     * @example
-	     *
-	     *     var key = CryptoJS.EvpKDF(password, salt);
-	     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8 });
-	     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8, iterations: 1000 });
-	     */
-	    C.EvpKDF = function (password, salt, cfg) {
-	        return EvpKDF.create(cfg).compute(password, salt);
-	    };
-	}());
-
-
-	return CryptoJS.EvpKDF;
-
-}));
-
-/***/ }),
-/* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -47842,7 +47705,169 @@ function CanvasRenderer() {
 
 
 /***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+	if (true) {
+		// CommonJS
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(9), __webpack_require__(10));
+	}
+	else if (typeof define === "function" && define.amd) {
+		// AMD
+		define(["./core", "./sha1", "./hmac"], factory);
+	}
+	else {
+		// Global (browser)
+		factory(root.CryptoJS);
+	}
+}(this, function (CryptoJS) {
+
+	(function () {
+	    // Shortcuts
+	    var C = CryptoJS;
+	    var C_lib = C.lib;
+	    var Base = C_lib.Base;
+	    var WordArray = C_lib.WordArray;
+	    var C_algo = C.algo;
+	    var MD5 = C_algo.MD5;
+
+	    /**
+	     * This key derivation function is meant to conform with EVP_BytesToKey.
+	     * www.openssl.org/docs/crypto/EVP_BytesToKey.html
+	     */
+	    var EvpKDF = C_algo.EvpKDF = Base.extend({
+	        /**
+	         * Configuration options.
+	         *
+	         * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
+	         * @property {Hasher} hasher The hash algorithm to use. Default: MD5
+	         * @property {number} iterations The number of iterations to perform. Default: 1
+	         */
+	        cfg: Base.extend({
+	            keySize: 128/32,
+	            hasher: MD5,
+	            iterations: 1
+	        }),
+
+	        /**
+	         * Initializes a newly created key derivation function.
+	         *
+	         * @param {Object} cfg (Optional) The configuration options to use for the derivation.
+	         *
+	         * @example
+	         *
+	         *     var kdf = CryptoJS.algo.EvpKDF.create();
+	         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8 });
+	         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8, iterations: 1000 });
+	         */
+	        init: function (cfg) {
+	            this.cfg = this.cfg.extend(cfg);
+	        },
+
+	        /**
+	         * Derives a key from a password.
+	         *
+	         * @param {WordArray|string} password The password.
+	         * @param {WordArray|string} salt A salt.
+	         *
+	         * @return {WordArray} The derived key.
+	         *
+	         * @example
+	         *
+	         *     var key = kdf.compute(password, salt);
+	         */
+	        compute: function (password, salt) {
+	            // Shortcut
+	            var cfg = this.cfg;
+
+	            // Init hasher
+	            var hasher = cfg.hasher.create();
+
+	            // Initial values
+	            var derivedKey = WordArray.create();
+
+	            // Shortcuts
+	            var derivedKeyWords = derivedKey.words;
+	            var keySize = cfg.keySize;
+	            var iterations = cfg.iterations;
+
+	            // Generate key
+	            while (derivedKeyWords.length < keySize) {
+	                if (block) {
+	                    hasher.update(block);
+	                }
+	                var block = hasher.update(password).finalize(salt);
+	                hasher.reset();
+
+	                // Iterations
+	                for (var i = 1; i < iterations; i++) {
+	                    block = hasher.finalize(block);
+	                    hasher.reset();
+	                }
+
+	                derivedKey.concat(block);
+	            }
+	            derivedKey.sigBytes = keySize * 4;
+
+	            return derivedKey;
+	        }
+	    });
+
+	    /**
+	     * Derives a key from a password.
+	     *
+	     * @param {WordArray|string} password The password.
+	     * @param {WordArray|string} salt A salt.
+	     * @param {Object} cfg (Optional) The configuration options to use for this computation.
+	     *
+	     * @return {WordArray} The derived key.
+	     *
+	     * @static
+	     *
+	     * @example
+	     *
+	     *     var key = CryptoJS.EvpKDF(password, salt);
+	     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8 });
+	     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8, iterations: 1000 });
+	     */
+	    C.EvpKDF = function (password, salt, cfg) {
+	        return EvpKDF.create(cfg).compute(password, salt);
+	    };
+	}());
+
+
+	return CryptoJS.EvpKDF;
+
+}));
+
+/***/ }),
 /* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/**
+ * @file logs & 统计
+ */
+function formatMsg(msg) {
+    return (typeof msg === 'string') ? new Error(msg) : msg;
+}
+/* harmony default export */ __webpack_exports__["a"] = ({
+    debug: false,
+    output: function (msg) {
+        return this.debug ? this.errorLog(msg) : this.infoLog(msg);
+    },
+    infoLog: function (msg) {
+        console.info(msg);
+    },
+    errorLog: function (msg) {
+        console.error(msg);
+    }
+});
+
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function (root, factory) {
@@ -47982,7 +48007,7 @@ function CanvasRenderer() {
 }));
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function (root, factory) {
@@ -48255,32 +48280,146 @@ function CanvasRenderer() {
 }));
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_crypto_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_crypto_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_crypto_js__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_three__ = __webpack_require__(2);
+
+
 /**
- * @file logs & 统计
+ * @file util tools
  */
-function formatMsg(msg) {
-    return (typeof msg === 'string') ? new Error(msg) : msg;
-}
+var composeKey = function (part) { return ('skt1wins' + part); };
 /* harmony default export */ __webpack_exports__["a"] = ({
-    debug: false,
-    output: function (msg) {
-        return this.debug ? this.errorLog(msg) : this.infoLog(msg);
+    /**
+     * 创建 dom 元素
+     * @param {string} domstring
+     */
+    createElement: function (domstring) {
+        var elem = document.createElement('div');
+        elem.innerHTML = domstring;
+        return elem.firstChild;
     },
-    infoLog: function (msg) {
-        console.info(msg);
+    /**
+     * 解密
+     * @param {string} ciphertext 密文
+     * @param {string} key 密钥
+     */
+    decode: function (ciphertext, key) {
+        if ((key ^ 1) !== 1) {
+            key = composeKey('forever');
+        }
+        var plaintext = __WEBPACK_IMPORTED_MODULE_0_crypto_js__["AES"].decrypt({
+            iv: null,
+            ciphertext: __WEBPACK_IMPORTED_MODULE_0_crypto_js__["enc"].Hex.parse(ciphertext),
+            salt: __WEBPACK_IMPORTED_MODULE_0_crypto_js__["lib"].WordArray.create(0)
+        }, key);
+        return plaintext.toString(__WEBPACK_IMPORTED_MODULE_0_crypto_js__["enc"].Utf8);
     },
-    errorLog: function (msg) {
-        console.error(msg);
+    /**
+     * 解析文件结束符, 域名规则检验
+     * @param {string} EOF
+     */
+    parseEOF: function (EOF) {
+        var ret = EOF.split('*');
+        var domains = ret[1] ? ret[1].split(',') : [];
+        var pass = true;
+        if (domains.length > 0) {
+            pass = Boolean(domains.find(function (domain) { return domain == location.host; }));
+        }
+        return {
+            line: ret[0],
+            pass: pass
+        };
+    },
+    /**
+     * 解析数据地理位置
+     * location.lng [-180, 180] location.lat [0, 180]
+     * @param {Object} data
+     * @param {Object} camera
+     */
+    parseLocation: function (data, camera) {
+        var location = data.location;
+        // 经纬度
+        if (location && location.lng !== undefined) {
+            var vector = this.calcSphereToWorld(location.lng, location.lat);
+            data.location = {
+                x: vector.x,
+                y: vector.y,
+                z: vector.z
+            };
+        }
+    },
+    /**
+     * 球面坐标转化成世界坐标
+     * @param {number} lng 经度
+     * @param {number} lat 纬度
+     * @param {number} radius 半径
+     */
+    calcSphereToWorld: function (lng, lat, radius) {
+        var spherical = new __WEBPACK_IMPORTED_MODULE_1_three__["x" /* Spherical */]();
+        var vector = new __WEBPACK_IMPORTED_MODULE_1_three__["A" /* Vector3 */]();
+        spherical.theta = lng * (Math.PI / 180);
+        spherical.phi = (90 - lat) * (Math.PI / 180);
+        spherical.radius = radius !== undefined ? radius : 1000;
+        vector.setFromSpherical(spherical);
+        return vector;
+    },
+    /**
+     * 世界坐标转为屏幕坐标
+     * @param {Object} location 世界坐标系
+     * @param {Object} camera 场景相机
+     */
+    calcWorldToScreen: function (location, camera) {
+        var vector = new __WEBPACK_IMPORTED_MODULE_1_three__["A" /* Vector3 */](location.x, location.y, location.z);
+        return vector.project(camera);
+    },
+    /**
+     * 屏幕坐标转为球面坐标
+     */
+    calcScreenToSphere: function (location, camera) {
+        var vector = new __WEBPACK_IMPORTED_MODULE_1_three__["A" /* Vector3 */](location.x, location.y, 0.99).unproject(camera);
+        var spherical = new __WEBPACK_IMPORTED_MODULE_1_three__["x" /* Spherical */]();
+        spherical.setFromVector3(vector);
+        return {
+            lng: spherical.theta * 180 / Math.PI,
+            lat: 90 - spherical.phi * 180 / Math.PI
+        };
+    },
+    /**
+     * 计算画布大小
+     * @param {Object} opts 配置参数
+     * @param {HTMLElement} elem 容器元素
+     */
+    calcRenderSize: function (opts, elem) {
+        var winWidth = window.innerWidth;
+        var winHeight = window.innerHeight;
+        var width = parseInt(opts.width) || elem.clientWidth || winWidth;
+        var height = parseInt(opts.height) || elem.clientHeight || winHeight;
+        /%$/.test(opts.width) && (width = width / 100 * winWidth);
+        /%$/.test(opts.height) && (height = height / 100 * winHeight);
+        return { width: width, height: height, aspect: width / height };
+    },
+    /**
+     * 删除 object3d 对象
+     */
+    cleanup: function (parent, target) {
+        var _this = this;
+        if (target.children.length) {
+            target.children.forEach(function (item) { return _this.cleanup(target, item); });
+        }
+        else if (parent) {
+            parent.remove(target);
+        }
     }
 });
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function (root, factory) {
@@ -48587,145 +48726,6 @@ function formatMsg(msg) {
 	return CryptoJS;
 
 }));
-
-/***/ }),
-/* 8 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_crypto_js__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_crypto_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_crypto_js__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_three__ = __webpack_require__(3);
-
-
-/**
- * @file util tools
- */
-var composeKey = function (part) { return ('skt1wins' + part); };
-/* harmony default export */ __webpack_exports__["a"] = ({
-    /**
-     * 创建 dom 元素
-     * @param {string} domstring
-     */
-    createElement: function (domstring) {
-        var elem = document.createElement('div');
-        elem.innerHTML = domstring;
-        return elem.firstChild;
-    },
-    /**
-     * 解密
-     * @param {string} ciphertext 密文
-     * @param {string} key 密钥
-     */
-    decode: function (ciphertext, key) {
-        if ((key ^ 1) !== 1) {
-            key = composeKey('forever');
-        }
-        var plaintext = __WEBPACK_IMPORTED_MODULE_0_crypto_js__["AES"].decrypt({
-            iv: null,
-            ciphertext: __WEBPACK_IMPORTED_MODULE_0_crypto_js__["enc"].Hex.parse(ciphertext),
-            salt: __WEBPACK_IMPORTED_MODULE_0_crypto_js__["lib"].WordArray.create(0)
-        }, key);
-        return plaintext.toString(__WEBPACK_IMPORTED_MODULE_0_crypto_js__["enc"].Utf8);
-    },
-    /**
-     * 解析文件结束符, 域名规则检验
-     * @param {string} EOF
-     */
-    parseEOF: function (EOF) {
-        var ret = EOF.split('*');
-        var domains = ret[1] ? ret[1].split(',') : [];
-        var pass = true;
-        if (domains.length > 0) {
-            pass = Boolean(domains.find(function (domain) { return domain == location.host; }));
-        }
-        return {
-            line: ret[0],
-            pass: pass
-        };
-    },
-    /**
-     * 解析数据地理位置
-     * location.lng [-180, 180] location.lat [0, 180]
-     * @param {Object} data
-     * @param {Object} camera
-     */
-    parseLocation: function (data, camera) {
-        var location = data.location;
-        // 经纬度
-        if (location && location.lng !== undefined) {
-            var vector = this.calcSphereToWorld(location.lng, location.lat);
-            data.location = {
-                x: vector.x,
-                y: vector.y,
-                z: vector.z
-            };
-        }
-    },
-    /**
-     * 球面坐标转化成世界坐标
-     * @param {number} lng 经度
-     * @param {number} lat 纬度
-     * @param {number} radius 半径
-     */
-    calcSphereToWorld: function (lng, lat, radius) {
-        var spherical = new __WEBPACK_IMPORTED_MODULE_1_three__["x" /* Spherical */]();
-        var vector = new __WEBPACK_IMPORTED_MODULE_1_three__["A" /* Vector3 */]();
-        spherical.theta = lng * (Math.PI / 180);
-        spherical.phi = (90 - lat) * (Math.PI / 180);
-        spherical.radius = radius !== undefined ? radius : 1000;
-        vector.setFromSpherical(spherical);
-        return vector;
-    },
-    /**
-     * 世界坐标转为屏幕坐标
-     * @param {Object} location 世界坐标系
-     * @param {Object} camera 场景相机
-     */
-    calcWorldToScreen: function (location, camera) {
-        var vector = new __WEBPACK_IMPORTED_MODULE_1_three__["A" /* Vector3 */](location.x, location.y, location.z);
-        return vector.project(camera);
-    },
-    /**
-     * 屏幕坐标转为球面坐标
-     */
-    calcScreenToSphere: function (location, camera) {
-        var vector = new __WEBPACK_IMPORTED_MODULE_1_three__["A" /* Vector3 */](location.x, location.y, 0).unproject(camera);
-        var spherical = new __WEBPACK_IMPORTED_MODULE_1_three__["x" /* Spherical */]();
-        spherical.setFromVector3(vector);
-        return {
-            lng: spherical.theta * 180 / Math.PI,
-            lat: 90 - spherical.phi * 180 / Math.PI
-        };
-    },
-    /**
-     * 计算画布大小
-     * @param {Object} opts 配置参数
-     * @param {HTMLElement} elem 容器元素
-     */
-    calcRenderSize: function (opts, elem) {
-        var winWidth = window.innerWidth;
-        var winHeight = window.innerHeight;
-        var width = parseInt(opts.width) || elem.clientWidth || winWidth;
-        var height = parseInt(opts.height) || elem.clientHeight || winHeight;
-        /%$/.test(opts.width) && (width = width / 100 * winWidth);
-        /%$/.test(opts.height) && (height = height / 100 * winHeight);
-        return { width: width, height: height, aspect: width / height };
-    },
-    /**
-     * 删除 object3d 对象
-     */
-    cleanup: function (parent, target) {
-        var _this = this;
-        if (target.children.length) {
-            target.children.forEach(function (item) { return _this.cleanup(target, item); });
-        }
-        else if (parent) {
-            parent.remove(target);
-        }
-    }
-});
-
 
 /***/ }),
 /* 9 */
@@ -49035,10 +49035,10 @@ var composeKey = function (part) { return ('skt1wins' + part); };
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__base_loader__ = __webpack_require__(49);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__util__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__log__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__util__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__log__ = __webpack_require__(4);
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -49386,7 +49386,7 @@ function loadCanvas(url, timeout) {
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(7));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -49712,7 +49712,7 @@ function loadCanvas(url, timeout) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__log__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__log__ = __webpack_require__(4);
 
 /**
  * @file js frame animation
@@ -49888,12 +49888,12 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__panoram__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__log__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__log__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__loaders_resource_loader__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_info_plugin__ = __webpack_require__(51);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_multiple_plugin__ = __webpack_require__(52);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_wormhole_plugin__ = __webpack_require__(53);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__animations_timeline_animation__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_info_plugin__ = __webpack_require__(58);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_multiple_plugin__ = __webpack_require__(59);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_wormhole_plugin__ = __webpack_require__(60);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__animations_timeline_animation__ = __webpack_require__(61);
 var __assign = (this && this.__assign) || Object.assign || function(t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
         s = arguments[i];
@@ -50131,12 +50131,12 @@ window.addEventListener('resize', onEnvResize);
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controls_orbitControl__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__controls_gyroControl__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__event__ = __webpack_require__(24);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__log__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__util__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__log__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__util__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__loaders_resource_loader__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__ = __webpack_require__(50);
@@ -50485,7 +50485,7 @@ var Panoram = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
 
 /**
  * @file 全景相机控制器
@@ -51122,7 +51122,7 @@ OrbitControl.prototype.constructor = OrbitControl;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
 
 /**
  * @file 陀螺仪控制器
@@ -51544,7 +51544,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(7), __webpack_require__(26), __webpack_require__(27), __webpack_require__(4), __webpack_require__(5), __webpack_require__(9), __webpack_require__(12), __webpack_require__(28), __webpack_require__(13), __webpack_require__(29), __webpack_require__(30), __webpack_require__(31), __webpack_require__(10), __webpack_require__(32), __webpack_require__(2), __webpack_require__(1), __webpack_require__(33), __webpack_require__(34), __webpack_require__(35), __webpack_require__(36), __webpack_require__(37), __webpack_require__(38), __webpack_require__(39), __webpack_require__(40), __webpack_require__(41), __webpack_require__(42), __webpack_require__(43), __webpack_require__(44), __webpack_require__(45), __webpack_require__(46), __webpack_require__(47), __webpack_require__(48));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8), __webpack_require__(26), __webpack_require__(27), __webpack_require__(5), __webpack_require__(6), __webpack_require__(9), __webpack_require__(12), __webpack_require__(28), __webpack_require__(13), __webpack_require__(29), __webpack_require__(30), __webpack_require__(31), __webpack_require__(10), __webpack_require__(32), __webpack_require__(3), __webpack_require__(1), __webpack_require__(33), __webpack_require__(34), __webpack_require__(35), __webpack_require__(36), __webpack_require__(37), __webpack_require__(38), __webpack_require__(39), __webpack_require__(40), __webpack_require__(41), __webpack_require__(42), __webpack_require__(43), __webpack_require__(44), __webpack_require__(45), __webpack_require__(46), __webpack_require__(47), __webpack_require__(48));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -51887,7 +51887,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(7), __webpack_require__(13));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8), __webpack_require__(13));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -51975,7 +51975,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(7));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -53400,7 +53400,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(4), __webpack_require__(5), __webpack_require__(2), __webpack_require__(1));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(5), __webpack_require__(6), __webpack_require__(3), __webpack_require__(1));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -53637,7 +53637,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(4), __webpack_require__(5), __webpack_require__(2), __webpack_require__(1));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(5), __webpack_require__(6), __webpack_require__(3), __webpack_require__(1));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -54412,7 +54412,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(4), __webpack_require__(5), __webpack_require__(2), __webpack_require__(1));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(5), __webpack_require__(6), __webpack_require__(3), __webpack_require__(1));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -54556,7 +54556,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(4), __webpack_require__(5), __webpack_require__(2), __webpack_require__(1));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(5), __webpack_require__(6), __webpack_require__(3), __webpack_require__(1));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -54753,7 +54753,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(4), __webpack_require__(5), __webpack_require__(2), __webpack_require__(1));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(5), __webpack_require__(6), __webpack_require__(3), __webpack_require__(1));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -55006,14 +55006,14 @@ var BaseLoader = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__util__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__log__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__dom_overlay__ = __webpack_require__(59);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__mesh_overlay__ = __webpack_require__(60);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__sprite_overlay__ = __webpack_require__(61);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__frame_overlay__ = __webpack_require__(62);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__video_overlay__ = __webpack_require__(63);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__util__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__log__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__dom_overlay__ = __webpack_require__(51);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__mesh_overlay__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__sprite_overlay__ = __webpack_require__(53);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__frame_overlay__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__video_overlay__ = __webpack_require__(55);
 
 
 
@@ -55299,6 +55299,527 @@ var Overlays = /** @class */ (function () {
 
 "use strict";
 /**
+ * @file dom element overlay
+ */
+var DomOverlay = /** @class */ (function () {
+    function DomOverlay(data) {
+        this.type = "dom";
+        this.data = data;
+        this.elem = this.create();
+    }
+    DomOverlay.prototype.create = function () {
+        var data = this.data;
+        var node = document.createElement('div');
+        node.id = data.id;
+        node.innerHTML = data.content;
+        node.className = 'panrom-domoverlay';
+        if (data.cls) {
+            node.className += " " + data.cls;
+        }
+        return node;
+    };
+    DomOverlay.prototype.update = function (x, y) {
+        var elem = this.elem;
+        var data = this.data;
+        data.x = x;
+        data.y = y;
+        elem.style.display = 'block';
+        elem.style.left = x + 'px';
+        elem.style.top = y + 'px';
+    };
+    DomOverlay.prototype.hide = function () {
+        this.elem.style.display = 'none';
+    };
+    DomOverlay.prototype.show = function () {
+        this.elem.style.display = 'block';
+    };
+    DomOverlay.prototype.dispose = function () { };
+    return DomOverlay;
+}());
+/* harmony default export */ __webpack_exports__["a"] = (DomOverlay);
+
+
+/***/ }),
+/* 52 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+
+/**
+ * @file mesh overlay, static return three mesh object
+ * @todo normalization object
+ */
+var MeshOverlay = /** @class */ (function () {
+    function MeshOverlay(data) {
+        this.type = "mesh";
+        this.data = data;
+        this.particle = this.create();
+    }
+    MeshOverlay.prototype.create = function () {
+        var data = this.data;
+        var loader = new __WEBPACK_IMPORTED_MODULE_0_three__["y" /* TextureLoader */]();
+        var texture = loader.load(data.img);
+        var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
+            map: texture,
+            transparent: true
+        });
+        var scale = 1;
+        var plane = new __WEBPACK_IMPORTED_MODULE_0_three__["q" /* PlaneGeometry */](data.width * scale, data.height * scale);
+        var planeMesh = new __WEBPACK_IMPORTED_MODULE_0_three__["m" /* Mesh */](plane, material);
+        planeMesh.position.set(data.location.x, data.location.y, data.location.z);
+        planeMesh.name = data.id;
+        planeMesh['instance'] = this;
+        return planeMesh;
+    };
+    MeshOverlay.prototype.update = function () { };
+    MeshOverlay.prototype.show = function () {
+        this.particle.visible = true;
+    };
+    MeshOverlay.prototype.hide = function () {
+        this.particle.visible = false;
+    };
+    MeshOverlay.prototype.dispose = function () {
+        delete this.particle['instance'];
+        this.particle.geometry.dispose();
+    };
+    return MeshOverlay;
+}());
+/* harmony default export */ __webpack_exports__["a"] = (MeshOverlay);
+
+
+/***/ }),
+/* 53 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+
+/**
+ * @file 雨雪特效 overlay
+ */
+var defaultOpts = {
+    size: 10,
+    count: 100,
+    speed: 3,
+    colorR: 0.3,
+    colorG: 0.3,
+    colorB: 0.3
+};
+function calcPos() {
+    return Math.random() * 1400 - 700;
+}
+var SpriteOverlay = /** @class */ (function () {
+    function SpriteOverlay(data) {
+        this.type = 'sprite';
+        this.data = Object.assign({}, defaultOpts, data);
+        this.particle = this.create();
+    }
+    SpriteOverlay.prototype.create = function () {
+        var data = this.data;
+        var geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["i" /* Geometry */]();
+        var texture = new __WEBPACK_IMPORTED_MODULE_0_three__["y" /* TextureLoader */]().load(data.type == 1 ? snowTexture : rainTexture);
+        for (var i = 0; i < data.count; i++) {
+            var vertex = new __WEBPACK_IMPORTED_MODULE_0_three__["A" /* Vector3 */](calcPos(), calcPos(), calcPos());
+            geometry.vertices.push(vertex);
+        }
+        var material = new __WEBPACK_IMPORTED_MODULE_0_three__["s" /* PointsMaterial */]({
+            size: data.size,
+            map: texture,
+            blending: __WEBPACK_IMPORTED_MODULE_0_three__["a" /* AdditiveBlending */],
+            depthTest: false,
+            transparent: true,
+            side: __WEBPACK_IMPORTED_MODULE_0_three__["f" /* DoubleSide */]
+        });
+        material.color.setRGB(data.colorR, data.colorG, data.colorB);
+        return new __WEBPACK_IMPORTED_MODULE_0_three__["r" /* Points */](geometry, material);
+    };
+    SpriteOverlay.prototype.update = function () {
+        if (!this.particle.visible) {
+            return;
+        }
+        var speed = this.data.speed;
+        var geometry = this.particle.geometry;
+        var list = geometry.vertices;
+        list.forEach(function (vertice) {
+            vertice.x -= 0.2 * (Math.random() - 0.5);
+            vertice.z -= 0.2 * (Math.random() - 0.5);
+            if (vertice.y < -700) {
+                vertice.y = 700;
+            }
+            vertice.y -= speed;
+        });
+        geometry.verticesNeedUpdate = true;
+    };
+    SpriteOverlay.prototype.isEnd = function () {
+        return false;
+    };
+    SpriteOverlay.prototype.show = function () {
+        this.particle.visible = true;
+    };
+    SpriteOverlay.prototype.hide = function () {
+        this.particle.visible = false;
+    };
+    SpriteOverlay.prototype.dispose = function () {
+        this.particle.geometry.dispose();
+    };
+    return SpriteOverlay;
+}());
+var snowTexture = 'data:image/png;base64,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';
+var rainTexture = 'data:image/png;base64,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';
+/* harmony default export */ __webpack_exports__["a"] = (SpriteOverlay);
+
+
+/***/ }),
+/* 54 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+
+/**
+ * @file 全景序列帧控制器
+ */
+var defaultOpts = {
+    width: 200,
+    height: 200,
+    loop: true,
+    auto: true,
+    inverval: 60
+};
+var FrameOverlay = /** @class */ (function () {
+    function FrameOverlay(data) {
+        this.textures = [];
+        this.index = 0;
+        this.enable = true;
+        this.finished = false;
+        this.lastTime = Date.now();
+        this.type = "frame";
+        this.data = Object.assign({}, defaultOpts, data);
+        this.particle = this.create();
+    }
+    FrameOverlay.prototype.loadTextures = function () {
+        var loader = new __WEBPACK_IMPORTED_MODULE_0_three__["y" /* TextureLoader */]();
+        var data = this.data;
+        var count = data.count;
+        var url = data.imgPath;
+        var limit = this.limit = data.count;
+        for (var i = 1; i <= limit; i++) {
+            this.textures.push(loader.load(url + "/" + i + ".png"));
+        }
+    };
+    FrameOverlay.prototype.create = function () {
+        this.loadTextures();
+        var data = this.data;
+        var location = data.location;
+        var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
+            map: this.textures[0],
+            transparent: true
+        });
+        var plane = new __WEBPACK_IMPORTED_MODULE_0_three__["q" /* PlaneGeometry */](data.width, data.height);
+        var mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["m" /* Mesh */](plane, material);
+        mesh.position.set(location.x, location.y, location.z);
+        if (data.rx) {
+            mesh.rotation.set(data.rx, data.ry, data.rz);
+        }
+        else {
+            mesh.lookAt(data.lookat);
+        }
+        return mesh;
+    };
+    FrameOverlay.prototype.update = function () {
+        if (!this.enable || !this.particle.visible) {
+            return;
+        }
+        var data = this.data;
+        var now = Date.now();
+        var textures = this.textures;
+        var newIndex = parseInt((now - this.lastTime) / data.inverval + '');
+        var texture;
+        if (newIndex != this.index) {
+            if (textures[newIndex]) {
+                texture = textures[this.index = newIndex];
+            }
+            else {
+                if (data.loop) {
+                    this.lastTime = now;
+                    texture = textures[this.index = 0];
+                }
+                else {
+                    this.finished = true;
+                }
+            }
+        }
+        if (texture) {
+            this.particle.material.map = texture;
+        }
+    };
+    FrameOverlay.prototype.isEnd = function () {
+        return this.finished;
+    };
+    FrameOverlay.prototype.stop = function () {
+        this.enable = false;
+        this.finished = true;
+    };
+    FrameOverlay.prototype.pause = function () {
+        this.enable = false;
+    };
+    FrameOverlay.prototype.play = function () {
+        this.enable = true;
+    };
+    FrameOverlay.prototype.hide = function () {
+        this.particle.visible = false;
+    };
+    FrameOverlay.prototype.show = function () {
+        this.particle.visible = true;
+    };
+    FrameOverlay.prototype.dispose = function () {
+        this.particle.geometry.dispose();
+    };
+    return FrameOverlay;
+}());
+/* harmony default export */ __webpack_exports__["a"] = (FrameOverlay);
+
+
+/***/ }),
+/* 55 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ui_layer_ui__ = __webpack_require__(56);
+
+
+/**
+ * @file 视频播放
+ */
+var defaultOpts = {
+    width: 30,
+    height: 30,
+    loop: false,
+    auto: true
+};
+var videoOverlay = /** @class */ (function () {
+    function videoOverlay(data) {
+        this.type = "video";
+        this.data = Object.assign({}, defaultOpts, data);
+        this.particle = this.create();
+    }
+    videoOverlay.prototype.create = function () {
+        var _this = this;
+        var data = this.data;
+        var location = data.location;
+        var video = this.video = document.createElement('video');
+        video.className = "panoram-video";
+        video.src = data.src;
+        video.autoplay = false;
+        video.loop = data.loop;
+        video.controls = true;
+        video.setAttribute('webkit-playsinlin', 'true');
+        var layer = this.layer = new __WEBPACK_IMPORTED_MODULE_1__ui_layer_ui__["a" /* default */]({
+            hide: true,
+            closeBtn: true,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            effect: 'scale',
+            onLayerClose: function () { return _this.stop(); }
+        });
+        layer.setContent(video);
+        layer.appendTo(document.body);
+        var texture = new __WEBPACK_IMPORTED_MODULE_0_three__["y" /* TextureLoader */]().load(data.img);
+        var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
+            map: texture,
+            transparent: true
+        });
+        var plane = new __WEBPACK_IMPORTED_MODULE_0_three__["q" /* PlaneGeometry */](data.width, data.height);
+        var planeMesh = new __WEBPACK_IMPORTED_MODULE_0_three__["m" /* Mesh */](plane, material);
+        planeMesh.position.set(location.x, location.y, location.z);
+        planeMesh.lookAt(data.lookat);
+        planeMesh.name = data.id;
+        planeMesh['instance'] = this;
+        return planeMesh;
+    };
+    videoOverlay.prototype.update = function () { };
+    videoOverlay.prototype.play = function () {
+        this.layer.show();
+        this.video.play();
+    };
+    videoOverlay.prototype.stop = function () {
+        this.video.pause();
+    };
+    videoOverlay.prototype.show = function () {
+        this.particle.visible = true;
+    };
+    videoOverlay.prototype.hide = function () {
+        this.particle.visible = false;
+    };
+    videoOverlay.prototype.dispose = function () {
+        delete this.particle['instance'];
+        this.video.pause();
+        this.particle.geometry.dispose();
+        this.layer.dispose();
+    };
+    return videoOverlay;
+}());
+/* harmony default export */ __webpack_exports__["a"] = (videoOverlay);
+
+
+/***/ }),
+/* 56 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__animations_css_animation__ = __webpack_require__(57);
+
+/**
+ * @file dom layer
+ */
+var defaultOpts = {
+    hide: false,
+    closeBtn: false,
+    width: 300,
+    height: 300,
+    x: 0,
+    y: 0
+};
+var Layer = /** @class */ (function () {
+    function Layer(opts) {
+        this.data = Object.assign({}, defaultOpts, opts);
+        this.create();
+        this.anim = new __WEBPACK_IMPORTED_MODULE_0__animations_css_animation__["a" /* default */](this.root, {
+            prop: 'transform',
+            timing: 'ease-out',
+            value: 'scale(0)'
+        });
+    }
+    Layer.prototype.create = function () {
+        var _this = this;
+        var data = this.data;
+        var root = this.root = document.createElement('div');
+        var content = this.content = document.createElement('div');
+        root.className = 'panoram-layer';
+        content.className = 'panoram-layer-conten';
+        if (data.closeBtn) {
+            var btn = document.createElement('span');
+            btn.className = 'panoram-icon panoram-layer-close';
+            btn.onclick = function () { return _this.hide(); };
+            root.appendChild(btn);
+        }
+        if (data.hide) {
+            root.style.display = 'none';
+        }
+        root.appendChild(content);
+        this.setSize(data);
+        this.setPostion(data);
+    };
+    Layer.prototype.getElement = function () {
+        return this.root;
+    };
+    Layer.prototype.setSize = function (data) {
+        this.content.style.width = data.width + 'px';
+        this.content.style.height = data.height + 'px';
+    };
+    Layer.prototype.setPostion = function (pos) {
+        this.root.style.left = pos.x + 'px';
+        this.root.style.top = pos.y + 'px';
+    };
+    Layer.prototype.setContent = function (child) {
+        this.content.appendChild(child);
+    };
+    Layer.prototype.appendTo = function (container) {
+        this.container = container;
+        container.appendChild(this.root);
+    };
+    Layer.prototype.show = function () {
+        var _this = this;
+        var data = this.data;
+        this.root.style.display = 'block';
+        if (data.effect === 'scale') {
+            setTimeout(function () { return _this.anim.start('scale(1)'); }, 20);
+        }
+    };
+    Layer.prototype.hide = function () {
+        var _this = this;
+        var data = this.data;
+        data.onLayerClose && data.onLayerClose();
+        if (data.effect === 'scale') {
+            this.anim.start('scale(0)').complete(function () { return _this.root.style.display = 'none'; });
+        }
+        else {
+            this.root.style.display = 'none';
+        }
+    };
+    Layer.prototype.dispose = function () {
+        var root = this.root;
+        root.style.display = 'none';
+        root.innerHTML = '';
+        this.container.removeChild(this.root);
+    };
+    return Layer;
+}());
+/* harmony default export */ __webpack_exports__["a"] = (Layer);
+
+
+/***/ }),
+/* 57 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/**
+ * @file css animation
+ * TODO: multiple set props support
+ */
+var defaultOpts = {
+    prop: 'transform',
+    duration: '1s',
+    timing: 'ease'
+};
+var CssAnimation = /** @class */ (function () {
+    function CssAnimation(element, opts) {
+        var _this = this;
+        var data = this.data = Object.assign({}, defaultOpts, opts);
+        this.element = element;
+        this.prop = this.normalizeProp(data.prop);
+        element.style.webkitTransition = data.prop + " " + data.duration + " " + data.timing;
+        element.style.webkitTransform = 'translateZ(0)';
+        element.addEventListener('webkitTransitionEnd', function () { return _this.onComplete && _this.onComplete(); });
+        if (data.value) {
+            element.style[this.prop] = data.value;
+        }
+    }
+    CssAnimation.prototype.start = function (value) {
+        var element = this.element;
+        var prop = this.prop;
+        delete this.onComplete;
+        this.lastValue = element.style[prop];
+        element.style[prop] = value;
+        return this;
+    };
+    CssAnimation.prototype.end = function (attr, value) {
+        this.element.style.webkitAnimationPlayState = 'paused';
+        return this;
+    };
+    CssAnimation.prototype.complete = function (fn) {
+        this.onComplete = fn;
+        return this;
+    };
+    CssAnimation.prototype.normalizeProp = function (prop) {
+        if (prop == 'transform') {
+            return 'webkitTransform';
+        }
+        return prop;
+    };
+    return CssAnimation;
+}());
+/* harmony default export */ __webpack_exports__["a"] = (CssAnimation);
+
+
+/***/ }),
+/* 58 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/**
  * @file 版权遮罩层
  */
 var Info = /** @class */ (function () {
@@ -55322,7 +55843,7 @@ var Info = /** @class */ (function () {
 
 
 /***/ }),
-/* 52 */
+/* 59 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -55427,14 +55948,14 @@ var Multiple = /** @class */ (function () {
 
 
 /***/ }),
-/* 53 */
+/* 60 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__loaders_resource_loader__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__log__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__log__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__animations_tween_animation__ = __webpack_require__(14);
 
 
@@ -55553,11 +56074,11 @@ var Wormhole = /** @class */ (function () {
 
 
 /***/ }),
-/* 54 */
+/* 61 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__fly_animation__ = __webpack_require__(55);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__fly_animation__ = __webpack_require__(62);
 
 /**
  * @file animation timeline
@@ -55601,7 +56122,7 @@ var Timeline = /** @class */ (function () {
 
 
 /***/ }),
-/* 55 */
+/* 62 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -55668,530 +56189,6 @@ var AnimationFly = /** @class */ (function () {
 }());
 /* harmony default export */ __webpack_exports__["a"] = (AnimationFly);
 ;
-
-
-/***/ }),
-/* 56 */,
-/* 57 */,
-/* 58 */,
-/* 59 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/**
- * @file dom element overlay
- */
-var DomOverlay = /** @class */ (function () {
-    function DomOverlay(data) {
-        this.type = "dom";
-        this.data = data;
-        this.elem = this.create();
-    }
-    DomOverlay.prototype.create = function () {
-        var data = this.data;
-        var node = document.createElement('div');
-        node.id = data.id;
-        node.innerHTML = data.content;
-        node.className = 'panrom-domoverlay';
-        if (data.cls) {
-            node.className += " " + data.cls;
-        }
-        return node;
-    };
-    DomOverlay.prototype.update = function (x, y) {
-        var elem = this.elem;
-        var data = this.data;
-        data.x = x;
-        data.y = y;
-        elem.style.display = 'block';
-        elem.style.left = x + 'px';
-        elem.style.top = y + 'px';
-    };
-    DomOverlay.prototype.hide = function () {
-        this.elem.style.display = 'none';
-    };
-    DomOverlay.prototype.show = function () {
-        this.elem.style.display = 'block';
-    };
-    DomOverlay.prototype.dispose = function () { };
-    return DomOverlay;
-}());
-/* harmony default export */ __webpack_exports__["a"] = (DomOverlay);
-
-
-/***/ }),
-/* 60 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
-
-/**
- * @file mesh overlay, static return three mesh object
- * @todo normalization object
- */
-var MeshOverlay = /** @class */ (function () {
-    function MeshOverlay(data) {
-        this.type = "mesh";
-        this.data = data;
-        this.particle = this.create();
-    }
-    MeshOverlay.prototype.create = function () {
-        var data = this.data;
-        var loader = new __WEBPACK_IMPORTED_MODULE_0_three__["y" /* TextureLoader */]();
-        var texture = loader.load(data.img);
-        var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
-            map: texture,
-            transparent: true
-        });
-        var scale = 1;
-        var plane = new __WEBPACK_IMPORTED_MODULE_0_three__["q" /* PlaneGeometry */](data.width * scale, data.height * scale);
-        var planeMesh = new __WEBPACK_IMPORTED_MODULE_0_three__["m" /* Mesh */](plane, material);
-        planeMesh.position.set(data.location.x, data.location.y, data.location.z);
-        planeMesh.name = data.id;
-        planeMesh['instance'] = this;
-        return planeMesh;
-    };
-    MeshOverlay.prototype.update = function () { };
-    MeshOverlay.prototype.show = function () {
-        this.particle.visible = true;
-    };
-    MeshOverlay.prototype.hide = function () {
-        this.particle.visible = false;
-    };
-    MeshOverlay.prototype.dispose = function () {
-        delete this.particle['instance'];
-        this.particle.geometry.dispose();
-    };
-    return MeshOverlay;
-}());
-/* harmony default export */ __webpack_exports__["a"] = (MeshOverlay);
-
-
-/***/ }),
-/* 61 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
-
-/**
- * @file 雨雪特效 overlay
- */
-var defaultOpts = {
-    size: 10,
-    count: 100,
-    speed: 3,
-    colorR: 0.3,
-    colorG: 0.3,
-    colorB: 0.3
-};
-function calcPos() {
-    return Math.random() * 1400 - 700;
-}
-var SpriteOverlay = /** @class */ (function () {
-    function SpriteOverlay(data) {
-        this.type = 'sprite';
-        this.data = Object.assign({}, defaultOpts, data);
-        this.particle = this.create();
-    }
-    SpriteOverlay.prototype.create = function () {
-        var data = this.data;
-        var geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["i" /* Geometry */]();
-        var texture = new __WEBPACK_IMPORTED_MODULE_0_three__["y" /* TextureLoader */]().load(data.type == 1 ? snowTexture : rainTexture);
-        for (var i = 0; i < data.count; i++) {
-            var vertex = new __WEBPACK_IMPORTED_MODULE_0_three__["A" /* Vector3 */](calcPos(), calcPos(), calcPos());
-            geometry.vertices.push(vertex);
-        }
-        var material = new __WEBPACK_IMPORTED_MODULE_0_three__["s" /* PointsMaterial */]({
-            size: data.size,
-            map: texture,
-            blending: __WEBPACK_IMPORTED_MODULE_0_three__["a" /* AdditiveBlending */],
-            depthTest: false,
-            transparent: true,
-            side: __WEBPACK_IMPORTED_MODULE_0_three__["f" /* DoubleSide */]
-        });
-        material.color.setRGB(data.colorR, data.colorG, data.colorB);
-        return new __WEBPACK_IMPORTED_MODULE_0_three__["r" /* Points */](geometry, material);
-    };
-    SpriteOverlay.prototype.update = function () {
-        if (!this.particle.visible) {
-            return;
-        }
-        var speed = this.data.speed;
-        var geometry = this.particle.geometry;
-        var list = geometry.vertices;
-        list.forEach(function (vertice) {
-            vertice.x -= 0.2 * (Math.random() - 0.5);
-            vertice.z -= 0.2 * (Math.random() - 0.5);
-            if (vertice.y < -700) {
-                vertice.y = 700;
-            }
-            vertice.y -= speed;
-        });
-        geometry.verticesNeedUpdate = true;
-    };
-    SpriteOverlay.prototype.isEnd = function () {
-        return false;
-    };
-    SpriteOverlay.prototype.show = function () {
-        this.particle.visible = true;
-    };
-    SpriteOverlay.prototype.hide = function () {
-        this.particle.visible = false;
-    };
-    SpriteOverlay.prototype.dispose = function () {
-        this.particle.geometry.dispose();
-    };
-    return SpriteOverlay;
-}());
-var snowTexture = 'data:image/png;base64,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';
-var rainTexture = 'data:image/png;base64,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';
-/* harmony default export */ __webpack_exports__["a"] = (SpriteOverlay);
-
-
-/***/ }),
-/* 62 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
-
-/**
- * @file 全景序列帧控制器
- */
-var defaultOpts = {
-    width: 200,
-    height: 200,
-    loop: true,
-    auto: true,
-    inverval: 60
-};
-var FrameOverlay = /** @class */ (function () {
-    function FrameOverlay(data) {
-        this.textures = [];
-        this.index = 0;
-        this.enable = true;
-        this.finished = false;
-        this.lastTime = Date.now();
-        this.type = "frame";
-        this.data = Object.assign({}, defaultOpts, data);
-        this.particle = this.create();
-    }
-    FrameOverlay.prototype.loadTextures = function () {
-        var loader = new __WEBPACK_IMPORTED_MODULE_0_three__["y" /* TextureLoader */]();
-        var data = this.data;
-        var count = data.count;
-        var url = data.imgPath;
-        var limit = this.limit = data.count;
-        for (var i = 1; i <= limit; i++) {
-            this.textures.push(loader.load(url + "/" + i + ".png"));
-        }
-    };
-    FrameOverlay.prototype.create = function () {
-        this.loadTextures();
-        var data = this.data;
-        var location = data.location;
-        var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
-            map: this.textures[0],
-            transparent: true
-        });
-        var plane = new __WEBPACK_IMPORTED_MODULE_0_three__["q" /* PlaneGeometry */](data.width, data.height);
-        var mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["m" /* Mesh */](plane, material);
-        mesh.position.set(location.x, location.y, location.z);
-        if (data.rx) {
-            mesh.rotation.set(data.rx, data.ry, data.rz);
-        }
-        else {
-            mesh.lookAt(data.lookat);
-        }
-        return mesh;
-    };
-    FrameOverlay.prototype.update = function () {
-        if (!this.enable || !this.particle.visible) {
-            return;
-        }
-        var data = this.data;
-        var now = Date.now();
-        var textures = this.textures;
-        var newIndex = parseInt((now - this.lastTime) / data.inverval + '');
-        var texture;
-        if (newIndex != this.index) {
-            if (textures[newIndex]) {
-                texture = textures[this.index = newIndex];
-            }
-            else {
-                if (data.loop) {
-                    this.lastTime = now;
-                    texture = textures[this.index = 0];
-                }
-                else {
-                    this.finished = true;
-                }
-            }
-        }
-        if (texture) {
-            this.particle.material.map = texture;
-        }
-    };
-    FrameOverlay.prototype.isEnd = function () {
-        return this.finished;
-    };
-    FrameOverlay.prototype.stop = function () {
-        this.enable = false;
-        this.finished = true;
-    };
-    FrameOverlay.prototype.pause = function () {
-        this.enable = false;
-    };
-    FrameOverlay.prototype.play = function () {
-        this.enable = true;
-    };
-    FrameOverlay.prototype.hide = function () {
-        this.particle.visible = false;
-    };
-    FrameOverlay.prototype.show = function () {
-        this.particle.visible = true;
-    };
-    FrameOverlay.prototype.dispose = function () {
-        this.particle.geometry.dispose();
-    };
-    return FrameOverlay;
-}());
-/* harmony default export */ __webpack_exports__["a"] = (FrameOverlay);
-
-
-/***/ }),
-/* 63 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ui_layer_ui__ = __webpack_require__(64);
-
-
-/**
- * @file 视频播放
- */
-var defaultOpts = {
-    width: 30,
-    height: 30,
-    loop: false,
-    auto: true
-};
-var videoOverlay = /** @class */ (function () {
-    function videoOverlay(data) {
-        this.type = "video";
-        this.data = Object.assign({}, defaultOpts, data);
-        this.particle = this.create();
-    }
-    videoOverlay.prototype.create = function () {
-        var _this = this;
-        var data = this.data;
-        var location = data.location;
-        var video = this.video = document.createElement('video');
-        video.className = "panoram-video";
-        video.src = data.src;
-        video.autoplay = false;
-        video.loop = data.loop;
-        video.controls = true;
-        video.setAttribute('webkit-playsinlin', 'true');
-        var layer = this.layer = new __WEBPACK_IMPORTED_MODULE_1__ui_layer_ui__["a" /* default */]({
-            hide: true,
-            closeBtn: true,
-            width: window.innerWidth,
-            height: window.innerHeight,
-            effect: 'scale',
-            onLayerClose: function () { return _this.stop(); }
-        });
-        layer.setContent(video);
-        layer.appendTo(document.body);
-        var texture = new __WEBPACK_IMPORTED_MODULE_0_three__["y" /* TextureLoader */]().load(data.img);
-        var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
-            map: texture,
-            transparent: true
-        });
-        var plane = new __WEBPACK_IMPORTED_MODULE_0_three__["q" /* PlaneGeometry */](data.width, data.height);
-        var planeMesh = new __WEBPACK_IMPORTED_MODULE_0_three__["m" /* Mesh */](plane, material);
-        planeMesh.position.set(location.x, location.y, location.z);
-        planeMesh.lookAt(data.lookat);
-        planeMesh.name = data.id;
-        planeMesh['instance'] = this;
-        return planeMesh;
-    };
-    videoOverlay.prototype.update = function () { };
-    videoOverlay.prototype.play = function () {
-        this.layer.show();
-        this.video.play();
-    };
-    videoOverlay.prototype.stop = function () {
-        this.video.pause();
-    };
-    videoOverlay.prototype.show = function () {
-        this.particle.visible = true;
-    };
-    videoOverlay.prototype.hide = function () {
-        this.particle.visible = false;
-    };
-    videoOverlay.prototype.dispose = function () {
-        delete this.particle['instance'];
-        this.video.pause();
-        this.particle.geometry.dispose();
-        this.layer.dispose();
-    };
-    return videoOverlay;
-}());
-/* harmony default export */ __webpack_exports__["a"] = (videoOverlay);
-
-
-/***/ }),
-/* 64 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__animations_css_animation__ = __webpack_require__(65);
-
-/**
- * @file dom layer
- */
-var defaultOpts = {
-    hide: false,
-    closeBtn: false,
-    width: 300,
-    height: 300,
-    x: 0,
-    y: 0
-};
-var Layer = /** @class */ (function () {
-    function Layer(opts) {
-        this.data = Object.assign({}, defaultOpts, opts);
-        this.create();
-        this.anim = new __WEBPACK_IMPORTED_MODULE_0__animations_css_animation__["a" /* default */](this.root, {
-            prop: 'transform',
-            timing: 'ease-out',
-            value: 'scale(0)'
-        });
-    }
-    Layer.prototype.create = function () {
-        var _this = this;
-        var data = this.data;
-        var root = this.root = document.createElement('div');
-        var content = this.content = document.createElement('div');
-        root.className = 'panoram-layer';
-        content.className = 'panoram-layer-conten';
-        if (data.closeBtn) {
-            var btn = document.createElement('span');
-            btn.className = 'panoram-icon panoram-layer-close';
-            btn.onclick = function () { return _this.hide(); };
-            root.appendChild(btn);
-        }
-        if (data.hide) {
-            root.style.display = 'none';
-        }
-        root.appendChild(content);
-        this.setSize(data);
-        this.setPostion(data);
-    };
-    Layer.prototype.getElement = function () {
-        return this.root;
-    };
-    Layer.prototype.setSize = function (data) {
-        this.content.style.width = data.width + 'px';
-        this.content.style.height = data.height + 'px';
-    };
-    Layer.prototype.setPostion = function (pos) {
-        this.root.style.left = pos.x + 'px';
-        this.root.style.top = pos.y + 'px';
-    };
-    Layer.prototype.setContent = function (child) {
-        this.content.appendChild(child);
-    };
-    Layer.prototype.appendTo = function (container) {
-        this.container = container;
-        container.appendChild(this.root);
-    };
-    Layer.prototype.show = function () {
-        var _this = this;
-        var data = this.data;
-        this.root.style.display = 'block';
-        if (data.effect === 'scale') {
-            setTimeout(function () { return _this.anim.start('scale(1)'); }, 20);
-        }
-    };
-    Layer.prototype.hide = function () {
-        var _this = this;
-        var data = this.data;
-        data.onLayerClose && data.onLayerClose();
-        if (data.effect === 'scale') {
-            this.anim.start('scale(0)').complete(function () { return _this.root.style.display = 'none'; });
-        }
-        else {
-            this.root.style.display = 'none';
-        }
-    };
-    Layer.prototype.dispose = function () {
-        var root = this.root;
-        root.style.display = 'none';
-        root.innerHTML = '';
-        this.container.removeChild(this.root);
-    };
-    return Layer;
-}());
-/* harmony default export */ __webpack_exports__["a"] = (Layer);
-
-
-/***/ }),
-/* 65 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/**
- * @file css animation
- * TODO: multiple set props support
- */
-var defaultOpts = {
-    prop: 'transform',
-    duration: '1s',
-    timing: 'ease'
-};
-var CssAnimation = /** @class */ (function () {
-    function CssAnimation(element, opts) {
-        var _this = this;
-        var data = this.data = Object.assign({}, defaultOpts, opts);
-        this.element = element;
-        this.prop = this.normalizeProp(data.prop);
-        element.style.webkitTransition = data.prop + " " + data.duration + " " + data.timing;
-        element.style.webkitTransform = 'translateZ(0)';
-        element.addEventListener('webkitTransitionEnd', function () { return _this.onComplete && _this.onComplete(); });
-        if (data.value) {
-            element.style[this.prop] = data.value;
-        }
-    }
-    CssAnimation.prototype.start = function (value) {
-        var element = this.element;
-        var prop = this.prop;
-        delete this.onComplete;
-        this.lastValue = element.style[prop];
-        element.style[prop] = value;
-        return this;
-    };
-    CssAnimation.prototype.end = function (attr, value) {
-        this.element.style.webkitAnimationPlayState = 'paused';
-        return this;
-    };
-    CssAnimation.prototype.complete = function (fn) {
-        this.onComplete = fn;
-        return this;
-    };
-    CssAnimation.prototype.normalizeProp = function (prop) {
-        if (prop == 'transform') {
-            return 'webkitTransform';
-        }
-        return prop;
-    };
-    return CssAnimation;
-}());
-/* harmony default export */ __webpack_exports__["a"] = (CssAnimation);
 
 
 /***/ })
