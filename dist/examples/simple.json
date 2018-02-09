@@ -8,9 +8,29 @@
     "sceneGroup": [{
         "id": "scene0",
         "name": "罗浮宫",
-        "bxlPath": "../assets/scene0/scene0.bxl",
-        "imgPath": "../assets/scene0/scene0.jpg",
-        "thumbPath": "../assets/scene0/thumb0.jpg"
+        "fov": 100,
+        "bxlPath": "../assets/scene4/scene4.bxl",
+        "imgPath": "../assets/scene4/scene4.jpg",
+        "thumbPath": "../assets/scene4/thumb4.jpg",
+        "overlays": [{
+            "id": 0,
+            "type": "dom",
+            "content": "客餐厅",
+            "actionType": "custom",
+            "location": {
+                "lng": "58.861400604248",
+                "lat": "32.754199981689"
+            }
+        }, {
+            "id": 1,
+            "type": "dom",
+            "content": "主卫",
+            "actionType": "custom",
+            "location": {
+            "lng": "-14.944265365601",
+            "lat": "36.060401916504"
+            }
+        }]
     }],
     "enableDevice": false
 }
