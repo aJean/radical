@@ -1,28 +1,38 @@
-<div id="test" ref="mytest"></div>
+<div id="test" ref="mytest" style="margin-right:175px;"></div>
 <div class="overlay-panel">
-    <button>添加 overlay</button>
+    <p><button class="add">添加 overlay</button></p>
+    <div class="show-point">
+        <p>点击 lng: <span></span></p>
+        <p>点击 lat: <span></span></p>
+    </div>
+    <p><button class="lookat">获取相机角度</button></p>
+    <div class="show-lookat">
+        <p>相机 lng: <span></span></p>
+        <p>相机 lat: <span></span></p>
+    </div>
 </div>
+<script src="../zepto.js"></script>
 <script src="../lib.js"></script>
 <script>
+    let pos;
     bxl.start('./add.json', '#test', {
-        'overlay-click': function (node) {
-            console.log(node.data);
+        'panoram-click': function (data) {
+            pos = data;
+            $('.show-point span').first().html(data.lng.toFixed(2));
+            $('.show-point span').last().html(data.lat.toFixed(2));
         }
     });
 
-    document.querySelector('.overlay-panel button').addEventListener('click', function () {
+    $('.overlay-panel .add').on('click', function () {
         const panoram = bxl.getPanoram('mytest');
-        panoram.addOverlay({
-            'overlays': [{
-                id: '2q',
-                type: 'dom',
-                actionType: 'custom',
-                content: '<strong>动态热点</strong>',
-                location: {
-                    lng: 180,
-                    lat: 100
-                }
-            }]
+        pos && panoram.addOverlay(pos, '动态热点');
         });
+
+        $('.overlay-panel .lookat').on('click', function () {
+        const panoram = bxl.getPanoram('mytest');
+        const point = panoram.getLook();
+
+        $('.show-lookat span').first().html(point.lng.toFixed(2));
+        $('.show-lookat span').last().html(point.lat.toFixed(2));
     });
 </script>
