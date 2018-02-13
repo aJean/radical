@@ -49891,9 +49891,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__log__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__loaders_resource_loader__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_info_plugin__ = __webpack_require__(58);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_multiple_plugin__ = __webpack_require__(59);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_wormhole_plugin__ = __webpack_require__(60);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__animations_timeline_animation__ = __webpack_require__(61);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_rotate_plugin__ = __webpack_require__(66);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_multiple_plugin__ = __webpack_require__(59);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_wormhole_plugin__ = __webpack_require__(60);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__animations_timeline_animation__ = __webpack_require__(61);
 var __assign = (this && this.__assign) || Object.assign || function(t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
         s = arguments[i];
@@ -49937,6 +49938,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+
 
 
 
@@ -50024,19 +50026,22 @@ var Runtime = /** @class */ (function () {
                         panoram = this.createRef(el, config['panoram']);
                         data = this.findScene(config);
                         if (config['animation']) {
-                            __WEBPACK_IMPORTED_MODULE_6__animations_timeline_animation__["a" /* default */].install(config['animation'], panoram);
+                            __WEBPACK_IMPORTED_MODULE_7__animations_timeline_animation__["a" /* default */].install(config['animation'], panoram);
                         }
                         else {
                             panoram.noTimeline();
                         }
+                        if (config['rotate']) {
+                            panoram.addPlugin(__WEBPACK_IMPORTED_MODULE_4__plugins_rotate_plugin__["a" /* default */], config['rotate']);
+                        }
                         if (config['multiScene']) {
-                            panoram.addPlugin(__WEBPACK_IMPORTED_MODULE_4__plugins_multiple_plugin__["a" /* default */], config['sceneGroup']);
+                            panoram.addPlugin(__WEBPACK_IMPORTED_MODULE_5__plugins_multiple_plugin__["a" /* default */], config['sceneGroup']);
                         }
                         if (config['info']) {
                             panoram.addPlugin(__WEBPACK_IMPORTED_MODULE_3__plugins_info_plugin__["a" /* default */], config['info']);
                         }
                         if (config['wormhole']) {
-                            panoram.addPlugin(__WEBPACK_IMPORTED_MODULE_5__plugins_wormhole_plugin__["a" /* default */], config['wormhole']);
+                            panoram.addPlugin(__WEBPACK_IMPORTED_MODULE_6__plugins_wormhole_plugin__["a" /* default */], config['wormhole']);
                         }
                         // 用户订阅事件
                         if (events) {
@@ -50210,9 +50215,6 @@ var Panoram = /** @class */ (function () {
     };
     Panoram.prototype.resetEnv = function (data) {
         var camera = this.camera;
-        var orbitControl = this.orbitControl;
-        // scene rotate
-        orbitControl.autoRotate = data.autoRotate;
         // scene fov
         camera.fov = data.fov || this.opts.fov;
         camera.updateProjectionMatrix();
@@ -50371,18 +50373,6 @@ var Panoram = /** @class */ (function () {
      */
     Panoram.prototype.getScene = function () {
         return this.scene;
-    };
-    /**
-     * 开始旋转
-     */
-    Panoram.prototype.startRotate = function () {
-        this.orbitControl.autoRotate = true;
-    };
-    /**
-     * 停止旋转
-     */
-    Panoram.prototype.stopRotate = function () {
-        this.orbitControl.autoRotate = false;
     };
     /**
      * 获取 camera lookat 目标的 vector3 obj
@@ -56189,6 +56179,28 @@ var AnimationFly = /** @class */ (function () {
 }());
 /* harmony default export */ __webpack_exports__["a"] = (AnimationFly);
 ;
+
+
+/***/ }),
+/* 63 */,
+/* 64 */,
+/* 65 */,
+/* 66 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/**
+ * @file 漫游插件
+ */
+var Rotate = /** @class */ (function () {
+    function Rotate(panoram, data) {
+        this.data = data;
+        this.panoram = panoram;
+        panoram.subscribe('scene-init', this.create, this);
+    }
+    return Rotate;
+}());
+/* harmony default export */ __webpack_exports__["a"] = (Rotate);
 
 
 /***/ })

@@ -11,26 +11,7 @@
         "fov": 100,
         "bxlPath": "../assets/scene4/scene4.bxl",
         "imgPath": "../assets/scene4/scene4.jpg",
-        "thumbPath": "../assets/scene4/thumb4.jpg",
-        "overlays": [{
-            "id": 0,
-            "type": "dom",
-            "content": "客餐厅",
-            "actionType": "custom",
-            "location": {
-                "lng": "58.861400604248",
-                "lat": "32.754199981689"
-            }
-        }, {
-            "id": 1,
-            "type": "dom",
-            "content": "主卫",
-            "actionType": "custom",
-            "location": {
-            "lng": "-14.944265365601",
-            "lat": "36.060401916504"
-            }
-        }]
+        "thumbPath": "../assets/scene4/thumb4.jpg"
     }],
     "enableDevice": false
 }

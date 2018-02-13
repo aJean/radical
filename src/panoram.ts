@@ -75,9 +75,6 @@ export default class Panoram {
 
     resetEnv(data) {
         const camera = this.camera;
-        const orbitControl = this.orbitControl;
-        // scene rotate
-        orbitControl.autoRotate = data.autoRotate;
         // scene fov
         camera.fov = data.fov || this.opts.fov;
         camera.updateProjectionMatrix()
@@ -260,20 +257,6 @@ export default class Panoram {
      */
     getScene() {
         return this.scene;
-    }
-
-    /**
-     * 开始旋转
-     */
-    startRotate() {
-        this.orbitControl.autoRotate = true;
-    }
-
-    /**
-     * 停止旋转
-     */
-    stopRotate() {
-        this.orbitControl.autoRotate = false;
     }
 
     /**

@@ -1,0 +1,73 @@
+{
+    "title": "test bxl transfer",
+    "cretPath": "../assets/cret.pem",
+    "info": {
+        "author": "绵阳谊君舞蹈",
+        "logo": "../assets/logo.png"
+    },
+    "sceneGroup": [{
+        "id": "scene0",
+        "name": "罗浮宫",
+        "fov": 100,
+        "bxlPath": "../assets/scene6/scene6.bxl",
+        "imgPath": "../assets/scene6/scene6.jpg",
+        "thumbPath": "../assets/scene6/thumb6.jpg",
+        "overlays": [{
+                "id": 0,
+                "type": "dom",
+                "content": "卫生间",
+                "actionType": "scene",
+                "sceneId": "51262461284",
+                "location": {
+                    "lng": "-130.86473083496",
+                    "lat": "15.62890625"
+                }
+            },
+            {
+                "id": 1,
+                "type": "dom",
+                "content": "主卧",
+                "actionType": "scene",
+                "sceneId": "51262440152",
+                "location": {
+                    "lng": "-124.02629852295",
+                    "lat": "20.746309280396"
+                }
+            },
+            {
+                "id": 2,
+                "type": "dom",
+                "content": "厨房",
+                "actionType": "scene",
+                "sceneId": "51262440158",
+                "location": {
+                    "lng": "-140.01483154297",
+                    "lat": "13.371173858643"
+                }
+            },
+            {
+                "id": 3,
+                "type": "dom",
+                "content": "次卧",
+                "actionType": "scene",
+                "sceneId": "51262461266",
+                "location": {
+                    "lng": "177.78254699707",
+                    "lat": "27.73671913147"
+                }
+            },
+            {
+                "id": 4,
+                "type": "dom",
+                "content": "餐厅",
+                "actionType": "scene",
+                "sceneId": "51262440178",
+                "location": {
+                    "lng": "-150.08676147461",
+                    "lat": "32.329257965088"
+                }
+            }
+        ]
+    }],
+    "enableDevice": false
+}

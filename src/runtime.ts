@@ -2,6 +2,7 @@ import Panoram from './panoram';
 import Log from './log';
 import ResourceLoader from './loaders/resource.loader';
 import Info from './plugins/info.plugin';
+import Rotate from './plugins/rotate.plugin';
 import Multiple from './plugins/multiple.plugin';
 import Wormhole from './plugins/wormhole.plugin';
 import Timeline from './animations/timeline.animation';
@@ -97,6 +98,10 @@ abstract class Runtime {
             Timeline.install(config['animation'], panoram);
         } else {
             panoram.noTimeline();
+        }
+
+        if (config['rotate']) {
+            panoram.addPlugin(Rotate, config['rotate']);
         }
 
         if (config['multiScene']) {
