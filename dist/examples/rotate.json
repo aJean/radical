@@ -2,10 +2,14 @@
     "title": "test bxl transfer",
     "cretPath": "../assets/cret.pem",
     "info": {
-        "author": "scene - 自动旋转"
+        "author": "scene - 漫游"
     },
     "panoram": {
         "fov": 55
+    },
+    "rotate": {
+        "speed": 0.3,
+        "lazy": 2000
     },
     "sceneGroup": [{
         "id": "scene0",

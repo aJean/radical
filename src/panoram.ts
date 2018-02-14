@@ -260,6 +260,13 @@ export default class Panoram {
     }
 
     /**
+     * 获取控制器
+     */
+    getControl() {
+        return this.orbitControl;
+    }
+
+    /**
      * 获取 camera lookat 目标的 vector3 obj
      */
     getLookAtTarget() {

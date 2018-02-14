@@ -561,6 +561,7 @@ function OrbitControl(object, domElement) {
         if (scope.enabled === false) {
             return;
         }
+        
         switch (event.touches.length) {
             case 1:
                 /* one-fingered touch: rotate*/ if (scope.enableRotate === false) {
