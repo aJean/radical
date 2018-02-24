@@ -49177,6 +49177,119 @@ function loadCanvas(url, timeout) {
 
 /***/ }),
 /* 12 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__log__ = __webpack_require__(4);
+
+/**
+ * @file js frame animation
+ */
+var EFFECT = {
+    linear: function (t, b, c, d) {
+        return c * t / d + b;
+    },
+    quadEaseIn: function (t, b, c, d) {
+        return c * (t /= d) * t + b;
+    },
+    quadEaseOut: function (t, b, c, d) {
+        return -c * (t /= d) * (t - 2) + b;
+    },
+    cubicEaseIn: function (t, b, c, d) {
+        return c * (t /= d) * t * t + b;
+    },
+    cubicEaseOut: function (t, b, c, d) {
+        return c * ((t = t / d - 1) * t * t + 1) + b;
+    },
+    quintEaseIn: function (t, b, c, d) {
+        return c * (t /= d) * t * t * t * t + b;
+    },
+    quintEaseOut: function (t, b, c, d) {
+        return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
+    }
+};
+var Tween = /** @class */ (function () {
+    function Tween(obj) {
+        this.record = {};
+        this.startTime = 0;
+        this.duration = 500;
+        this.obj = obj;
+    }
+    Tween.prototype.to = function (obj) {
+        this.target = obj;
+        return this;
+    };
+    Tween.prototype.start = function (keys, panoram) {
+        var _this = this;
+        if (!this.obj || !this.target || !this.fn) {
+            __WEBPACK_IMPORTED_MODULE_0__log__["a" /* default */].errorLog('leak of necessary parameters');
+        }
+        else {
+            this.startTime = Date.now();
+            this.panoram = panoram;
+            keys.forEach(function (key) { return _this.record[key] = _this.obj[key]; });
+            panoram.subscribe('render-process', this.animate, this);
+        }
+        return this;
+    };
+    Tween.prototype.stop = function () {
+        this.panoram.unsubscribe('render-process', this.animate, this);
+        return this;
+    };
+    Tween.prototype.effect = function (type, duration) {
+        if (duration !== undefined) {
+            this.duration = duration;
+        }
+        this.fn = EFFECT[type];
+        return this;
+    };
+    Tween.prototype.process = function (fn) {
+        this.onProcess = fn;
+        return this;
+    };
+    Tween.prototype.complete = function (fn) {
+        this.onComplete = fn;
+        return this;
+    };
+    Tween.prototype.animate = function () {
+        var _this = this;
+        try {
+            var t_1 = Date.now() - this.startTime;
+            var obj_1 = this.obj;
+            var target_1 = this.target;
+            var record_1 = this.record;
+            var duration_1 = this.duration;
+            var fn_1 = this.fn;
+            if (t_1 < duration_1) {
+                this.forEach(record_1, function (key) {
+                    var val = fn_1(t_1, record_1[key], target_1[key] - record_1[key], duration_1);
+                    _this.onProcess && _this.onProcess(obj_1[key], val);
+                    obj_1[key] = val;
+                });
+            }
+            else {
+                this.forEach(record_1, function (key) { return obj_1[key] = target_1[key]; });
+                this.stop();
+                this.onComplete && this.onComplete();
+            }
+        }
+        catch (e) {
+            __WEBPACK_IMPORTED_MODULE_0__log__["a" /* default */].errorLog(e);
+            this.stop();
+        }
+    };
+    Tween.prototype.forEach = function (obj, iterator) {
+        for (var key in obj) {
+            iterator.call(this, key, obj[key]);
+        }
+    };
+    return Tween;
+}());
+/* harmony default export */ __webpack_exports__["a"] = (Tween);
+
+
+/***/ }),
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function (root, factory) {
@@ -49380,7 +49493,7 @@ function loadCanvas(url, timeout) {
 }));
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function (root, factory, undef) {
@@ -49708,119 +49821,6 @@ function loadCanvas(url, timeout) {
 }));
 
 /***/ }),
-/* 14 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__log__ = __webpack_require__(4);
-
-/**
- * @file js frame animation
- */
-var EFFECT = {
-    linear: function (t, b, c, d) {
-        return c * t / d + b;
-    },
-    quadEaseIn: function (t, b, c, d) {
-        return c * (t /= d) * t + b;
-    },
-    quadEaseOut: function (t, b, c, d) {
-        return -c * (t /= d) * (t - 2) + b;
-    },
-    cubicEaseIn: function (t, b, c, d) {
-        return c * (t /= d) * t * t + b;
-    },
-    cubicEaseOut: function (t, b, c, d) {
-        return c * ((t = t / d - 1) * t * t + 1) + b;
-    },
-    quintEaseIn: function (t, b, c, d) {
-        return c * (t /= d) * t * t * t * t + b;
-    },
-    quintEaseOut: function (t, b, c, d) {
-        return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
-    }
-};
-var Tween = /** @class */ (function () {
-    function Tween(obj) {
-        this.record = {};
-        this.startTime = 0;
-        this.duration = 500;
-        this.obj = obj;
-    }
-    Tween.prototype.to = function (obj) {
-        this.target = obj;
-        return this;
-    };
-    Tween.prototype.start = function (keys, panoram) {
-        var _this = this;
-        if (!this.obj || !this.target || !this.fn) {
-            __WEBPACK_IMPORTED_MODULE_0__log__["a" /* default */].errorLog('leak of necessary parameters');
-        }
-        else {
-            this.startTime = Date.now();
-            this.panoram = panoram;
-            keys.forEach(function (key) { return _this.record[key] = _this.obj[key]; });
-            panoram.subscribe('render-process', this.animate, this);
-        }
-        return this;
-    };
-    Tween.prototype.stop = function () {
-        this.panoram.unsubscribe('render-process', this.animate, this);
-        return this;
-    };
-    Tween.prototype.effect = function (type, duration) {
-        if (duration !== undefined) {
-            this.duration = duration;
-        }
-        this.fn = EFFECT[type];
-        return this;
-    };
-    Tween.prototype.process = function (fn) {
-        this.onProcess = fn;
-        return this;
-    };
-    Tween.prototype.complete = function (fn) {
-        this.onComplete = fn;
-        return this;
-    };
-    Tween.prototype.animate = function () {
-        var _this = this;
-        try {
-            var t_1 = Date.now() - this.startTime;
-            var obj_1 = this.obj;
-            var target_1 = this.target;
-            var record_1 = this.record;
-            var duration_1 = this.duration;
-            var fn_1 = this.fn;
-            if (t_1 < duration_1) {
-                this.forEach(record_1, function (key) {
-                    var val = fn_1(t_1, record_1[key], target_1[key] - record_1[key], duration_1);
-                    _this.onProcess && _this.onProcess(obj_1[key], val);
-                    obj_1[key] = val;
-                });
-            }
-            else {
-                this.forEach(record_1, function (key) { return obj_1[key] = target_1[key]; });
-                this.stop();
-                this.onComplete && this.onComplete();
-            }
-        }
-        catch (e) {
-            __WEBPACK_IMPORTED_MODULE_0__log__["a" /* default */].errorLog(e);
-            this.stop();
-        }
-    };
-    Tween.prototype.forEach = function (obj, iterator) {
-        for (var key in obj) {
-            iterator.call(this, key, obj[key]);
-        }
-    };
-    return Tween;
-}());
-/* harmony default export */ __webpack_exports__["a"] = (Tween);
-
-
-/***/ }),
 /* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -50143,7 +50143,7 @@ window.addEventListener('resize', onEnvResize);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__log__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__util__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__loaders_resource_loader__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__ = __webpack_require__(50);
 
 
@@ -51540,7 +51540,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8), __webpack_require__(26), __webpack_require__(27), __webpack_require__(5), __webpack_require__(6), __webpack_require__(9), __webpack_require__(12), __webpack_require__(28), __webpack_require__(13), __webpack_require__(29), __webpack_require__(30), __webpack_require__(31), __webpack_require__(10), __webpack_require__(32), __webpack_require__(3), __webpack_require__(1), __webpack_require__(33), __webpack_require__(34), __webpack_require__(35), __webpack_require__(36), __webpack_require__(37), __webpack_require__(38), __webpack_require__(39), __webpack_require__(40), __webpack_require__(41), __webpack_require__(42), __webpack_require__(43), __webpack_require__(44), __webpack_require__(45), __webpack_require__(46), __webpack_require__(47), __webpack_require__(48));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8), __webpack_require__(26), __webpack_require__(27), __webpack_require__(5), __webpack_require__(6), __webpack_require__(9), __webpack_require__(13), __webpack_require__(28), __webpack_require__(14), __webpack_require__(29), __webpack_require__(30), __webpack_require__(31), __webpack_require__(10), __webpack_require__(32), __webpack_require__(3), __webpack_require__(1), __webpack_require__(33), __webpack_require__(34), __webpack_require__(35), __webpack_require__(36), __webpack_require__(37), __webpack_require__(38), __webpack_require__(39), __webpack_require__(40), __webpack_require__(41), __webpack_require__(42), __webpack_require__(43), __webpack_require__(44), __webpack_require__(45), __webpack_require__(46), __webpack_require__(47), __webpack_require__(48));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -51798,7 +51798,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(12));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(13));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -51883,7 +51883,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8), __webpack_require__(13));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8), __webpack_require__(14));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -55843,7 +55843,7 @@ var Info = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__animations_tween_animation__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__animations_tween_animation__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_timers__ = __webpack_require__(60);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_timers___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_timers__);
 
@@ -56490,7 +56490,7 @@ var Multiple = /** @class */ (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__loaders_resource_loader__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__log__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__animations_tween_animation__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__animations_tween_animation__ = __webpack_require__(12);
 
 
 
