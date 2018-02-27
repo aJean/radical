@@ -1,11 +1,11 @@
 import Util from '../util';
-import {IPluggableUi} from '../interface/ui.interface';
+import {IPluggableUI} from '../interface/ui.interface';
 
 /**
  * 多场景切换插件
  */
 
-export default class Multiple implements IPluggableUi{
+export default class Multiple implements IPluggableUI{
     panoram: any;
     data: any;
     root: any;

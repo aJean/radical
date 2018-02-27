@@ -2,7 +2,7 @@
  * @file ui interface defintation 
  */
 
-export interface IPluggableUi {
+export interface IPluggableUI {
     container: HTMLElement;
 
     getElement(): HTMLElement;
@@ -16,6 +16,14 @@ export interface IPluggableUi {
     dispose(): void;
 }
 
-export interface IAssemblyUi {
+export interface IAssemblyUI {
+    container: HTMLElement;
+    
+    compose(): void;
 
+    add(): void;
+
+    remove(): void;
+
+    dispose(): void;
 }

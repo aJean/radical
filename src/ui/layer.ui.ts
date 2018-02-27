@@ -1,4 +1,4 @@
-import {IPluggableUi} from '../interface/ui.interface';
+import {IPluggableUI} from '../interface/ui.interface';
 import CssAnimation from '../animations/css.animation';
 
 /**
@@ -13,7 +13,7 @@ const defaultOpts = {
     x: 0,
     y: 0
 };
-export default class Layer implements IPluggableUi {
+export default class Layer implements IPluggableUI {
     data: any;
     root: HTMLElement;
     content: HTMLElement;
