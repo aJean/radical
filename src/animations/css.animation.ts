@@ -21,8 +21,7 @@ export default class CssAnimation {
         this.prop = this.normalizeProp(data.prop);
 
         element.style.webkitTransition = `${data.prop} ${data.duration} ${data.timing}`;
-        element.style.webkitTransform = 'translateZ(0)';
-        element.addEventListener('webkitTransitionEnd', () => this.onComplete && this.onComplete());
+        element.addEventListener('transitionEnd', () => this.onComplete && this.onComplete());
 
         if (data.value) {
             element.style[this.prop] = data.value;
@@ -43,6 +42,10 @@ export default class CssAnimation {
     end(attr, value) {
         this.element.style.webkitAnimationPlayState = 'paused';
         return this;
+    }
+
+    reset(value) {
+        this.element.style[this.prop] = value;
     }
 
     complete(fn) {

@@ -14,7 +14,6 @@
             "id": "sintel",
             "type": "video",
             "actionType": "video",
-            "loop": false,
             "src": "../assets/video/sintel.mp4",
             "img": "../assets/video/sign.png",
             "location": {

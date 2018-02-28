@@ -27,14 +27,14 @@ export default class Popup extends Layer {
         this.createCloseBtn();
         this.anim = new CssAnimation(this.root, {
             prop: 'transform',
-            timing: 'ease-out',
+            timing: 'ease-in',
             value: 'scale(0)'
         });
     }
 
     createCloseBtn() {
         const data = this.data;
-        console.log(data)
+
         if (data.closeBtn) {
             const btn = Util.createElement('<span class="panoram-icon panoram-layer-close"></span>');
             btn.addEventListener('click', () => this.hide());
@@ -53,12 +53,14 @@ export default class Popup extends Layer {
 
     hide() {
         const data = this.data;
+        const anim = this.anim;
+        const root = this.root;
         data.onLayerClose && data.onLayerClose();
 
         if (data.effect === 'scale') {
-            this.anim.start('scale(0)').complete(() => this.root.style.display = 'none');
+            anim.start('scale(0)').complete(() => root.style.display = 'none');
         } else {
-            this.root.style.display = 'none';
+            root.style.display = 'none';
         }
     }
 }

@@ -17,8 +17,8 @@ export default class videoOverlay implements IPluggableOverlay {
     data: any;
     particle: any;
     video: any;
-    type = "video";
     popup: Popup;
+    type = "video";
 
     constructor(data) {
         this.data = Object.assign({}, defaultOpts, data);
