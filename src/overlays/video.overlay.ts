@@ -5,6 +5,7 @@ import Util from '../util';
 
 /**
  * @file 视频播放
+ * TODO: transform-origin
  */
 
 const defaultOpts = {
