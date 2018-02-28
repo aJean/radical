@@ -15,7 +15,7 @@ export default {
         const elem = document.createElement('div');
         elem.innerHTML = domstring;
 
-        return elem.firstChild;
+        return elem.firstElementChild;
     },
 
     /**

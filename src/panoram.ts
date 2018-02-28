@@ -14,7 +14,7 @@ import Overlays from './overlays/overlays.overlay';
 
 const defaultOpts = {
     el: undefined,
-    fov: 55,
+    fov: 80,
     gyro: false,
     width: null,
     height: null

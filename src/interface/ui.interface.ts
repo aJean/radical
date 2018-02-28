@@ -7,7 +7,7 @@ export interface IPluggableUI {
 
     getElement(): HTMLElement;
 
-    appendTo(container: HTMLElement): void;
+    setContainer(container: HTMLElement): void;
 
     show(): void;
 

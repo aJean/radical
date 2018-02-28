@@ -1,3 +1,5 @@
+import Util from '../util';
+
 /**
  * @file 版权遮罩层
  */
@@ -14,8 +16,7 @@ export default class Info {
     }
 
     createDom() {
-        const root = document.createElement('div');
-        root.className = "panrom-info";
+        const root = Util.createElement('<div class="panrom-info"></div>');
 
         if (this.data.logo) {
             root.innerHTML +=  `<img src="${this.data.logo}" width="70">`;

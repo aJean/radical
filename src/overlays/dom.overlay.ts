@@ -1,3 +1,4 @@
+import Util from '../util';
 import {IPluggableOverlay} from '../interface/overlay.interface';
 
 /**
@@ -16,10 +17,7 @@ export default class DomOverlay implements IPluggableOverlay {
 
     create() {
         const data = this.data;
-        const node = document.createElement('div'); 
-        node.id = data.id;
-        node.innerHTML = data.content;
-        node.className = 'panrom-domoverlay';
+        const node = Util.createElement(`<div id="${data.id}" class="panrom-domoverlay">${data.content}</div>`);
 
         if (data.cls) {
             node.className += ` ${data.cls}`;

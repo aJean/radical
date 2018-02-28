@@ -48301,7 +48301,7 @@ var composeKey = function (part) { return ('skt1wins' + part); };
     createElement: function (domstring) {
         var elem = document.createElement('div');
         elem.innerHTML = domstring;
-        return elem.firstChild;
+        return elem.firstElementChild;
     },
     /**
      * 解密
@@ -50159,7 +50159,7 @@ window.addEventListener('resize', onEnvResize);
  */
 var defaultOpts = {
     el: undefined,
-    fov: 55,
+    fov: 80,
     gyro: false,
     width: null,
     height: null
@@ -55294,6 +55294,8 @@ var Overlays = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__util__ = __webpack_require__(7);
+
 /**
  * @file dom element overlay
  */
@@ -55305,10 +55307,7 @@ var DomOverlay = /** @class */ (function () {
     }
     DomOverlay.prototype.create = function () {
         var data = this.data;
-        var node = document.createElement('div');
-        node.id = data.id;
-        node.innerHTML = data.content;
-        node.className = 'panrom-domoverlay';
+        var node = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement("<div id=\"" + data.id + "\" class=\"panrom-domoverlay\">" + data.content + "</div>");
         if (data.cls) {
             node.className += " " + data.cls;
         }
@@ -55583,17 +55582,19 @@ var FrameOverlay = /** @class */ (function () {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ui_layer_ui__ = __webpack_require__(56);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ui_popup_ui__ = __webpack_require__(71);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__util__ = __webpack_require__(7);
+
 
 
 /**
  * @file 视频播放
  */
 var defaultOpts = {
-    width: 30,
-    height: 30,
+    width: 80,
+    height: 80,
     loop: false,
-    auto: true
+    auto: false
 };
 var videoOverlay = /** @class */ (function () {
     function videoOverlay(data) {
@@ -55605,23 +55606,15 @@ var videoOverlay = /** @class */ (function () {
         var _this = this;
         var data = this.data;
         var location = data.location;
-        var video = this.video = document.createElement('video');
-        video.className = "panoram-video";
-        video.src = data.src;
-        video.autoplay = false;
-        video.loop = data.loop;
-        video.controls = true;
-        video.setAttribute('webkit-playsinlin', 'true');
-        var layer = this.layer = new __WEBPACK_IMPORTED_MODULE_1__ui_layer_ui__["a" /* default */]({
-            hide: true,
-            closeBtn: true,
+        var video = this.video = __WEBPACK_IMPORTED_MODULE_2__util__["a" /* default */].createElement("<video class=\"panoram-video\" src=\"" + data.src + "\"" + (data.auto ? ' autoplay' : '') + (data.loop ? ' loop' : '') + " controls webkit-playsinlin></video>");
+        var layer = this.popup = new __WEBPACK_IMPORTED_MODULE_1__ui_popup_ui__["a" /* default */]({
             width: window.innerWidth,
             height: window.innerHeight,
             effect: 'scale',
             onLayerClose: function () { return _this.stop(); }
         });
         layer.setContent(video);
-        layer.appendTo(document.body);
+        layer.setContainer(document.body);
         var texture = new __WEBPACK_IMPORTED_MODULE_0_three__["y" /* TextureLoader */]().load(data.img);
         var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
             map: texture,
@@ -55637,7 +55630,7 @@ var videoOverlay = /** @class */ (function () {
     };
     videoOverlay.prototype.update = function () { };
     videoOverlay.prototype.play = function () {
-        this.layer.show();
+        this.popup.show();
         this.video.play();
     };
     videoOverlay.prototype.stop = function () {
@@ -55653,7 +55646,7 @@ var videoOverlay = /** @class */ (function () {
         delete this.particle['instance'];
         this.video.pause();
         this.particle.geometry.dispose();
-        this.layer.dispose();
+        this.popup.dispose();
     };
     return videoOverlay;
 }());
@@ -55665,14 +55658,11 @@ var videoOverlay = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__animations_css_animation__ = __webpack_require__(57);
-
 /**
  * @file dom layer
  */
 var defaultOpts = {
-    hide: false,
-    closeBtn: false,
+    hide: true,
     width: 300,
     height: 300,
     x: 0,
@@ -55682,25 +55672,13 @@ var Layer = /** @class */ (function () {
     function Layer(opts) {
         this.data = Object.assign({}, defaultOpts, opts);
         this.create();
-        this.anim = new __WEBPACK_IMPORTED_MODULE_0__animations_css_animation__["a" /* default */](this.root, {
-            prop: 'transform',
-            timing: 'ease-out',
-            value: 'scale(0)'
-        });
     }
     Layer.prototype.create = function () {
-        var _this = this;
         var data = this.data;
         var root = this.root = document.createElement('div');
         var content = this.content = document.createElement('div');
         root.className = 'panoram-layer';
-        content.className = 'panoram-layer-conten';
-        if (data.closeBtn) {
-            var btn = document.createElement('span');
-            btn.className = 'panoram-icon panoram-layer-close';
-            btn.onclick = function () { return _this.hide(); };
-            root.appendChild(btn);
-        }
+        content.className = 'panoram-layer-content';
         if (data.hide) {
             root.style.display = 'none';
         }
@@ -55722,28 +55700,15 @@ var Layer = /** @class */ (function () {
     Layer.prototype.setContent = function (child) {
         this.content.appendChild(child);
     };
-    Layer.prototype.appendTo = function (container) {
+    Layer.prototype.setContainer = function (container) {
         this.container = container;
         container.appendChild(this.root);
     };
     Layer.prototype.show = function () {
-        var _this = this;
-        var data = this.data;
         this.root.style.display = 'block';
-        if (data.effect === 'scale') {
-            setTimeout(function () { return _this.anim.start('scale(1)'); }, 20);
-        }
     };
     Layer.prototype.hide = function () {
-        var _this = this;
-        var data = this.data;
-        data.onLayerClose && data.onLayerClose();
-        if (data.effect === 'scale') {
-            this.anim.start('scale(0)').complete(function () { return _this.root.style.display = 'none'; });
-        }
-        else {
-            this.root.style.display = 'none';
-        }
+        this.root.style.display = 'none';
     };
     Layer.prototype.dispose = function () {
         var root = this.root;
@@ -55815,6 +55780,8 @@ var CssAnimation = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__util__ = __webpack_require__(7);
+
 /**
  * @file 版权遮罩层
  */
@@ -55825,8 +55792,7 @@ var Info = /** @class */ (function () {
         this.createDom();
     }
     Info.prototype.createDom = function () {
-        var root = document.createElement('div');
-        root.className = "panrom-info";
+        var root = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="panrom-info"></div>');
         if (this.data.logo) {
             root.innerHTML += "<img src=\"" + this.data.logo + "\" width=\"70\">";
         }
@@ -56381,6 +56347,8 @@ process.umask = function() { return 0; };
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__util__ = __webpack_require__(7);
+
 /**
  * 多场景切换插件
  */
@@ -56392,12 +56360,9 @@ var Multiple = /** @class */ (function () {
         this.bindEvent();
     }
     Multiple.prototype.create = function () {
-        var root = this.root = document.createElement('div');
-        var outer = this.outer = document.createElement('div');
-        var inner = this.inner = document.createElement('div');
-        root.className = 'panoram-multiplescene';
-        outer.className = 'panoram-multiplescene-outer';
-        inner.className = 'panoram-multiplescene-inner';
+        var root = this.root = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="panoram-multiplescene"></div>');
+        var outer = this.outer = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="panoram-multiplescene-outer"></div>');
+        var inner = this.inner = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="panoram-multiplescene-inner"></div>');
         inner.innerHTML = this.data.map(function (item, i) {
             return "<div class=\"panoram-multiplescene-item\" data-id=\"" + i + "\">\n                <img src=\"" + item.thumbPath + "\" class=\"panoram-multiplescene-img\">\n            </div>";
         }).join('');
@@ -56405,12 +56370,12 @@ var Multiple = /** @class */ (function () {
         root.appendChild(outer);
         this.setActive(inner.childNodes[0]);
         // add to panoram root
-        this.appendTo(this.panoram.getRoot());
+        this.setContainer(this.panoram.getRoot());
     };
     Multiple.prototype.getElement = function () {
         return this.root;
     };
-    Multiple.prototype.appendTo = function (container) {
+    Multiple.prototype.setContainer = function (container) {
         this.container = container;
         container.appendChild(this.root);
     };
@@ -56723,6 +56688,87 @@ var AnimationFly = /** @class */ (function () {
 }());
 /* harmony default export */ __webpack_exports__["a"] = (AnimationFly);
 ;
+
+
+/***/ }),
+/* 68 */,
+/* 69 */,
+/* 70 */,
+/* 71 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__util__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__layer_ui__ = __webpack_require__(56);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__animations_css_animation__ = __webpack_require__(57);
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+
+
+/**
+ * popup component
+ */
+var defaultOpts = {
+    hide: true,
+    closeBtn: true,
+    width: 300,
+    height: 300,
+    x: 0,
+    y: 0
+};
+var Popup = /** @class */ (function (_super) {
+    __extends(Popup, _super);
+    function Popup(opts) {
+        var _this = _super.call(this, Object.assign({}, defaultOpts, opts)) || this;
+        _this.createCloseBtn();
+        _this.anim = new __WEBPACK_IMPORTED_MODULE_2__animations_css_animation__["a" /* default */](_this.root, {
+            prop: 'transform',
+            timing: 'ease-out',
+            value: 'scale(0)'
+        });
+        return _this;
+    }
+    Popup.prototype.createCloseBtn = function () {
+        var _this = this;
+        var data = this.data;
+        console.log(data);
+        if (data.closeBtn) {
+            var btn = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<span class="panoram-icon panoram-layer-close"></span>');
+            btn.addEventListener('click', function () { return _this.hide(); });
+            this.root.appendChild(btn);
+        }
+    };
+    Popup.prototype.show = function () {
+        var _this = this;
+        var data = this.data;
+        this.root.style.display = 'block';
+        if (data.effect === 'scale') {
+            setTimeout(function () { return _this.anim.start('scale(1)'); }, 20);
+        }
+    };
+    Popup.prototype.hide = function () {
+        var _this = this;
+        var data = this.data;
+        data.onLayerClose && data.onLayerClose();
+        if (data.effect === 'scale') {
+            this.anim.start('scale(0)').complete(function () { return _this.root.style.display = 'none'; });
+        }
+        else {
+            this.root.style.display = 'none';
+        }
+    };
+    return Popup;
+}(__WEBPACK_IMPORTED_MODULE_1__layer_ui__["a" /* default */]));
+/* harmony default export */ __webpack_exports__["a"] = (Popup);
 
 
 /***/ })

@@ -1,23 +1,24 @@
 import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
 import {IPluggableOverlay} from '../interface/overlay.interface';
-import Layer from '../ui/layer.ui';
+import Popup from '../ui/popup.ui';
+import Util from '../util';
 
 /**
  * @file 视频播放
  */
 
 const defaultOpts = {
-    width: 30,
-    height: 30,
+    width: 80,
+    height: 80,
     loop: false,
-    auto: true
+    auto: false
 };
 export default class videoOverlay implements IPluggableOverlay {
     data: any;
     particle: any;
     video: any;
     type = "video";
-    layer: Layer;
+    popup: Popup;
 
     constructor(data) {
         this.data = Object.assign({}, defaultOpts, data);
@@ -28,24 +29,16 @@ export default class videoOverlay implements IPluggableOverlay {
         const data = this.data;
         const location = data.location;
 
-        const video = this.video = document.createElement('video');
-        video.className = "panoram-video";
-        video.src = data.src;
-        video.autoplay = false;
-        video.loop = data.loop;
-        video.controls = true;
-        video.setAttribute('webkit-playsinlin', 'true');
+        const video = this.video = Util.createElement(`<video class="panoram-video" src="${data.src}"${data.auto ? ' autoplay' : ''}${data.loop ? ' loop' : ''} controls webkit-playsinlin></video>`);
 
-        const layer = this.layer = new Layer({
-            hide: true,
-            closeBtn: true,
+        const layer = this.popup = new Popup({
             width: window.innerWidth,
             height: window.innerHeight,
             effect: 'scale',
             onLayerClose: () => this.stop()
         });
         layer.setContent(video);
-        layer.appendTo(document.body);
+        layer.setContainer(document.body);
 
         const texture = new TextureLoader().load(data.img);
         const material = new MeshBasicMaterial({
@@ -67,7 +60,7 @@ export default class videoOverlay implements IPluggableOverlay {
     update() {}
 
     play() {
-        this.layer.show();
+        this.popup.show();
         this.video.play();
     }
 
@@ -87,6 +80,6 @@ export default class videoOverlay implements IPluggableOverlay {
         delete this.particle['instance'];
         this.video.pause();
         this.particle.geometry.dispose();
-        this.layer.dispose();
+        this.popup.dispose();
     }
 }

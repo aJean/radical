@@ -22,13 +22,9 @@ export default class Multiple implements IPluggableUI{
     }
 
     create() {
-        const root = this.root = document.createElement('div');
-        const outer = this.outer = document.createElement('div');
-        const inner = this.inner = document.createElement('div');
-
-        root.className = 'panoram-multiplescene';
-        outer.className = 'panoram-multiplescene-outer';
-        inner.className = 'panoram-multiplescene-inner';
+        const root = this.root = Util.createElement('<div class="panoram-multiplescene"></div>');
+        const outer = this.outer = Util.createElement('<div class="panoram-multiplescene-outer"></div>');
+        const inner = this.inner = Util.createElement('<div class="panoram-multiplescene-inner"></div>');
         
         inner.innerHTML = this.data.map((item, i) => {
             return `<div class="panoram-multiplescene-item" data-id="${i}">
@@ -40,14 +36,14 @@ export default class Multiple implements IPluggableUI{
         root.appendChild(outer);
         this.setActive(inner.childNodes[0]);
         // add to panoram root
-        this.appendTo(this.panoram.getRoot());
+        this.setContainer(this.panoram.getRoot());
     }
 
     getElement() {
         return this.root;
     }
 
-    appendTo(container) {
+    setContainer(container) {
         this.container = container;
         container.appendChild(this.root);
     }
