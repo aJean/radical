@@ -55,6 +55,7 @@ body {
     width: 130px;
     padding: 10px;
     border: 1px solid #f0860d;
+    background: rgba(255, 255, 255, .6);
 }
 
 .overlay-panel button {

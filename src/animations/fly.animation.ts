@@ -17,6 +17,21 @@ export default class AnimationFly {
         this.path = this.getPath(this.camera = camera);
     }
 
+    /** 
+     * set camera position when pano first render
+     */
+    init() {
+        const camera = this.camera;
+        const data = this.path[0].start;
+
+        camera.fov = data.fov;
+        camera.position.set(data.px, data.py, data.pz);
+        camera.rotation.set(data.rx, data.ry, data.rz);
+        // camera.lookAt(0, 0, 1);
+
+        camera.updateProjectionMatrix();
+    }
+
     update() {
         const camera = this.camera;
         const path = this.path;
@@ -42,7 +57,7 @@ export default class AnimationFly {
     
             camera.updateProjectionMatrix();
             time = this.time = 0;
-            return path.shift();          
+            return path.shift();       
         }
 
         for (let data of path) {
@@ -65,11 +80,11 @@ export default class AnimationFly {
 
     getPath(camera) {
         return [{
-            start: {fov: 160, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
-            end: {fov: 120, px: 0, py: 1500, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8},
+            start: {fov: 160, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
+            end: {fov: 100, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8},
             time: 1500
         }, {
-            start: {fov: 120, px: 0, py: 1500, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8},
+            start: {fov: 100, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8},
             end: {fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI},
             time: 1500
         }];

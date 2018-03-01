@@ -60,15 +60,11 @@ export default class Pano {
         this.scene = new Scene();
         this.camera = new PerspectiveCamera(opts.fov, size.aspect, 0.1, 10000);
         // 场景控制器
-        const vector = new Vector3(0, 0, 1);
         const control = this.orbitControl = new OrbitControl(this.camera, webgl.domElement);
         // 陀螺仪控制器
         if (opts.gyro) {
             this.gyroControl = new GyroControl(this.camera, control);
         }
-        // look at front
-        control.target = vector;
-        control.target0 = vector.clone();
         // bind overlays events
         this.overlays = new Overlays(this);        
     }
@@ -98,6 +94,7 @@ export default class Pano {
 
         this.scene.add(skyBox);
         this.dispatch('scene-init', this);
+        this.render();
     }
 
     /**
@@ -212,23 +209,33 @@ export default class Pano {
      * 帧渲染
      */
     animate() {
-        this.updateControl();
+        this.updateControl(); 
         this.dispatch('render-process', this.currentData, this);
-        this.webgl.render(this.scene, this.camera);
+        this.render();
 
         requestAnimationFrame(this.animate.bind(this));
+    }
+
+    render() {
+        this.webgl.render(this.scene, this.camera);
     }
 
     /**
      * 窗口变化响应事件
      */
     onResize() {
-        const camera = this.camera;
-        const size =  Util.calcRenderSize(this.opts, this.root);
+        const camera = this.getCamera();
+        const root = this.getRoot();
+        const size =  Util.calcRenderSize(this.opts, root);
 
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.webgl.setSize(size.width, size.height);
+        // set root element's size
+        Util.styleElement(root, {
+            width: size.width,
+            height: size.height
+        });
     }
 
     /**
@@ -323,8 +330,9 @@ export default class Pano {
     /**
      * enter next scene
      * @param {Object} data scene data or id
+     * @param {boolean} slient without set camera
      */
-    enterNext(data) {
+    enterNext(data, slient?) {
         if (typeof data === 'string') {
             data = this.group && this.group.find(item => item.id == data);
         }
@@ -336,7 +344,7 @@ export default class Pano {
         return myLoader.loadTexture(data.bxlPath || data.texPath)
             .then(texture => {
                 this.currentData = data;
-                this.resetEnv(data);
+                !slient && this.resetEnv(data);
                 this.replaceTexture(texture);
             }).catch(e => Log.output('load source texture fail'));
     }

@@ -18,6 +18,18 @@ export default {
         return elem.firstElementChild;
     },
 
+    styleElement(elem, data) {
+        for (let prop in data) {
+            let val = data[prop];
+
+            if (typeof val === 'number') {
+                val = val + 'px';
+            }
+            
+            elem.style[prop] = val;
+        }
+    },
+
     /**
      * 解密
      * @param {string} ciphertext 密文
@@ -126,8 +138,8 @@ export default {
         const winWidth = window.innerWidth;
         const winHeight = window.innerHeight;
 
-        let width = parseInt(opts.width) || elem.clientWidth || winWidth;
-        let height = parseInt(opts.height) || elem.clientHeight || winHeight;
+        let width = parseInt(opts.width) || elem.parentNode.clientWidth || winWidth;
+        let height = parseInt(opts.height) || elem.parentNode.clientHeight || winHeight;
 
         /%$/.test(opts.width) && (width = width / 100 * winWidth);
         /%$/.test(opts.height) && (height = height / 100 * winHeight);

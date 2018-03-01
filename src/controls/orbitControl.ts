@@ -5,72 +5,70 @@ import {Vector3, Vector2, MOUSE, Spherical, EventDispatcher, Quaternion, Perspec
  */
 
 function OrbitControl(object, domElement) {
-    /* camera */
+    // camera
     this.object = object;
     this.domElement = (domElement !== undefined) ? domElement : document;
-    /* Set to false to disable this control*/
+    // Set to false to disable this control
     this.enabled = true;
-    /*"target" sets the location of focus, where the object orbits around*/
-    this.target = new Vector3();
-    /* How far you can dolly in and out ( PerspectiveCamera only )*/
+    // look at panoram's front
+    this.target = new Vector3(0, 0, 1);
+    // How far you can dolly in and out ( PerspectiveCamera only )
     this.minDistance = 0;
     this.maxDistance = Infinity;
     this.minFov = 30;
     this.maxFov = 120;
-    /* How far you can zoom in and out ( OrthographicCamera only )*/
+    // How far you can zoom in and out ( OrthographicCamera only )
     this.minZoom = 0;
     this.maxZoom = Infinity;
-    /* How far you can orbit vertically, upper and lower limits.*/
+    /* How far you can orbit vertically, upper and lower limits. */
     /* Range is 0 to Math.PI radians.*/
     this.minPolarAngle = 0;
     this.maxPolarAngle = Math.PI;
-    /* How far you can orbit horizontally, upper and lower limits.*/
-    /* If set, must be a sub-interval of the interval [ - Math.PI, Math.PI ].*/
+    /* How far you can orbit horizontally, upper and lower limits. */
+    /* If set, must be a sub-interval of the interval [ - Math.PI, Math.PI ]. */
     this.minAzimuthAngle = -Infinity;
     this.maxAzimuthAngle = Infinity;
-    /* Set to true to enable damping (inertia)*/
-    /* If damping is enabled, you must call controls.update() in your animation loop*/
+    /* Set to true to enable damping (inertia) */
+    /* If damping is enabled, you must call controls.update() in your animation loop */
     this.enableDamping = false;
     this.dampingFactor = 0.25;
-    /* This option actually enables dollying in and out; left as "zoom" for backwards compatibility.*/
-    /* Set to false to disable zooming*/
+    /* This option actually enables dollying in and out; left as "zoom" for backwards compatibility. */
+    /* Set to false to disable zooming */
     this.enableZoom = true;
     this.zoomSpeed = 1.0;
-    /* Set to false to disable rotating*/
+    /* Set to false to disable rotating */
     this.enableRotate = true;
     this.rotateSpeed = -0.2;
-    /* Set to false to disable panning*/
+    /* Set to false to disable panning */
     this.enablePan = false;
     this.keyPanSpeed = 7.0;
-    /* pixels moved per arrow key push*/
-    /* Set to true to automatically rotate around the target*/
-    /* If auto-rotate is enabled, you must call controls.update() in your animation loop*/
+    /* pixels moved per arrow key push */
+    /* Set to true to automatically rotate around the target */
+    /* If auto-rotate is enabled, you must call controls.update() in your animation loop */
     this.autoRotate = false;
     this.autoRotateSpeed = 1.0;
-    /* 30 seconds per round when fps is 60*/
-    /* Set to false to disable use of the keys*/
+    /* 30 seconds per round when fps is 60 */
+    /* Set to false to disable use of the keys */
     this.enableKeys = false;
-    /* The four arrow keys*/
+    // The four arrow keys
     this.keys = {
         LEFT: 37,
         UP: 38,
         RIGHT: 39,
         BOTTOM: 40
     };
-    /* Mouse buttons*/
+    // Mouse buttons
     this.mouseButtons = {
         ORBIT: MOUSE.LEFT,
         ZOOM: MOUSE.MIDDLE,
         PAN: MOUSE.RIGHT
     };
-    /* for reset*/
+    // for reset
     this.target0 = this.target.clone();
     this.position0 = this.object.position.clone();
     this.zoom0 = this.object.zoom;
-    /*
-     * internals
-     */
-    /* current position in spherical coordinates*/
+
+    // current position in spherical coordinates
     var spherical = new Spherical();
     // var sphericalDelta = new THREE.Spherical(1, Math.PI/2, Math.PI );
     var sphericalDelta = new Spherical();
@@ -108,9 +106,7 @@ function OrbitControl(object, domElement) {
     var dollyStart = new Vector2();
     var dollyEnd = new Vector2();
     var dollyDelta = new Vector2();
-    /*
-     * public methods
-     */
+
     this.getPolarAngle = function () {
         return spherical.phi;
     };
@@ -135,10 +131,10 @@ function OrbitControl(object, domElement) {
         state = STATE.NONE;
     };
 
-    /* this method is exposed, but perhaps it would be better if we can make it private...*/
+    /* this method is exposed, but perhaps it would be better if we can make it private... */
     this.update = (function () {
         var offset = new Vector3();
-        /*so camera.up is the orbit axis*/
+        /* so camera.up is the orbit axis */
         var quat = new Quaternion().setFromUnitVectors(object.up, new Vector3(0, 1, 0));
         var quatInverse = quat.clone().inverse();
         var lastPosition = new Vector3();
@@ -146,20 +142,20 @@ function OrbitControl(object, domElement) {
         return function update(sphericalNew) {
             var position = scope.object.position;
             offset.copy(position).sub(scope.target);
-            /* rotate offset to "y-axis-is-up" space*/
+            /* rotate offset to "y-axis-is-up" space */
             offset.applyQuaternion(quat);
-            /* angle from z-axis around y-axis*/
+            /* angle from z-axis around y-axi */
             spherical.setFromVector3(offset);
             if (scope.autoRotate && state === STATE.NONE) {
                 rotateLeft(getAutoRotationAngle());
             } else if (state === STATE.SLIDER) {
                 if (rotateDelta.length() > 0.35) {
-                    /* rotating across whole screen goes 360 degrees around*/
+                    /* rotating across whole screen goes 360 degrees around */
                     var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
                     rotateDelta.setLength(rotateDelta.length() * 0.90);
                     rotateLeft(2 * Math.PI * rotateDelta.x / element.clientWidth * scope.rotateSpeed);
-                    /* rotating up and down along whole screen attempts to go 360, but limited to 180*/
-                    /*constraint.rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight * selfClass.rotateSpeed);*/
+                    /* rotating up and down along whole screen attempts to go 360, but limited to 180 */
+                    /* constraint.rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight * selfClass.rotateSpeed); */
                 } else {
                     state = STATE.NONE;
                 }
@@ -172,9 +168,9 @@ function OrbitControl(object, domElement) {
 
             spherical.theta += sphericalDelta.theta;
             spherical.phi += sphericalDelta.phi;
-            /* restrict theta to be between desired limits*/
+            /* restrict theta to be between desired limits */
             spherical.theta = Math.max(scope.minAzimuthAngle, Math.min(scope.maxAzimuthAngle, spherical.theta));
-            /* restrict phi to be between desired limits*/
+            /* restrict phi to be between desired limits */
             spherical.phi = Math.max(scope.minPolarAngle, Math.min(scope.maxPolarAngle, spherical.phi));
             spherical.makeSafe();
             // 缩放
@@ -187,13 +183,15 @@ function OrbitControl(object, domElement) {
                 }
                 scope.object.updateProjectionMatrix();
             }
-            /* move target to panned location*/
+            // move target to panned location
             scope.target.add(panOffset);
             offset.setFromSpherical(spherical);
-            /* rotate offset back to "camera-up-vector-is-up" space*/
+            // rotate offset back to "camera-up-vector-is-up" space
             offset.applyQuaternion(quatInverse);
             position.copy(scope.target).add(offset);
+            // camera lookat
             scope.object.lookAt(scope.target);
+
             if (scope.enableDamping === true) {
                 sphericalDelta.theta *= (1 - scope.dampingFactor);
                 sphericalDelta.phi *= (1 - scope.dampingFactor);
@@ -202,10 +200,11 @@ function OrbitControl(object, domElement) {
             }
             scale = 1;
             panOffset.set(0, 0, 0);
-            /*update condition is:
+            /**
+             * update condition is:
              * min(camera displacement, camera rotation in radians)^2 > EPS
              * using small-angle approximation cos(x/2) = 1 - x^2 / 8
-             * */
+             **/
             if (zoomChanged
                 || lastPosition.distanceToSquared(scope.object.position) > EPS
                 || 8 * (1 - lastQuaternion.dot(scope.object.quaternion)) > EPS) {
@@ -259,7 +258,7 @@ function OrbitControl(object, domElement) {
         var v = new Vector3();
         return function panLeft(distance, objectMatrix) {
             v.setFromMatrixColumn(objectMatrix, 0);
-            /* get X column of objectMatrix*/
+            // get X column of objectMatrix
             v.multiplyScalar(-distance);
             panOffset.add(v);
         };
@@ -269,35 +268,35 @@ function OrbitControl(object, domElement) {
         var v = new Vector3();
         return function panUp(distance, objectMatrix) {
             v.setFromMatrixColumn(objectMatrix, 1);
-            /*get Y column of objectMatrix*/
+            // get Y column of objectMatrix
             v.multiplyScalar(distance);
             panOffset.add(v);
         };
     }());
 
-    /* deltaX and deltaY are in pixels; right and down are positive*/
+    // deltaX and deltaY are in pixels; right and down are positive
     var pan = (function () {
         var offset = new Vector3();
         return function pan(deltaX, deltaY) {
             var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
             if (scope.object instanceof PerspectiveCamera) {
-                /* perspective*/
+                // perspective
                 var position = scope.object.position;
                 offset.copy(position).sub(scope.target);
                 var targetDistance = offset.length();
-                /* half of the fov is center to top of screen*/
+                // half of the fov is center to top of screen
                 targetDistance *= Math.tan((scope.object.fov / 2) * Math.PI / 180.0);
-                /* we actually don't use screenWidth, since perspective camera is fixed to screen height*/
+                // we actually don't use screenWidth, since perspective camera is fixed to screen height
                 panLeft(2 * deltaX * targetDistance / element.clientHeight, scope.object.matrix);
                 panUp(2 * deltaY * targetDistance / element.clientHeight, scope.object.matrix);
             } else if (scope.object instanceof OrthographicCamera) {
-                /* orthographic*/
+                // orthographic
                 panLeft(deltaX * (scope.object.right - scope.object.left) / scope.object.zoom / element.clientWidth,
                     scope.object.matrix);
                 panUp(deltaY * (scope.object.top - scope.object.bottom) / scope.object.zoom / element.clientHeight,
                     scope.object.matrix);
             } else {
-                /* camera neither orthographic nor perspective*/
+                // camera neither orthographic nor perspective
                 console.warn('WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.');
                 scope.enablePan = false;
             }
@@ -329,6 +328,7 @@ function OrbitControl(object, domElement) {
             scope.enableZoom = false;
         }
     }
+
     /*
      * event callbacks - update the object state
      */
@@ -348,9 +348,9 @@ function OrbitControl(object, domElement) {
         rotateEnd.set(event.clientX, event.clientY);
         rotateDelta.subVectors(rotateEnd, rotateStart);
         var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
-        /* rotating across whole screen goes 360 degrees around*/
+        // rotating across whole screen goes 360 degrees around
         rotateLeft(2 * Math.PI * rotateDelta.x / element.clientWidth * scope.rotateSpeed);
-        /* rotating up and down along whole screen attempts to go 360, but limited to 180*/
+        // rotating up and down along whole screen attempts to go 360, but limited to 180
         rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight * scope.rotateSpeed);
         rotateStart.copy(rotateEnd);
         scope.update();
@@ -427,9 +427,9 @@ function OrbitControl(object, domElement) {
         rotateEnd.set(event.touches[0].pageX, event.touches[0].pageY);
         rotateDelta.subVectors(rotateEnd, rotateStart);
         var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
-        /* rotating across whole screen goes 360 degrees around*/
+        // rotating across whole screen goes 360 degrees around
         rotateLeft(2 * Math.PI * rotateDelta.x / element.clientWidth * scope.rotateSpeed);
-        /* rotating up and down along whole screen attempts to go 360, but limited to 180*/
+        // rotating up and down along whole screen attempts to go 360, but limited to 180
         rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight * scope.rotateSpeed);
         rotateStart.copy(rotateEnd);
         scope.update();
@@ -459,6 +459,7 @@ function OrbitControl(object, domElement) {
     }
 
     function handleTouchEnd(event) {}
+
     /*
      * event handlers - FSM: listen for events and reset state
      */
@@ -546,7 +547,7 @@ function OrbitControl(object, domElement) {
         event.stopPropagation();
         handleMouseWheel(event);
         scope.dispatchEvent(startEvent);
-        /* not sure why these are here...*/
+        // not sure why these are here...
         scope.dispatchEvent(endEvent);
     }
 
@@ -564,21 +565,24 @@ function OrbitControl(object, domElement) {
         
         switch (event.touches.length) {
             case 1:
-                /* one-fingered touch: rotate*/ if (scope.enableRotate === false) {
+                // one-fingered touch: rotate
+                if (scope.enableRotate === false) {
                     return;
                 }
                 handleTouchStartRotate(event);
                 state = STATE.TOUCH_ROTATE;
                 break;
             case 2:
-                /* two-fingered touch: dolly*/ if (scope.enableZoom === false) {
+                // two-fingered touch: dolly
+                if (scope.enableZoom === false) {
                     return;
                 }
                 handleTouchStartDolly(event);
                 state = STATE.TOUCH_DOLLY;
                 break;
             case 3:
-                /* three-fingered touch: pan*/ if (scope.enablePan === false) {
+                // three-fingered touch: pan
+                if (scope.enablePan === false) {
                     return;
                 }
                 handleTouchStartPan(event);
@@ -600,7 +604,8 @@ function OrbitControl(object, domElement) {
         event.stopPropagation();
         switch (event.touches.length) {
             case 1:
-                /* one-fingered touch: rotate*/ if (scope.enableRotate === false) {
+                // one-fingered touch: rotate
+                if (scope.enableRotate === false) {
                     return;
                 }
                 if (state !== STATE.TOUCH_ROTATE) {
@@ -609,7 +614,8 @@ function OrbitControl(object, domElement) {
                 handleTouchMoveRotate(event);
                 break;
             case 2:
-                /* two-fingered touch: dolly*/ if (scope.enableZoom === false) {
+                // two-fingered touch: dolly
+                if (scope.enableZoom === false) {
                     return;
                 }
                 if (state !== STATE.TOUCH_DOLLY) {
@@ -618,7 +624,8 @@ function OrbitControl(object, domElement) {
                 handleTouchMoveDolly(event);
                 break;
             case 3:
-                /* three-fingered touch: pan*/ if (scope.enablePan === false) {
+                // three-fingered touch: pan
+                if (scope.enablePan === false) {
                     return;
                 }
                 if (state !== STATE.TOUCH_PAN) {
@@ -653,7 +660,7 @@ function OrbitControl(object, domElement) {
     scope.domElement.addEventListener('touchend', onTouchEnd, false);
     scope.domElement.addEventListener('touchmove', onTouchMove, false);
     window.addEventListener('keydown', onKeyDown, false);
-    /* force an update at start*/
+    // force an update at start
     this.update();
 };
 

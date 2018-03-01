@@ -142,7 +142,7 @@ abstract class Runtime {
             // 加载原图
             if (thumbImg) {
                 pano.initPreview(thumbImg);
-                await pano.enterNext(data);
+                await pano.enterNext(data, true);
                 pano.animate();
             }
         } catch(e) {

@@ -18,15 +18,26 @@ export default abstract class Timeline {
             this.lines.push(fly);
         }
 
+        pano.subscribe('scene-init', this.onTimeInit, this);
         pano.subscribe('render-process', this.onTimeChange, this);
     }
 
-    static onTimeChange() {
+    static onTimeInit() {
         const lines = this.lines;
+        lines.forEach(anim => anim.init && anim.init());
+    }
+
+    static onTimeChange() {
+        const pano = this.pano;
+        const lines = this.lines;
+
+        if (!lines.length) {
+            return this.onTimeEnd();
+        }
 
         lines.forEach((anim, i) => {
             if (anim.isEnd()) {
-                this.onAnimationEnd(anim);
+                pano.dispatch('animation-end', anim);
                 lines.splice(i, 1);
             } else {
                 anim.update();
@@ -34,10 +45,11 @@ export default abstract class Timeline {
         });
     }
 
-    static onAnimationEnd(data) {
+    static onTimeEnd() {
         const pano = this.pano;
 
+        pano.unsubscribe('scene-init', this.onTimeInit, this);
+        pano.unsubscribe('render-process', this.onTimeChange, this);
         pano.noTimeline();
-        pano.dispatch('animation-end', data);
     }
 }

@@ -47728,6 +47728,15 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         elem.innerHTML = domstring;
         return elem.firstElementChild;
     },
+    styleElement: function (elem, data) {
+        for (var prop in data) {
+            var val = data[prop];
+            if (typeof val === 'number') {
+                val = val + 'px';
+            }
+            elem.style[prop] = val;
+        }
+    },
     /**
      * 解密
      * @param {string} ciphertext 密文
@@ -47822,8 +47831,8 @@ var composeKey = function (part) { return ('skt1wins' + part); };
     calcRenderSize: function (opts, elem) {
         var winWidth = window.innerWidth;
         var winHeight = window.innerHeight;
-        var width = parseInt(opts.width) || elem.clientWidth || winWidth;
-        var height = parseInt(opts.height) || elem.clientHeight || winHeight;
+        var width = parseInt(opts.width) || elem.parentNode.clientWidth || winWidth;
+        var height = parseInt(opts.height) || elem.parentNode.clientHeight || winHeight;
         /%$/.test(opts.width) && (width = width / 100 * winWidth);
         /%$/.test(opts.height) && (height = height / 100 * winHeight);
         return { width: width, height: height, aspect: width / height };
@@ -50077,7 +50086,7 @@ var Runtime = /** @class */ (function () {
                         thumbImg = _a.sent();
                         if (!thumbImg) return [3 /*break*/, 3];
                         pano.initPreview(thumbImg);
-                        return [4 /*yield*/, pano.enterNext(data)];
+                        return [4 /*yield*/, pano.enterNext(data, true)];
                     case 2:
                         _a.sent();
                         pano.animate();
@@ -50165,8 +50174,8 @@ var defaultOpts = {
     height: null
 };
 var myLoader = new __WEBPACK_IMPORTED_MODULE_6__loaders_resource_loader__["a" /* default */]();
-var Panorama = /** @class */ (function () {
-    function Panorama(opts) {
+var Pano = /** @class */ (function () {
+    function Pano(opts) {
         this.opts = null;
         this.root = null;
         this.webgl = null;
@@ -50183,7 +50192,7 @@ var Panorama = /** @class */ (function () {
         this.initEnv();
         this.dispatch('render-init', this);
     }
-    Panorama.prototype.initEnv = function () {
+    Pano.prototype.initEnv = function () {
         var opts = this.opts;
         var container = opts.el;
         var size = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].calcRenderSize(opts, container);
@@ -50201,19 +50210,15 @@ var Panorama = /** @class */ (function () {
         this.scene = new __WEBPACK_IMPORTED_MODULE_0_three__["v" /* Scene */]();
         this.camera = new __WEBPACK_IMPORTED_MODULE_0_three__["p" /* PerspectiveCamera */](opts.fov, size.aspect, 0.1, 10000);
         // 场景控制器
-        var vector = new __WEBPACK_IMPORTED_MODULE_0_three__["A" /* Vector3 */](0, 0, 1);
         var control = this.orbitControl = new __WEBPACK_IMPORTED_MODULE_1__controls_orbitControl__["a" /* default */](this.camera, webgl.domElement);
         // 陀螺仪控制器
         if (opts.gyro) {
             this.gyroControl = new __WEBPACK_IMPORTED_MODULE_2__controls_gyroControl__["a" /* default */](this.camera, control);
         }
-        // look at front
-        control.target = vector;
-        control.target0 = vector.clone();
         // bind overlays events
         this.overlays = new __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__["a" /* default */](this);
     };
-    Panorama.prototype.resetEnv = function (data) {
+    Pano.prototype.resetEnv = function (data) {
         var camera = this.camera;
         // scene fov
         camera.fov = data.fov || this.opts.fov;
@@ -50225,7 +50230,7 @@ var Panorama = /** @class */ (function () {
      * 渲染预览图纹理
      * @param {Object} texture 纹理贴图
      */
-    Panorama.prototype.initPreview = function (texture) {
+    Pano.prototype.initPreview = function (texture) {
         var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
             envMap: texture,
             side: __WEBPACK_IMPORTED_MODULE_0_three__["b" /* BackSide */],
@@ -50236,11 +50241,12 @@ var Panorama = /** @class */ (function () {
         var skyBox = this.skyBox = new __WEBPACK_IMPORTED_MODULE_0_three__["m" /* Mesh */](geometry, material);
         this.scene.add(skyBox);
         this.dispatch('scene-init', this);
+        this.render();
     };
     /**
      * 在渲染帧中更新控制器
      */
-    Panorama.prototype.updateControl = function () {
+    Pano.prototype.updateControl = function () {
         if (this.gyroControl && this.gyroControl.enabled) {
             this.gyroControl.update();
         }
@@ -50253,7 +50259,7 @@ var Panorama = /** @class */ (function () {
      * @param {number} lng 横向角度
      * @param {number} lat 纵向角度
      */
-    Panorama.prototype.setLook = function (lng, lat) {
+    Pano.prototype.setLook = function (lng, lat) {
         var control = this.orbitControl;
         if (lng !== undefined && lat !== undefined) {
             var theta = (180 - lng) * (Math.PI / 180);
@@ -50266,7 +50272,7 @@ var Panorama = /** @class */ (function () {
     /**
      * 获取相机角度
      */
-    Panorama.prototype.getLook = function () {
+    Pano.prototype.getLook = function () {
         var control = this.orbitControl;
         var theta = control.getAzimuthalAngle();
         var phi = control.getPolarAngle();
@@ -50280,7 +50286,7 @@ var Panorama = /** @class */ (function () {
      * @param {number} fov 视角
      * @param {number} duration 时长
      */
-    Panorama.prototype.setFov = function (fov, duration) {
+    Pano.prototype.setFov = function (fov, duration) {
         var camera = this.getCamera();
         new __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__["a" /* default */](camera).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
             .start(['fov'], this).process(function () { return camera.updateProjectionMatrix(); });
@@ -50288,13 +50294,13 @@ var Panorama = /** @class */ (function () {
     /**
      * 获取视角
      */
-    Panorama.prototype.getFov = function () {
+    Pano.prototype.getFov = function () {
         return this.getCamera().fov;
     };
     /**
      * 恢复视角
      */
-    Panorama.prototype.resetFov = function () {
+    Pano.prototype.resetFov = function () {
         var camera = this.camera;
         camera.fov = this.opts.fov;
         camera.updateProjectionMatrix();
@@ -50304,17 +50310,17 @@ var Panorama = /** @class */ (function () {
      * @param {Object} Plugin 插件 class
      * @param {Object} data 插件数据
      */
-    Panorama.prototype.addPlugin = function (Plugin, data) {
+    Pano.prototype.addPlugin = function (Plugin, data) {
         var plugin = new Plugin(this, data);
         this.pluginList.push(plugin);
     };
-    Panorama.prototype.subscribe = function (type, fn, context) {
+    Pano.prototype.subscribe = function (type, fn, context) {
         this.event.on(type, fn, context);
     };
-    Panorama.prototype.unsubscribe = function (type, fn, context) {
+    Pano.prototype.unsubscribe = function (type, fn, context) {
         this.event.off(type, fn, context);
     };
-    Panorama.prototype.dispatch = function (type, arg1, arg2) {
+    Pano.prototype.dispatch = function (type, arg1, arg2) {
         this.event.emit(type, arg1, arg2);
     };
     /**
@@ -50322,7 +50328,7 @@ var Panorama = /** @class */ (function () {
      * @param {Object} texture 场景原图纹理
      * @param {boolean} slient 安静模式
      */
-    Panorama.prototype.replaceTexture = function (texture) {
+    Pano.prototype.replaceTexture = function (texture) {
         texture.mapping = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
         texture.needsUpdate = true;
         var tempTex = this.skyBox.material.envMap;
@@ -50334,86 +50340,95 @@ var Panorama = /** @class */ (function () {
     /**
      * 帧渲染
      */
-    Panorama.prototype.animate = function () {
+    Pano.prototype.animate = function () {
         this.updateControl();
         this.dispatch('render-process', this.currentData, this);
-        this.webgl.render(this.scene, this.camera);
+        this.render();
         requestAnimationFrame(this.animate.bind(this));
+    };
+    Pano.prototype.render = function () {
+        this.webgl.render(this.scene, this.camera);
     };
     /**
      * 窗口变化响应事件
      */
-    Panorama.prototype.onResize = function () {
-        var camera = this.camera;
-        var size = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].calcRenderSize(this.opts, this.root);
+    Pano.prototype.onResize = function () {
+        var camera = this.getCamera();
+        var root = this.getRoot();
+        var size = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].calcRenderSize(this.opts, root);
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.webgl.setSize(size.width, size.height);
+        // set root element's size
+        __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].styleElement(root, {
+            width: size.width,
+            height: size.height
+        });
     };
     /**
      * 获取相机
      */
-    Panorama.prototype.getCamera = function () {
+    Pano.prototype.getCamera = function () {
         return this.camera;
     };
     /**
      * 获取画布元素
      */
-    Panorama.prototype.getCanvas = function () {
+    Pano.prototype.getCanvas = function () {
         return this.webgl.domElement;
     };
     /**
      * 获取容器元素
      */
-    Panorama.prototype.getRoot = function () {
+    Pano.prototype.getRoot = function () {
         return this.root;
     };
     /**
      * 获取场景对象
      */
-    Panorama.prototype.getScene = function () {
+    Pano.prototype.getScene = function () {
         return this.scene;
     };
     /**
      * 获取控制器
      */
-    Panorama.prototype.getControl = function () {
+    Pano.prototype.getControl = function () {
         return this.orbitControl;
     };
     /**
      * 获取 camera lookat 目标的 vector3 obj
      */
-    Panorama.prototype.getLookAtTarget = function () {
+    Pano.prototype.getLookAtTarget = function () {
         return this.orbitControl.target;
     };
     /**
      * 添加 object3d 对象
      */
-    Panorama.prototype.addSceneObject = function (obj) {
+    Pano.prototype.addSceneObject = function (obj) {
         this.scene.add(obj);
     };
     /**
      * 删除 object3d 对象
      */
-    Panorama.prototype.removeSceneObject = function (obj) {
+    Pano.prototype.removeSceneObject = function (obj) {
         this.scene.remove(obj);
     };
     /**
      * 添加 dom 对象
      */
-    Panorama.prototype.addDomObject = function (obj) {
+    Pano.prototype.addDomObject = function (obj) {
         this.root.appendChild(obj);
     };
     /**
      * 删除 dom 对象
      */
-    Panorama.prototype.removeDomObject = function (obj) {
+    Pano.prototype.removeDomObject = function (obj) {
         this.root.removeChild(obj);
     };
     /**
      * 添加热点覆盖物, 目前支持 mesh
      */
-    Panorama.prototype.addOverlay = function (location, text) {
+    Pano.prototype.addOverlay = function (location, text) {
         var data = {
             'overlays': [{
                     type: 'dom',
@@ -50430,8 +50445,9 @@ var Panorama = /** @class */ (function () {
     /**
      * enter next scene
      * @param {Object} data scene data or id
+     * @param {boolean} slient without set camera
      */
-    Panorama.prototype.enterNext = function (data) {
+    Pano.prototype.enterNext = function (data, slient) {
         var _this = this;
         if (typeof data === 'string') {
             data = this.group && this.group.find(function (item) { return item.id == data; });
@@ -50442,16 +50458,16 @@ var Panorama = /** @class */ (function () {
         return myLoader.loadTexture(data.bxlPath || data.texPath)
             .then(function (texture) {
             _this.currentData = data;
-            _this.resetEnv(data);
+            !slient && _this.resetEnv(data);
             _this.replaceTexture(texture);
         }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('load source texture fail'); });
     };
-    Panorama.prototype.startGyroControl = function () {
+    Pano.prototype.startGyroControl = function () {
         if (this.gyroControl && !this.gyroControl.enabled) {
             this.gyroControl.connect();
         }
     };
-    Panorama.prototype.stopGyroControl = function () {
+    Pano.prototype.stopGyroControl = function () {
         if (this.gyroControl) {
             this.gyroControl.disconnect();
             delete this.gyroControl;
@@ -50460,10 +50476,10 @@ var Panorama = /** @class */ (function () {
     /**
      * 开场动画结束
      */
-    Panorama.prototype.noTimeline = function () {
+    Pano.prototype.noTimeline = function () {
         this.startGyroControl();
     };
-    Panorama.prototype.dispose = function () {
+    Pano.prototype.dispose = function () {
         __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].cleanup(null, this.scene);
         this.stopGyroControl();
         this.dispatch('render-dispose', this);
@@ -50471,9 +50487,9 @@ var Panorama = /** @class */ (function () {
         this.webgl.dispose();
         this.root.innerHTML = '';
     };
-    return Panorama;
+    return Pano;
 }());
-/* harmony default export */ __webpack_exports__["a"] = (Panorama);
+/* harmony default export */ __webpack_exports__["a"] = (Pano);
 
 
 /***/ }),
@@ -50487,72 +50503,69 @@ var Panorama = /** @class */ (function () {
  * @file 全景相机控制器
  */
 function OrbitControl(object, domElement) {
-    /* camera */
+    // camera
     this.object = object;
     this.domElement = (domElement !== undefined) ? domElement : document;
-    /* Set to false to disable this control*/
+    // Set to false to disable this control
     this.enabled = true;
-    /*"target" sets the location of focus, where the object orbits around*/
-    this.target = new __WEBPACK_IMPORTED_MODULE_0_three__["A" /* Vector3 */]();
-    /* How far you can dolly in and out ( PerspectiveCamera only )*/
+    // look at panoram's front
+    this.target = new __WEBPACK_IMPORTED_MODULE_0_three__["A" /* Vector3 */](0, 0, 1);
+    // How far you can dolly in and out ( PerspectiveCamera only )
     this.minDistance = 0;
     this.maxDistance = Infinity;
     this.minFov = 30;
     this.maxFov = 120;
-    /* How far you can zoom in and out ( OrthographicCamera only )*/
+    // How far you can zoom in and out ( OrthographicCamera only )
     this.minZoom = 0;
     this.maxZoom = Infinity;
-    /* How far you can orbit vertically, upper and lower limits.*/
+    /* How far you can orbit vertically, upper and lower limits. */
     /* Range is 0 to Math.PI radians.*/
     this.minPolarAngle = 0;
     this.maxPolarAngle = Math.PI;
-    /* How far you can orbit horizontally, upper and lower limits.*/
-    /* If set, must be a sub-interval of the interval [ - Math.PI, Math.PI ].*/
+    /* How far you can orbit horizontally, upper and lower limits. */
+    /* If set, must be a sub-interval of the interval [ - Math.PI, Math.PI ]. */
     this.minAzimuthAngle = -Infinity;
     this.maxAzimuthAngle = Infinity;
-    /* Set to true to enable damping (inertia)*/
-    /* If damping is enabled, you must call controls.update() in your animation loop*/
+    /* Set to true to enable damping (inertia) */
+    /* If damping is enabled, you must call controls.update() in your animation loop */
     this.enableDamping = false;
     this.dampingFactor = 0.25;
-    /* This option actually enables dollying in and out; left as "zoom" for backwards compatibility.*/
-    /* Set to false to disable zooming*/
+    /* This option actually enables dollying in and out; left as "zoom" for backwards compatibility. */
+    /* Set to false to disable zooming */
     this.enableZoom = true;
     this.zoomSpeed = 1.0;
-    /* Set to false to disable rotating*/
+    /* Set to false to disable rotating */
     this.enableRotate = true;
     this.rotateSpeed = -0.2;
-    /* Set to false to disable panning*/
+    /* Set to false to disable panning */
     this.enablePan = false;
     this.keyPanSpeed = 7.0;
-    /* pixels moved per arrow key push*/
-    /* Set to true to automatically rotate around the target*/
-    /* If auto-rotate is enabled, you must call controls.update() in your animation loop*/
+    /* pixels moved per arrow key push */
+    /* Set to true to automatically rotate around the target */
+    /* If auto-rotate is enabled, you must call controls.update() in your animation loop */
     this.autoRotate = false;
     this.autoRotateSpeed = 1.0;
-    /* 30 seconds per round when fps is 60*/
-    /* Set to false to disable use of the keys*/
+    /* 30 seconds per round when fps is 60 */
+    /* Set to false to disable use of the keys */
     this.enableKeys = false;
-    /* The four arrow keys*/
+    // The four arrow keys
     this.keys = {
         LEFT: 37,
         UP: 38,
         RIGHT: 39,
         BOTTOM: 40
     };
-    /* Mouse buttons*/
+    // Mouse buttons
     this.mouseButtons = {
         ORBIT: __WEBPACK_IMPORTED_MODULE_0_three__["k" /* MOUSE */].LEFT,
         ZOOM: __WEBPACK_IMPORTED_MODULE_0_three__["k" /* MOUSE */].MIDDLE,
         PAN: __WEBPACK_IMPORTED_MODULE_0_three__["k" /* MOUSE */].RIGHT
     };
-    /* for reset*/
+    // for reset
     this.target0 = this.target.clone();
     this.position0 = this.object.position.clone();
     this.zoom0 = this.object.zoom;
-    /*
-     * internals
-     */
-    /* current position in spherical coordinates*/
+    // current position in spherical coordinates
     var spherical = new __WEBPACK_IMPORTED_MODULE_0_three__["x" /* Spherical */]();
     // var sphericalDelta = new THREE.Spherical(1, Math.PI/2, Math.PI );
     var sphericalDelta = new __WEBPACK_IMPORTED_MODULE_0_three__["x" /* Spherical */]();
@@ -50590,9 +50603,6 @@ function OrbitControl(object, domElement) {
     var dollyStart = new __WEBPACK_IMPORTED_MODULE_0_three__["z" /* Vector2 */]();
     var dollyEnd = new __WEBPACK_IMPORTED_MODULE_0_three__["z" /* Vector2 */]();
     var dollyDelta = new __WEBPACK_IMPORTED_MODULE_0_three__["z" /* Vector2 */]();
-    /*
-     * public methods
-     */
     this.getPolarAngle = function () {
         return spherical.phi;
     };
@@ -50613,10 +50623,10 @@ function OrbitControl(object, domElement) {
         scope.update();
         state = STATE.NONE;
     };
-    /* this method is exposed, but perhaps it would be better if we can make it private...*/
+    /* this method is exposed, but perhaps it would be better if we can make it private... */
     this.update = (function () {
         var offset = new __WEBPACK_IMPORTED_MODULE_0_three__["A" /* Vector3 */]();
-        /*so camera.up is the orbit axis*/
+        /* so camera.up is the orbit axis */
         var quat = new __WEBPACK_IMPORTED_MODULE_0_three__["t" /* Quaternion */]().setFromUnitVectors(object.up, new __WEBPACK_IMPORTED_MODULE_0_three__["A" /* Vector3 */](0, 1, 0));
         var quatInverse = quat.clone().inverse();
         var lastPosition = new __WEBPACK_IMPORTED_MODULE_0_three__["A" /* Vector3 */]();
@@ -50624,21 +50634,21 @@ function OrbitControl(object, domElement) {
         return function update(sphericalNew) {
             var position = scope.object.position;
             offset.copy(position).sub(scope.target);
-            /* rotate offset to "y-axis-is-up" space*/
+            /* rotate offset to "y-axis-is-up" space */
             offset.applyQuaternion(quat);
-            /* angle from z-axis around y-axis*/
+            /* angle from z-axis around y-axi */
             spherical.setFromVector3(offset);
             if (scope.autoRotate && state === STATE.NONE) {
                 rotateLeft(getAutoRotationAngle());
             }
             else if (state === STATE.SLIDER) {
                 if (rotateDelta.length() > 0.35) {
-                    /* rotating across whole screen goes 360 degrees around*/
+                    /* rotating across whole screen goes 360 degrees around */
                     var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
                     rotateDelta.setLength(rotateDelta.length() * 0.90);
                     rotateLeft(2 * Math.PI * rotateDelta.x / element.clientWidth * scope.rotateSpeed);
-                    /* rotating up and down along whole screen attempts to go 360, but limited to 180*/
-                    /*constraint.rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight * selfClass.rotateSpeed);*/
+                    /* rotating up and down along whole screen attempts to go 360, but limited to 180 */
+                    /* constraint.rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight * selfClass.rotateSpeed); */
                 }
                 else {
                     state = STATE.NONE;
@@ -50650,9 +50660,9 @@ function OrbitControl(object, domElement) {
             }
             spherical.theta += sphericalDelta.theta;
             spherical.phi += sphericalDelta.phi;
-            /* restrict theta to be between desired limits*/
+            /* restrict theta to be between desired limits */
             spherical.theta = Math.max(scope.minAzimuthAngle, Math.min(scope.maxAzimuthAngle, spherical.theta));
-            /* restrict phi to be between desired limits*/
+            /* restrict phi to be between desired limits */
             spherical.phi = Math.max(scope.minPolarAngle, Math.min(scope.maxPolarAngle, spherical.phi));
             spherical.makeSafe();
             // 缩放
@@ -50666,12 +50676,13 @@ function OrbitControl(object, domElement) {
                 }
                 scope.object.updateProjectionMatrix();
             }
-            /* move target to panned location*/
+            // move target to panned location
             scope.target.add(panOffset);
             offset.setFromSpherical(spherical);
-            /* rotate offset back to "camera-up-vector-is-up" space*/
+            // rotate offset back to "camera-up-vector-is-up" space
             offset.applyQuaternion(quatInverse);
             position.copy(scope.target).add(offset);
+            // camera lookat
             scope.object.lookAt(scope.target);
             if (scope.enableDamping === true) {
                 sphericalDelta.theta *= (1 - scope.dampingFactor);
@@ -50682,10 +50693,11 @@ function OrbitControl(object, domElement) {
             }
             scale = 1;
             panOffset.set(0, 0, 0);
-            /*update condition is:
+            /**
+             * update condition is:
              * min(camera displacement, camera rotation in radians)^2 > EPS
              * using small-angle approximation cos(x/2) = 1 - x^2 / 8
-             * */
+             **/
             if (zoomChanged
                 || lastPosition.distanceToSquared(scope.object.position) > EPS
                 || 8 * (1 - lastQuaternion.dot(scope.object.quaternion)) > EPS) {
@@ -50731,7 +50743,7 @@ function OrbitControl(object, domElement) {
         var v = new __WEBPACK_IMPORTED_MODULE_0_three__["A" /* Vector3 */]();
         return function panLeft(distance, objectMatrix) {
             v.setFromMatrixColumn(objectMatrix, 0);
-            /* get X column of objectMatrix*/
+            // get X column of objectMatrix
             v.multiplyScalar(-distance);
             panOffset.add(v);
         };
@@ -50740,34 +50752,34 @@ function OrbitControl(object, domElement) {
         var v = new __WEBPACK_IMPORTED_MODULE_0_three__["A" /* Vector3 */]();
         return function panUp(distance, objectMatrix) {
             v.setFromMatrixColumn(objectMatrix, 1);
-            /*get Y column of objectMatrix*/
+            // get Y column of objectMatrix
             v.multiplyScalar(distance);
             panOffset.add(v);
         };
     }());
-    /* deltaX and deltaY are in pixels; right and down are positive*/
+    // deltaX and deltaY are in pixels; right and down are positive
     var pan = (function () {
         var offset = new __WEBPACK_IMPORTED_MODULE_0_three__["A" /* Vector3 */]();
         return function pan(deltaX, deltaY) {
             var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
             if (scope.object instanceof __WEBPACK_IMPORTED_MODULE_0_three__["p" /* PerspectiveCamera */]) {
-                /* perspective*/
+                // perspective
                 var position = scope.object.position;
                 offset.copy(position).sub(scope.target);
                 var targetDistance = offset.length();
-                /* half of the fov is center to top of screen*/
+                // half of the fov is center to top of screen
                 targetDistance *= Math.tan((scope.object.fov / 2) * Math.PI / 180.0);
-                /* we actually don't use screenWidth, since perspective camera is fixed to screen height*/
+                // we actually don't use screenWidth, since perspective camera is fixed to screen height
                 panLeft(2 * deltaX * targetDistance / element.clientHeight, scope.object.matrix);
                 panUp(2 * deltaY * targetDistance / element.clientHeight, scope.object.matrix);
             }
             else if (scope.object instanceof __WEBPACK_IMPORTED_MODULE_0_three__["o" /* OrthographicCamera */]) {
-                /* orthographic*/
+                // orthographic
                 panLeft(deltaX * (scope.object.right - scope.object.left) / scope.object.zoom / element.clientWidth, scope.object.matrix);
                 panUp(deltaY * (scope.object.top - scope.object.bottom) / scope.object.zoom / element.clientHeight, scope.object.matrix);
             }
             else {
-                /* camera neither orthographic nor perspective*/
+                // camera neither orthographic nor perspective
                 console.warn('WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.');
                 scope.enablePan = false;
             }
@@ -50817,9 +50829,9 @@ function OrbitControl(object, domElement) {
         rotateEnd.set(event.clientX, event.clientY);
         rotateDelta.subVectors(rotateEnd, rotateStart);
         var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
-        /* rotating across whole screen goes 360 degrees around*/
+        // rotating across whole screen goes 360 degrees around
         rotateLeft(2 * Math.PI * rotateDelta.x / element.clientWidth * scope.rotateSpeed);
-        /* rotating up and down along whole screen attempts to go 360, but limited to 180*/
+        // rotating up and down along whole screen attempts to go 360, but limited to 180
         rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight * scope.rotateSpeed);
         rotateStart.copy(rotateEnd);
         scope.update();
@@ -50889,9 +50901,9 @@ function OrbitControl(object, domElement) {
         rotateEnd.set(event.touches[0].pageX, event.touches[0].pageY);
         rotateDelta.subVectors(rotateEnd, rotateStart);
         var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
-        /* rotating across whole screen goes 360 degrees around*/
+        // rotating across whole screen goes 360 degrees around
         rotateLeft(2 * Math.PI * rotateDelta.x / element.clientWidth * scope.rotateSpeed);
-        /* rotating up and down along whole screen attempts to go 360, but limited to 180*/
+        // rotating up and down along whole screen attempts to go 360, but limited to 180
         rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight * scope.rotateSpeed);
         rotateStart.copy(rotateEnd);
         scope.update();
@@ -51003,7 +51015,7 @@ function OrbitControl(object, domElement) {
         event.stopPropagation();
         handleMouseWheel(event);
         scope.dispatchEvent(startEvent);
-        /* not sure why these are here...*/
+        // not sure why these are here...
         scope.dispatchEvent(endEvent);
     }
     function onKeyDown(event) {
@@ -51018,21 +51030,24 @@ function OrbitControl(object, domElement) {
         }
         switch (event.touches.length) {
             case 1:
-                /* one-fingered touch: rotate*/ if (scope.enableRotate === false) {
+                // one-fingered touch: rotate
+                if (scope.enableRotate === false) {
                     return;
                 }
                 handleTouchStartRotate(event);
                 state = STATE.TOUCH_ROTATE;
                 break;
             case 2:
-                /* two-fingered touch: dolly*/ if (scope.enableZoom === false) {
+                // two-fingered touch: dolly
+                if (scope.enableZoom === false) {
                     return;
                 }
                 handleTouchStartDolly(event);
                 state = STATE.TOUCH_DOLLY;
                 break;
             case 3:
-                /* three-fingered touch: pan*/ if (scope.enablePan === false) {
+                // three-fingered touch: pan
+                if (scope.enablePan === false) {
                     return;
                 }
                 handleTouchStartPan(event);
@@ -51053,7 +51068,8 @@ function OrbitControl(object, domElement) {
         event.stopPropagation();
         switch (event.touches.length) {
             case 1:
-                /* one-fingered touch: rotate*/ if (scope.enableRotate === false) {
+                // one-fingered touch: rotate
+                if (scope.enableRotate === false) {
                     return;
                 }
                 if (state !== STATE.TOUCH_ROTATE) {
@@ -51062,7 +51078,8 @@ function OrbitControl(object, domElement) {
                 handleTouchMoveRotate(event);
                 break;
             case 2:
-                /* two-fingered touch: dolly*/ if (scope.enableZoom === false) {
+                // two-fingered touch: dolly
+                if (scope.enableZoom === false) {
                     return;
                 }
                 if (state !== STATE.TOUCH_DOLLY) {
@@ -51071,7 +51088,8 @@ function OrbitControl(object, domElement) {
                 handleTouchMoveDolly(event);
                 break;
             case 3:
-                /* three-fingered touch: pan*/ if (scope.enablePan === false) {
+                // three-fingered touch: pan
+                if (scope.enablePan === false) {
                     return;
                 }
                 if (state !== STATE.TOUCH_PAN) {
@@ -51104,7 +51122,7 @@ function OrbitControl(object, domElement) {
     scope.domElement.addEventListener('touchend', onTouchEnd, false);
     scope.domElement.addEventListener('touchmove', onTouchMove, false);
     window.addEventListener('keydown', onKeyDown, false);
-    /* force an update at start*/
+    // force an update at start
     this.update();
 }
 ;
@@ -56675,14 +56693,22 @@ var Timeline = /** @class */ (function () {
             var fly = new __WEBPACK_IMPORTED_MODULE_0__fly_animation__["a" /* default */](camera);
             this.lines.push(fly);
         }
+        pano.subscribe('scene-init', this.onTimeInit, this);
         pano.subscribe('render-process', this.onTimeChange, this);
     };
-    Timeline.onTimeChange = function () {
-        var _this = this;
+    Timeline.onTimeInit = function () {
         var lines = this.lines;
+        lines.forEach(function (anim) { return anim.init && anim.init(); });
+    };
+    Timeline.onTimeChange = function () {
+        var pano = this.pano;
+        var lines = this.lines;
+        if (!lines.length) {
+            return this.onTimeEnd();
+        }
         lines.forEach(function (anim, i) {
             if (anim.isEnd()) {
-                _this.onAnimationEnd(anim);
+                pano.dispatch('animation-end', anim);
                 lines.splice(i, 1);
             }
             else {
@@ -56690,10 +56716,11 @@ var Timeline = /** @class */ (function () {
             }
         });
     };
-    Timeline.onAnimationEnd = function (data) {
+    Timeline.onTimeEnd = function () {
         var pano = this.pano;
+        pano.unsubscribe('scene-init', this.onTimeInit, this);
+        pano.unsubscribe('render-process', this.onTimeChange, this);
         pano.noTimeline();
-        pano.dispatch('animation-end', data);
     };
     Timeline.lines = [];
     return Timeline;
@@ -56719,6 +56746,18 @@ var AnimationFly = /** @class */ (function () {
         this.finished = false;
         this.path = this.getPath(this.camera = camera);
     }
+    /**
+     * set camera position when pano first render
+     */
+    AnimationFly.prototype.init = function () {
+        var camera = this.camera;
+        var data = this.path[0].start;
+        camera.fov = data.fov;
+        camera.position.set(data.px, data.py, data.pz);
+        camera.rotation.set(data.rx, data.ry, data.rz);
+        // camera.lookAt(0, 0, 1);
+        camera.updateProjectionMatrix();
+    };
     AnimationFly.prototype.update = function () {
         var camera = this.camera;
         var path = this.path;
@@ -56753,11 +56792,11 @@ var AnimationFly = /** @class */ (function () {
     };
     AnimationFly.prototype.getPath = function (camera) {
         return [{
-                start: { fov: 160, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
-                end: { fov: 120, px: 0, py: 1500, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
+                start: { fov: 160, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
+                end: { fov: 100, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
                 time: 1500
             }, {
-                start: { fov: 120, px: 0, py: 1500, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
+                start: { fov: 100, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
                 end: { fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI },
                 time: 1500
             }];
