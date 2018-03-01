@@ -20,7 +20,7 @@ const defaultOpts = {
     height: null
 };
 const myLoader = new ResourceLoader();
-export default class Panorama {
+export default class Pano {
     overlays: Overlays;
     opts = null;
     root = null;
