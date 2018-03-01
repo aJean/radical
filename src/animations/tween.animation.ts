@@ -1,4 +1,4 @@
-import Panoram from '../panoram';
+import Pano from '../pano';
 import Log from '../log';
 
 /**
@@ -36,7 +36,7 @@ const EFFECT = {
 };
 
 export default class Tween {
-    panoram: Panoram;
+    pano: Pano;
     obj: any;
     target: any;
     fn: Function;
@@ -55,21 +55,21 @@ export default class Tween {
         return this;
     }
 
-    start(keys, panoram: Panoram) {
+    start(keys, pano: Pano) {
         if (!this.obj || !this.target || !this.fn) {
             Log.errorLog('leak of necessary parameters');
         } else {
             this.startTime = Date.now();
-            this.panoram = panoram;
+            this.pano = pano;
             keys.forEach(key => this.record[key] = this.obj[key]);
-            panoram.subscribe('render-process', this.animate, this);
+            pano.subscribe('render-process', this.animate, this);
         }
 
         return this;
     }
 
     stop() {
-        this.panoram.unsubscribe('render-process', this.animate, this);
+        this.pano.unsubscribe('render-process', this.animate, this);
         return this;
     }
 

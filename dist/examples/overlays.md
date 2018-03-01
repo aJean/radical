@@ -3,7 +3,7 @@
 <script>
     // start
     bxl.start('./overlays.json', '#test', {
-        'overlay-click': function (data, panoram) {
+        'overlay-click': function (data, pano) {
             if (data.actionType == 'custom') {
                 const node = document.createElement('div');
                 node.className = 'testlabel';
@@ -11,7 +11,7 @@
                 node.style.left = data.x + 20 + 'px';
                 node.style.top = data.y + 20 + 'px';
 
-                panoram.addDomObject(node);
+                pano.addDomObject(node);
             }
         }
     });

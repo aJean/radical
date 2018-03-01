@@ -30,7 +30,7 @@ export default class videoOverlay implements IPluggableOverlay {
         const data = this.data;
         const location = data.location;
 
-        const video = this.video = Util.createElement(`<video class="panoram-video" src="${data.src}"${data.auto ? ' autoplay' : ''}${data.loop ? ' loop' : ''} controls webkit-playsinlin></video>`);
+        const video = this.video = Util.createElement(`<video class="pano-video" src="${data.src}"${data.auto ? ' autoplay' : ''}${data.loop ? ' loop' : ''} controls webkit-playsinlin></video>`);
 
         const layer = this.popup = new Popup({
             width: window.innerWidth,

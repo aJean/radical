@@ -36,7 +36,7 @@ export default class Popup extends Layer {
         const data = this.data;
 
         if (data.closeBtn) {
-            const btn = Util.createElement('<span class="panoram-icon panoram-layer-close"></span>');
+            const btn = Util.createElement('<span class="pano-icon pano-layer-close"></span>');
             btn.addEventListener('click', () => this.hide());
             this.root.appendChild(btn);
         }

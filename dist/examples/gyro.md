@@ -1,2 +1,2 @@
-<panoram source="./gyro.json" auto="true"></panoram>
+<pano source="./gyro.json" auto="true"></pano>
 <script src="../lib.js"></script>

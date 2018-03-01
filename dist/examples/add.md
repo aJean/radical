@@ -16,7 +16,7 @@
 <script>
     let pos;
     bxl.start('./add.json', '#test', {
-        'panoram-click': function (data) {
+        'pano-click': function (data) {
             pos = data;
             $('.show-point span').first().html(data.lng.toFixed(2));
             $('.show-point span').last().html(data.lat.toFixed(2));
@@ -24,15 +24,15 @@
     });
 
     $('.overlay-panel .add').on('click', function () {
-        const panoram = bxl.getPanoram('mytest');
-        pos && panoram.addOverlay(pos, '动态热点');
+        const pano = bxl.getPano('mytest');
+        pos && pano.addOverlay(pos, '动态热点');
         });
 
         $('.overlay-panel .lookat').on('click', function () {
-        const panoram = bxl.getPanoram('mytest');
-        const point = panoram.getLook();
+        const pano = bxl.getPano('mytest');
+        const point = pano.getLook();
 
         $('.show-lookat span').first().html(point.lng.toFixed(2));
         $('.show-lookat span').last().html(point.lat.toFixed(2));
-    });
+        });
 </script>

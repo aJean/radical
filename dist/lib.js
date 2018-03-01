@@ -49219,21 +49219,21 @@ var Tween = /** @class */ (function () {
         this.target = obj;
         return this;
     };
-    Tween.prototype.start = function (keys, panoram) {
+    Tween.prototype.start = function (keys, pano) {
         var _this = this;
         if (!this.obj || !this.target || !this.fn) {
             __WEBPACK_IMPORTED_MODULE_0__log__["a" /* default */].errorLog('leak of necessary parameters');
         }
         else {
             this.startTime = Date.now();
-            this.panoram = panoram;
+            this.pano = pano;
             keys.forEach(function (key) { return _this.record[key] = _this.obj[key]; });
-            panoram.subscribe('render-process', this.animate, this);
+            pano.subscribe('render-process', this.animate, this);
         }
         return this;
     };
     Tween.prototype.stop = function () {
-        this.panoram.unsubscribe('render-process', this.animate, this);
+        this.pano.unsubscribe('render-process', this.animate, this);
         return this;
     };
     Tween.prototype.effect = function (type, duration) {
@@ -49826,8 +49826,8 @@ var Tween = /** @class */ (function () {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_panoram_style_less__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_panoram_style_less___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__styles_panoram_style_less__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_pano_style_less__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__styles_pano_style_less___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__styles_pano_style_less__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__styles_multiple_style_less__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__styles_multiple_style_less___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__styles_multiple_style_less__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__styles_overlays_style_less__ = __webpack_require__(18);
@@ -49847,7 +49847,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     start: function (source, el, events) {
         __WEBPACK_IMPORTED_MODULE_4__src_runtime__["a" /* default */].start(source, el, events);
     },
-    getPanoram: function (ref) {
+    getPano: function (ref) {
         return __WEBPACK_IMPORTED_MODULE_4__src_runtime__["a" /* default */].getInstance(ref);
     },
     dispose: function (ref) {
@@ -49887,7 +49887,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__panoram__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__pano__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__log__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__loaders_resource_loader__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_info_plugin__ = __webpack_require__(59);
@@ -49989,10 +49989,10 @@ var Runtime = /** @class */ (function () {
      * @param {string} ref
      */
     Runtime.releaseInstance = function (ref) {
-        var panoram = this.instanceMap[ref];
-        if (panoram) {
-            panoram.dispose();
-            EnvQueue.remove(panoram);
+        var pano = this.instanceMap[ref];
+        if (pano) {
+            pano.dispose();
+            EnvQueue.remove(pano);
         }
         if (!EnvQueue.len()) {
             window.removeEventListener('resize', onEnvResize);
@@ -50008,13 +50008,13 @@ var Runtime = /** @class */ (function () {
         if (!el || !el.parentNode) {
             el = document.body;
         }
-        var ref = el.getAttribute('ref') || "panoram_" + this.uid++;
+        var ref = el.getAttribute('ref') || "pano_" + this.uid++;
         el.setAttribute('ref', ref);
-        return this.instanceMap[ref] = new __WEBPACK_IMPORTED_MODULE_0__panoram__["a" /* default */](__assign({ el: el }, opts));
+        return this.instanceMap[ref] = new __WEBPACK_IMPORTED_MODULE_0__pano__["a" /* default */](__assign({ el: el }, opts));
     };
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
-            var config, panoram, data, name_1;
+            var config, pano, data, name_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, myLoader.fetchUrl(url)];
@@ -50023,38 +50023,38 @@ var Runtime = /** @class */ (function () {
                         if (!(config && config['sceneGroup'])) {
                             return [2 /*return*/, __WEBPACK_IMPORTED_MODULE_1__log__["a" /* default */].output('load source error')];
                         }
-                        panoram = this.createRef(el, config['panoram']);
+                        pano = this.createRef(el, config['pano']);
                         data = this.findScene(config);
                         if (config['animation']) {
-                            __WEBPACK_IMPORTED_MODULE_7__animations_timeline_animation__["a" /* default */].install(config['animation'], panoram);
+                            __WEBPACK_IMPORTED_MODULE_7__animations_timeline_animation__["a" /* default */].install(config['animation'], pano);
                         }
                         else {
-                            panoram.noTimeline();
+                            pano.noTimeline();
                         }
                         if (config['rotate']) {
-                            panoram.addPlugin(__WEBPACK_IMPORTED_MODULE_4__plugins_rotate_plugin__["a" /* default */], config['rotate']);
+                            pano.addPlugin(__WEBPACK_IMPORTED_MODULE_4__plugins_rotate_plugin__["a" /* default */], config['rotate']);
                         }
                         if (config['multiScene']) {
-                            panoram.addPlugin(__WEBPACK_IMPORTED_MODULE_5__plugins_multiple_plugin__["a" /* default */], config['sceneGroup']);
+                            pano.addPlugin(__WEBPACK_IMPORTED_MODULE_5__plugins_multiple_plugin__["a" /* default */], config['sceneGroup']);
                         }
                         if (config['info']) {
-                            panoram.addPlugin(__WEBPACK_IMPORTED_MODULE_3__plugins_info_plugin__["a" /* default */], config['info']);
+                            pano.addPlugin(__WEBPACK_IMPORTED_MODULE_3__plugins_info_plugin__["a" /* default */], config['info']);
                         }
                         if (config['wormhole']) {
-                            panoram.addPlugin(__WEBPACK_IMPORTED_MODULE_6__plugins_wormhole_plugin__["a" /* default */], config['wormhole']);
+                            pano.addPlugin(__WEBPACK_IMPORTED_MODULE_6__plugins_wormhole_plugin__["a" /* default */], config['wormhole']);
                         }
                         // 用户订阅事件
                         if (events) {
                             for (name_1 in events) {
-                                panoram.subscribe(name_1, events[name_1]);
+                                pano.subscribe(name_1, events[name_1]);
                             }
                         }
                         // set pem path
                         myLoader.loadCret(config['cretPath']);
                         // add to env queue listeners
-                        EnvQueue.add(panoram.onResize, panoram);
+                        EnvQueue.add(pano.onResize, pano);
                         // load and render
-                        this.run(panoram, data);
+                        this.run(pano, data);
                         return [2 /*return*/];
                 }
             });
@@ -50062,10 +50062,10 @@ var Runtime = /** @class */ (function () {
     };
     /**
      * 环境构造 stream
-     * @param {Object} panoram 全景对象
+     * @param {Object} pano 全景对象
      * @param {Object} data 等待渲染的场景数据
      */
-    Runtime.run = function (panoram, data) {
+    Runtime.run = function (pano, data) {
         return __awaiter(this, void 0, void 0, function () {
             var thumbImg, e_1;
             return __generator(this, function (_a) {
@@ -50076,11 +50076,11 @@ var Runtime = /** @class */ (function () {
                     case 1:
                         thumbImg = _a.sent();
                         if (!thumbImg) return [3 /*break*/, 3];
-                        panoram.initPreview(thumbImg);
-                        return [4 /*yield*/, panoram.enterNext(data)];
+                        pano.initPreview(thumbImg);
+                        return [4 /*yield*/, pano.enterNext(data)];
                     case 2:
                         _a.sent();
-                        panoram.animate();
+                        pano.animate();
                         _a.label = 3;
                     case 3: return [3 /*break*/, 5];
                     case 4:
@@ -50101,7 +50101,7 @@ var Runtime = /** @class */ (function () {
         var scene = group.find(function (item) { return item.id == source.defaultSceneId; });
         return (scene || group[0]);
     };
-    Runtime.addOverlay = function (panoram) {
+    Runtime.addOverlay = function (pano) {
     };
     Runtime.uid = 0;
     Runtime.instanceMap = {};
@@ -50112,7 +50112,7 @@ var pastLoad = window.onload;
 window.onload = function () {
     pastLoad && pastLoad.call(this);
     var uid = 0;
-    var nodeList = document.querySelectorAll('panoram');
+    var nodeList = document.querySelectorAll('pano');
     for (var i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
         var auto = node.getAttribute('auto');
@@ -50165,8 +50165,8 @@ var defaultOpts = {
     height: null
 };
 var myLoader = new __WEBPACK_IMPORTED_MODULE_6__loaders_resource_loader__["a" /* default */]();
-var Panoram = /** @class */ (function () {
-    function Panoram(opts) {
+var Panorama = /** @class */ (function () {
+    function Panorama(opts) {
         this.opts = null;
         this.root = null;
         this.webgl = null;
@@ -50183,11 +50183,11 @@ var Panoram = /** @class */ (function () {
         this.initEnv();
         this.dispatch('render-init', this);
     }
-    Panoram.prototype.initEnv = function () {
+    Panorama.prototype.initEnv = function () {
         var opts = this.opts;
         var container = opts.el;
         var size = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].calcRenderSize(opts, container);
-        var root = this.root = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].createElement('<div class="panoram-root" style="width:'
+        var root = this.root = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].createElement('<div class="pano-root" style="width:'
             + size.width + 'px;height:' + size.height + 'px;"></div>');
         // 渲染器
         var webgl = this.webgl = new __WEBPACK_IMPORTED_MODULE_0_three__["B" /* WebGLRenderer */]({ alpha: true, antialias: true });
@@ -50213,7 +50213,7 @@ var Panoram = /** @class */ (function () {
         // bind overlays events
         this.overlays = new __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__["a" /* default */](this);
     };
-    Panoram.prototype.resetEnv = function (data) {
+    Panorama.prototype.resetEnv = function (data) {
         var camera = this.camera;
         // scene fov
         camera.fov = data.fov || this.opts.fov;
@@ -50225,7 +50225,7 @@ var Panoram = /** @class */ (function () {
      * 渲染预览图纹理
      * @param {Object} texture 纹理贴图
      */
-    Panoram.prototype.initPreview = function (texture) {
+    Panorama.prototype.initPreview = function (texture) {
         var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
             envMap: texture,
             side: __WEBPACK_IMPORTED_MODULE_0_three__["b" /* BackSide */],
@@ -50240,7 +50240,7 @@ var Panoram = /** @class */ (function () {
     /**
      * 在渲染帧中更新控制器
      */
-    Panoram.prototype.updateControl = function () {
+    Panorama.prototype.updateControl = function () {
         if (this.gyroControl && this.gyroControl.enabled) {
             this.gyroControl.update();
         }
@@ -50253,7 +50253,7 @@ var Panoram = /** @class */ (function () {
      * @param {number} lng 横向角度
      * @param {number} lat 纵向角度
      */
-    Panoram.prototype.setLook = function (lng, lat) {
+    Panorama.prototype.setLook = function (lng, lat) {
         var control = this.orbitControl;
         if (lng !== undefined && lat !== undefined) {
             var theta = (180 - lng) * (Math.PI / 180);
@@ -50266,7 +50266,7 @@ var Panoram = /** @class */ (function () {
     /**
      * 获取相机角度
      */
-    Panoram.prototype.getLook = function () {
+    Panorama.prototype.getLook = function () {
         var control = this.orbitControl;
         var theta = control.getAzimuthalAngle();
         var phi = control.getPolarAngle();
@@ -50280,7 +50280,7 @@ var Panoram = /** @class */ (function () {
      * @param {number} fov 视角
      * @param {number} duration 时长
      */
-    Panoram.prototype.setFov = function (fov, duration) {
+    Panorama.prototype.setFov = function (fov, duration) {
         var camera = this.getCamera();
         new __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__["a" /* default */](camera).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
             .start(['fov'], this).process(function () { return camera.updateProjectionMatrix(); });
@@ -50288,13 +50288,13 @@ var Panoram = /** @class */ (function () {
     /**
      * 获取视角
      */
-    Panoram.prototype.getFov = function () {
+    Panorama.prototype.getFov = function () {
         return this.getCamera().fov;
     };
     /**
      * 恢复视角
      */
-    Panoram.prototype.resetFov = function () {
+    Panorama.prototype.resetFov = function () {
         var camera = this.camera;
         camera.fov = this.opts.fov;
         camera.updateProjectionMatrix();
@@ -50304,17 +50304,17 @@ var Panoram = /** @class */ (function () {
      * @param {Object} Plugin 插件 class
      * @param {Object} data 插件数据
      */
-    Panoram.prototype.addPlugin = function (Plugin, data) {
+    Panorama.prototype.addPlugin = function (Plugin, data) {
         var plugin = new Plugin(this, data);
         this.pluginList.push(plugin);
     };
-    Panoram.prototype.subscribe = function (type, fn, context) {
+    Panorama.prototype.subscribe = function (type, fn, context) {
         this.event.on(type, fn, context);
     };
-    Panoram.prototype.unsubscribe = function (type, fn, context) {
+    Panorama.prototype.unsubscribe = function (type, fn, context) {
         this.event.off(type, fn, context);
     };
-    Panoram.prototype.dispatch = function (type, arg1, arg2) {
+    Panorama.prototype.dispatch = function (type, arg1, arg2) {
         this.event.emit(type, arg1, arg2);
     };
     /**
@@ -50322,7 +50322,7 @@ var Panoram = /** @class */ (function () {
      * @param {Object} texture 场景原图纹理
      * @param {boolean} slient 安静模式
      */
-    Panoram.prototype.replaceTexture = function (texture) {
+    Panorama.prototype.replaceTexture = function (texture) {
         texture.mapping = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
         texture.needsUpdate = true;
         var tempTex = this.skyBox.material.envMap;
@@ -50334,7 +50334,7 @@ var Panoram = /** @class */ (function () {
     /**
      * 帧渲染
      */
-    Panoram.prototype.animate = function () {
+    Panorama.prototype.animate = function () {
         this.updateControl();
         this.dispatch('render-process', this.currentData, this);
         this.webgl.render(this.scene, this.camera);
@@ -50343,7 +50343,7 @@ var Panoram = /** @class */ (function () {
     /**
      * 窗口变化响应事件
      */
-    Panoram.prototype.onResize = function () {
+    Panorama.prototype.onResize = function () {
         var camera = this.camera;
         var size = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].calcRenderSize(this.opts, this.root);
         camera.aspect = size.aspect;
@@ -50353,67 +50353,67 @@ var Panoram = /** @class */ (function () {
     /**
      * 获取相机
      */
-    Panoram.prototype.getCamera = function () {
+    Panorama.prototype.getCamera = function () {
         return this.camera;
     };
     /**
      * 获取画布元素
      */
-    Panoram.prototype.getCanvas = function () {
+    Panorama.prototype.getCanvas = function () {
         return this.webgl.domElement;
     };
     /**
      * 获取容器元素
      */
-    Panoram.prototype.getRoot = function () {
+    Panorama.prototype.getRoot = function () {
         return this.root;
     };
     /**
      * 获取场景对象
      */
-    Panoram.prototype.getScene = function () {
+    Panorama.prototype.getScene = function () {
         return this.scene;
     };
     /**
      * 获取控制器
      */
-    Panoram.prototype.getControl = function () {
+    Panorama.prototype.getControl = function () {
         return this.orbitControl;
     };
     /**
      * 获取 camera lookat 目标的 vector3 obj
      */
-    Panoram.prototype.getLookAtTarget = function () {
+    Panorama.prototype.getLookAtTarget = function () {
         return this.orbitControl.target;
     };
     /**
      * 添加 object3d 对象
      */
-    Panoram.prototype.addSceneObject = function (obj) {
+    Panorama.prototype.addSceneObject = function (obj) {
         this.scene.add(obj);
     };
     /**
      * 删除 object3d 对象
      */
-    Panoram.prototype.removeSceneObject = function (obj) {
+    Panorama.prototype.removeSceneObject = function (obj) {
         this.scene.remove(obj);
     };
     /**
      * 添加 dom 对象
      */
-    Panoram.prototype.addDomObject = function (obj) {
+    Panorama.prototype.addDomObject = function (obj) {
         this.root.appendChild(obj);
     };
     /**
      * 删除 dom 对象
      */
-    Panoram.prototype.removeDomObject = function (obj) {
+    Panorama.prototype.removeDomObject = function (obj) {
         this.root.removeChild(obj);
     };
     /**
      * 添加热点覆盖物, 目前支持 mesh
      */
-    Panoram.prototype.addOverlay = function (location, text) {
+    Panorama.prototype.addOverlay = function (location, text) {
         var data = {
             'overlays': [{
                     type: 'dom',
@@ -50431,7 +50431,7 @@ var Panoram = /** @class */ (function () {
      * enter next scene
      * @param {Object} data scene data or id
      */
-    Panoram.prototype.enterNext = function (data) {
+    Panorama.prototype.enterNext = function (data) {
         var _this = this;
         if (typeof data === 'string') {
             data = this.group && this.group.find(function (item) { return item.id == data; });
@@ -50446,12 +50446,12 @@ var Panoram = /** @class */ (function () {
             _this.replaceTexture(texture);
         }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('load source texture fail'); });
     };
-    Panoram.prototype.startGyroControl = function () {
+    Panorama.prototype.startGyroControl = function () {
         if (this.gyroControl && !this.gyroControl.enabled) {
             this.gyroControl.connect();
         }
     };
-    Panoram.prototype.stopGyroControl = function () {
+    Panorama.prototype.stopGyroControl = function () {
         if (this.gyroControl) {
             this.gyroControl.disconnect();
             delete this.gyroControl;
@@ -50460,10 +50460,10 @@ var Panoram = /** @class */ (function () {
     /**
      * 开场动画结束
      */
-    Panoram.prototype.noTimeline = function () {
+    Panorama.prototype.noTimeline = function () {
         this.startGyroControl();
     };
-    Panoram.prototype.dispose = function () {
+    Panorama.prototype.dispose = function () {
         __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].cleanup(null, this.scene);
         this.stopGyroControl();
         this.dispatch('render-dispose', this);
@@ -50471,9 +50471,9 @@ var Panoram = /** @class */ (function () {
         this.webgl.dispose();
         this.root.innerHTML = '';
     };
-    return Panoram;
+    return Panorama;
 }());
-/* harmony default export */ __webpack_exports__["a"] = (Panoram);
+/* harmony default export */ __webpack_exports__["a"] = (Panorama);
 
 
 /***/ }),
@@ -55040,26 +55040,26 @@ var AnimationOpts = {
     }
 };
 var Overlays = /** @class */ (function () {
-    function Overlays(panoram) {
+    function Overlays(pano) {
         var _this = this;
         this.maps = {};
         this.raycaster = new __WEBPACK_IMPORTED_MODULE_0_three__["u" /* Raycaster */]();
-        this.panoram = panoram;
-        panoram.subscribe('scene-attach', function (scene) {
+        this.pano = pano;
+        pano.subscribe('scene-attach', function (scene) {
             _this.removeOverlays();
             _this.init(scene);
         });
-        panoram.subscribe('render-process', function (scene) {
+        pano.subscribe('render-process', function (scene) {
             var cache = _this.getCurrent(scene.id);
             cache.domGroup.forEach(function (item) { return _this.updateDomOverlay(item); });
             cache.meshGroup.forEach(function (item) { return item.update(); });
         });
-        panoram.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
+        pano.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
     }
     Overlays.prototype.init = function (data) {
         // scene cache id
         if (!data.id) {
-            data.id = 'panoram' + Date.now();
+            data.id = 'pano' + Date.now();
         }
         this.cid = data.id;
         this.create(data);
@@ -55090,22 +55090,22 @@ var Overlays = /** @class */ (function () {
      */
     Overlays.prototype.createDomOverlay = function (prop, cache) {
         var _this = this;
-        __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, this.panoram.getCamera());
+        __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, this.pano.getCamera());
         var item = new __WEBPACK_IMPORTED_MODULE_3__dom_overlay__["a" /* default */](prop);
         item.elem.onclick = function (e) { return _this.onOverlayHandle(item); };
         cache.domGroup.push(item);
-        this.panoram.addDomObject(item.elem);
+        this.pano.addDomObject(item.elem);
         this.updateDomOverlay(item);
     };
     /**
      * 不断更新 dom overlay 的屏幕坐标
      */
     Overlays.prototype.updateDomOverlay = function (item) {
-        var panoram = this.panoram;
-        var root = panoram.getRoot();
+        var pano = this.pano;
+        var root = pano.getRoot();
         var width = root.clientWidth / 2;
         var height = root.clientHeight / 2;
-        var position = __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].calcWorldToScreen(item.data.location, panoram.getCamera());
+        var position = __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].calcWorldToScreen(item.data.location, pano.getCamera());
         // z > 1 is backside
         if (position.z > 1) {
             item.hide();
@@ -55120,7 +55120,7 @@ var Overlays = /** @class */ (function () {
      * 创建 mesh 覆盖物
      */
     Overlays.prototype.createMeshOverlay = function (prop, cache) {
-        var camera = this.panoram.getCamera();
+        var camera = this.pano.getCamera();
         __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, camera);
         var item = new __WEBPACK_IMPORTED_MODULE_4__mesh_overlay__["a" /* default */](prop);
         var particle = item.particle;
@@ -55138,8 +55138,8 @@ var Overlays = /** @class */ (function () {
      * 创建动画覆盖物
      */
     Overlays.prototype.createAnimationOverlay = function (prop, cache) {
-        var panoram = this.panoram;
-        var camera = panoram.getCamera();
+        var pano = this.pano;
+        var camera = pano.getCamera();
         var item;
         __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, camera);
         if (prop.category == 'frame') {
@@ -55149,15 +55149,15 @@ var Overlays = /** @class */ (function () {
         else {
             item = new __WEBPACK_IMPORTED_MODULE_5__sprite_overlay__["a" /* default */](AnimationOpts[prop.category]);
         }
-        panoram.addSceneObject(item.particle);
+        pano.addSceneObject(item.particle);
         cache.meshGroup.push(item);
     };
     /**
      * 创建视频覆盖物
      */
     Overlays.prototype.createVideoOverlay = function (prop, cache) {
-        var panoram = this.panoram;
-        var camera = panoram.getCamera();
+        var pano = this.pano;
+        var camera = pano.getCamera();
         __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, camera);
         prop.lookat = camera.position;
         var item = new __WEBPACK_IMPORTED_MODULE_7__video_overlay__["a" /* default */](prop);
@@ -55175,7 +55175,7 @@ var Overlays = /** @class */ (function () {
         }
         else {
             var group = new __WEBPACK_IMPORTED_MODULE_0_three__["j" /* Group */]();
-            this.panoram.addSceneObject(group);
+            this.pano.addSceneObject(group);
             return this.maps[id] = {
                 detects: group,
                 domGroup: [],
@@ -55187,10 +55187,10 @@ var Overlays = /** @class */ (function () {
      * 点击 canvas
      */
     Overlays.prototype.onCanvasHandle = function (evt) {
-        var panoram = this.panoram;
-        var camera = panoram.getCamera();
+        var pano = this.pano;
+        var camera = pano.getCamera();
         var raycaster = this.raycaster;
-        var element = panoram.getCanvas();
+        var element = pano.getCanvas();
         var pos = {
             x: (evt.clientX / element.clientWidth) * 2 - 1,
             y: -(evt.clientY / element.clientHeight) * 2 + 1
@@ -55202,10 +55202,10 @@ var Overlays = /** @class */ (function () {
                 raycaster.setFromCamera(pos, camera);
                 var intersects = raycaster.intersectObjects(group.children, false);
                 intersects.length ? this.onOverlayHandle(intersects[0].object['instance'])
-                    : panoram.dispatch('panoram-click', vector, panoram);
+                    : pano.dispatch('pano-click', vector, pano);
             }
             else {
-                panoram.dispatch('panoram-click', vector, panoram);
+                pano.dispatch('pano-click', vector, pano);
             }
         }
         catch (e) {
@@ -55216,24 +55216,24 @@ var Overlays = /** @class */ (function () {
      * 点击覆盖物
      */
     Overlays.prototype.onOverlayHandle = function (instance) {
-        var panoram = this.panoram;
+        var pano = this.pano;
         var data = instance.data;
+        // for log & statistics & user behavior
+        pano.dispatch('overlay-click', instance, pano);
         switch (data.actionType) {
             case 'scene':
-                panoram.enterNext(data.sceneId);
+                pano.enterNext(data.sceneId);
                 break;
             case 'link':
                 window.open(data.linkUrl, '_blank');
                 break;
             // let Multiple plugin control
             case 'multiple':
-                panoram.dispatch('multiple-active', data);
+                pano.dispatch('multiple-active', data);
                 break;
             case 'video':
                 instance.play();
                 break;
-            default:
-                panoram.dispatch('overlay-click', instance, panoram);
         }
     };
     /**
@@ -55251,25 +55251,25 @@ var Overlays = /** @class */ (function () {
      * @param {boolean} isclean 是否清除
      */
     Overlays.prototype.hideOverlays = function (data, isclean) {
-        var panoram = this.panoram;
+        var pano = this.pano;
         if (data) {
             data.domGroup.forEach(function (item) {
                 item.hide();
                 if (isclean) {
                     item.dispose();
-                    panoram.removeDomObject(item.elem);
+                    pano.removeDomObject(item.elem);
                 }
             });
             data.meshGroup.forEach(function (item) {
                 item.hide();
                 if (isclean) {
                     item.dispose();
-                    panoram.removeSceneObject(item.particle);
+                    pano.removeSceneObject(item.particle);
                 }
             });
             if (isclean && data.detects.children) {
                 (_a = data.detects).remove.apply(_a, data.detects.children);
-                panoram.removeSceneObject(data.detects);
+                pano.removeSceneObject(data.detects);
             }
         }
         var _a;
@@ -55307,7 +55307,7 @@ var DomOverlay = /** @class */ (function () {
     }
     DomOverlay.prototype.create = function () {
         var data = this.data;
-        var node = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement("<div id=\"" + data.id + "\" class=\"panrom-domoverlay\">" + data.content + "</div>");
+        var node = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement("<div id=\"" + data.id + "\" class=\"pano-domoverlay\">" + data.content + "</div>");
         if (data.cls) {
             node.className += " " + data.cls;
         }
@@ -55589,6 +55589,7 @@ var FrameOverlay = /** @class */ (function () {
 
 /**
  * @file 视频播放
+ * TODO: transform-origin
  */
 var defaultOpts = {
     width: 80,
@@ -55606,7 +55607,7 @@ var videoOverlay = /** @class */ (function () {
         var _this = this;
         var data = this.data;
         var location = data.location;
-        var video = this.video = __WEBPACK_IMPORTED_MODULE_2__util__["a" /* default */].createElement("<video class=\"panoram-video\" src=\"" + data.src + "\"" + (data.auto ? ' autoplay' : '') + (data.loop ? ' loop' : '') + " controls webkit-playsinlin></video>");
+        var video = this.video = __WEBPACK_IMPORTED_MODULE_2__util__["a" /* default */].createElement("<video class=\"pano-video\" src=\"" + data.src + "\"" + (data.auto ? ' autoplay' : '') + (data.loop ? ' loop' : '') + " controls webkit-playsinlin></video>");
         var layer = this.popup = new __WEBPACK_IMPORTED_MODULE_1__ui_popup_ui__["a" /* default */]({
             width: window.innerWidth,
             height: window.innerHeight,
@@ -55701,7 +55702,7 @@ var Popup = /** @class */ (function (_super) {
         var _this = this;
         var data = this.data;
         if (data.closeBtn) {
-            var btn = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<span class="panoram-icon panoram-layer-close"></span>');
+            var btn = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<span class="pano-icon pano-layer-close"></span>');
             btn.addEventListener('click', function () { return _this.hide(); });
             this.root.appendChild(btn);
         }
@@ -55755,8 +55756,8 @@ var Layer = /** @class */ (function () {
         var data = this.data;
         var root = this.root = document.createElement('div');
         var content = this.content = document.createElement('div');
-        root.className = 'panoram-layer';
-        content.className = 'panoram-layer-content';
+        root.className = 'pano-layer';
+        content.className = 'pano-layer-content';
         if (data.hide) {
             root.style.display = 'none';
         }
@@ -55866,18 +55867,18 @@ var CssAnimation = /** @class */ (function () {
  * @file 版权遮罩层
  */
 var Info = /** @class */ (function () {
-    function Info(panoram, data) {
-        this.panoram = panoram;
+    function Info(pano, data) {
+        this.pano = pano;
         this.data = data;
         this.createDom();
     }
     Info.prototype.createDom = function () {
-        var root = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="panrom-info"></div>');
+        var root = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="pano-info"></div>');
         if (this.data.logo) {
             root.innerHTML += "<img src=\"" + this.data.logo + "\" width=\"70\">";
         }
-        root.innerHTML += "<div class=\"panrom-info-name\">" + this.data.author + "</div>";
-        this.panoram.getRoot().appendChild(root);
+        root.innerHTML += "<div class=\"pano-info-name\">" + this.data.author + "</div>";
+        this.pano.getRoot().appendChild(root);
     };
     return Info;
 }());
@@ -55903,18 +55904,18 @@ var defaultOpts = {
     recover: 5000
 };
 var Rotate = /** @class */ (function () {
-    function Rotate(panoram, data) {
+    function Rotate(pano, data) {
         this.data = Object.assign({}, defaultOpts, data);
-        this.panoram = panoram;
+        this.pano = pano;
         this.onDisturb = this.onDisturb.bind(this);
-        var canvas = panoram.getCanvas();
-        panoram.subscribe('scene-init', this.create, this);
+        var canvas = pano.getCanvas();
+        pano.subscribe('scene-init', this.create, this);
         canvas.addEventListener('touchstart', this.onDisturb);
         canvas.addEventListener('mousedown', this.onDisturb);
     }
     Rotate.prototype.create = function () {
         var data = this.data;
-        var orbit = this.panoram.getControl();
+        var orbit = this.pano.getControl();
         orbit.autoRotateSpeed = data.speed;
         Object(__WEBPACK_IMPORTED_MODULE_1_timers__["setTimeout"])(function () { return orbit.autoRotate = true; }, data.lazy);
     };
@@ -55924,10 +55925,10 @@ var Rotate = /** @class */ (function () {
     Rotate.prototype.onDisturb = function () {
         var _this = this;
         var data = this.data;
-        var panoram = this.panoram;
+        var pano = this.pano;
         var tween = this.tween;
-        var orbit = panoram.getControl();
-        var camera = panoram.getCamera();
+        var orbit = pano.getControl();
+        var camera = pano.getCamera();
         var target = { y: camera.position.y };
         orbit.autoRotate = false;
         tween && tween.stop();
@@ -55935,12 +55936,12 @@ var Rotate = /** @class */ (function () {
         this.timeid = Object(__WEBPACK_IMPORTED_MODULE_1_timers__["setTimeout"])(function () {
             _this.tween = new __WEBPACK_IMPORTED_MODULE_0__animations_tween_animation__["a" /* default */](camera.position).to(target)
                 .effect('linear', data.recover)
-                .start(['y'], panoram);
+                .start(['y'], pano);
             orbit.autoRotate = true;
         }, data.lazy);
     };
     Rotate.prototype.dispose = function () {
-        var canvas = this.panoram.getCanvas();
+        var canvas = this.pano.getCanvas();
         try {
             canvas.removeEventListener('touchstart', this.onDisturb);
             canvas.removeEventListener('mousedown', this.onDisturb);
@@ -56433,24 +56434,24 @@ process.umask = function() { return 0; };
  * 多场景切换插件
  */
 var Multiple = /** @class */ (function () {
-    function Multiple(panoram, data) {
-        this.panoram = panoram;
+    function Multiple(pano, data) {
+        this.pano = pano;
         this.data = data;
         this.create();
         this.bindEvent();
     }
     Multiple.prototype.create = function () {
-        var root = this.root = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="panoram-multiplescene"></div>');
-        var outer = this.outer = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="panoram-multiplescene-outer"></div>');
-        var inner = this.inner = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="panoram-multiplescene-inner"></div>');
+        var root = this.root = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="pano-multiplescene"></div>');
+        var outer = this.outer = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="pano-multiplescene-outer"></div>');
+        var inner = this.inner = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="pano-multiplescene-inner"></div>');
         inner.innerHTML = this.data.map(function (item, i) {
-            return "<div class=\"panoram-multiplescene-item\" data-id=\"" + i + "\">\n                <img src=\"" + item.thumbPath + "\" class=\"panoram-multiplescene-img\">\n            </div>";
+            return "<div class=\"pano-multiplescene-item\" data-id=\"" + i + "\">\n                <img src=\"" + item.thumbPath + "\" class=\"pano-multiplescene-img\">\n            </div>";
         }).join('');
         outer.appendChild(inner);
         root.appendChild(outer);
         this.setActive(inner.childNodes[0]);
-        // add to panoram root
-        this.setContainer(this.panoram.getRoot());
+        // add to pano root
+        this.setContainer(this.pano.getRoot());
     };
     Multiple.prototype.getElement = function () {
         return this.root;
@@ -56466,15 +56467,15 @@ var Multiple = /** @class */ (function () {
         inner.addEventListener('click', this.onClickHandle);
         inner.addEventListener('mousewheel', this.onWheelHandle);
         // 管理 actionType 为 multiple 的 overlay 
-        this.panoram.subscribe('multiple-active', this.onMultipleActive, this);
+        this.pano.subscribe('multiple-active', this.onMultipleActive, this);
     };
     Multiple.prototype.onClickHandle = function (e) {
-        var node = this.findParent(e.target, 'panoram-multiplescene-item');
+        var node = this.findParent(e.target, 'pano-multiplescene-item');
         if (node) {
             var id = node.getAttribute('data-id');
             var scene = this.data[id];
             if (scene) {
-                this.panoram.enterNext(scene);
+                this.pano.enterNext(scene);
                 this.setActive(node);
             }
         }
@@ -56488,7 +56489,7 @@ var Multiple = /** @class */ (function () {
         var index = this.data.indexOf(scene);
         var node = this.inner.querySelector("div[data-id=\"" + index + "\"]");
         if (scene && node) {
-            this.panoram.enterNext(scene);
+            this.pano.enterNext(scene);
             this.setActive(node);
         }
     };
@@ -56517,7 +56518,7 @@ var Multiple = /** @class */ (function () {
     Multiple.prototype.dispose = function () {
         this.inner.removeEventListener('click', this.onClickHandle);
         this.inner.removeEventListener('mousewheel', this.onWheelHandle);
-        this.panoram.unSubscribe('multiple-active', this.onMultipleActive, this);
+        this.pano.unSubscribe('multiple-active', this.onMultipleActive, this);
         this.root.innerHTML = '';
         this.container.removeChild(this.root);
     };
@@ -56549,19 +56550,19 @@ var Multiple = /** @class */ (function () {
  */
 var myLoader = new __WEBPACK_IMPORTED_MODULE_1__loaders_resource_loader__["a" /* default */]();
 var Wormhole = /** @class */ (function () {
-    function Wormhole(panoram, data) {
+    function Wormhole(pano, data) {
         var _this = this;
         this.direction = true;
         this.raycaster = new __WEBPACK_IMPORTED_MODULE_0_three__["u" /* Raycaster */]();
         this.data = data;
-        this.panoram = panoram;
+        this.pano = pano;
         this.onDetect = function (evt) { return _this.detect(evt); };
-        panoram.subscribe('scene-init', this.create, this);
+        pano.subscribe('scene-init', this.create, this);
     }
     Wormhole.prototype.create = function () {
         var _this = this;
         var data = this.data;
-        var panoram = this.panoram;
+        var pano = this.pano;
         var cubeLoader = new __WEBPACK_IMPORTED_MODULE_0_three__["e" /* CubeTextureLoader */]();
         var geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["w" /* SphereGeometry */](100, 32, 16);
         var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
@@ -56575,21 +56576,21 @@ var Wormhole = /** @class */ (function () {
             texture.mapping = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
             material.envMap = _this.texture = texture;
             box.position.set(vector.x, vector.y, vector.z);
-            panoram.addSceneObject(box);
+            pano.addSceneObject(box);
             _this.bindEvents();
         }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_2__log__["a" /* default */].errorLog(e); });
     };
     Wormhole.prototype.bindEvents = function () {
-        var panoram = this.panoram;
-        panoram.getCanvas().addEventListener('click', this.onDetect);
-        panoram.subscribe('render-process', this.rotate, this);
+        var pano = this.pano;
+        pano.getCanvas().addEventListener('click', this.onDetect);
+        pano.subscribe('render-process', this.rotate, this);
     };
     Wormhole.prototype.detect = function (evt) {
         var _this = this;
-        var panoram = this.panoram;
-        var camera = panoram.getCamera();
+        var pano = this.pano;
+        var camera = pano.getCamera();
         var raycaster = this.raycaster;
-        var element = panoram.getCanvas();
+        var element = pano.getCanvas();
         var pos = {
             x: (evt.clientX / element.clientWidth) * 2 - 1,
             y: -(evt.clientY / element.clientHeight) * 2 + 1
@@ -56597,17 +56598,17 @@ var Wormhole = /** @class */ (function () {
         raycaster.setFromCamera(pos, camera);
         var intersects = raycaster.intersectObjects([this.box]);
         if (intersects.length) {
-            var vector = panoram.getLookAtTarget();
+            var vector = pano.getLookAtTarget();
             var target = this.vector.clone();
             // camera lookAt.z > camera position.z
             target.z += this.direction ? 100 : -100;
             // camera lookAt
             new __WEBPACK_IMPORTED_MODULE_4__animations_tween_animation__["a" /* default */](vector).to(target).effect('quintEaseIn', 1000)
-                .start(['x', 'y', 'z'], panoram)
+                .start(['x', 'y', 'z'], pano)
                 .complete(function () {
                 // camera position
                 new __WEBPACK_IMPORTED_MODULE_4__animations_tween_animation__["a" /* default */](camera.position).to(_this.vector).effect('quadEaseOut', 1000)
-                    .start(['x', 'y', 'z'], panoram)
+                    .start(['x', 'y', 'z'], pano)
                     .complete(function () {
                     _this.finish();
                     _this.addBackDoor();
@@ -56621,16 +56622,16 @@ var Wormhole = /** @class */ (function () {
         this.box.rotation.z += 0.01;
     };
     Wormhole.prototype.finish = function () {
-        var panoram = this.panoram;
-        panoram.unsubscribe('scene-init', this.create, this);
-        panoram.unsubscribe('render-process', this.rotate, this);
-        this.backTexture = panoram.skyBox.material.envMap;
-        panoram.skyBox.material.envMap = this.texture;
-        panoram.removeSceneObject(this.box);
-        panoram.getCamera().position.set(0, 0, 0);
-        panoram.getLookAtTarget().set(0, 0, this.direction ? 1 : -1);
-        panoram.removeSceneObject(this.box);
-        panoram.getCanvas().removeEventListener('click', this.onDetect);
+        var pano = this.pano;
+        pano.unsubscribe('scene-init', this.create, this);
+        pano.unsubscribe('render-process', this.rotate, this);
+        this.backTexture = pano.skyBox.material.envMap;
+        pano.skyBox.material.envMap = this.texture;
+        pano.removeSceneObject(this.box);
+        pano.getCamera().position.set(0, 0, 0);
+        pano.getLookAtTarget().set(0, 0, this.direction ? 1 : -1);
+        pano.removeSceneObject(this.box);
+        pano.getCanvas().removeEventListener('click', this.onDetect);
     };
     Wormhole.prototype.addBackDoor = function () {
         var geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["w" /* SphereGeometry */](100, 32, 16);
@@ -56644,7 +56645,7 @@ var Wormhole = /** @class */ (function () {
         var vector = this.vector = __WEBPACK_IMPORTED_MODULE_3__util__["a" /* default */].calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
         box.position.set(vector.x, vector.y, vector.z);
         this.direction = !this.direction;
-        this.panoram.addSceneObject(box);
+        this.pano.addSceneObject(box);
         this.bindEvents();
     };
     return Wormhole;
@@ -56666,15 +56667,15 @@ var Wormhole = /** @class */ (function () {
 var Timeline = /** @class */ (function () {
     function Timeline() {
     }
-    Timeline.install = function (opts, panoram) {
-        var camera = panoram.getCamera();
-        this.panoram = panoram;
+    Timeline.install = function (opts, pano) {
+        var camera = pano.getCamera();
+        this.pano = pano;
         // minor planet
         if (opts.fly) {
             var fly = new __WEBPACK_IMPORTED_MODULE_0__fly_animation__["a" /* default */](camera);
             this.lines.push(fly);
         }
-        panoram.subscribe('render-process', this.onTimeChange, this);
+        pano.subscribe('render-process', this.onTimeChange, this);
     };
     Timeline.onTimeChange = function () {
         var _this = this;
@@ -56690,9 +56691,9 @@ var Timeline = /** @class */ (function () {
         });
     };
     Timeline.onAnimationEnd = function (data) {
-        var panoram = this.panoram;
-        panoram.noTimeline();
-        panoram.dispatch('animation-end', data);
+        var pano = this.pano;
+        pano.noTimeline();
+        pano.dispatch('animation-end', data);
     };
     Timeline.lines = [];
     return Timeline;

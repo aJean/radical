@@ -1,4 +1,4 @@
-import Panoram from './panoram';
+import Pano from './pano';
 import Log from './log';
 import ResourceLoader from './loaders/resource.loader';
 import Info from './plugins/info.plugin';
@@ -55,10 +55,10 @@ abstract class Runtime {
      * @param {string} ref 
      */
     static releaseInstance(ref) {
-        const panoram = this.instanceMap[ref];
-        if (panoram) {
-            panoram.dispose();
-            EnvQueue.remove(panoram);
+        const pano = this.instanceMap[ref];
+        if (pano) {
+            pano.dispose();
+            EnvQueue.remove(pano);
         }
 
         if (!EnvQueue.len()) {
@@ -78,10 +78,10 @@ abstract class Runtime {
             el = document.body;
         }
 
-        const ref = el.getAttribute('ref') || `panoram_${this.uid++}`;
+        const ref = el.getAttribute('ref') || `pano_${this.uid++}`;
         el.setAttribute('ref', ref);
         
-        return this.instanceMap[ref] = new Panoram({el, ...opts});
+        return this.instanceMap[ref] = new Pano({el, ...opts});
     }
 
     static async start(url, el, events?) {
@@ -91,59 +91,59 @@ abstract class Runtime {
             return Log.output('load source error');
         }
 
-        const panoram = this.createRef(el, config['panoram']);
+        const pano = this.createRef(el, config['pano']);
         const data = this.findScene(config);
 
         if (config['animation']) {
-            Timeline.install(config['animation'], panoram);
+            Timeline.install(config['animation'], pano);
         } else {
-            panoram.noTimeline();
+            pano.noTimeline();
         }
 
         if (config['rotate']) {
-            panoram.addPlugin(Rotate, config['rotate']);
+            pano.addPlugin(Rotate, config['rotate']);
         }
 
         if (config['multiScene']) {
-            panoram.addPlugin(Multiple, config['sceneGroup']);
+            pano.addPlugin(Multiple, config['sceneGroup']);
         }
 
         if (config['info']) {
-            panoram.addPlugin(Info, config['info']);
+            pano.addPlugin(Info, config['info']);
         }
 
         if (config['wormhole']) {
-            panoram.addPlugin(Wormhole, config['wormhole']);
+            pano.addPlugin(Wormhole, config['wormhole']);
         }
         // 用户订阅事件
         if (events) {
             for (let name in events) {
-                panoram.subscribe(name, events[name]);
+                pano.subscribe(name, events[name]);
             }
         }
 
         // set pem path
         myLoader.loadCret(config['cretPath']);
         // add to env queue listeners
-        EnvQueue.add(panoram.onResize, panoram);
+        EnvQueue.add(pano.onResize, pano);
         // load and render
-        this.run(panoram, data);
+        this.run(pano, data);
     }
 
     /**
      * 环境构造 stream
-     * @param {Object} panoram 全景对象
+     * @param {Object} pano 全景对象
      * @param {Object} data 等待渲染的场景数据
      */
-    static async run(panoram, data) {  
+    static async run(pano, data) {  
         try {
             // 加载缩略图
             const thumbImg = await myLoader.loadTexture(data.imgPath, 'canvas');
             // 加载原图
             if (thumbImg) {
-                panoram.initPreview(thumbImg);
-                await panoram.enterNext(data);
-                panoram.animate();
+                pano.initPreview(thumbImg);
+                await pano.enterNext(data);
+                pano.animate();
             }
         } catch(e) {
             Log.output(e)
@@ -161,7 +161,7 @@ abstract class Runtime {
         return (scene || group[0]);
     }
 
-    static addOverlay(panoram, ) {
+    static addOverlay(pano) {
 
     }
 };
@@ -171,7 +171,7 @@ window.onload = function() {
     pastLoad && pastLoad.call(this);
 
     let uid = 0;
-    const nodeList = document.querySelectorAll('panoram');
+    const nodeList = document.querySelectorAll('pano');
 
     for (let i = 0; i < nodeList.length; i++) {
         const node = nodeList[i];

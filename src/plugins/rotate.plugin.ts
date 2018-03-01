@@ -1,4 +1,4 @@
-import Panoram from '../panoram';
+import Pano from '../pano';
 import Tween from '../animations/tween.animation';
 import { setTimeout, clearTimeout } from 'timers';
 
@@ -13,17 +13,17 @@ const defaultOpts = {
 };
 export default class Rotate {
     data: any;
-    panoram: Panoram;
+    pano: Pano;
     timeid: any;
     tween: Tween;
 
-    constructor(panoram: Panoram, data) {
+    constructor(pano: Pano, data) {
         this.data = Object.assign({}, defaultOpts, data);
-        this.panoram = panoram;
+        this.pano = pano;
         this.onDisturb = this.onDisturb.bind(this);
 
-        const canvas = panoram.getCanvas();
-        panoram.subscribe('scene-init', this.create, this);
+        const canvas = pano.getCanvas();
+        pano.subscribe('scene-init', this.create, this);
 
         canvas.addEventListener('touchstart', this.onDisturb);
         canvas.addEventListener('mousedown', this.onDisturb);
@@ -31,7 +31,7 @@ export default class Rotate {
 
     create() {
         const data = this.data;
-        const orbit = this.panoram.getControl();
+        const orbit = this.pano.getControl();
         
         orbit.autoRotateSpeed = data.speed;
         setTimeout(() => orbit.autoRotate = true, data.lazy);
@@ -42,10 +42,10 @@ export default class Rotate {
      */
     onDisturb() {
         const data = this.data;
-        const panoram = this.panoram;
+        const pano = this.pano;
         const tween = this.tween;
-        const orbit = panoram.getControl();
-        const camera = panoram.getCamera();
+        const orbit = pano.getControl();
+        const camera = pano.getCamera();
         const target = {y: camera.position.y}
 
         orbit.autoRotate = false;
@@ -55,13 +55,13 @@ export default class Rotate {
         this.timeid = setTimeout(() => {
             this.tween = new Tween(camera.position).to(target)
                 .effect('linear', data.recover)
-                .start(['y'], panoram);
+                .start(['y'], pano);
             orbit.autoRotate = true;
         }, data.lazy);
     }
 
     dispose() {
-        const canvas = this.panoram.getCanvas();
+        const canvas = this.pano.getCanvas();
 
         try {
             canvas.removeEventListener('touchstart', this.onDisturb);

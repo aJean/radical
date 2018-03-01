@@ -20,7 +20,7 @@ const defaultOpts = {
     height: null
 };
 const myLoader = new ResourceLoader();
-export default class Panoram {
+export default class Panorama {
     overlays: Overlays;
     opts = null;
     root = null;
@@ -46,7 +46,7 @@ export default class Panoram {
         const opts = this.opts;
         const container = opts.el;
         const size = Util.calcRenderSize(opts, container);
-        const root = this.root = Util.createElement('<div class="panoram-root" style="width:'
+        const root = this.root = Util.createElement('<div class="pano-root" style="width:'
             + size.width + 'px;height:' + size.height + 'px;"></div>');
         // 渲染器
         const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});

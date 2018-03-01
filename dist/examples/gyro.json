@@ -5,7 +5,7 @@
         "author": "陀螺仪 - 请使用手机浏览",
         "logo": "../assets/logo-gyro.png"
     },
-    "panoram": {
+    "pano": {
         "gyro": true
     },
     "sceneGroup": [{

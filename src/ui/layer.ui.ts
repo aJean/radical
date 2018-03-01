@@ -26,8 +26,8 @@ export default class Layer implements IPluggableUI {
         const data = this.data;
         const root = this.root = document.createElement('div');
         const content = this.content = document.createElement('div');
-        root.className = 'panoram-layer';
-        content.className = 'panoram-layer-content';
+        root.className = 'pano-layer';
+        content.className = 'pano-layer-content';
 
         if (data.hide) {
             root.style.display = 'none';

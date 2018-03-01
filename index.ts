@@ -1,4 +1,4 @@
-import './styles/panoram.style.less';
+import './styles/pano.style.less';
 import './styles/multiple.style.less';
 import './styles/overlays.style.less';
 import './styles/ui.style.less';
@@ -13,7 +13,7 @@ export default {
         Runtime.start(source, el, events);
     },
 
-    getPanoram(ref: string) {
+    getPano(ref: string) {
         return Runtime.getInstance(ref);
     },
 

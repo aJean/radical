@@ -1,7 +1,7 @@
 let flag = 0;
 let oheight;
 bxl.start('./card.json', '.scene', {
-    'scene-init': function (panoram) {
+    'scene-init': function (pano) {
         const $root = $('.scene');
         // dom placeholder
         const $copy = $('<div class="scene"></div>')
@@ -15,7 +15,7 @@ bxl.start('./card.json', '.scene', {
                     transform: 'translate3d(0px, 0px, 0px)',
                     height: oheight
                 });
-                panoram.setFov(85);
+                pano.setFov(85);
                 setTimeout(function() {
                     $root.css({
                         position: 'static'
@@ -36,7 +36,7 @@ bxl.start('./card.json', '.scene', {
                         transform: 'translate3d(0px, -' + top + 'px, 0px)',
                         height: window.innerHeight
                     });
-                    panoram.setFov(55);
+                    pano.setFov(55);
                 }, 20);
                 flag = 1;
             }

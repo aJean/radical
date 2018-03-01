@@ -6,19 +6,19 @@ import AnimationFly from './fly.animation';
  */
 
 export default abstract class Timeline {
-    static panoram: any;
+    static pano: any;
     static lines = [];
 
-    static install(opts, panoram) {
-        const camera = panoram.getCamera();
-        this.panoram = panoram;
+    static install(opts, pano) {
+        const camera = pano.getCamera();
+        this.pano = pano;
         // minor planet
         if (opts.fly) {
             const fly = new AnimationFly(camera);
             this.lines.push(fly);
         }
 
-        panoram.subscribe('render-process', this.onTimeChange, this);
+        pano.subscribe('render-process', this.onTimeChange, this);
     }
 
     static onTimeChange() {
@@ -35,9 +35,9 @@ export default abstract class Timeline {
     }
 
     static onAnimationEnd(data) {
-        const panoram = this.panoram;
+        const pano = this.pano;
 
-        panoram.noTimeline();
-        panoram.dispatch('animation-end', data);
+        pano.noTimeline();
+        pano.dispatch('animation-end', data);
     }
 }
