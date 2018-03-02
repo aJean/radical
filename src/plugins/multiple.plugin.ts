@@ -68,7 +68,7 @@ export default class Multiple implements IPluggableUI{
             const scene = this.data[id];
     
             if (scene) {
-                this.pano.enterNext(scene);
+                this.pano.enterNextInternal(scene);
                 this.setActive(node);
             }
         }
@@ -85,7 +85,7 @@ export default class Multiple implements IPluggableUI{
         const node = this.inner.querySelector(`div[data-id="${index}"]`);
 
         if (scene && node) {
-            this.pano.enterNext(scene);
+            this.pano.enterNextInternal(scene);
             this.setActive(node);
         }
     }

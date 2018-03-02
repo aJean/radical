@@ -235,7 +235,7 @@ export default class Overlays {
         pano.dispatch('overlay-click', instance, pano);
         switch (data.actionType) {
             case 'scene':
-                pano.enterNext(data.sceneId);
+                pano.enterNextInternal(data.sceneId);
                 break;
             case 'link':
                 window.open(data.linkUrl, '_blank');

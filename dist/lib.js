@@ -50086,7 +50086,7 @@ var Runtime = /** @class */ (function () {
                         thumbImg = _a.sent();
                         if (!thumbImg) return [3 /*break*/, 3];
                         pano.initPreview(thumbImg);
-                        return [4 /*yield*/, pano.enterNext(data, true)];
+                        return [4 /*yield*/, pano.enterNext(data)];
                     case 2:
                         _a.sent();
                         pano.animate();
@@ -50154,6 +50154,8 @@ window.addEventListener('resize', onEnvResize);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__loaders_resource_loader__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__ = __webpack_require__(50);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plastic_inradius_plastic__ = __webpack_require__(72);
+
 
 
 
@@ -50231,15 +50233,8 @@ var Pano = /** @class */ (function () {
      * @param {Object} texture 纹理贴图
      */
     Pano.prototype.initPreview = function (texture) {
-        var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
-            envMap: texture,
-            side: __WEBPACK_IMPORTED_MODULE_0_three__["b" /* BackSide */],
-            refractionRatio: 0,
-            reflectivity: 1
-        });
-        var geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["w" /* SphereGeometry */](2000, 32, 16);
-        var skyBox = this.skyBox = new __WEBPACK_IMPORTED_MODULE_0_three__["m" /* Mesh */](geometry, material);
-        this.scene.add(skyBox);
+        var skyBox = this.skyBox = new __WEBPACK_IMPORTED_MODULE_9__plastic_inradius_plastic__["a" /* default */]({ envMap: texture });
+        skyBox.addTo(this.scene);
         this.dispatch('scene-init', this);
         this.render();
     };
@@ -50326,14 +50321,26 @@ var Pano = /** @class */ (function () {
     /**
      * 渲染场景贴图
      * @param {Object} texture 场景原图纹理
-     * @param {boolean} slient 安静模式
      */
     Pano.prototype.replaceTexture = function (texture) {
         texture.mapping = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
         texture.needsUpdate = true;
-        var tempTex = this.skyBox.material.envMap;
-        this.skyBox.material.envMap = texture;
-        tempTex.dispose();
+        this.skyBox.setMap(texture, true);
+        // 触发场景切换事件
+        this.dispatch('scene-attach', this.currentData, this);
+    };
+    /**
+     * 动画效果切换场景贴图
+     * @param {Object} texture 场景原图纹理
+     */
+    Pano.prototype.replaceTextureAnim = function (texture) {
+        texture.mapping = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
+        texture.needsUpdate = true;
+        var skyBox = this.skyBox;
+        var oldMap = skyBox.getMap();
+        var oldBox = new __WEBPACK_IMPORTED_MODULE_9__plastic_inradius_plastic__["a" /* default */]({ envMap: oldMap });
+        oldBox.addTo(this.scene);
+        skyBox.setMap(texture, true);
         // 触发场景切换事件
         this.dispatch('scene-attach', this.currentData, this);
     };
@@ -50445,28 +50452,48 @@ var Pano = /** @class */ (function () {
     /**
      * enter next scene
      * @param {Object} data scene data or id
-     * @param {boolean} slient without set camera
      */
-    Pano.prototype.enterNext = function (data, slient) {
+    Pano.prototype.enterNext = function (data) {
+        var _this = this;
+        if (!data) {
+            return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('enter scene: no scene data provided');
+        }
+        return myLoader.loadTexture(data.bxlPath || data.texPath)
+            .then(function (texture) {
+            _this.currentData = data;
+            _this.replaceTexture(texture);
+        }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('load scene: load source texture fail'); });
+    };
+    /**
+     * internal enter next scenel
+     * @param {Object} data scene data or id
+     */
+    Pano.prototype.enterNextInternal = function (data) {
         var _this = this;
         if (typeof data === 'string') {
             data = this.group && this.group.find(function (item) { return item.id == data; });
         }
         if (!data) {
-            return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('no scene data provided');
+            return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('enter scene: no scene data provided');
         }
         return myLoader.loadTexture(data.bxlPath || data.texPath)
             .then(function (texture) {
             _this.currentData = data;
-            !slient && _this.resetEnv(data);
-            _this.replaceTexture(texture);
-        }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('load source texture fail'); });
+            _this.resetEnv(data);
+            _this.replaceTextureAnim(texture);
+        }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('load scene: load source texture fail'); });
     };
+    /**
+     * 启动陀螺仪
+     */
     Pano.prototype.startGyroControl = function () {
         if (this.gyroControl && !this.gyroControl.enabled) {
             this.gyroControl.connect();
         }
     };
+    /**
+     * 停止陀螺仪
+     */
     Pano.prototype.stopGyroControl = function () {
         if (this.gyroControl) {
             this.gyroControl.disconnect();
@@ -50479,6 +50506,9 @@ var Pano = /** @class */ (function () {
     Pano.prototype.noTimeline = function () {
         this.startGyroControl();
     };
+    /**
+     * 释放资源
+     */
     Pano.prototype.dispose = function () {
         __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].cleanup(null, this.scene);
         this.stopGyroControl();
@@ -55240,7 +55270,7 @@ var Overlays = /** @class */ (function () {
         pano.dispatch('overlay-click', instance, pano);
         switch (data.actionType) {
             case 'scene':
-                pano.enterNext(data.sceneId);
+                pano.enterNextInternal(data.sceneId);
                 break;
             case 'link':
                 window.open(data.linkUrl, '_blank');
@@ -56493,7 +56523,7 @@ var Multiple = /** @class */ (function () {
             var id = node.getAttribute('data-id');
             var scene = this.data[id];
             if (scene) {
-                this.pano.enterNext(scene);
+                this.pano.enterNextInternal(scene);
                 this.setActive(node);
             }
         }
@@ -56507,7 +56537,7 @@ var Multiple = /** @class */ (function () {
         var index = this.data.indexOf(scene);
         var node = this.inner.querySelector("div[data-id=\"" + index + "\"]");
         if (scene && node) {
-            this.pano.enterNext(scene);
+            this.pano.enterNextInternal(scene);
             this.setActive(node);
         }
     };
@@ -56808,6 +56838,64 @@ var AnimationFly = /** @class */ (function () {
 }());
 /* harmony default export */ __webpack_exports__["a"] = (AnimationFly);
 ;
+
+
+/***/ }),
+/* 69 */,
+/* 70 */,
+/* 71 */,
+/* 72 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
+
+/**
+ * @file 内切球
+ */
+var defaultOpts = {
+    side: __WEBPACK_IMPORTED_MODULE_0_three__["b" /* BackSide */],
+    radius: 2000,
+    widthSegments: 30,
+    heightSegments: 16
+};
+var Inradius = /** @class */ (function () {
+    function Inradius(data) {
+        this.data = Object.assign({}, defaultOpts, data);
+        this.create();
+    }
+    Inradius.prototype.create = function () {
+        var data = this.data;
+        var material = new __WEBPACK_IMPORTED_MODULE_0_three__["n" /* MeshBasicMaterial */]({
+            envMap: data.envMap,
+            side: data.side,
+            refractionRatio: 0,
+            reflectivity: 1
+        });
+        var geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["w" /* SphereGeometry */](data.radius, data.widthSegments, data.heightSegments);
+        this.plastic = new __WEBPACK_IMPORTED_MODULE_0_three__["m" /* Mesh */](geometry, material);
+    };
+    Inradius.prototype.getMap = function () {
+        return this.plastic.material.envMap;
+    };
+    Inradius.prototype.setMap = function (texture, slient) {
+        var tempMap = this.plastic.material.envMap;
+        this.plastic.material.envMap = texture;
+        !slient && tempMap.dispose();
+    };
+    Inradius.prototype.getPlastic = function () {
+        return this.plastic;
+    };
+    Inradius.prototype.addTo = function (scene) {
+        scene.add(this.plastic);
+    };
+    Inradius.prototype.dispose = function () {
+        this.plastic.material.envMap.dispose();
+        this.plastic.material.dispose();
+    };
+    return Inradius;
+}());
+/* harmony default export */ __webpack_exports__["a"] = (Inradius);
 
 
 /***/ })

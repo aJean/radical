@@ -1,4 +1,4 @@
-import {WebGLRenderer, Scene, PerspectiveCamera, Vector3, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Math as TMath} from 'three';
+import {WebGLRenderer, Scene, PerspectiveCamera, Vector3, CubeRefractionMapping, Math as TMath} from 'three';
 import OrbitControl from './controls/orbitControl';
 import GyroControl from './controls/gyroControl';
 import EventEmitter from './event';
@@ -7,6 +7,7 @@ import Util from './util';
 import ResourceLoader from './loaders/resource.loader';
 import Tween from './animations/tween.animation';
 import Overlays from './overlays/overlays.overlay';
+import Inradius from './plastic/inradius.plastic';
 
 /**
  * @file 全景渲染
@@ -83,16 +84,9 @@ export default class Pano {
      * @param {Object} texture 纹理贴图 
      */
     initPreview(texture) {
-        const material = new MeshBasicMaterial({
-            envMap: texture,
-            side: BackSide,
-            refractionRatio: 0,
-            reflectivity: 1
-        });
-        const geometry = new SphereGeometry(2000, 32, 16);
-        const skyBox = this.skyBox = new Mesh(geometry, material);
+        const skyBox = this.skyBox = new Inradius({envMap: texture});
+        skyBox.addTo(this.scene);
 
-        this.scene.add(skyBox);
         this.dispatch('scene-init', this);
         this.render();
     }
@@ -192,15 +186,30 @@ export default class Pano {
     /**
      * 渲染场景贴图
      * @param {Object} texture 场景原图纹理
-     * @param {boolean} slient 安静模式
      */
     replaceTexture(texture) {
         texture.mapping = CubeRefractionMapping;
         texture.needsUpdate = true;
 
-        const tempTex = this.skyBox.material.envMap;
-        this.skyBox.material.envMap = texture;
-        tempTex.dispose();
+        this.skyBox.setMap(texture, true);
+        // 触发场景切换事件
+        this.dispatch('scene-attach', this.currentData, this);
+    }
+
+    /**
+     * 动画效果切换场景贴图
+     * @param {Object} texture 场景原图纹理
+     */
+    replaceTextureAnim(texture) {
+        texture.mapping = CubeRefractionMapping;
+        texture.needsUpdate = true;
+
+        const skyBox = this.skyBox;
+        const oldMap = skyBox.getMap();
+        const oldBox = new Inradius({envMap: oldMap});
+
+        oldBox.addTo(this.scene);
+        skyBox.setMap(texture, true);
         // 触发场景切换事件
         this.dispatch('scene-attach', this.currentData, this);
     }
@@ -330,31 +339,53 @@ export default class Pano {
     /**
      * enter next scene
      * @param {Object} data scene data or id
-     * @param {boolean} slient without set camera
      */
-    enterNext(data, slient?) {
-        if (typeof data === 'string') {
-            data = this.group && this.group.find(item => item.id == data);
-        }
-
+    enterNext(data) {
         if (!data) {
-            return Log.output('no scene data provided');
+            return Log.output('enter scene: no scene data provided');
         }
 
         return myLoader.loadTexture(data.bxlPath || data.texPath)
             .then(texture => {
                 this.currentData = data;
-                !slient && this.resetEnv(data);
                 this.replaceTexture(texture);
-            }).catch(e => Log.output('load source texture fail'));
+            }).catch(e => Log.output('load scene: load source texture fail'));
     }
 
+
+    /**
+     * internal enter next scenel
+     * @param {Object} data scene data or id
+     */
+    enterNextInternal(data) {
+        if (typeof data === 'string') {
+            data = this.group && this.group.find(item => item.id == data);
+        }
+
+        if (!data) {
+            return Log.output('enter scene: no scene data provided');
+        }
+
+        return myLoader.loadTexture(data.bxlPath || data.texPath)
+            .then(texture => {
+                this.currentData = data;
+                this.resetEnv(data);
+                this.replaceTextureAnim(texture);
+            }).catch(e => Log.output('load scene: load source texture fail'));
+    }
+
+    /** 
+     * 启动陀螺仪
+     */
     startGyroControl() {
         if (this.gyroControl && !this.gyroControl.enabled) {
             this.gyroControl.connect();
         }
     }
 
+    /** 
+     * 停止陀螺仪
+     */
     stopGyroControl() {
         if (this.gyroControl) {
             this.gyroControl.disconnect();
@@ -369,6 +400,9 @@ export default class Pano {
        this.startGyroControl();
     }
 
+    /** 
+     * 释放资源
+     */
     dispose() {
         Util.cleanup(null, this.scene);
 
