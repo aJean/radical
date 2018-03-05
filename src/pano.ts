@@ -18,7 +18,8 @@ const defaultOpts = {
     fov: 80,
     gyro: false,
     width: null,
-    height: null
+    height: null,
+    sceneTrans: false
 };
 const myLoader = new ResourceLoader();
 export default class Pano {
@@ -89,6 +90,18 @@ export default class Pano {
 
         this.dispatch('scene-init', this);
         this.render();
+    }
+
+    /**
+     * enter next scene
+     * @param {Object} data scene data or id
+     */
+    initScene(data) {
+        return myLoader.loadTexture(data.bxlPath || data.texPath)
+            .then(texture => {
+                this.currentData = data;
+                this.replaceTexture(texture);
+            }).catch(e => Log.output('load scene: load source texture fail'));
     }
 
     /**
@@ -188,10 +201,11 @@ export default class Pano {
      * @param {Object} texture 场景原图纹理
      */
     replaceTexture(texture) {
+        this.dispatch('scene-attachstart', this.currentData, this);
         texture.mapping = CubeRefractionMapping;
         texture.needsUpdate = true;
 
-        this.skyBox.setMap(texture, true);
+        this.skyBox.setMap(texture);
         // 触发场景切换事件
         this.dispatch('scene-attach', this.currentData, this);
     }
@@ -200,18 +214,26 @@ export default class Pano {
      * 动画效果切换场景贴图
      * @param {Object} texture 场景原图纹理
      */
-    replaceTextureAnim(texture) {
+    replaceAnim(texture) {
+        this.dispatch('scene-attachstart', this.currentData, this);
         texture.mapping = CubeRefractionMapping;
         texture.needsUpdate = true;
 
         const skyBox = this.skyBox;
         const oldMap = skyBox.getMap();
-        const oldBox = new Inradius({envMap: oldMap});
+        const newBox = new Inradius({
+            envMap: texture,
+            transparent: true,
+            opacity: 0
+        });
 
-        oldBox.addTo(this.scene);
-        skyBox.setMap(texture, true);
-        // 触发场景切换事件
-        this.dispatch('scene-attach', this.currentData, this);
+        newBox.addTo(this.scene);
+        newBox.fadeIn(this, () => {
+            skyBox.setMap(texture);
+            newBox.dispose();
+            // 触发场景切换事件
+            this.dispatch('scene-attach', this.currentData, this);
+        });
     }
 
     /**
@@ -337,40 +359,19 @@ export default class Pano {
     }
 
     /**
-     * enter next scene
-     * @param {Object} data scene data or id
-     */
-    enterNext(data) {
-        if (!data) {
-            return Log.output('enter scene: no scene data provided');
-        }
-
-        return myLoader.loadTexture(data.bxlPath || data.texPath)
-            .then(texture => {
-                this.currentData = data;
-                this.replaceTexture(texture);
-            }).catch(e => Log.output('load scene: load source texture fail'));
-    }
-
-
-    /**
      * internal enter next scenel
      * @param {Object} data scene data or id
      */
-    enterNextInternal(data) {
+    enterNext(data) {
         if (typeof data === 'string') {
             data = this.group && this.group.find(item => item.id == data);
-        }
-
-        if (!data) {
-            return Log.output('enter scene: no scene data provided');
         }
 
         return myLoader.loadTexture(data.bxlPath || data.texPath)
             .then(texture => {
                 this.currentData = data;
                 this.resetEnv(data);
-                this.replaceTextureAnim(texture);
+                this.opts.sceneTrans ? this.replaceAnim(texture) : this.replaceTexture(texture);
             }).catch(e => Log.output('load scene: load source texture fail'));
     }
 

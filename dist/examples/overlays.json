@@ -5,6 +5,9 @@
     "info": {
         "author": "覆盖物 + 帧动画 (scene3)"
     },
+    "pano": {
+        "sceneTrans": true
+    },
     "sceneGroup": [{
         "id": "scene0",
         "name": "罗浮宫",

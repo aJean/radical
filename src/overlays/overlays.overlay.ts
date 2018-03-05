@@ -40,11 +40,8 @@ export default class Overlays {
     constructor(pano: Pano) {
         this.pano = pano;
 
-        pano.subscribe('scene-attach', scene => {
-            this.removeOverlays();
-            this.init(scene);
-        });
-
+        pano.subscribe('scene-attachstart', scene => this.removeOverlays());
+        pano.subscribe('scene-attach', scene => this.init(scene));
         pano.subscribe('render-process', scene => {
             const cache = this.getCurrent(scene.id);
             cache.domGroup.forEach(item => this.updateDomOverlay(item));
@@ -235,7 +232,7 @@ export default class Overlays {
         pano.dispatch('overlay-click', instance, pano);
         switch (data.actionType) {
             case 'scene':
-                pano.enterNextInternal(data.sceneId);
+                pano.enterNext(data.sceneId);
                 break;
             case 'link':
                 window.open(data.linkUrl, '_blank');

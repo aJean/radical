@@ -108,8 +108,8 @@ export default class Wormhole {
         pano.unsubscribe('scene-init', this.create, this);
         pano.unsubscribe('render-process', this.rotate, this);
 
-        this.backTexture = pano.skyBox.material.envMap;
-        pano.skyBox.material.envMap = this.texture;
+        this.backTexture = pano.skyBox.getMap();
+        pano.skyBox.setMap(this.texture);
         pano.removeSceneObject(this.box);
 
         pano.getCamera().position.set(0, 0, 0);
