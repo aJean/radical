@@ -49213,6 +49213,7 @@ var ResourceLoader = /** @class */ (function (_super) {
      * @param {string} url
      */
     ResourceLoader.prototype.loadImage = function (url) {
+        url = url.replace(/\/$/, '');
         var urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(function (name) { return url + "/mobile_" + name + ".jpg"; });
         return new Promise(function (resolve, reject) {
             cubeLoader.load(urls, function (tex) { return resolve(tex); }, null, function (e) { return reject(e); });

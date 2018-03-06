@@ -45,6 +45,7 @@ class ResourceLoader extends BaseLoader {
      * @param {string} url 
      */
     loadImage(url) {
+        url = url.replace(/\/$/, '');
         const urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(name => `${url}/mobile_${name}.jpg`);
 
         return new Promise((resolve, reject) => {
