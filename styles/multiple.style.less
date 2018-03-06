@@ -3,41 +3,51 @@
 .pano-multiplescene {
     position: absolute;
     left: 0;
-    bottom: 10px;
+    bottom: 0;
     width: 100%;
     z-index: 999;
     .pano-multiplescene-outer {
-        margin: 0 10px;
-        padding: 10px;
-        border-radius: 4px;
-        background: rgba(0, 0, 0, .5);
-    }
-    .pano-multiplescene-inner {
-        font-size: 12px;
-        white-space: nowrap;
         overflow-x: auto;
+        background: rgba(0, 0, 0, .8);
         -webkit-overflow-scrolling: touch;
         &::-webkit-scrollbar {
             display: none;
-        }
+        }      
+    }
+    .pano-multiplescene-inner {
+        display: inline-flex;
+        flex-direction: row;
+        padding: 17px;     
+        font-size: 12px;
     }
     .pano-multiplescene-item {
-        display: inline-block;
-        border: 2px solid #fff;
+        position: relative;
+        border: 1px solid #fff;
         margin-right: 10px;
-        &:hover {
-            border: 2px solid rgb(38, 112, 248);
-        }
         &:last-child {
             margin-right: 0;
         }
         &.active {
-            border: 2px solid rgb(0, 247, 33) !important;
+            border: 1px solid #38f;
+        }
+        img {
+            width: 120px;
+            height: 80px;
         }
     }
     .pano-multiplescene-img {
         width: 100px;
         height: 100px;
         vertical-align: middle;
+    }
+    .pano-multiplescene-name {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        line-height: 20px;
+        text-align: center;
+        color: #fff;
+        background: rgba(0, 0, 0, .4);
     }
 }

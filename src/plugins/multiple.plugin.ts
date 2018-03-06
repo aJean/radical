@@ -29,6 +29,7 @@ export default class Multiple implements IPluggableUI{
         inner.innerHTML = this.data.map((item, i) => {
             return `<div class="pano-multiplescene-item" data-id="${i}">
                 <img src="${item.thumbPath}" class="pano-multiplescene-img">
+                <span class="pano-multiplescene-name">${item.name}</span>
             </div>`;
         }).join('');
 

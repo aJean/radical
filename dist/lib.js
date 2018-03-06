@@ -56586,7 +56586,7 @@ var Multiple = /** @class */ (function () {
         var outer = this.outer = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="pano-multiplescene-outer"></div>');
         var inner = this.inner = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].createElement('<div class="pano-multiplescene-inner"></div>');
         inner.innerHTML = this.data.map(function (item, i) {
-            return "<div class=\"pano-multiplescene-item\" data-id=\"" + i + "\">\n                <img src=\"" + item.thumbPath + "\" class=\"pano-multiplescene-img\">\n            </div>";
+            return "<div class=\"pano-multiplescene-item\" data-id=\"" + i + "\">\n                <img src=\"" + item.thumbPath + "\" class=\"pano-multiplescene-img\">\n                <span class=\"pano-multiplescene-name\">" + item.name + "</span>\n            </div>";
         }).join('');
         outer.appendChild(inner);
         root.appendChild(outer);
