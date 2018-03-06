@@ -62,6 +62,7 @@ export default class Multiple implements IPluggableUI{
     }
 
     onClickHandle(e) {
+        e.preventDefault();
         const node = this.findParent(e.target, 'pano-multiplescene-item');
       
         if (node) {
