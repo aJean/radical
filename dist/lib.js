@@ -47859,7 +47859,7 @@ var composeKey = function (part) { return ('skt1wins' + part); };
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(9), __webpack_require__(10));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(10), __webpack_require__(11));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -48738,6 +48738,119 @@ function formatMsg(msg) {
 
 /***/ }),
 /* 9 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__log__ = __webpack_require__(5);
+
+/**
+ * @file js frame animation
+ */
+var EFFECT = {
+    linear: function (t, b, c, d) {
+        return c * t / d + b;
+    },
+    quadEaseIn: function (t, b, c, d) {
+        return c * (t /= d) * t + b;
+    },
+    quadEaseOut: function (t, b, c, d) {
+        return -c * (t /= d) * (t - 2) + b;
+    },
+    cubicEaseIn: function (t, b, c, d) {
+        return c * (t /= d) * t * t + b;
+    },
+    cubicEaseOut: function (t, b, c, d) {
+        return c * ((t = t / d - 1) * t * t + 1) + b;
+    },
+    quintEaseIn: function (t, b, c, d) {
+        return c * (t /= d) * t * t * t * t + b;
+    },
+    quintEaseOut: function (t, b, c, d) {
+        return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
+    }
+};
+var Tween = /** @class */ (function () {
+    function Tween(obj) {
+        this.record = {};
+        this.startTime = 0;
+        this.duration = 500;
+        this.obj = obj;
+    }
+    Tween.prototype.to = function (obj) {
+        this.target = obj;
+        return this;
+    };
+    Tween.prototype.start = function (keys, pano) {
+        var _this = this;
+        if (!this.obj || !this.target || !this.fn) {
+            __WEBPACK_IMPORTED_MODULE_0__log__["a" /* default */].errorLog('leak of necessary parameters');
+        }
+        else {
+            this.startTime = Date.now();
+            this.pano = pano;
+            keys.forEach(function (key) { return _this.record[key] = _this.obj[key]; });
+            pano.subscribe('render-process', this.animate, this);
+        }
+        return this;
+    };
+    Tween.prototype.stop = function () {
+        this.pano.unsubscribe('render-process', this.animate, this);
+        return this;
+    };
+    Tween.prototype.effect = function (type, duration) {
+        if (duration !== undefined) {
+            this.duration = duration;
+        }
+        this.fn = EFFECT[type];
+        return this;
+    };
+    Tween.prototype.process = function (fn) {
+        this.onProcess = fn;
+        return this;
+    };
+    Tween.prototype.complete = function (fn) {
+        this.onComplete = fn;
+        return this;
+    };
+    Tween.prototype.animate = function () {
+        var _this = this;
+        try {
+            var t_1 = Date.now() - this.startTime;
+            var obj_1 = this.obj;
+            var target_1 = this.target;
+            var record_1 = this.record;
+            var duration_1 = this.duration;
+            var fn_1 = this.fn;
+            if (t_1 < duration_1) {
+                this.forEach(record_1, function (key) {
+                    var val = fn_1(t_1, record_1[key], target_1[key] - record_1[key], duration_1);
+                    _this.onProcess && _this.onProcess(obj_1[key], val);
+                    obj_1[key] = val;
+                });
+            }
+            else {
+                this.forEach(record_1, function (key) { return obj_1[key] = target_1[key]; });
+                this.stop();
+                this.onComplete && this.onComplete();
+            }
+        }
+        catch (e) {
+            __WEBPACK_IMPORTED_MODULE_0__log__["a" /* default */].errorLog(e);
+            this.stop();
+        }
+    };
+    Tween.prototype.forEach = function (obj, iterator) {
+        for (var key in obj) {
+            iterator.call(this, key, obj[key]);
+        }
+    };
+    return Tween;
+}());
+/* harmony default export */ __webpack_exports__["a"] = (Tween);
+
+
+/***/ }),
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function (root, factory) {
@@ -48892,7 +49005,7 @@ function formatMsg(msg) {
 }));
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ;(function (root, factory) {
@@ -49040,7 +49153,7 @@ function formatMsg(msg) {
 }));
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -49182,119 +49295,6 @@ function loadCanvas(url, timeout) {
     }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_3__log__["a" /* default */].output(e); });
 }
 /* harmony default export */ __webpack_exports__["a"] = (ResourceLoader);
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__log__ = __webpack_require__(5);
-
-/**
- * @file js frame animation
- */
-var EFFECT = {
-    linear: function (t, b, c, d) {
-        return c * t / d + b;
-    },
-    quadEaseIn: function (t, b, c, d) {
-        return c * (t /= d) * t + b;
-    },
-    quadEaseOut: function (t, b, c, d) {
-        return -c * (t /= d) * (t - 2) + b;
-    },
-    cubicEaseIn: function (t, b, c, d) {
-        return c * (t /= d) * t * t + b;
-    },
-    cubicEaseOut: function (t, b, c, d) {
-        return c * ((t = t / d - 1) * t * t + 1) + b;
-    },
-    quintEaseIn: function (t, b, c, d) {
-        return c * (t /= d) * t * t * t * t + b;
-    },
-    quintEaseOut: function (t, b, c, d) {
-        return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
-    }
-};
-var Tween = /** @class */ (function () {
-    function Tween(obj) {
-        this.record = {};
-        this.startTime = 0;
-        this.duration = 500;
-        this.obj = obj;
-    }
-    Tween.prototype.to = function (obj) {
-        this.target = obj;
-        return this;
-    };
-    Tween.prototype.start = function (keys, pano) {
-        var _this = this;
-        if (!this.obj || !this.target || !this.fn) {
-            __WEBPACK_IMPORTED_MODULE_0__log__["a" /* default */].errorLog('leak of necessary parameters');
-        }
-        else {
-            this.startTime = Date.now();
-            this.pano = pano;
-            keys.forEach(function (key) { return _this.record[key] = _this.obj[key]; });
-            pano.subscribe('render-process', this.animate, this);
-        }
-        return this;
-    };
-    Tween.prototype.stop = function () {
-        this.pano.unsubscribe('render-process', this.animate, this);
-        return this;
-    };
-    Tween.prototype.effect = function (type, duration) {
-        if (duration !== undefined) {
-            this.duration = duration;
-        }
-        this.fn = EFFECT[type];
-        return this;
-    };
-    Tween.prototype.process = function (fn) {
-        this.onProcess = fn;
-        return this;
-    };
-    Tween.prototype.complete = function (fn) {
-        this.onComplete = fn;
-        return this;
-    };
-    Tween.prototype.animate = function () {
-        var _this = this;
-        try {
-            var t_1 = Date.now() - this.startTime;
-            var obj_1 = this.obj;
-            var target_1 = this.target;
-            var record_1 = this.record;
-            var duration_1 = this.duration;
-            var fn_1 = this.fn;
-            if (t_1 < duration_1) {
-                this.forEach(record_1, function (key) {
-                    var val = fn_1(t_1, record_1[key], target_1[key] - record_1[key], duration_1);
-                    _this.onProcess && _this.onProcess(obj_1[key], val);
-                    obj_1[key] = val;
-                });
-            }
-            else {
-                this.forEach(record_1, function (key) { return obj_1[key] = target_1[key]; });
-                this.stop();
-                this.onComplete && this.onComplete();
-            }
-        }
-        catch (e) {
-            __WEBPACK_IMPORTED_MODULE_0__log__["a" /* default */].errorLog(e);
-            this.stop();
-        }
-    };
-    Tween.prototype.forEach = function (obj, iterator) {
-        for (var key in obj) {
-            iterator.call(this, key, obj[key]);
-        }
-    };
-    return Tween;
-}());
-/* harmony default export */ __webpack_exports__["a"] = (Tween);
 
 
 /***/ }),
@@ -49898,7 +49898,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__pano__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__log__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__loaders_resource_loader__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__loaders_resource_loader__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_info_plugin__ = __webpack_require__(60);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_rotate_plugin__ = __webpack_require__(61);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_multiple_plugin__ = __webpack_require__(66);
@@ -50023,12 +50023,20 @@ var Runtime = /** @class */ (function () {
     };
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
-            var config, pano, data, name_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, myLoader.fetchUrl(url)];
+            var config, _a, pano, data, name_1;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        if (!(typeof url === 'string')) return [3 /*break*/, 2];
+                        return [4 /*yield*/, myLoader.fetchUrl(url)];
                     case 1:
-                        config = _a.sent();
+                        _a = _b.sent();
+                        return [3 /*break*/, 3];
+                    case 2:
+                        _a = url;
+                        _b.label = 3;
+                    case 3:
+                        config = _a;
                         if (!(config && config['sceneGroup'])) {
                             return [2 /*return*/, __WEBPACK_IMPORTED_MODULE_1__log__["a" /* default */].output('load source error')];
                         }
@@ -50151,8 +50159,8 @@ window.addEventListener('resize', onEnvResize);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__event__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__log__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__util__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__loaders_resource_loader__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__loaders_resource_loader__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__ = __webpack_require__(50);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plastic_inradius_plastic__ = __webpack_require__(59);
 
@@ -50193,7 +50201,7 @@ var Pano = /** @class */ (function () {
         this.pluginList = [];
         this.opts = Object.assign({}, defaultOpts, opts);
         this.initEnv();
-        this.dispatch('render-init', this);
+        this.dispatch('scene-create', this);
     }
     Pano.prototype.initEnv = function () {
         var opts = this.opts;
@@ -50222,10 +50230,12 @@ var Pano = /** @class */ (function () {
         this.overlays = new __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__["a" /* default */](this);
     };
     Pano.prototype.resetEnv = function (data) {
+        var fov = data.fov || this.opts.fov;
         var camera = this.camera;
         // scene fov
-        camera.fov = data.fov || this.opts.fov;
-        camera.updateProjectionMatrix();
+        if (fov != camera.fov) {
+            this.setFov(fov);
+        }
         // look at angle
         this.setLook(data.lng || 180, data.lat || 90);
     };
@@ -50296,8 +50306,14 @@ var Pano = /** @class */ (function () {
      */
     Pano.prototype.setFov = function (fov, duration) {
         var camera = this.getCamera();
-        new __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__["a" /* default */](camera).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
-            .start(['fov'], this).process(function () { return camera.updateProjectionMatrix(); });
+        if (this.opts.fovTrans) {
+            new __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__["a" /* default */](camera).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
+                .start(['fov'], this).process(function () { return camera.updateProjectionMatrix(); });
+        }
+        else {
+            camera.fov = fov;
+            camera.updateProjectionMatrix();
+        }
     };
     /**
      * 获取视角
@@ -51593,7 +51609,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8), __webpack_require__(26), __webpack_require__(27), __webpack_require__(6), __webpack_require__(7), __webpack_require__(9), __webpack_require__(13), __webpack_require__(28), __webpack_require__(14), __webpack_require__(29), __webpack_require__(30), __webpack_require__(31), __webpack_require__(10), __webpack_require__(32), __webpack_require__(4), __webpack_require__(1), __webpack_require__(33), __webpack_require__(34), __webpack_require__(35), __webpack_require__(36), __webpack_require__(37), __webpack_require__(38), __webpack_require__(39), __webpack_require__(40), __webpack_require__(41), __webpack_require__(42), __webpack_require__(43), __webpack_require__(44), __webpack_require__(45), __webpack_require__(46), __webpack_require__(47), __webpack_require__(48));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(8), __webpack_require__(26), __webpack_require__(27), __webpack_require__(6), __webpack_require__(7), __webpack_require__(10), __webpack_require__(13), __webpack_require__(28), __webpack_require__(14), __webpack_require__(29), __webpack_require__(30), __webpack_require__(31), __webpack_require__(11), __webpack_require__(32), __webpack_require__(4), __webpack_require__(1), __webpack_require__(33), __webpack_require__(34), __webpack_require__(35), __webpack_require__(36), __webpack_require__(37), __webpack_require__(38), __webpack_require__(39), __webpack_require__(40), __webpack_require__(41), __webpack_require__(42), __webpack_require__(43), __webpack_require__(44), __webpack_require__(45), __webpack_require__(46), __webpack_require__(47), __webpack_require__(48));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -52624,7 +52640,7 @@ EventEmitter['EventEmitter'] = EventEmitter;
 ;(function (root, factory, undef) {
 	if (true) {
 		// CommonJS
-		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(9), __webpack_require__(10));
+		module.exports = exports = factory(__webpack_require__(0), __webpack_require__(10), __webpack_require__(11));
 	}
 	else if (typeof define === "function" && define.amd) {
 		// AMD
@@ -55913,7 +55929,7 @@ var CssAnimation = /** @class */ (function () {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__animations_tween_animation__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__animations_tween_animation__ = __webpack_require__(9);
 
 
 /**
@@ -56014,7 +56030,7 @@ var Info = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__animations_tween_animation__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__animations_tween_animation__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_timers__ = __webpack_require__(62);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_timers___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_timers__);
 
@@ -56657,10 +56673,10 @@ var Multiple = /** @class */ (function () {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__loaders_resource_loader__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__loaders_resource_loader__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__log__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__animations_tween_animation__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__animations_tween_animation__ = __webpack_require__(9);
 
 
 

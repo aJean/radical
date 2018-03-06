@@ -6,6 +6,7 @@
         "author": "覆盖物 + 帧动画 (scene3)"
     },
     "pano": {
+        "fovTrans": true,
         "sceneTrans": true
     },
     "sceneGroup": [{

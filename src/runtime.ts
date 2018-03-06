@@ -85,7 +85,7 @@ abstract class Runtime {
     }
 
     static async start(url, el, events?) {
-        const config = await myLoader.fetchUrl(url);
+        const config = typeof url === 'string' ? await myLoader.fetchUrl(url) : url;
 
         if (!(config && config['sceneGroup'])) {
             return Log.output('load source error');

@@ -41,7 +41,7 @@ export default class Pano {
         this.opts = Object.assign({}, defaultOpts, opts);
     
         this.initEnv();
-        this.dispatch('render-init', this);
+        this.dispatch('scene-create', this);
     }
 
     initEnv() {
@@ -72,10 +72,12 @@ export default class Pano {
     }
 
     resetEnv(data) {
+        const fov = data.fov || this.opts.fov;
         const camera = this.camera;
         // scene fov
-        camera.fov = data.fov || this.opts.fov;
-        camera.updateProjectionMatrix()
+        if (fov != camera.fov) {
+            this.setFov(fov);
+        }
         // look at angle
         this.setLook(data.lng || 180, data.lat || 90);
     }
@@ -152,10 +154,16 @@ export default class Pano {
      * @param {number} fov 视角
      * @param {number} duration 时长
      */
-    setFov(fov, duration) {
-        const camera = this.getCamera();        
-        new Tween(camera).to({fov}).effect('quadEaseOut', duration || 1000)
-            .start(['fov'], this).process(() => camera.updateProjectionMatrix());
+    setFov(fov, duration?) {
+        const camera = this.getCamera();
+        
+        if (this.opts.fovTrans) {
+            new Tween(camera).to({fov}).effect('quadEaseOut', duration || 1000)
+                .start(['fov'], this).process(() => camera.updateProjectionMatrix());
+        } else {
+            camera.fov = fov;
+            camera.updateProjectionMatrix();
+        }
     }
 
     /**
