@@ -45,7 +45,7 @@ class ResourceLoader extends BaseLoader {
      * @param {string} url 
      */
     loadImage(url) {
-        const urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(name => `${url}/texture_${name}.jpg`);
+        const urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(name => `${url}/mobile_${name}.jpg`);
 
         return new Promise((resolve, reject) => {
             cubeLoader.load(urls, tex => resolve(tex), null, e => reject(e));
