@@ -13,6 +13,7 @@ export default class Multiple implements IPluggableUI{
     inner: any;
     activeItem: any;
     container: HTMLElement;
+    isActive = true;
 
     constructor(pano, data) {
         this.pano = pano;
@@ -40,6 +41,22 @@ export default class Multiple implements IPluggableUI{
         this.setContainer(this.pano.getRoot());
     }
 
+    bindEvent() {
+        const pano = this.pano;
+        const inner = this.inner;
+
+        this.onClickHandle = this.onClickHandle.bind(this);
+        this.onWheelHandle = this.onWheelHandle.bind(this);
+
+        inner.addEventListener('click', this.onClickHandle);
+        inner.addEventListener('mousewheel', this.onWheelHandle);
+        // 管理 actionType 为 multiple 的 overlay 
+        pano.subscribe('multiple-active', this.onMultipleActive, this);
+        // 管理激活状态
+        pano.subscribe('scene-attachstart', this.onDisable, this);
+        pano.subscribe('scene-attach', this.onEnable, this);
+    }
+
     getElement() {
         return this.root;
     }
@@ -49,26 +66,14 @@ export default class Multiple implements IPluggableUI{
         container.appendChild(this.root);
     }
 
-    bindEvent() {
-        const inner = this.inner;
-
-        this.onClickHandle = this.onClickHandle.bind(this);
-        this.onWheelHandle = this.onWheelHandle.bind(this);
-
-        inner.addEventListener('click', this.onClickHandle);
-        inner.addEventListener('mousewheel', this.onWheelHandle);
-        // 管理 actionType 为 multiple 的 overlay 
-        this.pano.subscribe('multiple-active', this.onMultipleActive, this);
-    }
-
     onClickHandle(e) {
         e.preventDefault();
         const node = this.findParent(e.target, 'pano-multiplescene-item');
-      
-        if (node) {
+
+        if (node && this.isActive) {
             const id = node.getAttribute('data-id');
             const scene = this.data[id];
-    
+
             if (scene) {
                 this.pano.enterNext(scene);
                 this.setActive(node);
@@ -90,6 +95,14 @@ export default class Multiple implements IPluggableUI{
             this.pano.enterNext(scene);
             this.setActive(node);
         }
+    }
+
+    onDisable() {
+        this.isActive = false;
+    }
+
+    onEnable() {
+        this.isActive = true;
     }
 
     findParent(node, cls) {
@@ -121,9 +134,14 @@ export default class Multiple implements IPluggableUI{
     }
 
     dispose() {
-        this.inner.removeEventListener('click', this.onClickHandle);
-        this.inner.removeEventListener('mousewheel', this.onWheelHandle);
-        this.pano.unSubscribe('multiple-active', this.onMultipleActive, this);
+        const pano = this.pano;
+        const inner = this.inner;
+
+        inner.removeEventListener('click', this.onClickHandle);
+        inner.removeEventListener('mousewheel', this.onWheelHandle);
+        pano.unSubscribe('multiple-active', this.onMultipleActive, this);
+        pano.unSubscribe('scene-attachStart', this.onDisable, this);
+        pano.unSubscribe('scene-attach', this.onEnable, this);
 
         this.root.innerHTML = '';
         this.container.removeChild(this.root);

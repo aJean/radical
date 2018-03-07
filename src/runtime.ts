@@ -87,13 +87,14 @@ abstract class Runtime {
 
     static async start(url, el, events?) {
         const config = typeof url === 'string' ? await myLoader.fetchUrl(url) : url;
+        const data = config && config['sceneGroup'];
 
-        if (!(config && config['sceneGroup'])) {
+        if (!data) {
             return Log.output('load source error');
         }
 
-        const pano = this.createRef(el, config['pano'], config['sceneGroup']);
-        const data = this.findScene(config);
+        const pano = this.createRef(el, config['pano'], data);
+        const scene = this.findScene(config);
 
         if (config['animation']) {
             Timeline.install(config['animation'], pano);
@@ -128,22 +129,22 @@ abstract class Runtime {
         // add to env queue listeners
         EnvQueue.add(pano.onResize, pano);
         // load and render
-        this.run(pano, data);
+        this.run(pano, scene);
     }
 
     /**
      * 环境构造 stream
      * @param {Object} pano 全景对象
-     * @param {Object} data 等待渲染的场景数据
+     * @param {Object} scene 等待渲染的场景数据
      */
-    static async run(pano, data) {  
+    static async run(pano, scene) {  
         try {
             // 加载缩略图
-            const thumbImg = await myLoader.loadTexture(data.imgPath, 'canvas');
+            const thumbImg = await myLoader.loadTexture(scene.imgPath, 'canvas');
             // 加载原图
             if (thumbImg) {
                 pano.initPreview(thumbImg);
-                await pano.initScene(data);
+                await pano.initScene(scene);
                 pano.animate();
             }
         } catch(e) {

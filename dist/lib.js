@@ -50025,7 +50025,7 @@ var Runtime = /** @class */ (function () {
     };
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
-            var config, _a, pano, data, name_1;
+            var config, _a, data, pano, scene, name_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -50039,11 +50039,12 @@ var Runtime = /** @class */ (function () {
                         _b.label = 3;
                     case 3:
                         config = _a;
-                        if (!(config && config['sceneGroup'])) {
+                        data = config && config['sceneGroup'];
+                        if (!data) {
                             return [2 /*return*/, __WEBPACK_IMPORTED_MODULE_1__log__["a" /* default */].output('load source error')];
                         }
-                        pano = this.createRef(el, config['pano'], config['sceneGroup']);
-                        data = this.findScene(config);
+                        pano = this.createRef(el, config['pano'], data);
+                        scene = this.findScene(config);
                         if (config['animation']) {
                             __WEBPACK_IMPORTED_MODULE_7__animations_timeline_animation__["a" /* default */].install(config['animation'], pano);
                         }
@@ -50073,7 +50074,7 @@ var Runtime = /** @class */ (function () {
                         // add to env queue listeners
                         EnvQueue.add(pano.onResize, pano);
                         // load and render
-                        this.run(pano, data);
+                        this.run(pano, scene);
                         return [2 /*return*/];
                 }
             });
@@ -50082,21 +50083,21 @@ var Runtime = /** @class */ (function () {
     /**
      * 环境构造 stream
      * @param {Object} pano 全景对象
-     * @param {Object} data 等待渲染的场景数据
+     * @param {Object} scene 等待渲染的场景数据
      */
-    Runtime.run = function (pano, data) {
+    Runtime.run = function (pano, scene) {
         return __awaiter(this, void 0, void 0, function () {
             var thumbImg, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 4, , 5]);
-                        return [4 /*yield*/, myLoader.loadTexture(data.imgPath, 'canvas')];
+                        return [4 /*yield*/, myLoader.loadTexture(scene.imgPath, 'canvas')];
                     case 1:
                         thumbImg = _a.sent();
                         if (!thumbImg) return [3 /*break*/, 3];
                         pano.initPreview(thumbImg);
-                        return [4 /*yield*/, pano.initScene(data)];
+                        return [4 /*yield*/, pano.initScene(scene)];
                     case 2:
                         _a.sent();
                         pano.animate();
@@ -56105,6 +56106,7 @@ var Rotate = /** @class */ (function () {
  */
 var Multiple = /** @class */ (function () {
     function Multiple(pano, data) {
+        this.isActive = true;
         this.pano = pano;
         this.data = data;
         this.create();
@@ -56123,6 +56125,19 @@ var Multiple = /** @class */ (function () {
         // add to pano root
         this.setContainer(this.pano.getRoot());
     };
+    Multiple.prototype.bindEvent = function () {
+        var pano = this.pano;
+        var inner = this.inner;
+        this.onClickHandle = this.onClickHandle.bind(this);
+        this.onWheelHandle = this.onWheelHandle.bind(this);
+        inner.addEventListener('click', this.onClickHandle);
+        inner.addEventListener('mousewheel', this.onWheelHandle);
+        // 管理 actionType 为 multiple 的 overlay 
+        pano.subscribe('multiple-active', this.onMultipleActive, this);
+        // 管理激活状态
+        pano.subscribe('scene-attachstart', this.onDisable, this);
+        pano.subscribe('scene-attach', this.onEnable, this);
+    };
     Multiple.prototype.getElement = function () {
         return this.root;
     };
@@ -56130,19 +56145,10 @@ var Multiple = /** @class */ (function () {
         this.container = container;
         container.appendChild(this.root);
     };
-    Multiple.prototype.bindEvent = function () {
-        var inner = this.inner;
-        this.onClickHandle = this.onClickHandle.bind(this);
-        this.onWheelHandle = this.onWheelHandle.bind(this);
-        inner.addEventListener('click', this.onClickHandle);
-        inner.addEventListener('mousewheel', this.onWheelHandle);
-        // 管理 actionType 为 multiple 的 overlay 
-        this.pano.subscribe('multiple-active', this.onMultipleActive, this);
-    };
     Multiple.prototype.onClickHandle = function (e) {
         e.preventDefault();
         var node = this.findParent(e.target, 'pano-multiplescene-item');
-        if (node) {
+        if (node && this.isActive) {
             var id = node.getAttribute('data-id');
             var scene = this.data[id];
             if (scene) {
@@ -56163,6 +56169,12 @@ var Multiple = /** @class */ (function () {
             this.pano.enterNext(scene);
             this.setActive(node);
         }
+    };
+    Multiple.prototype.onDisable = function () {
+        this.isActive = false;
+    };
+    Multiple.prototype.onEnable = function () {
+        this.isActive = true;
     };
     Multiple.prototype.findParent = function (node, cls) {
         while (node != null) {
@@ -56187,9 +56199,13 @@ var Multiple = /** @class */ (function () {
         this.root.style.display = 'none';
     };
     Multiple.prototype.dispose = function () {
-        this.inner.removeEventListener('click', this.onClickHandle);
-        this.inner.removeEventListener('mousewheel', this.onWheelHandle);
-        this.pano.unSubscribe('multiple-active', this.onMultipleActive, this);
+        var pano = this.pano;
+        var inner = this.inner;
+        inner.removeEventListener('click', this.onClickHandle);
+        inner.removeEventListener('mousewheel', this.onWheelHandle);
+        pano.unSubscribe('multiple-active', this.onMultipleActive, this);
+        pano.unSubscribe('scene-attachStart', this.onDisable, this);
+        pano.unSubscribe('scene-attach', this.onEnable, this);
         this.root.innerHTML = '';
         this.container.removeChild(this.root);
     };
