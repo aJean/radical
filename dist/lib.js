@@ -47848,6 +47848,16 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         else if (parent) {
             parent.remove(target);
         }
+    },
+    /**
+     * 查找渲染 scene 对象
+     * @param source
+     */
+    findScene: function (source, tid) {
+        var group = source.sceneGroup;
+        var id = tid !== void 0 ? tid : source.defaultSceneId;
+        var scene = group.find(function (item) { return item.id == id; });
+        return (scene || group[0]);
     }
 });
 
@@ -49862,8 +49872,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     },
     dispose: function (ref) {
         return __WEBPACK_IMPORTED_MODULE_4__src_runtime__["a" /* default */].releaseInstance(ref);
-    },
-    addOverlay: function (data) {
     }
 });
 
@@ -50011,21 +50019,21 @@ var Runtime = /** @class */ (function () {
     /**
      * 创建全景对象
      * @param {HTMLElement} el root 元素
-     * @param {Object} opts
-     * @param {Array} data
+     * @param {Object} source
      */
-    Runtime.createRef = function (el, opts, data) {
+    Runtime.createRef = function (el, source) {
         el = (typeof el == 'string') ? document.querySelector(el) : el;
         if (!el || !el.parentNode) {
             el = document.body;
         }
         var ref = el.getAttribute('ref') || "pano_" + this.uid++;
+        var opts = __assign({ el: el }, source['pano']);
         el.setAttribute('ref', ref);
-        return this.instanceMap[ref] = new __WEBPACK_IMPORTED_MODULE_0__pano__["a" /* default */](__assign({ el: el, data: data }, opts));
+        return this.instanceMap[ref] = new __WEBPACK_IMPORTED_MODULE_0__pano__["a" /* default */](opts, source);
     };
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
-            var config, _a, data, pano, scene, name_1;
+            var source, _a, data, pano, scene, name_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -50038,30 +50046,30 @@ var Runtime = /** @class */ (function () {
                         _a = url;
                         _b.label = 3;
                     case 3:
-                        config = _a;
-                        data = config && config['sceneGroup'];
+                        source = _a;
+                        data = source && source['sceneGroup'];
                         if (!data) {
                             return [2 /*return*/, __WEBPACK_IMPORTED_MODULE_1__log__["a" /* default */].output('load source error')];
                         }
-                        pano = this.createRef(el, config['pano'], data);
-                        scene = this.findScene(config);
-                        if (config['animation']) {
-                            __WEBPACK_IMPORTED_MODULE_7__animations_timeline_animation__["a" /* default */].install(config['animation'], pano);
+                        pano = this.createRef(el, source);
+                        scene = this.findScene(source);
+                        if (source['animation']) {
+                            __WEBPACK_IMPORTED_MODULE_7__animations_timeline_animation__["a" /* default */].install(source['animation'], pano);
                         }
                         else {
                             pano.noTimeline();
                         }
-                        if (config['rotate']) {
-                            pano.addPlugin(__WEBPACK_IMPORTED_MODULE_4__plugins_rotate_plugin__["a" /* default */], config['rotate']);
+                        if (source['rotate']) {
+                            pano.addPlugin(__WEBPACK_IMPORTED_MODULE_4__plugins_rotate_plugin__["a" /* default */], source['rotate']);
                         }
-                        if (config['multiScene']) {
-                            pano.addPlugin(__WEBPACK_IMPORTED_MODULE_5__plugins_multiple_plugin__["a" /* default */], config['sceneGroup']);
+                        if (source['multiScene']) {
+                            pano.addPlugin(__WEBPACK_IMPORTED_MODULE_5__plugins_multiple_plugin__["a" /* default */], source['sceneGroup']);
                         }
-                        if (config['info']) {
-                            pano.addPlugin(__WEBPACK_IMPORTED_MODULE_3__plugins_info_plugin__["a" /* default */], config['info']);
+                        if (source['info']) {
+                            pano.addPlugin(__WEBPACK_IMPORTED_MODULE_3__plugins_info_plugin__["a" /* default */], source['info']);
                         }
-                        if (config['wormhole']) {
-                            pano.addPlugin(__WEBPACK_IMPORTED_MODULE_6__plugins_wormhole_plugin__["a" /* default */], config['wormhole']);
+                        if (source['wormhole']) {
+                            pano.addPlugin(__WEBPACK_IMPORTED_MODULE_6__plugins_wormhole_plugin__["a" /* default */], source['wormhole']);
                         }
                         // 用户订阅事件
                         if (events) {
@@ -50069,12 +50077,10 @@ var Runtime = /** @class */ (function () {
                                 pano.subscribe(name_1, events[name_1]);
                             }
                         }
-                        // set pem path
-                        myLoader.loadCret(config['cretPath']);
                         // add to env queue listeners
                         EnvQueue.add(pano.onResize, pano);
                         // load and render
-                        this.run(pano, scene);
+                        pano.run();
                         return [2 /*return*/];
                 }
             });
@@ -50087,27 +50093,28 @@ var Runtime = /** @class */ (function () {
      */
     Runtime.run = function (pano, scene) {
         return __awaiter(this, void 0, void 0, function () {
-            var thumbImg, e_1;
+            var img, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 4, , 5]);
+                        _a.trys.push([0, 3, , 4]);
+                        pano.currentData = scene;
                         return [4 /*yield*/, myLoader.loadTexture(scene.imgPath, 'canvas')];
                     case 1:
-                        thumbImg = _a.sent();
-                        if (!thumbImg) return [3 /*break*/, 3];
-                        pano.initPreview(thumbImg);
+                        img = _a.sent();
+                        pano.initPreview(img);
+                        // 加载原图
                         return [4 /*yield*/, pano.initScene(scene)];
                     case 2:
+                        // 加载原图
                         _a.sent();
                         pano.animate();
-                        _a.label = 3;
-                    case 3: return [3 /*break*/, 5];
-                    case 4:
+                        return [3 /*break*/, 4];
+                    case 3:
                         e_1 = _a.sent();
                         __WEBPACK_IMPORTED_MODULE_1__log__["a" /* default */].output(e_1);
-                        return [3 /*break*/, 5];
-                    case 5: return [2 /*return*/];
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
                 }
             });
         });
@@ -50120,8 +50127,6 @@ var Runtime = /** @class */ (function () {
         var group = source.sceneGroup;
         var scene = group.find(function (item) { return item.id == source.defaultSceneId; });
         return (scene || group[0]);
-    };
-    Runtime.addOverlay = function (pano) {
     };
     Runtime.uid = 0;
     Runtime.instanceMap = {};
@@ -50166,6 +50171,41 @@ window.addEventListener('resize', onEnvResize);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__animations_tween_animation__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__ = __webpack_require__(50);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plastic_inradius_plastic__ = __webpack_require__(59);
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [0, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 
 
 
@@ -50181,7 +50221,7 @@ window.addEventListener('resize', onEnvResize);
  */
 var defaultOpts = {
     el: undefined,
-    fov: 80,
+    fov: 100,
     gyro: false,
     width: null,
     height: null,
@@ -50189,19 +50229,26 @@ var defaultOpts = {
 };
 var myLoader = new __WEBPACK_IMPORTED_MODULE_6__loaders_resource_loader__["a" /* default */]();
 var Pano = /** @class */ (function () {
-    function Pano(opts) {
+    function Pano(opts, source) {
         this.opts = null;
         this.root = null;
         this.webgl = null;
         this.scene = null;
         this.camera = null;
         this.skyBox = null;
-        this.orbitControl = null;
-        this.gyroControl = null;
+        this.orbit = null;
+        this.gyro = null;
         this.currentData = null;
+        this.frozen = true;
         this.event = new __WEBPACK_IMPORTED_MODULE_3__event__["a" /* default */]();
         this.pluginList = [];
-        this.opts = Object.assign({}, defaultOpts, opts);
+        var data = this.currentData = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].findScene(source);
+        opts = Object.assign({}, defaultOpts, opts);
+        if (data.fov) {
+            opts.fov = data.fov;
+        }
+        this.opts = opts;
+        this.source = source;
         this.initEnv();
         this.dispatch('scene-create', this);
     }
@@ -50223,56 +50270,74 @@ var Pano = /** @class */ (function () {
         this.scene = new __WEBPACK_IMPORTED_MODULE_0_three__["v" /* Scene */]();
         this.camera = new __WEBPACK_IMPORTED_MODULE_0_three__["p" /* PerspectiveCamera */](opts.fov, size.aspect, 0.1, 10000);
         // 场景控制器
-        var control = this.orbitControl = new __WEBPACK_IMPORTED_MODULE_1__controls_orbitControl__["a" /* default */](this.camera, webgl.domElement);
+        var control = this.orbit = new __WEBPACK_IMPORTED_MODULE_1__controls_orbitControl__["a" /* default */](this.camera, webgl.domElement);
         // 陀螺仪控制器
         if (opts.gyro) {
-            this.gyroControl = new __WEBPACK_IMPORTED_MODULE_2__controls_gyroControl__["a" /* default */](this.camera, control);
+            this.gyro = new __WEBPACK_IMPORTED_MODULE_2__controls_gyroControl__["a" /* default */](this.camera, control);
         }
         // bind overlays events
-        this.overlays = new __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__["a" /* default */](this, opts.data);
+        this.overlays = new __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__["a" /* default */](this, this.source['sceneGroup']);
     };
     Pano.prototype.resetEnv = function (data) {
         var fov = data.fov || this.opts.fov;
         var camera = this.camera;
-        // scene fov
+        // scene fov        
         if (fov != camera.fov) {
             this.setFov(fov);
         }
         // look at angle
         this.setLook(data.lng || 180, data.lat || 90);
     };
-    /**
-     * 渲染预览图纹理
-     * @param {Object} texture 纹理贴图
-     */
-    Pano.prototype.initPreview = function (texture) {
-        var skyBox = this.skyBox = new __WEBPACK_IMPORTED_MODULE_9__plastic_inradius_plastic__["a" /* default */]({ envMap: texture });
-        skyBox.addTo(this.scene);
-        this.dispatch('scene-init', this);
-        this.render();
-    };
-    /**
-     * enter next scene
-     * @param {Object} data scene data or id
-     */
-    Pano.prototype.initScene = function (data) {
-        var _this = this;
-        return myLoader.loadTexture(data.bxlPath || data.texPath)
-            .then(function (texture) {
-            _this.currentData = data;
-            _this.replaceTexture(texture);
-        }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('load scene: load source texture fail'); });
+    Pano.prototype.run = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            var source, data, img, skyBox, e_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        source = this.source;
+                        // set pem path
+                        myLoader.loadCret(source['cretPath']);
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 4, , 5]);
+                        data = this.currentData;
+                        return [4 /*yield*/, myLoader.loadTexture(data.imgPath, 'canvas')];
+                    case 2:
+                        img = _a.sent();
+                        skyBox = this.skyBox = new __WEBPACK_IMPORTED_MODULE_9__plastic_inradius_plastic__["a" /* default */]({ envMap: img });
+                        skyBox.addTo(this.scene);
+                        this.dispatch('scene-init', this);
+                        this.render();
+                        // 加载原图
+                        return [4 /*yield*/, myLoader.loadTexture(data.bxlPath || data.texPath)
+                                .then(function (texture) {
+                                texture['mapping'] = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
+                                texture['needsUpdate'] = true;
+                                _this.skyBox.setMap(texture);
+                                _this.dispatch('scene-ready', _this);
+                            }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('load scene: load source texture fail'); })];
+                    case 3:
+                        // 加载原图
+                        _a.sent();
+                        // render process
+                        this.animate();
+                        return [3 /*break*/, 5];
+                    case 4:
+                        e_1 = _a.sent();
+                        __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output(e_1);
+                        return [3 /*break*/, 5];
+                    case 5: return [2 /*return*/];
+                }
+            });
+        });
     };
     /**
      * 在渲染帧中更新控制器
      */
     Pano.prototype.updateControl = function () {
-        if (this.gyroControl && this.gyroControl.enabled) {
-            this.gyroControl.update();
-        }
-        else {
-            this.orbitControl.update();
-        }
+        var control = this.gyro && this.gyro.enabled ? this.gyro : this.orbit;
+        !this.frozen && control.update();
     };
     /**
      * 设置相机角度, 相机方向 (0, 0, -1), 相对初始 z 轴正方向 (180, 90)
@@ -50280,7 +50345,7 @@ var Pano = /** @class */ (function () {
      * @param {number} lat 纵向角度
      */
     Pano.prototype.setLook = function (lng, lat) {
-        var control = this.orbitControl;
+        var control = this.orbit;
         if (lng !== undefined && lat !== undefined) {
             var theta = (180 - lng) * (Math.PI / 180);
             var phi = (90 - lat) * (Math.PI / 180);
@@ -50293,7 +50358,7 @@ var Pano = /** @class */ (function () {
      * 获取相机角度
      */
     Pano.prototype.getLook = function () {
-        var control = this.orbitControl;
+        var control = this.orbit;
         var theta = control.getAzimuthalAngle();
         var phi = control.getPolarAngle();
         return {
@@ -50441,13 +50506,13 @@ var Pano = /** @class */ (function () {
      * 获取控制器
      */
     Pano.prototype.getControl = function () {
-        return this.orbitControl;
+        return this.orbit;
     };
     /**
      * 获取 camera lookat 目标的 vector3 obj
      */
     Pano.prototype.getLookAtTarget = function () {
-        return this.orbitControl.target;
+        return this.orbit.target;
     };
     /**
      * 添加 object3d 对象
@@ -50507,23 +50572,24 @@ var Pano = /** @class */ (function () {
      * 启动陀螺仪
      */
     Pano.prototype.startGyroControl = function () {
-        if (this.gyroControl && !this.gyroControl.enabled) {
-            this.gyroControl.connect();
+        if (this.gyro && !this.gyro.enabled) {
+            this.gyro.connect();
         }
     };
     /**
      * 停止陀螺仪
      */
     Pano.prototype.stopGyroControl = function () {
-        if (this.gyroControl) {
-            this.gyroControl.disconnect();
-            delete this.gyroControl;
+        if (this.gyro) {
+            this.gyro.disconnect();
+            delete this.gyro;
         }
     };
     /**
      * 开场动画结束
      */
     Pano.prototype.noTimeline = function () {
+        this.frozen = false;
         this.startGyroControl();
     };
     /**
@@ -56040,7 +56106,8 @@ var Info = /** @class */ (function () {
  */
 var defaultOpts = {
     speed: 1,
-    lazy: 3000,
+    start: 0,
+    lazy: 2000,
     recover: 5000
 };
 var Rotate = /** @class */ (function () {
@@ -56057,7 +56124,7 @@ var Rotate = /** @class */ (function () {
         var data = this.data;
         var orbit = this.pano.getControl();
         orbit.autoRotateSpeed = data.speed;
-        setTimeout(function () { return orbit.autoRotate = true; }, data.lazy);
+        setTimeout(function () { return orbit.autoRotate = true; }, data.start);
     };
     /**
      * 中断漫游并恢复
@@ -56413,21 +56480,26 @@ var AnimationFly = /** @class */ (function () {
         this.time = 0;
         this.type = 'fly';
         this.finished = false;
+        this.enable = false;
         this.path = this.getPath(this.camera = camera);
     }
     /**
      * set camera position when pano first render
      */
     AnimationFly.prototype.init = function () {
+        var _this = this;
         var camera = this.camera;
         var data = this.path[0].start;
         camera.fov = data.fov;
         camera.position.set(data.px, data.py, data.pz);
         camera.rotation.set(data.rx, data.ry, data.rz);
-        // camera.lookAt(0, 0, 1);
         camera.updateProjectionMatrix();
+        setTimeout(function () { return _this.enable = true; }, 1000);
     };
     AnimationFly.prototype.update = function () {
+        if (!this.enable) {
+            return;
+        }
         var camera = this.camera;
         var path = this.path;
         var phase = path[0];
@@ -56462,10 +56534,10 @@ var AnimationFly = /** @class */ (function () {
     AnimationFly.prototype.getPath = function (camera) {
         return [{
                 start: { fov: 160, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
-                end: { fov: 100, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
+                end: { fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
                 time: 1500
             }, {
-                start: { fov: 100, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
+                start: { fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
                 end: { fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI },
                 time: 1500
             }];

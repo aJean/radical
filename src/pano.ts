@@ -8,6 +8,11 @@ import ResourceLoader from './loaders/resource.loader';
 import Tween from './animations/tween.animation';
 import Overlays from './overlays/overlays.overlay';
 import Inradius from './plastic/inradius.plastic';
+import Info from './plugins/info.plugin';
+import Rotate from './plugins/rotate.plugin';
+import Multiple from './plugins/multiple.plugin';
+import Wormhole from './plugins/wormhole.plugin';
+import Timeline from './animations/timeline.animation';
 
 /**
  * @file 全景渲染
@@ -15,7 +20,7 @@ import Inradius from './plastic/inradius.plastic';
 
 const defaultOpts = {
     el: undefined,
-    fov: 80,
+    fov: 100,
     gyro: false,
     width: null,
     height: null,
@@ -24,21 +29,30 @@ const defaultOpts = {
 const myLoader = new ResourceLoader();
 export default class Pano {
     overlays: Overlays;
+    source: any;
     opts = null;
     root = null;
     webgl = null;
     scene = null;
     camera = null;
     skyBox = null;
-    orbitControl = null;
-    gyroControl = null;
+    orbit = null;
+    gyro = null;
     currentData = null;
+    frozen = true;
     event = new EventEmitter();
     pluginList = [];
 
-    constructor(opts) {
-        this.opts = Object.assign({}, defaultOpts, opts);
-    
+    constructor(opts, source) {
+        const data = this.currentData = Util.findScene(source);
+        opts = Object.assign({}, defaultOpts, opts);
+
+        if (data.fov) {
+            opts.fov = data.fov;
+        }
+
+        this.opts = opts;
+        this.source = source;
         this.initEnv();
         this.dispatch('scene-create', this);
     }
@@ -61,19 +75,19 @@ export default class Pano {
         this.scene = new Scene();
         this.camera = new PerspectiveCamera(opts.fov, size.aspect, 0.1, 10000);
         // 场景控制器
-        const control = this.orbitControl = new OrbitControl(this.camera, webgl.domElement);
+        const control = this.orbit = new OrbitControl(this.camera, webgl.domElement);
         // 陀螺仪控制器
         if (opts.gyro) {
-            this.gyroControl = new GyroControl(this.camera, control);
+            this.gyro = new GyroControl(this.camera, control);
         }
         // bind overlays events
-        this.overlays = new Overlays(this, opts.data);        
+        this.overlays = new Overlays(this, this.source['sceneGroup']);        
     }
 
     resetEnv(data) {
         const fov = data.fov || this.opts.fov;
         const camera = this.camera;
-        // scene fov
+        // scene fov        
         if (fov != camera.fov) {
             this.setFov(fov);
         }
@@ -81,39 +95,42 @@ export default class Pano {
         this.setLook(data.lng || 180, data.lat || 90);
     }
 
-    /**
-     * 渲染预览图纹理
-     * @param {Object} texture 纹理贴图 
-     */
-    initPreview(texture) {
-        const skyBox = this.skyBox = new Inradius({envMap: texture});
-        skyBox.addTo(this.scene);
+    async run() {
+        const source = this.source;
+        // set pem path
+        myLoader.loadCret(source['cretPath']);
 
-        this.dispatch('scene-init', this);
-        this.render();
-    }
+        try {
+            const data = this.currentData;
+            // 加载缩略图
+            const img = await myLoader.loadTexture(data.imgPath, 'canvas');
+            const skyBox = this.skyBox = new Inradius({envMap: img});
+            skyBox.addTo(this.scene);
 
-    /**
-     * enter next scene
-     * @param {Object} data scene data or id
-     */
-    initScene(data) {
-        return myLoader.loadTexture(data.bxlPath || data.texPath)
+            this.dispatch('scene-init', this);
+            this.render();
+            // 加载原图
+            await myLoader.loadTexture(data.bxlPath || data.texPath)
             .then(texture => {
-                this.currentData = data;
-                this.replaceTexture(texture);
+                texture['mapping'] = CubeRefractionMapping;
+                texture['needsUpdate'] = true;
+        
+                this.skyBox.setMap(texture);
+                this.dispatch('scene-ready', this);
             }).catch(e => Log.output('load scene: load source texture fail'));
+            // render process
+            this.animate();
+        } catch(e) {
+            Log.output(e)
+        }
     }
 
     /**
      * 在渲染帧中更新控制器
      */
     updateControl() {
-        if (this.gyroControl && this.gyroControl.enabled) {
-            this.gyroControl.update();
-        } else {
-            this.orbitControl.update();
-        }
+        const control = this.gyro && this.gyro.enabled ? this.gyro : this.orbit;
+        !this.frozen && control.update();
     }
 
     /**
@@ -122,7 +139,7 @@ export default class Pano {
      * @param {number} lat 纵向角度
      */
     setLook(lng?, lat?) {
-        const control = this.orbitControl;
+        const control = this.orbit;
 
         if (lng !== undefined && lat !== undefined) {
             const theta = (180 - lng) * (Math.PI / 180);
@@ -138,7 +155,7 @@ export default class Pano {
      * 获取相机角度
      */
     getLook() {
-        const control = this.orbitControl;
+        const control = this.orbit;
         const theta = control.getAzimuthalAngle();
         const phi = control.getPolarAngle();
 
@@ -247,7 +264,7 @@ export default class Pano {
      * 帧渲染
      */
     animate() {
-        this.updateControl(); 
+        this.updateControl();
         this.dispatch('render-process', this.currentData, this);
         this.render();
 
@@ -308,14 +325,14 @@ export default class Pano {
      * 获取控制器
      */
     getControl() {
-        return this.orbitControl;
+        return this.orbit;
     }
 
     /**
      * 获取 camera lookat 目标的 vector3 obj
      */
     getLookAtTarget() {
-        return this.orbitControl.target;
+        return this.orbit.target;
     }
 
     /**
@@ -382,8 +399,8 @@ export default class Pano {
      * 启动陀螺仪
      */
     startGyroControl() {
-        if (this.gyroControl && !this.gyroControl.enabled) {
-            this.gyroControl.connect();
+        if (this.gyro && !this.gyro.enabled) {
+            this.gyro.connect();
         }
     }
 
@@ -391,9 +408,9 @@ export default class Pano {
      * 停止陀螺仪
      */
     stopGyroControl() {
-        if (this.gyroControl) {
-            this.gyroControl.disconnect();
-            delete this.gyroControl;
+        if (this.gyro) {
+            this.gyro.disconnect();
+            delete this.gyro;
         }
     }
 
@@ -401,7 +418,8 @@ export default class Pano {
      * 开场动画结束
      */
     noTimeline() {
-       this.startGyroControl();
+        this.frozen = false;
+        this.startGyroControl();
     }
 
     /** 

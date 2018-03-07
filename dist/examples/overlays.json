@@ -69,7 +69,7 @@
         "bxlPath": "../assets/scene2/scene2.bxl",
         "imgPath": "../assets/scene2/scene2.jpg",
         "thumbPath": "../assets/scene2/thumb2.jpg",
-        "fov": 100,
+        "fov": 80,
         "overlays": [{
             "type": "animation",
             "category": "frame",

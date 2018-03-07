@@ -7,7 +7,8 @@ import Tween from '../animations/tween.animation';
 
 const defaultOpts = {
     speed: 1,
-    lazy: 3000,
+    start: 0,
+    lazy: 2000,
     recover: 5000
 };
 export default class Rotate {
@@ -33,7 +34,7 @@ export default class Rotate {
         const orbit = this.pano.getControl();
         
         orbit.autoRotateSpeed = data.speed;
-        setTimeout(() => orbit.autoRotate = true, data.lazy);
+        setTimeout(() => orbit.autoRotate = true, data.start);
     }
 
     /**

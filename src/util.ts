@@ -156,5 +156,17 @@ export default {
         } else if (parent) {
             parent.remove(target);
         }
+    },
+
+    /**
+     * 查找渲染 scene 对象
+     * @param source
+     */
+    findScene(source, tid?) {
+        const group = source.sceneGroup;
+        const id = tid !== void 0 ? tid : source.defaultSceneId;
+        const scene = group.find(item => item.id == id);
+
+        return (scene || group[0]);
     }
 };

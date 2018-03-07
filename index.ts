@@ -19,9 +19,5 @@ export default {
 
     dispose(ref: string) {
         return Runtime.releaseInstance(ref);
-    },
-
-    addOverlay(data: Object) {
-
     }
 };

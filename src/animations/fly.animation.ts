@@ -12,6 +12,7 @@ export default class AnimationFly {
     time = 0;
     type = 'fly';
     finished = false;
+    enable = false;
 
     constructor(camera) {
         this.path = this.getPath(this.camera = camera);
@@ -27,12 +28,17 @@ export default class AnimationFly {
         camera.fov = data.fov;
         camera.position.set(data.px, data.py, data.pz);
         camera.rotation.set(data.rx, data.ry, data.rz);
-        // camera.lookAt(0, 0, 1);
 
         camera.updateProjectionMatrix();
+
+        setTimeout(() => this.enable = true, 1000);
     }
 
     update() {
+        if (!this.enable) {
+            return;
+        }
+
         const camera = this.camera;
         const path = this.path;
         const phase = path[0];
@@ -54,7 +60,7 @@ export default class AnimationFly {
                 phase.end.ry,
                 phase.end.rz
             );
-    
+            
             camera.updateProjectionMatrix();
             time = this.time = 0;
             return path.shift();       
@@ -81,10 +87,10 @@ export default class AnimationFly {
     getPath(camera) {
         return [{
             start: {fov: 160, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
-            end: {fov: 100, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8},
+            end: {fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8},
             time: 1500
         }, {
-            start: {fov: 100, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8},
+            start: {fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8},
             end: {fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI},
             time: 1500
         }];

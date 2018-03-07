@@ -4,12 +4,8 @@
     "info": {
         "author": "scene - 漫游"
     },
-    "pano": {
-        "fov": 100
-    },
     "rotate": {
-        "speed": 0.3,
-        "lazy": 2000
+        "speed": 0.4
     },
     "sceneGroup": [{
         "id": "scene0",
