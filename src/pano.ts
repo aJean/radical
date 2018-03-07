@@ -34,7 +34,6 @@ export default class Pano {
     gyroControl = null;
     currentData = null;
     event = new EventEmitter();
-    group = [];
     pluginList = [];
 
     constructor(opts) {
@@ -68,7 +67,7 @@ export default class Pano {
             this.gyroControl = new GyroControl(this.camera, control);
         }
         // bind overlays events
-        this.overlays = new Overlays(this);        
+        this.overlays = new Overlays(this, opts.data);        
     }
 
     resetEnv(data) {
@@ -368,13 +367,9 @@ export default class Pano {
 
     /**
      * internal enter next scenel
-     * @param {Object} data scene data or id
+     * @param {Object} data scene data
      */
     enterNext(data) {
-        if (typeof data === 'string') {
-            data = this.group && this.group.find(item => item.id == data);
-        }
-
         return myLoader.loadTexture(data.bxlPath || data.texPath)
             .then(texture => {
                 this.currentData = data;

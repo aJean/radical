@@ -1,6 +1,5 @@
 import Pano from '../pano';
 import Tween from '../animations/tween.animation';
-import { setTimeout, clearTimeout } from 'timers';
 
 /**
  * @file 漫游插件

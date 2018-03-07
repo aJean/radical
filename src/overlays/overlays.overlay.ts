@@ -35,10 +35,12 @@ export default class Overlays {
     maps = {};
     pano: Pano;
     cid: number;
+    group: any;
     raycaster = new Raycaster();
 
-    constructor(pano: Pano) {
+    constructor(pano: Pano, group) {
         this.pano = pano;
+        this.group = group;
 
         pano.subscribe('scene-attachstart', scene => this.removeOverlays());
         pano.subscribe('scene-attach', scene => this.init(scene));
@@ -81,6 +83,10 @@ export default class Overlays {
                     break;
             }
         });
+    }
+
+    findScene(id) {
+        return this.group.find(item => item.id == id);
     }
 
     /**
@@ -232,7 +238,7 @@ export default class Overlays {
         pano.dispatch('overlay-click', instance, pano);
         switch (data.actionType) {
             case 'scene':
-                pano.enterNext(data.sceneId);
+                pano.enterNext(this.findScene(data.sceneId));
                 break;
             case 'link':
                 window.open(data.linkUrl, '_blank');

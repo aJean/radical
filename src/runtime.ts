@@ -70,8 +70,9 @@ abstract class Runtime {
      * 创建全景对象
      * @param {HTMLElement} el root 元素
      * @param {Object} opts
+     * @param {Array} data
      */
-    static createRef(el, opts) {
+    static createRef(el, opts, data) {
         el = (typeof el == 'string') ? document.querySelector(el) : el;
 
         if (!el || !el.parentNode) {
@@ -81,7 +82,7 @@ abstract class Runtime {
         const ref = el.getAttribute('ref') || `pano_${this.uid++}`;
         el.setAttribute('ref', ref);
         
-        return this.instanceMap[ref] = new Pano({el, ...opts});
+        return this.instanceMap[ref] = new Pano({el, data, ...opts});
     }
 
     static async start(url, el, events?) {
@@ -91,7 +92,7 @@ abstract class Runtime {
             return Log.output('load source error');
         }
 
-        const pano = this.createRef(el, config['pano']);
+        const pano = this.createRef(el, config['pano'], config['sceneGroup']);
         const data = this.findScene(config);
 
         if (config['animation']) {
