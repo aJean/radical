@@ -218,7 +218,7 @@ export default class Pano {
 
         this.skyBox.setMap(texture);
         // 触发场景切换事件
-        this.dispatch('scene-attach', this.currentData, this);
+        setTimeout(() => this.dispatch('scene-attach', this.currentData, this), 100);
     }
 
     /**
@@ -311,6 +311,20 @@ export default class Pano {
      */
     getControl() {
         return this.orbit;
+    }
+
+    /**
+     * 设置旋转速度
+     */
+    setRotateSpeed(speed) {
+        this.orbit.autoRotateSpeed = speed;
+    }
+
+    /**
+     * 设置旋转
+     */
+    setRotate(flag) {
+        this.orbit.autoRotate = flag;
     }
 
     /**

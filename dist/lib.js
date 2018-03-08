@@ -50372,10 +50372,11 @@ var Pano = /** @class */ (function () {
      * @param {Object} texture 场景原图纹理
      */
     Pano.prototype.replaceTexture = function (texture) {
+        var _this = this;
         this.dispatch('scene-attachstart', this.currentData, this);
         this.skyBox.setMap(texture);
         // 触发场景切换事件
-        this.dispatch('scene-attach', this.currentData, this);
+        setTimeout(function () { return _this.dispatch('scene-attach', _this.currentData, _this); }, 100);
     };
     /**
      * 动画效果切换场景贴图
@@ -50456,6 +50457,18 @@ var Pano = /** @class */ (function () {
      */
     Pano.prototype.getControl = function () {
         return this.orbit;
+    };
+    /**
+     * 设置旋转速度
+     */
+    Pano.prototype.setRotateSpeed = function (speed) {
+        this.orbit.autoRotateSpeed = speed;
+    };
+    /**
+     * 设置旋转
+     */
+    Pano.prototype.setRotate = function (flag) {
+        this.orbit.autoRotate = flag;
     };
     /**
      * 获取 camera lookat 目标的 vector3 obj
@@ -56079,7 +56092,9 @@ var Rotate = /** @class */ (function () {
         this.onDisturb = this.onDisturb.bind(this);
         this.onRecover = this.onRecover.bind(this);
         var canvas = pano.getCanvas();
-        pano.subscribe('scene-init', this.create, this);
+        pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', this.create, this);
+        pano.subscribe('scene-attachstart', function () { return pano.setRotate(false); });
+        pano.subscribe('scene-attach', function () { return pano.setRotate(true); });
         canvas.addEventListener('touchstart', this.onDisturb);
         canvas.addEventListener('mousedown', this.onDisturb);
         canvas.addEventListener('touchend', this.onRecover);
@@ -56087,9 +56102,11 @@ var Rotate = /** @class */ (function () {
     }
     Rotate.prototype.create = function () {
         var data = this.data;
-        var orbit = this.pano.getControl();
-        orbit.autoRotateSpeed = data.speed;
-        setTimeout(function () { return orbit.autoRotate = true; }, data.start);
+        var pano = this.pano;
+        // target y set only once
+        this.target = { y: pano.getCamera().position.y };
+        pano.setRotateSpeed(data.speed);
+        setTimeout(function () { return pano.setRotate(true); }, data.start);
     };
     /**
      * 中断漫游
@@ -56097,10 +56114,8 @@ var Rotate = /** @class */ (function () {
     Rotate.prototype.onDisturb = function () {
         clearTimeout(this.timeid);
         var pano = this.pano;
-        var orbit = pano.getControl();
-        this.target = { y: pano.getCamera().position.y };
         this.tween && this.tween.stop();
-        orbit.autoRotate = false;
+        pano.setRotate(false);
     };
     /**
      * 恢复漫游
@@ -56110,13 +56125,12 @@ var Rotate = /** @class */ (function () {
         clearTimeout(this.timeid);
         var data = this.data;
         var pano = this.pano;
-        var orbit = pano.getControl();
         var camera = pano.getCamera();
         this.timeid = setTimeout(function () {
             _this.tween = new __WEBPACK_IMPORTED_MODULE_0__animations_tween_animation__["a" /* default */](camera.position).to(_this.target)
                 .effect('linear', data.recover)
                 .start(['y'], pano);
-            orbit.autoRotate = true;
+            pano.setRotate(true);
         }, data.lazy);
     };
     Rotate.prototype.dispose = function () {

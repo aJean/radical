@@ -13,7 +13,6 @@
         "bxlPath": "../assets/scene6/scene6.bxl",
         "imgPath": "../assets/scene6/scene6.jpg",
         "thumbPath": "../assets/scene6/thumb6.jpg",
-        "autoRotate": true,
         "overlays": [{
             "id": "id1",
             "type": "dom",

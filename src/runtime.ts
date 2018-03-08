@@ -116,6 +116,7 @@ abstract class Runtime {
         if (source['wormhole']) {
             pano.addPlugin(Wormhole, source['wormhole']);
         }
+
         // 用户订阅事件
         if (events) {
             for (let name in events) {

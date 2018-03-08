@@ -23,11 +23,12 @@ export default class Rotate {
         this.pano = pano;
         this.onDisturb = this.onDisturb.bind(this);
         this.onRecover = this.onRecover.bind(this);
-        
 
         const canvas = pano.getCanvas();
-        pano.subscribe('scene-init', this.create, this);
-
+        pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', this.create, this);
+        pano.subscribe('scene-attachstart', () => pano.setRotate(false));
+        pano.subscribe('scene-attach', () => pano.setRotate(true));
+   
         canvas.addEventListener('touchstart', this.onDisturb);
         canvas.addEventListener('mousedown', this.onDisturb);
         canvas.addEventListener('touchend', this.onRecover);
@@ -36,10 +37,11 @@ export default class Rotate {
 
     create() {
         const data = this.data;
-        const orbit = this.pano.getControl();
-        
-        orbit.autoRotateSpeed = data.speed;
-        setTimeout(() => orbit.autoRotate = true, data.start);
+        const pano = this.pano;
+        // target y set only once
+        this.target = {y: pano.getCamera().position.y};        
+        pano.setRotateSpeed(data.speed);
+        setTimeout(() => pano.setRotate(true), data.start);
     }
 
     /**
@@ -47,13 +49,10 @@ export default class Rotate {
      */
     onDisturb() {
         clearTimeout(this.timeid);
-        
         const pano = this.pano;
-        const orbit = pano.getControl();
 
-        this.target = {y: pano.getCamera().position.y}
         this.tween && this.tween.stop();
-        orbit.autoRotate = false;
+        pano.setRotate(false);
     }
 
     /** 
@@ -61,17 +60,15 @@ export default class Rotate {
      */
     onRecover() {
         clearTimeout(this.timeid);
-        
         const data = this.data;
         const pano = this.pano;
-        const orbit = pano.getControl();
         const camera = pano.getCamera();
 
         this.timeid = setTimeout(() => {
             this.tween = new Tween(camera.position).to(this.target)
                 .effect('linear', data.recover)
                 .start(['y'], pano);
-            orbit.autoRotate = true;
+            pano.setRotate(true);
         }, data.lazy);
     }
 
