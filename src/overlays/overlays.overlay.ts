@@ -97,8 +97,12 @@ export default class Overlays {
         Util.parseLocation(prop, this.pano.getCamera());
 
         const item = new DomOverlay(prop);
-        item.elem.onclick = e => this.onOverlayHandle(item);
         cache.domGroup.push(item);
+        item.elem.onclick = e => {
+            e.stopPropagation();
+            e.preventDefault();
+            this.onOverlayHandle(item)
+        };
 
         this.pano.addDomObject(item.elem);
         this.updateDomOverlay(item);
@@ -117,8 +121,8 @@ export default class Overlays {
         if (position.z > 1) {
             item.hide();
         } else {
-            const x = Math.round(position.x * width + width);
-            const y = Math.round(-position.y * height + height);
+            const x = Math.floor(position.x * width + width);
+            const y = Math.floor(-position.y * height + height);
             item.update(x, y);
         }
     }
@@ -195,7 +199,7 @@ export default class Overlays {
                 detects: group,
                 domGroup: [],
                 meshGroup: []
-            }
+            };
         }
     }
 

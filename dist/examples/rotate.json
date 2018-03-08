@@ -5,7 +5,7 @@
         "author": "scene - 漫游"
     },
     "rotate": {
-        "speed": 0.4
+        "speed": 0.3
     },
     "sceneGroup": [{
         "id": "scene0",
@@ -13,6 +13,17 @@
         "bxlPath": "../assets/scene6/scene6.bxl",
         "imgPath": "../assets/scene6/scene6.jpg",
         "thumbPath": "../assets/scene6/thumb6.jpg",
-        "autoRotate": true
+        "autoRotate": true,
+        "overlays": [{
+            "id": "id1",
+            "type": "dom",
+            "actionType": "multiple",
+            "content": "<a style='color:#e3b;'>进入场景2</a>",
+            "sceneId": "scene1",
+            "location": {
+                "lng": 0,
+                "lat": 0
+            }
+        }]
     }]
 }

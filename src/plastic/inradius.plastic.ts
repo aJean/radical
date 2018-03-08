@@ -19,6 +19,8 @@ export default class Inradius {
 
     constructor(data) {
         this.data = Object.assign({}, defaultOpts, data);
+        
+        this.setRefraction(data.envMap);
         this.create();
     }
 
@@ -44,11 +46,14 @@ export default class Inradius {
     setMap(texture) {
         const tempMap = this.plastic.material.envMap;
 
-        texture.mapping = CubeRefractionMapping;
-        texture.needsUpdate = true;
-        
+        this.setRefraction(texture);
         this.plastic.material.envMap = texture;
         tempMap.dispose();
+    }
+
+    setRefraction(texture) {
+        texture.mapping = CubeRefractionMapping;
+        texture.needsUpdate = true;
     }
 
     getPlastic() {

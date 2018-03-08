@@ -87,34 +87,30 @@ export default class Pano {
             this.setFov(fov);
         }
         // look at angle
-        this.setLook(data.lng || 180, data.lat || 90);
+        if (data.lng !== void 0) {
+            this.setLook(data.lng, data.lat);
+        }
     }
 
     async run() {
         const source = this.source;
-        // set pem path
-        myLoader.loadCret(source['cretPath']);
+        source['cretPath'] && myLoader.loadCret(source['cretPath']);
 
         try {
             const data = this.currentData;
-            // load preview
             const img = await myLoader.loadTexture(data.imgPath, 'canvas');
             const skyBox = this.skyBox = new Inradius({envMap: img});
             skyBox.addTo(this.scene);
-            // preview init
             this.dispatch('scene-init', data, this);
             this.render();
-            // load bxl
             await myLoader.loadTexture(data.bxlPath || data.texPath)
             .then(texture => {      
                 this.skyBox.setMap(texture);
-                // bxl loaded
-                this.dispatch('scene-ready', data, this);
+                this.dispatch('scene-load', data, this);
             }).catch(e => Log.output('load scene: load source texture fail'));
-            // start render process
             this.animate();
         } catch(e) {
-            Log.output(e)
+            Log.output(e);
         }
     }
 
@@ -372,7 +368,7 @@ export default class Pano {
     }
 
     /**
-     * internal enter next scenel
+     * internal enter next scene
      * @param {Object} data scene data
      */
     enterNext(data) {
@@ -409,6 +405,8 @@ export default class Pano {
     noTimeline() {
         this.frozen = false;
         this.startGyroControl();
+        // entrance animation end, scene become stable
+        this.dispatch('scene-ready', this.currentData, this);
     }
 
     /** 

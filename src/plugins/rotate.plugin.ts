@@ -15,18 +15,23 @@ export default class Rotate {
     data: any;
     pano: Pano;
     timeid: any;
+    target: any;
     tween: Tween;
 
     constructor(pano: Pano, data) {
         this.data = Object.assign({}, defaultOpts, data);
         this.pano = pano;
         this.onDisturb = this.onDisturb.bind(this);
+        this.onRecover = this.onRecover.bind(this);
+        
 
         const canvas = pano.getCanvas();
         pano.subscribe('scene-init', this.create, this);
 
         canvas.addEventListener('touchstart', this.onDisturb);
         canvas.addEventListener('mousedown', this.onDisturb);
+        canvas.addEventListener('touchend', this.onRecover);
+        canvas.addEventListener('mouseup', this.onRecover);
     }
 
     create() {
@@ -38,22 +43,32 @@ export default class Rotate {
     }
 
     /**
-     * 中断漫游并恢复
+     * 中断漫游
      */
     onDisturb() {
+        clearTimeout(this.timeid);
+        
+        const pano = this.pano;
+        const orbit = pano.getControl();
+
+        this.target = {y: pano.getCamera().position.y}
+        this.tween && this.tween.stop();
+        orbit.autoRotate = false;
+    }
+
+    /** 
+     * 恢复漫游
+     */
+    onRecover() {
+        clearTimeout(this.timeid);
+        
         const data = this.data;
         const pano = this.pano;
-        const tween = this.tween;
         const orbit = pano.getControl();
         const camera = pano.getCamera();
-        const target = {y: camera.position.y}
-
-        orbit.autoRotate = false;
-        tween && tween.stop();
-        clearTimeout(this.timeid);
 
         this.timeid = setTimeout(() => {
-            this.tween = new Tween(camera.position).to(target)
+            this.tween = new Tween(camera.position).to(this.target)
                 .effect('linear', data.recover)
                 .start(['y'], pano);
             orbit.autoRotate = true;
@@ -66,6 +81,8 @@ export default class Rotate {
         try {
             canvas.removeEventListener('touchstart', this.onDisturb);
             canvas.removeEventListener('mousedown', this.onDisturb);
+            canvas.removeEventListener('touchend', this.onRecover);
+            canvas.removeEventListener('mouseup', this.onRecover);
             this.tween.stop();
         } catch (e) {}
     }

@@ -50243,7 +50243,9 @@ var Pano = /** @class */ (function () {
             this.setFov(fov);
         }
         // look at angle
-        this.setLook(data.lng || 180, data.lat || 90);
+        if (data.lng !== void 0) {
+            this.setLook(data.lng, data.lat);
+        }
     };
     Pano.prototype.run = function () {
         return __awaiter(this, void 0, void 0, function () {
@@ -50253,8 +50255,7 @@ var Pano = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         source = this.source;
-                        // set pem path
-                        myLoader.loadCret(source['cretPath']);
+                        source['cretPath'] && myLoader.loadCret(source['cretPath']);
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 4, , 5]);
@@ -50264,20 +50265,15 @@ var Pano = /** @class */ (function () {
                         img = _a.sent();
                         skyBox = this.skyBox = new __WEBPACK_IMPORTED_MODULE_9__plastic_inradius_plastic__["a" /* default */]({ envMap: img });
                         skyBox.addTo(this.scene);
-                        // preview init
                         this.dispatch('scene-init', data_1, this);
                         this.render();
-                        // load bxl
                         return [4 /*yield*/, myLoader.loadTexture(data_1.bxlPath || data_1.texPath)
                                 .then(function (texture) {
                                 _this.skyBox.setMap(texture);
-                                // bxl loaded
-                                _this.dispatch('scene-ready', data_1, _this);
+                                _this.dispatch('scene-load', data_1, _this);
                             }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('load scene: load source texture fail'); })];
                     case 3:
-                        // load bxl
                         _a.sent();
-                        // start render process
                         this.animate();
                         return [3 /*break*/, 5];
                     case 4:
@@ -50509,7 +50505,7 @@ var Pano = /** @class */ (function () {
         this.overlays.create(data);
     };
     /**
-     * internal enter next scenel
+     * internal enter next scene
      * @param {Object} data scene data
      */
     Pano.prototype.enterNext = function (data) {
@@ -50544,6 +50540,8 @@ var Pano = /** @class */ (function () {
     Pano.prototype.noTimeline = function () {
         this.frozen = false;
         this.startGyroControl();
+        // entrance animation end, scene become stable
+        this.dispatch('scene-ready', this.currentData, this);
     };
     /**
      * 释放资源
@@ -55182,8 +55180,12 @@ var Overlays = /** @class */ (function () {
         var _this = this;
         __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].parseLocation(prop, this.pano.getCamera());
         var item = new __WEBPACK_IMPORTED_MODULE_3__dom_overlay__["a" /* default */](prop);
-        item.elem.onclick = function (e) { return _this.onOverlayHandle(item); };
         cache.domGroup.push(item);
+        item.elem.onclick = function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+            _this.onOverlayHandle(item);
+        };
         this.pano.addDomObject(item.elem);
         this.updateDomOverlay(item);
     };
@@ -55201,8 +55203,8 @@ var Overlays = /** @class */ (function () {
             item.hide();
         }
         else {
-            var x = Math.round(position.x * width + width);
-            var y = Math.round(-position.y * height + height);
+            var x = Math.floor(position.x * width + width);
+            var y = Math.floor(-position.y * height + height);
             item.update(x, y);
         }
     };
@@ -55406,11 +55408,11 @@ var DomOverlay = /** @class */ (function () {
     DomOverlay.prototype.update = function (x, y) {
         var elem = this.elem;
         var data = this.data;
+        if (x !== data.x || y !== data.y) {
+            elem.style.cssText = "display:block;left:" + x + "px;top:" + y + "px";
+        }
         data.x = x;
         data.y = y;
-        elem.style.display = 'block';
-        elem.style.left = x + 'px';
-        elem.style.top = y + 'px';
     };
     DomOverlay.prototype.hide = function () {
         this.elem.style.display = 'none';
@@ -55969,6 +55971,7 @@ var defaultOpts = {
 var Inradius = /** @class */ (function () {
     function Inradius(data) {
         this.data = Object.assign({}, defaultOpts, data);
+        this.setRefraction(data.envMap);
         this.create();
     }
     Inradius.prototype.create = function () {
@@ -55989,10 +55992,13 @@ var Inradius = /** @class */ (function () {
     };
     Inradius.prototype.setMap = function (texture) {
         var tempMap = this.plastic.material.envMap;
-        texture.mapping = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
-        texture.needsUpdate = true;
+        this.setRefraction(texture);
         this.plastic.material.envMap = texture;
         tempMap.dispose();
+    };
+    Inradius.prototype.setRefraction = function (texture) {
+        texture.mapping = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
+        texture.needsUpdate = true;
     };
     Inradius.prototype.getPlastic = function () {
         return this.plastic;
@@ -56071,10 +56077,13 @@ var Rotate = /** @class */ (function () {
         this.data = Object.assign({}, defaultOpts, data);
         this.pano = pano;
         this.onDisturb = this.onDisturb.bind(this);
+        this.onRecover = this.onRecover.bind(this);
         var canvas = pano.getCanvas();
         pano.subscribe('scene-init', this.create, this);
         canvas.addEventListener('touchstart', this.onDisturb);
         canvas.addEventListener('mousedown', this.onDisturb);
+        canvas.addEventListener('touchend', this.onRecover);
+        canvas.addEventListener('mouseup', this.onRecover);
     }
     Rotate.prototype.create = function () {
         var data = this.data;
@@ -56083,21 +56092,28 @@ var Rotate = /** @class */ (function () {
         setTimeout(function () { return orbit.autoRotate = true; }, data.start);
     };
     /**
-     * 中断漫游并恢复
+     * 中断漫游
      */
     Rotate.prototype.onDisturb = function () {
+        clearTimeout(this.timeid);
+        var pano = this.pano;
+        var orbit = pano.getControl();
+        this.target = { y: pano.getCamera().position.y };
+        this.tween && this.tween.stop();
+        orbit.autoRotate = false;
+    };
+    /**
+     * 恢复漫游
+     */
+    Rotate.prototype.onRecover = function () {
         var _this = this;
+        clearTimeout(this.timeid);
         var data = this.data;
         var pano = this.pano;
-        var tween = this.tween;
         var orbit = pano.getControl();
         var camera = pano.getCamera();
-        var target = { y: camera.position.y };
-        orbit.autoRotate = false;
-        tween && tween.stop();
-        clearTimeout(this.timeid);
         this.timeid = setTimeout(function () {
-            _this.tween = new __WEBPACK_IMPORTED_MODULE_0__animations_tween_animation__["a" /* default */](camera.position).to(target)
+            _this.tween = new __WEBPACK_IMPORTED_MODULE_0__animations_tween_animation__["a" /* default */](camera.position).to(_this.target)
                 .effect('linear', data.recover)
                 .start(['y'], pano);
             orbit.autoRotate = true;
@@ -56108,6 +56124,8 @@ var Rotate = /** @class */ (function () {
         try {
             canvas.removeEventListener('touchstart', this.onDisturb);
             canvas.removeEventListener('mousedown', this.onDisturb);
+            canvas.removeEventListener('touchend', this.onRecover);
+            canvas.removeEventListener('mouseup', this.onRecover);
             this.tween.stop();
         }
         catch (e) { }

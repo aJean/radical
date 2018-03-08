@@ -9,6 +9,10 @@
         "fovTrans": true,
         "sceneTrans": true
     },
+    "rotate": {
+        "speed": 0.4,
+        "start": 2000        
+    },
     "sceneGroup": [{
         "id": "scene0",
         "name": "罗浮宫",
@@ -84,7 +88,7 @@
         "id": "scene3",
         "name": "暗夜",
         "fov": 100,
-        "lng": 180,
+        "lng": 120,
         "lat": 90,
         "bxlPath": "../assets/scene3/scene3.bxl",
         "imgPath": "../assets/scene3/scene3.jpg",
