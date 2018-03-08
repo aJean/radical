@@ -42,6 +42,7 @@ export default class Overlays {
         this.pano = pano;
         this.group = group;
 
+        pano.subscribe('scene-ready', scene => this.init(scene));
         pano.subscribe('scene-attachstart', scene => this.removeOverlays());
         pano.subscribe('scene-attach', scene => this.init(scene));
         pano.subscribe('render-process', scene => {

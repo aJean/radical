@@ -94,7 +94,6 @@ abstract class Runtime {
         }
 
         const pano = this.createRef(el, source);
-        const scene = this.findScene(source);
 
         if (source['animation']) {
             Timeline.install(source['animation'], pano);
@@ -128,36 +127,6 @@ abstract class Runtime {
         EnvQueue.add(pano.onResize, pano);
         // load and render
         pano.run();
-    }
-
-    /**
-     * 环境构造 stream
-     * @param {Object} pano 全景对象
-     * @param {Object} scene 等待渲染的场景数据
-     */
-    static async run(pano, scene) {  
-        try {
-            pano.currentData = scene;
-            // 加载缩略图
-            const img = await myLoader.loadTexture(scene.imgPath, 'canvas');
-            pano.initPreview(img);
-            // 加载原图
-            await pano.initScene(scene);
-            pano.animate();
-        } catch(e) {
-            Log.output(e)
-        }
-    }
-
-      /**
-     * 初始化资源配置
-     * @param {Object} source 资源配置对象
-     */
-    static findScene(source) {
-        const group = source.sceneGroup;
-        const scene = group.find(item => item.id == source.defaultSceneId);
-
-        return (scene || group[0]);
     }
 };
 

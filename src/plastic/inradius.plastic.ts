@@ -44,6 +44,9 @@ export default class Inradius {
     setMap(texture) {
         const tempMap = this.plastic.material.envMap;
 
+        texture.mapping = CubeRefractionMapping;
+        texture.needsUpdate = true;
+        
         this.plastic.material.envMap = texture;
         tempMap.dispose();
     }

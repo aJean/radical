@@ -1,4 +1,4 @@
-import {WebGLRenderer, Scene, PerspectiveCamera, Vector3, CubeRefractionMapping, Math as TMath} from 'three';
+import {WebGLRenderer, Scene, PerspectiveCamera, Vector3, Math as TMath} from 'three';
 import OrbitControl from './controls/orbitControl';
 import GyroControl from './controls/gyroControl';
 import EventEmitter from './event';
@@ -8,11 +8,6 @@ import ResourceLoader from './loaders/resource.loader';
 import Tween from './animations/tween.animation';
 import Overlays from './overlays/overlays.overlay';
 import Inradius from './plastic/inradius.plastic';
-import Info from './plugins/info.plugin';
-import Rotate from './plugins/rotate.plugin';
-import Multiple from './plugins/multiple.plugin';
-import Wormhole from './plugins/wormhole.plugin';
-import Timeline from './animations/timeline.animation';
 
 /**
  * @file 全景渲染
@@ -102,23 +97,21 @@ export default class Pano {
 
         try {
             const data = this.currentData;
-            // 加载缩略图
+            // load preview
             const img = await myLoader.loadTexture(data.imgPath, 'canvas');
             const skyBox = this.skyBox = new Inradius({envMap: img});
             skyBox.addTo(this.scene);
-
-            this.dispatch('scene-init', this);
+            // preview init
+            this.dispatch('scene-init', data, this);
             this.render();
-            // 加载原图
+            // load bxl
             await myLoader.loadTexture(data.bxlPath || data.texPath)
-            .then(texture => {
-                texture['mapping'] = CubeRefractionMapping;
-                texture['needsUpdate'] = true;
-        
+            .then(texture => {      
                 this.skyBox.setMap(texture);
-                this.dispatch('scene-ready', this);
+                // bxl loaded
+                this.dispatch('scene-ready', data, this);
             }).catch(e => Log.output('load scene: load source texture fail'));
-            // render process
+            // start render process
             this.animate();
         } catch(e) {
             Log.output(e)
@@ -226,8 +219,6 @@ export default class Pano {
      */
     replaceTexture(texture) {
         this.dispatch('scene-attachstart', this.currentData, this);
-        texture.mapping = CubeRefractionMapping;
-        texture.needsUpdate = true;
 
         this.skyBox.setMap(texture);
         // 触发场景切换事件
@@ -240,9 +231,7 @@ export default class Pano {
      */
     replaceAnim(texture) {
         this.dispatch('scene-attachstart', this.currentData, this);
-        texture.mapping = CubeRefractionMapping;
-        texture.needsUpdate = true;
-
+        
         const skyBox = this.skyBox;
         const oldMap = skyBox.getMap();
         const newBox = new Inradius({

@@ -50033,7 +50033,7 @@ var Runtime = /** @class */ (function () {
     };
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
-            var source, _a, data, pano, scene, name_1;
+            var source, _a, data, pano, name_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -50052,7 +50052,6 @@ var Runtime = /** @class */ (function () {
                             return [2 /*return*/, __WEBPACK_IMPORTED_MODULE_1__log__["a" /* default */].output('load source error')];
                         }
                         pano = this.createRef(el, source);
-                        scene = this.findScene(source);
                         if (source['animation']) {
                             __WEBPACK_IMPORTED_MODULE_7__animations_timeline_animation__["a" /* default */].install(source['animation'], pano);
                         }
@@ -50085,48 +50084,6 @@ var Runtime = /** @class */ (function () {
                 }
             });
         });
-    };
-    /**
-     * 环境构造 stream
-     * @param {Object} pano 全景对象
-     * @param {Object} scene 等待渲染的场景数据
-     */
-    Runtime.run = function (pano, scene) {
-        return __awaiter(this, void 0, void 0, function () {
-            var img, e_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 3, , 4]);
-                        pano.currentData = scene;
-                        return [4 /*yield*/, myLoader.loadTexture(scene.imgPath, 'canvas')];
-                    case 1:
-                        img = _a.sent();
-                        pano.initPreview(img);
-                        // 加载原图
-                        return [4 /*yield*/, pano.initScene(scene)];
-                    case 2:
-                        // 加载原图
-                        _a.sent();
-                        pano.animate();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        e_1 = _a.sent();
-                        __WEBPACK_IMPORTED_MODULE_1__log__["a" /* default */].output(e_1);
-                        return [3 /*break*/, 4];
-                    case 4: return [2 /*return*/];
-                }
-            });
-        });
-    };
-    /**
-   * 初始化资源配置
-   * @param {Object} source 资源配置对象
-   */
-    Runtime.findScene = function (source) {
-        var group = source.sceneGroup;
-        var scene = group.find(function (item) { return item.id == source.defaultSceneId; });
-        return (scene || group[0]);
     };
     Runtime.uid = 0;
     Runtime.instanceMap = {};
@@ -50291,7 +50248,7 @@ var Pano = /** @class */ (function () {
     Pano.prototype.run = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
-            var source, data, img, skyBox, e_1;
+            var source, data_1, img, skyBox, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -50301,26 +50258,26 @@ var Pano = /** @class */ (function () {
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 4, , 5]);
-                        data = this.currentData;
-                        return [4 /*yield*/, myLoader.loadTexture(data.imgPath, 'canvas')];
+                        data_1 = this.currentData;
+                        return [4 /*yield*/, myLoader.loadTexture(data_1.imgPath, 'canvas')];
                     case 2:
                         img = _a.sent();
                         skyBox = this.skyBox = new __WEBPACK_IMPORTED_MODULE_9__plastic_inradius_plastic__["a" /* default */]({ envMap: img });
                         skyBox.addTo(this.scene);
-                        this.dispatch('scene-init', this);
+                        // preview init
+                        this.dispatch('scene-init', data_1, this);
                         this.render();
-                        // 加载原图
-                        return [4 /*yield*/, myLoader.loadTexture(data.bxlPath || data.texPath)
+                        // load bxl
+                        return [4 /*yield*/, myLoader.loadTexture(data_1.bxlPath || data_1.texPath)
                                 .then(function (texture) {
-                                texture['mapping'] = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
-                                texture['needsUpdate'] = true;
                                 _this.skyBox.setMap(texture);
-                                _this.dispatch('scene-ready', _this);
+                                // bxl loaded
+                                _this.dispatch('scene-ready', data_1, _this);
                             }).catch(function (e) { return __WEBPACK_IMPORTED_MODULE_4__log__["a" /* default */].output('load scene: load source texture fail'); })];
                     case 3:
-                        // 加载原图
+                        // load bxl
                         _a.sent();
-                        // render process
+                        // start render process
                         this.animate();
                         return [3 /*break*/, 5];
                     case 4:
@@ -50420,8 +50377,6 @@ var Pano = /** @class */ (function () {
      */
     Pano.prototype.replaceTexture = function (texture) {
         this.dispatch('scene-attachstart', this.currentData, this);
-        texture.mapping = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
-        texture.needsUpdate = true;
         this.skyBox.setMap(texture);
         // 触发场景切换事件
         this.dispatch('scene-attach', this.currentData, this);
@@ -50433,8 +50388,6 @@ var Pano = /** @class */ (function () {
     Pano.prototype.replaceAnim = function (texture) {
         var _this = this;
         this.dispatch('scene-attachstart', this.currentData, this);
-        texture.mapping = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
-        texture.needsUpdate = true;
         var skyBox = this.skyBox;
         var oldMap = skyBox.getMap();
         var newBox = new __WEBPACK_IMPORTED_MODULE_9__plastic_inradius_plastic__["a" /* default */]({
@@ -55180,6 +55133,7 @@ var Overlays = /** @class */ (function () {
         this.raycaster = new __WEBPACK_IMPORTED_MODULE_0_three__["u" /* Raycaster */]();
         this.pano = pano;
         this.group = group;
+        pano.subscribe('scene-ready', function (scene) { return _this.init(scene); });
         pano.subscribe('scene-attachstart', function (scene) { return _this.removeOverlays(); });
         pano.subscribe('scene-attach', function (scene) { return _this.init(scene); });
         pano.subscribe('render-process', function (scene) {
@@ -56035,6 +55989,8 @@ var Inradius = /** @class */ (function () {
     };
     Inradius.prototype.setMap = function (texture) {
         var tempMap = this.plastic.material.envMap;
+        texture.mapping = __WEBPACK_IMPORTED_MODULE_0_three__["c" /* CubeRefractionMapping */];
+        texture.needsUpdate = true;
         this.plastic.material.envMap = texture;
         tempMap.dispose();
     };
