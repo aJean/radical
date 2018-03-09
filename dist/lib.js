@@ -50085,6 +50085,11 @@ var Runtime = /** @class */ (function () {
             });
         });
     };
+    Runtime.start3d = function () {
+        return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
+            return [2 /*return*/];
+        }); });
+    };
     Runtime.uid = 0;
     Runtime.instanceMap = {};
     return Runtime;
@@ -50207,7 +50212,6 @@ var Pano = /** @class */ (function () {
         this.opts = opts;
         this.source = source;
         this.initEnv();
-        this.dispatch('scene-create', this);
     }
     Pano.prototype.initEnv = function () {
         var opts = this.opts;
@@ -50259,6 +50263,8 @@ var Pano = /** @class */ (function () {
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 4, , 5]);
+                        // push pano obj for client
+                        this.dispatch('scene-create', this);
                         data_1 = this.currentData;
                         return [4 /*yield*/, myLoader.loadTexture(data_1.imgPath, 'canvas')];
                     case 2:

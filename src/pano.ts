@@ -49,7 +49,6 @@ export default class Pano {
         this.opts = opts;
         this.source = source;
         this.initEnv();
-        this.dispatch('scene-create', this);
     }
 
     initEnv() {
@@ -97,17 +96,21 @@ export default class Pano {
         source['cretPath'] && myLoader.loadCret(source['cretPath']);
 
         try {
+            // push pano obj for client
+            this.dispatch('scene-create', this);
             const data = this.currentData;
             const img = await myLoader.loadTexture(data.imgPath, 'canvas');
             const skyBox = this.skyBox = new Inradius({envMap: img});
+
             skyBox.addTo(this.scene);
             this.dispatch('scene-init', data, this);
             this.render();
+
             await myLoader.loadTexture(data.bxlPath || data.texPath)
-            .then(texture => {      
-                this.skyBox.setMap(texture);
-                this.dispatch('scene-load', data, this);
-            }).catch(e => Log.output('load scene: load source texture fail'));
+                .then(texture => {      
+                    this.skyBox.setMap(texture);
+                    this.dispatch('scene-load', data, this);
+                }).catch(e => Log.output('load scene: load source texture fail'));
             this.animate();
         } catch(e) {
             Log.output(e);

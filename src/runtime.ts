@@ -129,6 +129,8 @@ abstract class Runtime {
         // load and render
         pano.run();
     }
+
+    static async start3d() {}
 };
 
 const pastLoad = window.onload;
