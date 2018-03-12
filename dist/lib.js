@@ -50217,26 +50217,22 @@ var Pano = /** @class */ (function () {
         var opts = this.opts;
         var container = opts.el;
         var size = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].calcRenderSize(opts, container);
-        var root = this.root = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].createElement('<div class="pano-root" style="width:'
-            + size.width + 'px;height:' + size.height + 'px;"></div>');
-        // 渲染器
+        var root = this.root = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].createElement("<div class=\"pano-root\" style=\"width:" + size.width + "px;\n            height:" + size.height + "px;\"></div>");
         var webgl = this.webgl = new __WEBPACK_IMPORTED_MODULE_0_three__["B" /* WebGLRenderer */]({ alpha: true, antialias: true });
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(size.width, size.height);
-        // 容器
+        // canvas
         root.appendChild(webgl.domElement);
         container.appendChild(root);
         // 场景, 相机
         this.scene = new __WEBPACK_IMPORTED_MODULE_0_three__["v" /* Scene */]();
         this.camera = new __WEBPACK_IMPORTED_MODULE_0_three__["p" /* PerspectiveCamera */](opts.fov, size.aspect, 0.1, 10000);
-        // 场景控制器
         var control = this.orbit = new __WEBPACK_IMPORTED_MODULE_1__controls_orbitControl__["a" /* default */](this.camera, webgl.domElement);
-        // 陀螺仪控制器
         if (opts.gyro) {
             this.gyro = new __WEBPACK_IMPORTED_MODULE_2__controls_gyroControl__["a" /* default */](this.camera, control);
         }
-        // bind overlays events
+        // all overlays manager
         this.overlays = new __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__["a" /* default */](this, this.source['sceneGroup']);
     };
     Pano.prototype.resetEnv = function (data) {
@@ -50507,21 +50503,16 @@ var Pano = /** @class */ (function () {
         this.root.removeChild(obj);
     };
     /**
-     * 添加热点覆盖物, 目前支持 mesh
+     * 添加热点覆盖物, 目前支持 dom
      */
-    Pano.prototype.addOverlay = function (location, text) {
-        var data = {
-            'overlays': [{
-                    type: 'dom',
-                    actionType: 'custom',
-                    content: '<strong>动态热点</strong>',
-                    location: {
-                        lng: location.lng,
-                        lat: location.lat
-                    }
-                }]
-        };
+    Pano.prototype.addOverlay = function (data) {
         this.overlays.create(data);
+    };
+    /**
+     * 为 overlays 补充场景数据
+     */
+    Pano.prototype.supplyOverlayScenes = function (scenes) {
+        this.overlays.addScenes(scenes);
     };
     /**
      * internal enter next scene
@@ -55124,6 +55115,7 @@ var BaseLoader = /** @class */ (function () {
 
 /**
  * @file 管理所有场景下的覆盖物
+ * @TODO: cid 缓存当前场景 overlays, 但是切换场景时还是 remove - create 机制
  */
 var AnimationOpts = {
     rain: {
@@ -55144,14 +55136,15 @@ var AnimationOpts = {
     }
 };
 var Overlays = /** @class */ (function () {
-    function Overlays(pano, group) {
+    function Overlays(pano, list) {
         var _this = this;
         this.maps = {};
         this.raycaster = new __WEBPACK_IMPORTED_MODULE_0_three__["u" /* Raycaster */]();
         this.pano = pano;
-        this.group = group;
+        this.list = list;
         pano.subscribe('scene-ready', function (scene) { return _this.init(scene); });
         pano.subscribe('scene-attachstart', function (scene) { return _this.removeOverlays(); });
+        // per scene change
         pano.subscribe('scene-attach', function (scene) { return _this.init(scene); });
         pano.subscribe('render-process', function (scene) {
             var cache = _this.getCurrent(scene.id);
@@ -55190,7 +55183,14 @@ var Overlays = /** @class */ (function () {
         });
     };
     Overlays.prototype.findScene = function (id) {
-        return this.group.find(function (item) { return item.id == id; });
+        return this.list.find(function (item) { return item.id == id; });
+    };
+    /**
+     * 增加场景数据, 用于图集切换
+     * @param {Array} scenes 场景数据
+     */
+    Overlays.prototype.addScenes = function (scenes) {
+        this.list = scenes.concat(this.list);
     };
     /**
      * 创建 dom 覆盖物并添加进 maps

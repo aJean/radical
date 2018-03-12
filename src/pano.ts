@@ -55,26 +55,23 @@ export default class Pano {
         const opts = this.opts;
         const container = opts.el;
         const size = Util.calcRenderSize(opts, container);
-        const root = this.root = Util.createElement('<div class="pano-root" style="width:'
-            + size.width + 'px;height:' + size.height + 'px;"></div>');
-        // 渲染器
+        const root = this.root = Util.createElement(`<div class="pano-root" style="width:${size.width}px;
+            height:${size.height}px;"></div>`);
         const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(size.width, size.height);
-        // 容器
+        // canvas
         root.appendChild(webgl.domElement);
         container.appendChild(root);
         // 场景, 相机
         this.scene = new Scene();
         this.camera = new PerspectiveCamera(opts.fov, size.aspect, 0.1, 10000);
-        // 场景控制器
         const control = this.orbit = new OrbitControl(this.camera, webgl.domElement);
-        // 陀螺仪控制器
         if (opts.gyro) {
             this.gyro = new GyroControl(this.camera, control);
         }
-        // bind overlays events
+        // all overlays manager
         this.overlays = new Overlays(this, this.source['sceneGroup']);        
     }
 
@@ -366,24 +363,19 @@ export default class Pano {
     }
 
     /**
-     * 添加热点覆盖物, 目前支持 mesh
+     * 添加热点覆盖物, 目前支持 dom
      */
-    addOverlay(location, text) {
-        const data = {
-            'overlays': [{
-                type: 'dom',
-                actionType: 'custom',
-                content: '<strong>动态热点</strong>',
-                location: {
-                    lng: location.lng,
-                    lat: location.lat
-                }
-            }]
-        };
-
+    addOverlay(data) {
         this.overlays.create(data);
     }
 
+    /**
+     * 为 overlays 补充场景数据
+     */
+    supplyOverlayScenes(scenes) {
+        this.overlays.addScenes(scenes);
+    }
+    
     /**
      * internal enter next scene
      * @param {Object} data scene data

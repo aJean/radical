@@ -10,6 +10,7 @@ import VideoOverlay from './video.overlay';
 
 /**
  * @file 管理所有场景下的覆盖物
+ * @TODO: cid 缓存当前场景 overlays, 但是切换场景时还是 remove - create 机制
  */
 
 const AnimationOpts = {
@@ -32,18 +33,19 @@ const AnimationOpts = {
 };
 
 export default class Overlays {
-    maps = {};
-    pano: Pano;
     cid: number;
-    group: any;
+    pano: Pano;
+    list: any;
+    maps = {};
     raycaster = new Raycaster();
 
-    constructor(pano: Pano, group) {
+    constructor(pano: Pano, list) {
         this.pano = pano;
-        this.group = group;
+        this.list = list;
 
         pano.subscribe('scene-ready', scene => this.init(scene));
         pano.subscribe('scene-attachstart', scene => this.removeOverlays());
+        // per scene change
         pano.subscribe('scene-attach', scene => this.init(scene));
         pano.subscribe('render-process', scene => {
             const cache = this.getCurrent(scene.id);
@@ -87,7 +89,15 @@ export default class Overlays {
     }
 
     findScene(id) {
-        return this.group.find(item => item.id == id);
+        return this.list.find(item => item.id == id);
+    }
+
+    /**
+     * 增加场景数据, 用于图集切换
+     * @param {Array} scenes 场景数据
+     */
+    addScenes(scenes) {
+        this.list = scenes.concat(this.list);
     }
 
     /**
