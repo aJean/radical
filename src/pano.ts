@@ -15,8 +15,8 @@ import Inradius from './plastic/inradius.plastic';
 
 const defaultOpts = {
     el: undefined,
-    fov: 100,
     gyro: false,
+    fov: 100,
     width: null,
     height: null,
     sceneTrans: false
@@ -42,16 +42,12 @@ export default class Pano {
         const data = this.currentData = Util.findScene(source);
         opts = Object.assign({}, defaultOpts, opts);
 
-        if (data.fov) {
-            opts.fov = data.fov;
-        }
-
         this.opts = opts;
         this.source = source;
-        this.initEnv();
+        this.initEnv(data);
     }
 
-    initEnv() {
+    initEnv(data) {
         const opts = this.opts;
         const container = opts.el;
         const size = Util.calcRenderSize(opts, container);
@@ -66,10 +62,11 @@ export default class Pano {
         container.appendChild(root);
         // 场景, 相机
         this.scene = new Scene();
-        this.camera = new PerspectiveCamera(opts.fov, size.aspect, 0.1, 10000);
-        const control = this.orbit = new OrbitControl(this.camera, webgl.domElement);
+        this.camera = new PerspectiveCamera(data.fov || opts.fov, size.aspect, 0.1, 10000);
+        // control
+        const orbit = this.orbit = new OrbitControl(this.camera, webgl.domElement);
         if (opts.gyro) {
-            this.gyro = new GyroControl(this.camera, control);
+            this.gyro = new GyroControl(this.camera, orbit);
         }
         // all overlays manager
         this.overlays = new Overlays(this, this.source['sceneGroup']);        

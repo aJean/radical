@@ -10,6 +10,7 @@
         "bxlPath": "../assets/scene0/scene0.bxl",
         "imgPath": "../assets/scene0/scene0.jpg",
         "thumbPath": "../assets/scene0/thumb0.jpg",
+        "fov": 80,
         "overlays": [{
             "type": "animation",
             "category": "snow"

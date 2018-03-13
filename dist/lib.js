@@ -50183,8 +50183,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
  */
 var defaultOpts = {
     el: undefined,
-    fov: 100,
     gyro: false,
+    fov: 100,
     width: null,
     height: null,
     sceneTrans: false
@@ -50206,14 +50206,11 @@ var Pano = /** @class */ (function () {
         this.pluginList = [];
         var data = this.currentData = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].findScene(source);
         opts = Object.assign({}, defaultOpts, opts);
-        if (data.fov) {
-            opts.fov = data.fov;
-        }
         this.opts = opts;
         this.source = source;
-        this.initEnv();
+        this.initEnv(data);
     }
-    Pano.prototype.initEnv = function () {
+    Pano.prototype.initEnv = function (data) {
         var opts = this.opts;
         var container = opts.el;
         var size = __WEBPACK_IMPORTED_MODULE_5__util__["a" /* default */].calcRenderSize(opts, container);
@@ -50227,10 +50224,11 @@ var Pano = /** @class */ (function () {
         container.appendChild(root);
         // 场景, 相机
         this.scene = new __WEBPACK_IMPORTED_MODULE_0_three__["v" /* Scene */]();
-        this.camera = new __WEBPACK_IMPORTED_MODULE_0_three__["p" /* PerspectiveCamera */](opts.fov, size.aspect, 0.1, 10000);
-        var control = this.orbit = new __WEBPACK_IMPORTED_MODULE_1__controls_orbitControl__["a" /* default */](this.camera, webgl.domElement);
+        this.camera = new __WEBPACK_IMPORTED_MODULE_0_three__["p" /* PerspectiveCamera */](data.fov || opts.fov, size.aspect, 0.1, 10000);
+        // control
+        var orbit = this.orbit = new __WEBPACK_IMPORTED_MODULE_1__controls_orbitControl__["a" /* default */](this.camera, webgl.domElement);
         if (opts.gyro) {
-            this.gyro = new __WEBPACK_IMPORTED_MODULE_2__controls_gyroControl__["a" /* default */](this.camera, control);
+            this.gyro = new __WEBPACK_IMPORTED_MODULE_2__controls_gyroControl__["a" /* default */](this.camera, orbit);
         }
         // all overlays manager
         this.overlays = new __WEBPACK_IMPORTED_MODULE_8__overlays_overlays_overlay__["a" /* default */](this, this.source['sceneGroup']);

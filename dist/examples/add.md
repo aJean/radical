@@ -25,14 +25,21 @@
 
     $('.overlay-panel .add').on('click', function () {
         const pano = bxl.getPano('mytest');
-        pos && pano.addOverlay(pos, '动态热点');
+        pos && pano.addOverlay({
+            'overlays': [{
+                type: 'dom',
+                actionType: 'custom',
+                content: '<strong>动态热点</strong>',
+                location: pos
+            }]
+        });
         });
 
         $('.overlay-panel .lookat').on('click', function () {
-        const pano = bxl.getPano('mytest');
-        const point = pano.getLook();
+            const pano = bxl.getPano('mytest');
+            const point = pano.getLook();
 
-        $('.show-lookat span').first().html(point.lng.toFixed(2));
-        $('.show-lookat span').last().html(point.lat.toFixed(2));
+            $('.show-lookat span').first().html(point.lng.toFixed(2));
+            $('.show-lookat span').last().html(point.lat.toFixed(2));
         });
 </script>

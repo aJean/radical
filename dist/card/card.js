@@ -1,7 +1,7 @@
 let flag = 0;
 let oheight;
 bxl.start('./card.json', '.scene', {
-    'scene-init': function (pano) {
+    'scene-init': function (data, pano) {
         const $root = $('.scene');
         // dom placeholder
         const $copy = $('<div class="scene"></div>')
