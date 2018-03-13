@@ -13,7 +13,9 @@ const extractLess = new ExtractTextPlugin({
 });
 
 const uglifyJs = new UglifyJSPlugin({
-    exclude: /node_modules/
+    exclude: /node_modules/,
+    sourceMap: false,
+    comments: false
 });
 
 module.exports = {
