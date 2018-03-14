@@ -1,6 +1,6 @@
 {
     "title": "test bxl transfer",
-    "cretPath": "../assets/cret.pem",
+    "cretPath": "../assets/scene8/images.pem",
     "info": {
         "author": "添加覆盖物"
     },
@@ -8,9 +8,9 @@
         "id": "scene3",
         "name": "博物馆",
         "fov": 100,
-        "bxlPath": "../assets/scene3/scene3.bxl",
-        "imgPath": "../assets/scene3/scene3.jpg",
-        "thumbPath": "../assets/scene3/thumb3.jpg",
+        "bxlPath": "../assets/scene8/images.bxl",
+        "imgPath": "../assets/scene8/scene8.jpg",
+        "thumbPath": "../assets/scene8/thumb8.jpg",
         "overlays": [{
             "type": "dom",
             "actionType": "custom",
