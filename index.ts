@@ -2,7 +2,8 @@ import './styles/pano.style.less';
 import './styles/multiple.style.less';
 import './styles/overlays.style.less';
 import './styles/ui.style.less';
-import Runtime from './src/runtime';
+import VR from './src/runtime/vr.runtime';
+import AR from './src/runtime/ar.runtime';
 
 /**
  * @file lib index.ts
@@ -10,14 +11,18 @@ import Runtime from './src/runtime';
 
 export default {
     start(source, el, events?) {
-        Runtime.start(source, el, events);
+        VR.start(source, el, events);
     },
 
     getPano(ref: string) {
-        return Runtime.getInstance(ref);
+        return VR.getInstance(ref);
     },
 
     dispose(ref: string) {
-        return Runtime.releaseInstance(ref);
+        return VR.releaseInstance(ref);
+    },
+
+    testAR() {
+        new AR();
     }
 };

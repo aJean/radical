@@ -5,20 +5,17 @@
 const webpack = require('webpack');
 const path = require('path');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 const extractLess = new ExtractTextPlugin({
-    filename: '[name].css',
-    disable: process.env.NODE_ENV === 'development'
-});
-
-const uglifyJs = new UglifyJSPlugin({
-    exclude: /node_modules/,
-    sourceMap: false,
-    comments: false
+    filename: '[name].css'
 });
 
 module.exports = {
+    mode: 'development',
+    devtool: 'none',
+    optimization: {
+        minimize: false
+    },
     entry: {
         lib: './index.ts'
     },
