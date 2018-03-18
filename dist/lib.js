@@ -56094,18 +56094,19 @@ var Wormhole = /** @class */ (function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util */ "./src/util.ts");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util */ "./src/util.ts");
+
 
 /**
  * @file web ar
+ * @TODO: use corner to set box's world position
  * http://bhollis.github.io/aruco-marker/demos/angular.html
  */
 var AR = window['AR'];
 var Runtime = /** @class */ (function () {
     function Runtime() {
         var _this = this;
-        this.create();
-        this.detector = new AR.Detector();
         var constraints = { audio: false, video: { facingMode: 'environment' } };
         navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
             var video = _this.video;
@@ -56119,18 +56120,45 @@ var Runtime = /** @class */ (function () {
         }).catch(function (err) {
             alert(err);
         });
+        this.detector = new AR.Detector();
+        this.createDom();
+        this.createRender();
         this.tick();
     }
-    Runtime.prototype.create = function () {
-        var video = this.video = _util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement("<video class=\"ar-video\" style=\"position:relative;z-index:1;\" autoplay playsinline></video>");
-        var canvas = this.canvas = _util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement("<canvas width=\"300\" height=\"300\"></canvas>");
-        var tip = this.tip = _util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<span style="display:none;position:absolute;width:100px;height:50px;background:blue;color:#fff;z-index:999;">hello webar</span>');
+    Runtime.prototype.createDom = function () {
+        var video = this.video = _util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement("<video class=\"ar-video\" style=\"position:relative;z-index:1;\" autoplay playsinline></video>");
+        var canvas = this.canvas = _util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement("<canvas width=\"300\" height=\"300\"></canvas>");
         this.context = canvas.getContext("2d");
         document.body.appendChild(video);
-        document.body.appendChild(tip);
+    };
+    Runtime.prototype.createRender = function () {
+        var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
+        var render = this.render = webgl.domElement;
+        webgl.setPixelRatio(window.devicePixelRatio);
+        webgl.setSize(window.innerWidth, window.innerHeight);
+        _util__WEBPACK_IMPORTED_MODULE_1__["default"].styleElement(render, {
+            position: 'absolute',
+            display: 'none',
+            left: 0,
+            top: 0,
+            zIndex: '999'
+        });
+        document.body.appendChild(render);
+        var scene = this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
+        var camera = this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](80, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(0, 0, 600);
+        var texture = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load('../assets/webar/material.gif');
+        var geometry = new three__WEBPACK_IMPORTED_MODULE_0__["BoxBufferGeometry"](200, 200, 200);
+        var material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({ map: texture });
+        var mesh = this.mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, material);
+        scene.add(mesh);
+        webgl.render(scene, camera);
     };
     Runtime.prototype.tick = function () {
         requestAnimationFrame(this.tick.bind(this));
+        this.webgl.render(this.scene, this.camera);
+        this.mesh.rotation.x += 0.005;
+        this.mesh.rotation.y += 0.01;
         var video = this.video;
         var canvas = this.canvas;
         var context = this.context;
@@ -56140,13 +56168,21 @@ var Runtime = /** @class */ (function () {
         var markers = detector.detect(data);
         if (markers.length) {
             var marker = markers[0];
-            this.tip.style.display = 'block';
-            this.tip.style.left = marker.corners[0].x + 'px';
-            this.tip.style.top = marker.corners[0].y + 'px';
+            this.show3d(marker);
         }
         else {
-            this.tip.style.display = 'none';
+            this.hide3d();
         }
+    };
+    Runtime.prototype.show3d = function (marker) {
+        var left = marker.corners[0];
+        var render = this.render;
+        render.style.display = 'block';
+        // render.style.left = left.x + 'px';
+        // render.style.top = left.y + 'px';
+    };
+    Runtime.prototype.hide3d = function () {
+        this.render.style.display = 'none';
     };
     return Runtime;
 }());

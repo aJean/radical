@@ -1,7 +1,9 @@
+import {WebGLRenderer, Scene, PerspectiveCamera, TextureLoader, BoxBufferGeometry, MeshBasicMaterial, Mesh} from 'three';
 import Util from '../util';
 
 /**
  * @file web ar
+ * @TODO: use corner to set box's world position
  * http://bhollis.github.io/aruco-marker/demos/angular.html
  */
 
@@ -11,12 +13,13 @@ export default class Runtime {
     video: any;
     canvas: any;
     context: any;
-    tip: any;
+    webgl: any;
+    render: any;
+    scene: any;
+    camera: any;
+    mesh: any;
 
     constructor() {
-        this.create();
-        this.detector = new AR.Detector();
-
         const constraints = {audio: false, video: {facingMode: 'environment'}};
         navigator.mediaDevices.getUserMedia(constraints).then(stream => {
             const video = this.video;
@@ -32,23 +35,59 @@ export default class Runtime {
             alert(err);
         });
 
+        this.detector = new AR.Detector();
+        
+        this.createDom();
+        this.createRender();
         this.tick();
     }
 
-    create() {
+    createDom() {
         const video = this.video = Util.createElement(`<video class="ar-video" style="position:relative;z-index:1;" autoplay playsinline></video>`);
         const canvas:any = this.canvas = Util.createElement(`<canvas width="300" height="300"></canvas>`);
-        const tip = this.tip = Util.createElement('<span style="display:none;position:absolute;width:100px;height:50px;background:blue;color:#fff;z-index:999;">hello webar</span>');
 
         this.context = canvas.getContext("2d");
         
         document.body.appendChild(video);
-        document.body.appendChild(tip);
+    }
+
+    createRender() {
         
+        const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});
+        const render = this.render = webgl.domElement;
+
+        webgl.setPixelRatio(window.devicePixelRatio);
+        webgl.setSize(window.innerWidth, window.innerHeight);
+        Util.styleElement(render, {
+            position: 'absolute',
+            display: 'none',
+            left: 0,
+            top: 0,
+            zIndex: '999'
+        });
+
+        document.body.appendChild(render);
+
+        const scene = this.scene = new Scene();
+        const camera = this.camera = new PerspectiveCamera(80, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(0, 0, 600);
+        
+        const texture = new TextureLoader().load('../assets/webar/material.gif');
+        const geometry = new BoxBufferGeometry(200, 200, 200);
+        const material = new MeshBasicMaterial({map: texture});
+        const mesh = this.mesh = new Mesh(geometry, material);
+
+        scene.add(mesh);
+
+        webgl.render(scene, camera);
     }
 
     tick() {
         requestAnimationFrame(this.tick.bind(this));
+
+        this.webgl.render(this.scene, this.camera);
+        this.mesh.rotation.x += 0.005;
+        this.mesh.rotation.y += 0.01;
 
         const video = this.video;
         const canvas = this.canvas;
@@ -62,11 +101,22 @@ export default class Runtime {
         
         if (markers.length) {
             const marker = markers[0];
-            this.tip.style.display = 'block'
-            this.tip.style.left = marker.corners[0].x + 'px';
-            this.tip.style.top = marker.corners[0].y + 'px';
+            this.show3d(marker);
         } else {
-            this.tip.style.display = 'none';
+            this.hide3d();
         }
+    }
+
+    show3d(marker) {
+        const left = marker.corners[0];
+        const render = this.render;
+
+        render.style.display = 'block'
+        // render.style.left = left.x + 'px';
+        // render.style.top = left.y + 'px';
+    }
+
+    hide3d() {
+        this.render.style.display = 'none';
     }
 }
