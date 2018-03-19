@@ -8,10 +8,13 @@ import Util from '../util';
  */
 
 const AR = window['AR'];
+const POS = window['POS'];
+const winWidth = window.innerWidth;
+const winHeight = window.innerHeight;
 export default class Runtime {
     detector: any;
+    posit: any;
     video: any;
-    canvas: any;
     context: any;
     webgl: any;
     render: any;
@@ -36,6 +39,7 @@ export default class Runtime {
         });
 
         this.detector = new AR.Detector();
+        this.posit = new POS.Posit(35, winWidth);
         
         this.createDom();
         this.createRender();
@@ -44,7 +48,7 @@ export default class Runtime {
 
     createDom() {
         const video = this.video = Util.createElement(`<video class="ar-video" style="position:relative;z-index:1;" autoplay playsinline></video>`);
-        const canvas:any = this.canvas = Util.createElement(`<canvas width="300" height="300"></canvas>`);
+        const canvas:any = Util.createElement(`<canvas width="300" height="300"></canvas>`);
 
         this.context = canvas.getContext("2d");
         
@@ -52,15 +56,13 @@ export default class Runtime {
     }
 
     createRender() {
-        
         const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});
         const render = this.render = webgl.domElement;
 
         webgl.setPixelRatio(window.devicePixelRatio);
-        webgl.setSize(window.innerWidth, window.innerHeight);
+        webgl.setSize(winWidth, winHeight);
         Util.styleElement(render, {
             position: 'absolute',
-            display: 'none',
             left: 0,
             top: 0,
             zIndex: '999'
@@ -69,7 +71,7 @@ export default class Runtime {
         document.body.appendChild(render);
 
         const scene = this.scene = new Scene();
-        const camera = this.camera = new PerspectiveCamera(80, window.innerWidth / window.innerHeight, 1, 1000);
+        const camera = this.camera = new PerspectiveCamera(80, winWidth / winHeight, 1, 1000);
         camera.position.set(0, 0, 600);
         
         const texture = new TextureLoader().load('../assets/webar/material.gif');
@@ -89,34 +91,28 @@ export default class Runtime {
         this.mesh.rotation.x += 0.005;
         this.mesh.rotation.y += 0.01;
 
-        const video = this.video;
-        const canvas = this.canvas;
         const context = this.context;
-        const detector = this.detector;
-
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const data = context.getImageData(0, 0, canvas.width, canvas.height);
-
-        const markers = detector.detect(data);
+        context.drawImage(this.video, 0, 0, 300, 300);
+        const markers = this.detector.detect(context.getImageData(0, 0, 300, 300));
         
-        if (markers.length) {
-            const marker = markers[0];
-            this.show3d(marker);
-        } else {
-            this.hide3d();
-        }
+        markers.length ? this.show3d(markers[0]) : this.hide3d();
     }
 
     show3d(marker) {
-        const left = marker.corners[0];
-        const render = this.render;
+        const corners = marker.corners;
+        const mesh = this.mesh;
 
-        render.style.display = 'block'
-        // render.style.left = left.x + 'px';
-        // render.style.top = left.y + 'px';
+        corners.forEach(data => {
+            data.x = data.x - (winWidth / 2);
+            data.y = (winHeight / 2) - data.y;
+        });
+
+        const pos = this.posit.pose(corners);
+        mesh.position.set(pos.bestTranslation[0], pos.bestTranslation[1], pos.bestTranslation[2]);
+        mesh.visible = true;
     }
 
     hide3d() {
-        this.render.style.display = 'none';
+        this.mesh.visible = false;
     }
 }
