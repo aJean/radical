@@ -6,7 +6,7 @@ import VR from './src/runtime/vr.runtime';
 import AR from './src/runtime/ar.runtime';
 
 /**
- * @file lib index.ts
+ * @file bxl lib
  */
 
 export default {
@@ -21,7 +21,7 @@ export default {
     dispose(ref: string) {
         return VR.releaseInstance(ref);
     },
-
+    
     testAR() {
         new AR();
     }

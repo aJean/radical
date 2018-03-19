@@ -107,7 +107,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 /**
- * @file lib index.ts
+ * @file bxl lib
  */
 /* harmony default export */ __webpack_exports__["default"] = ({
     start: function (source, el, events) {
@@ -53160,45 +53160,39 @@ var GyroControl = /** @class */ (function () {
         this.spherical = new three__WEBPACK_IMPORTED_MODULE_0__["Spherical"]();
         this.diffSpherical = new three__WEBPACK_IMPORTED_MODULE_0__["Spherical"]();
         camera.rotation.reorder('YXZ');
-        control.update();
         this.camera = camera.clone();
         this.control = control;
-        this.onDeviceOrientationChangeEvent = function (event) {
-            _this.deviceOrien = event;
-        };
-        this.onScreenOrientationChangeEvent = function (event) {
-            _this.screenOrien = Number(window.orientation) || 0;
-        };
+        this.onDeviceOrientationChangeEvent = function (event) { return _this.deviceOrien = event; };
+        this.onScreenOrientationChangeEvent = function (event) { return _this.screenOrien = Number(window.orientation) || 0; };
     }
     /**
      * The angles alpha, beta and gamma form a set of intrinsic Tait-Bryan angles of type Z-X'-Y''
      */
-    GyroControl.prototype.calcQuaternion = function (quaternion, alpha, beta, gamma, orient) {
+    GyroControl.prototype.calcQuaternion = function (alpha, beta, gamma, orient) {
         // 'ZXY' for the device, but 'YXZ' for us
         this.euler.set(beta, alpha, -gamma, 'YXZ');
+        var camera = this.camera;
+        var spherical = this.spherical;
+        var diffSpherical = this.diffSpherical;
+        var quaternion = this.camera.quaternion;
         // orient the device
         quaternion.setFromEuler(this.euler);
         // camera looks out the back of the device, not the top
         quaternion.multiply(this.q1);
         // adjust for screen orientation
         quaternion.multiply(this.q0.setFromAxisAngle(this.zee, -orient));
-        // 相机初始观看方向向量
-        this.spherical.setFromVector3(this.camera.getWorldDirection());
-        var spherical = this.spherical;
-        var diffSpherical = this.diffSpherical;
+        // imu 变化转为球面坐标
+        spherical.setFromVector3(camera.getWorldDirection());
         var lastSpherical = this.lastSpherical;
         // 计算设备方向的增量
         if (lastSpherical) {
-            diffSpherical.theta = spherical.theta - lastSpherical.theta;
-            diffSpherical.phi = -spherical.phi + lastSpherical.phi;
-            // 将偏移角度传给 orbitControl 计算 camera
+            diffSpherical.set(1, -spherical.phi + lastSpherical.phi, spherical.theta - lastSpherical.theta);
             this.control.update(diffSpherical);
         }
         else {
             lastSpherical = this.lastSpherical = new three__WEBPACK_IMPORTED_MODULE_0__["Spherical"]();
         }
-        lastSpherical.theta = spherical.theta;
-        lastSpherical.phi = spherical.phi;
+        lastSpherical.set(1, spherical.phi, spherical.theta);
     };
     GyroControl.prototype.connect = function () {
         window.addEventListener('orientationchange', this.onScreenOrientationChangeEvent, false);
@@ -53227,7 +53221,7 @@ var GyroControl = /** @class */ (function () {
         if (alpha === 0 && beta === 0 && gamma === 0 && orient === 0) {
             return;
         }
-        this.calcQuaternion(this.camera.quaternion, alpha, beta, gamma, orient);
+        this.calcQuaternion(alpha.toFixed(5), beta.toFixed(5), gamma.toFixed(5), orient);
     };
     /**
      * 初始 z 轴旋转角度

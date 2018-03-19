@@ -24,50 +24,45 @@ export default class GyroControl {
 
     constructor(camera, control) {
         camera.rotation.reorder('YXZ');
-        control.update();
 
         this.camera = camera.clone();
         this.control = control;
-        this.onDeviceOrientationChangeEvent = event => {
-            this.deviceOrien = event;
-        };
-
-        this.onScreenOrientationChangeEvent = event => {
-            this.screenOrien = Number(window.orientation) || 0;
-        };
+        this.onDeviceOrientationChangeEvent = event => this.deviceOrien = event;
+        this.onScreenOrientationChangeEvent = event => this.screenOrien = Number(window.orientation) || 0;
     }
 
     /** 
      * The angles alpha, beta and gamma form a set of intrinsic Tait-Bryan angles of type Z-X'-Y''
      */
-    calcQuaternion(quaternion, alpha, beta, gamma, orient) {
+    calcQuaternion(alpha, beta, gamma, orient) {
         // 'ZXY' for the device, but 'YXZ' for us
         this.euler.set(beta, alpha, -gamma, 'YXZ');
+
+        const camera = this.camera;
+        const spherical = this.spherical;
+        const diffSpherical = this.diffSpherical;
+        const quaternion = this.camera.quaternion;
+
         // orient the device
         quaternion.setFromEuler(this.euler);
         // camera looks out the back of the device, not the top
         quaternion.multiply(this.q1);
         // adjust for screen orientation
         quaternion.multiply(this.q0.setFromAxisAngle(this.zee, -orient));
-        // 相机初始观看方向向量
-        this.spherical.setFromVector3(this.camera.getWorldDirection());
+        // imu 变化转为球面坐标
+        spherical.setFromVector3(camera.getWorldDirection());
 
-        const spherical = this.spherical;
-        const diffSpherical = this.diffSpherical;
         let lastSpherical = this.lastSpherical;
-
+        
         // 计算设备方向的增量
         if (lastSpherical) {
-            diffSpherical.theta = spherical.theta - lastSpherical.theta;
-            diffSpherical.phi = -spherical.phi + lastSpherical.phi;
-            // 将偏移角度传给 orbitControl 计算 camera
+            diffSpherical.set(1, -spherical.phi + lastSpherical.phi, spherical.theta - lastSpherical.theta);
             this.control.update(diffSpherical);
         } else {
             lastSpherical = this.lastSpherical = new Spherical();
         }
 
-        lastSpherical.theta = spherical.theta;
-        lastSpherical.phi = spherical.phi;
+        lastSpherical.set(1, spherical.phi, spherical.theta);
     }
 
     connect() {
@@ -102,7 +97,7 @@ export default class GyroControl {
             return;
         }
 
-        this.calcQuaternion(this.camera.quaternion, alpha, beta, gamma, orient);
+        this.calcQuaternion(alpha.toFixed(5), beta.toFixed(5), gamma.toFixed(5), orient);
     }
 
     /**
