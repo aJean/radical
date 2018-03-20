@@ -1,5 +1,5 @@
-import Util from '../util';
 import {IPluggableOverlay} from '../interface/overlay.interface';
+import Util from '../../core/util';
 
 /**
  * @file dom element overlay

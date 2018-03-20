@@ -2,8 +2,8 @@ import './styles/pano.style.less';
 import './styles/multiple.style.less';
 import './styles/overlays.style.less';
 import './styles/ui.style.less';
-import VR from './src/runtime/vr.runtime';
-import AR from './src/runtime/ar.runtime';
+import VRuntime from './src/runtime/vr.runtime';
+import ARuntime from './src/runtime/ar.runtime';
 
 /**
  * @file bxl lib
@@ -11,18 +11,18 @@ import AR from './src/runtime/ar.runtime';
 
 export default {
     start(source, el, events?) {
-        VR.start(source, el, events);
+        VRuntime.start(source, el, events);
     },
 
     getPano(ref: string) {
-        return VR.getInstance(ref);
+        return VRuntime.getInstance(ref);
     },
 
     dispose(ref: string) {
-        return VR.releaseInstance(ref);
+        return VRuntime.releaseInstance(ref);
     },
     
-    testAR() {
-        new AR();
+    testAR(opts) {
+        ARuntime.start(opts);
     }
 };

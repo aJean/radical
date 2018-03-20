@@ -1,7 +1,7 @@
 import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
 import {IPluggableOverlay} from '../interface/overlay.interface';
 import Popup from '../ui/popup.ui';
-import Util from '../util';
+import Util from '../../core/util';
 
 /**
  * @file 视频播放

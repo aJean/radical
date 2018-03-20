@@ -4,45 +4,76 @@
         <title></title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1, maximum-scale=1">
-        <title>artoolkit 使用</title>
+        <title>web ar 演示 - artoolkit</title>
         <link rel="stylesheet" href="../../index.css">        
     </head>
     <body>
         <script src="./artoolkit.min.js"></script>
         <script src="./artoolkit.api.js"></script>
+        <script src="./three.min.js"></script>
         <video id="ar-video" style="position:relative;z-index:1;" autoplay playsinline></video>
         <script>
             let markerId;
             const video = document.getElementById('ar-video');
-            video.width = window.innerWidth;
-            video.height = window.innerHeight;
+            const winWidth = window.innerWidth;
+            const winHeight = window.innerHeight;
 
+            video.width = winWidth;
+            video.height = winHeight;
+
+            const webgl = this.webgl = new THREE.WebGLRenderer({alpha: true, antialias: true});
+            const render = webgl.domElement;
+            render.style.cssText = 'position:absolute;left:0;top:0;z-index:999;';
+
+            webgl.setPixelRatio(window.devicePixelRatio);
+            webgl.setSize(winWidth, winHeight);
+            document.body.appendChild(render);
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.Camera();
+            
+            const texture = new THREE.TextureLoader().load('../../assets/webar/material.gif');
+            const geometry = new THREE.BoxBufferGeometry(1, 1, 1);
+            const material = new THREE.MeshBasicMaterial({map: texture});
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.visible = false;
+            
+            scene.add(mesh);
+
+            const arController = new ARController(video, '../../assets/webar/camera_para_ios.dat');
+            arController.onload = function() {
+                arController.loadMarker('../../assets/webar/patt.hiro', marker => {
+                    markerId = marker;
+                });
+
+                arController.addEventListener('getMarker', ev => {
+                    if (ev.data.marker.idPatt === markerId) {
+                        mesh.visible = true;
+                        mesh.matrix.elements.set(ev.matrix);
+                    } else {
+                        mesh.visible = false;
+                    }
+                });
+
+                camera.matrixAutoUpdate = false;
+                camera.matrix.elements.set(arController.getCameraMatrix());
+
+                tick();                
+            }
+
+            const tick = function() {
+                requestAnimationFrame(tick);
+
+                arController.process(video);
+                webgl.render(scene, camera);
+            };
+            
             const hdConstraints = {
                 audio: false,
                 video: {
                     facingMode: 'environment'
                 }
             };
-
-            const arController = new ARController(video, '../../assets/webar/camera_para.dat');
-            arController.onload = function() {
-                arController.loadMarker('../../assets/webar/patt.hiro', marker => {
-                    markerId = marker;
-                    console.log(marker);
-                });
-
-                arController.addEventListener('getMarker', ev => {
-                    if (ev.data.marker.idPatt === markerId) {
-                        console.log(111);
-                    }
-                });
-            }
-
-            const tick = function() {
-                arController.process(video);
-                requestAnimationFrame(tick);
-            };
-
             navigator.mediaDevices.getUserMedia(hdConstraints).then(stream => {
                 if ('srcObject' in video) {
                     video.srcObject = stream;
@@ -51,7 +82,6 @@
                 }
                 
                 video.play();
-                tick();
             }).catch(function(err) {
                 console.error(err);
             });

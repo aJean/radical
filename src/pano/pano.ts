@@ -1,13 +1,13 @@
 import {WebGLRenderer, Scene, PerspectiveCamera, Vector3, Math as TMath} from 'three';
 import OrbitControl from './controls/orbitControl';
 import GyroControl from './controls/gyroControl';
-import EventEmitter from './event';
-import Log from './log';
-import Util from './util';
 import ResourceLoader from './loaders/resource.loader';
 import Tween from './animations/tween.animation';
 import Overlays from './overlays/overlays.overlay';
 import Inradius from './plastic/inradius.plastic';
+import EventEmitter from '../core/event';
+import Log from '../core/log';
+import Util from '../core/util';
 
 /**
  * @file 全景渲染

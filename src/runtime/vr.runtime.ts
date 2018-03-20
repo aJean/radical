@@ -1,11 +1,11 @@
-import Pano from '../pano';
-import Log from '../log';
-import ResourceLoader from '../loaders/resource.loader';
-import Info from '../plugins/info.plugin';
-import Rotate from '../plugins/rotate.plugin';
-import Multiple from '../plugins/multiple.plugin';
-import Wormhole from '../plugins/wormhole.plugin';
-import Timeline from '../animations/timeline.animation';
+import ResourceLoader from '../pano/loaders/resource.loader';
+import Info from '../pano/plugins/info.plugin';
+import Rotate from '../pano/plugins/rotate.plugin';
+import Multiple from '../pano/plugins/multiple.plugin';
+import Wormhole from '../pano/plugins/wormhole.plugin';
+import Timeline from '../pano/animations/timeline.animation';
+import Pano from '../pano/pano';
+import Log from '../core/log';
 
 /**
  * @file 执行环境

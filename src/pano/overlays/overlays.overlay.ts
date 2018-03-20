@@ -1,12 +1,12 @@
 import {Vector3, Raycaster, Group} from 'three';
-import Pano from '../pano';
-import Util from '../util';
-import Log from '../log';
 import DomOverlay from './dom.overlay';
 import MeshOverlay from './mesh.overlay';
 import SpriteOverlay from './sprite.overlay';
 import FrameOverlay from './frame.overlay';
 import VideoOverlay from './video.overlay';
+import Pano from '../pano';
+import Util from '../../core/util';
+import Log from '../../core/log';
 
 /**
  * @file 管理所有场景下的覆盖物

@@ -1,9 +1,9 @@
 import {Texture, CubeTextureLoader, Raycaster, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Vector3} from 'three';
 import ResourceLoader from '../loaders/resource.loader';
-import Pano from '../pano';
-import Log from '../log';
-import Util from '../util';
 import Tween from '../animations/tween.animation';
+import Pano from '../pano';
+import Log from '../../core/log';
+import Util from '../../core/util';
 
 /**
  * @file wormhole space through effection

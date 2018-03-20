@@ -1,5 +1,5 @@
-import Util from '../util';
 import {IPluggableUI} from '../interface/ui.interface';
+import Util from '../../core/util';
 
 /**
  * 多场景切换插件

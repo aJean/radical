@@ -4,7 +4,7 @@
         <title></title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1, maximum-scale=1">
-        <title>web ar 演示</title>
+        <title>web ar 演示 - jsaruco</title>
         <link rel="stylesheet" href="../../index.css">        
     </head>
     <body>
@@ -18,7 +18,10 @@
         　　　　paths: {"bxl": "../../lib"}
         　　});
             requirejs(['bxl'], function (bxl) {
-                bxl.testAR();
+                bxl.testAR({
+                    aruco: true,
+                    texurl: '../../assets/webar/material.gif'
+                });
             });
         </script>
     </body>

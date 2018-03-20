@@ -1,6 +1,6 @@
-import Util from '../util';
 import Layer from './layer.ui';
 import CssAnimation from '../animations/css.animation';
+import Util from '../../core/util';
 
 /**
  * popup component

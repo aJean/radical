@@ -1,4 +1,4 @@
-import Util from '../util';
+import Util from '../../core/util';
 
 /**
  * @file 版权遮罩层

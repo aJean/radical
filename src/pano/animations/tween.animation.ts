@@ -1,5 +1,5 @@
 import Pano from '../pano';
-import Log from '../log';
+import Log from '../../core/log';
 
 /**
  * @file js frame animation

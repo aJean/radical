@@ -1,7 +1,7 @@
 import {CubeTexture, CubeTextureLoader, CubeRefractionMapping} from 'three';
 import BaseLoader from './base.loader';
-import Util from '../util';
-import Log from '../log';
+import Util from '../../core/util';
+import Log from '../../core/log';
 
 /**
  * @file 资源加载器, 支持预览, bxl, image 三种格式

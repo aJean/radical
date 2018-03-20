@@ -119,8 +119,8 @@ __webpack_require__.r(__webpack_exports__);
     dispose: function (ref) {
         return _src_runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__["default"].releaseInstance(ref);
     },
-    testAR: function () {
-        new _src_runtime_ar_runtime__WEBPACK_IMPORTED_MODULE_5__["default"]();
+    testAR: function (opts) {
+        _src_runtime_ar_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].start(opts);
     }
 });
 
@@ -52794,10 +52794,635 @@ function CanvasRenderer() {
 
 /***/ }),
 
-/***/ "./src/animations/css.animation.ts":
-/*!*****************************************!*\
-  !*** ./src/animations/css.animation.ts ***!
-  \*****************************************/
+/***/ "./src/ar/ar.ts":
+/*!**********************!*\
+  !*** ./src/ar/ar.ts ***!
+  \**********************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+
+
+/**
+ * @file webar
+ * use js-aruco & jsartoolkit
+ * http://bhollis.github.io/aruco-marker/demos/angular.html
+ */
+var Aruco = window['AR'];
+var POS = window['POS'];
+var winWidth = window.innerWidth;
+var winHeight = window.innerHeight;
+var AR = /** @class */ (function () {
+    function AR(opts) {
+        var _this = this;
+        var constraints = { audio: false, video: { facingMode: 'environment' } };
+        navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
+            var video = _this.video;
+            if ('srcObject' in video) {
+                video.srcObject = stream;
+            }
+            else {
+                video.src = window.URL.createObjectURL(stream);
+            }
+            video.play();
+        }).catch(function (err) {
+            alert(err);
+        });
+        this.createDom();
+        this.createRender(opts.texurl);
+        if (opts.aruco) {
+            this.detector = new Aruco.Detector();
+            this.posit = new POS.Posit(35, winWidth);
+            this.tick();
+        }
+        else {
+            this.tickArtoolkit();
+        }
+    }
+    AR.prototype.createDom = function () {
+        var video = this.video = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement("<video class=\"ar-video\" style=\"position:relative;z-index:1;\" autoplay playsinline></video>");
+        var canvas = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement("<canvas width=\"300\" height=\"300\"></canvas>");
+        this.painter = canvas.getContext('2d');
+        document.body.appendChild(video);
+    };
+    AR.prototype.createRender = function (texurl) {
+        var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
+        var render = this.render = webgl.domElement;
+        webgl.setPixelRatio(window.devicePixelRatio);
+        webgl.setSize(winWidth, winHeight);
+        _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].styleElement(render, {
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            zIndex: '999'
+        });
+        document.body.appendChild(render);
+        var scene = this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
+        var camera = this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](80, winWidth / winHeight, 1, 1000);
+        camera.position.set(0, 0, 600);
+        var texture = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load(texurl);
+        var geometry = new three__WEBPACK_IMPORTED_MODULE_0__["BoxBufferGeometry"](200, 200, 200);
+        var material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({ map: texture });
+        var mesh = this.mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, material);
+        scene.add(mesh);
+        webgl.render(scene, camera);
+    };
+    AR.prototype.tick = function () {
+        requestAnimationFrame(this.tick.bind(this));
+        this.webgl.render(this.scene, this.camera);
+        this.mesh.rotation.x += 0.005;
+        this.mesh.rotation.y += 0.01;
+        var painter = this.painter;
+        painter.drawImage(this.video, 0, 0, 300, 300);
+        var markers = this.detector.detect(painter.getImageData(0, 0, 300, 300));
+        markers.length ? this.show3d(markers[0]) : this.hide3d();
+    };
+    AR.prototype.show3d = function (marker) {
+        var corners = marker.corners;
+        var mesh = this.mesh;
+        corners.forEach(function (data) {
+            data.x = data.x - (winWidth / 2);
+            data.y = (winHeight / 2) - data.y;
+        });
+        var pos = this.posit.pose(corners);
+        mesh.position.set(pos.bestTranslation[0], pos.bestTranslation[1], pos.bestTranslation[2]);
+        mesh.visible = true;
+    };
+    AR.prototype.hide3d = function () {
+        this.mesh.visible = false;
+    };
+    AR.prototype.tickArtoolkit = function () {
+        requestAnimationFrame(this.tick.bind(this));
+    };
+    return AR;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (AR);
+
+
+/***/ }),
+
+/***/ "./src/core/event.ts":
+/*!***************************!*\
+  !*** ./src/core/event.ts ***!
+  \***************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+var has = Object.prototype.hasOwnProperty;
+var prefix = '~';
+/**
+ * Constructor to create a storage for our `EE` objects.
+ * An `Events` instance is a plain object whose properties are event names.
+ *
+ * @constructor
+ * @private
+ */
+function Events() { }
+//
+// We try to not inherit from `Object.prototype`. In some engines creating an
+// instance in this way is faster than calling `Object.create(null)` directly.
+// If `Object.create(null)` is not supported we prefix the event names with a
+// character to make sure that the built-in object properties are not
+// overridden or used as an attack vector.
+//
+if (Object.create) {
+    Events.prototype = Object.create(null);
+    //
+    // This hack is needed because the `__proto__` property is still inherited in
+    // some old browsers like Android 4, iPhone 5.1, Opera 11 and Safari 5.
+    //
+    if (!new Events()['__proto__'])
+        prefix = false;
+}
+/**
+ * Representation of a single event listener.
+ *
+ * @param {Function} fn The listener function.
+ * @param {*} context The context to invoke the listener with.
+ * @param {Boolean} [once=false] Specify if the listener is a one-time listener.
+ * @constructor
+ * @private
+ */
+function EE(fn, context, once) {
+    this.fn = fn;
+    this.context = context;
+    this.once = once || false;
+}
+/**
+ * Add a listener for a given event.
+ *
+ * @param {EventEmitter} emitter Reference to the `EventEmitter` instance.
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @param {*} context The context to invoke the listener with.
+ * @param {Boolean} once Specify if the listener is a one-time listener.
+ * @returns {EventEmitter}
+ * @private
+ */
+function addListener(emitter, event, fn, context, once) {
+    if (typeof fn !== 'function') {
+        throw new TypeError('The listener must be a function');
+    }
+    var listener = new EE(fn, context || emitter, once), evt = prefix ? prefix + event : event;
+    if (!emitter._events[evt])
+        emitter._events[evt] = listener, emitter._eventsCount++;
+    else if (!emitter._events[evt].fn)
+        emitter._events[evt].push(listener);
+    else
+        emitter._events[evt] = [emitter._events[evt], listener];
+    return emitter;
+}
+/**
+ * Clear event by name.
+ *
+ * @param {EventEmitter} emitter Reference to the `EventEmitter` instance.
+ * @param {(String|Symbol)} evt The Event name.
+ * @private
+ */
+function clearEvent(emitter, evt) {
+    if (--emitter._eventsCount === 0)
+        emitter._events = new Events();
+    else
+        delete emitter._events[evt];
+}
+/**
+ * Minimal `EventEmitter` interface that is molded against the Node.js
+ * `EventEmitter` interface.
+ *
+ * @constructor
+ * @public
+ */
+function EventEmitter() {
+    this._events = new Events();
+    this._eventsCount = 0;
+}
+/**
+ * Return an array listing the events for which the emitter has registered
+ * listeners.
+ *
+ * @returns {Array}
+ * @public
+ */
+EventEmitter.prototype.eventNames = function eventNames() {
+    var names = [], events, name;
+    if (this._eventsCount === 0)
+        return names;
+    for (name in (events = this._events)) {
+        if (has.call(events, name))
+            names.push(prefix ? name.slice(1) : name);
+    }
+    if (Object['getOwnPropertySymbols']) {
+        return names.concat(Object['getOwnPropertySymbols'](events));
+    }
+    return names;
+};
+/**
+ * Return the listeners registered for a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @returns {Array} The registered listeners.
+ * @public
+ */
+EventEmitter.prototype.listeners = function listeners(event) {
+    var evt = prefix ? prefix + event : event, handlers = this._events[evt];
+    if (!handlers)
+        return [];
+    if (handlers.fn)
+        return [handlers.fn];
+    for (var i = 0, l = handlers.length, ee = new Array(l); i < l; i++) {
+        ee[i] = handlers[i].fn;
+    }
+    return ee;
+};
+/**
+ * Return the number of listeners listening to a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @returns {Number} The number of listeners.
+ * @public
+ */
+EventEmitter.prototype.listenerCount = function listenerCount(event) {
+    var evt = prefix ? prefix + event : event, listeners = this._events[evt];
+    if (!listeners)
+        return 0;
+    if (listeners.fn)
+        return 1;
+    return listeners.length;
+};
+/**
+ * Calls each of the listeners registered for a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @returns {Boolean} `true` if the event had listeners, else `false`.
+ * @public
+ */
+EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
+    var evt = prefix ? prefix + event : event;
+    if (!this._events[evt])
+        return false;
+    var listeners = this._events[evt], len = arguments.length, args, i;
+    if (listeners.fn) {
+        if (listeners.once)
+            this.removeListener(event, listeners.fn, undefined, true);
+        switch (len) {
+            case 1:
+                return listeners.fn.call(listeners.context), true;
+            case 2:
+                return listeners.fn.call(listeners.context, a1), true;
+            case 3:
+                return listeners.fn.call(listeners.context, a1, a2), true;
+            case 4:
+                return listeners.fn.call(listeners.context, a1, a2, a3), true;
+            case 5:
+                return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
+            case 6:
+                return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
+        }
+        for (i = 1, args = new Array(len - 1); i < len; i++) {
+            args[i - 1] = arguments[i];
+        }
+        listeners.fn.apply(listeners.context, args);
+    }
+    else {
+        var length = listeners.length, j;
+        for (i = 0; i < length; i++) {
+            if (listeners[i].once)
+                this.removeListener(event, listeners[i].fn, undefined, true);
+            switch (len) {
+                case 1:
+                    listeners[i].fn.call(listeners[i].context);
+                    break;
+                case 2:
+                    listeners[i].fn.call(listeners[i].context, a1);
+                    break;
+                case 3:
+                    listeners[i].fn.call(listeners[i].context, a1, a2);
+                    break;
+                case 4:
+                    listeners[i].fn.call(listeners[i].context, a1, a2, a3);
+                    break;
+                default:
+                    if (!args)
+                        for (j = 1, args = new Array(len - 1); j < len; j++) {
+                            args[j - 1] = arguments[j];
+                        }
+                    listeners[i].fn.apply(listeners[i].context, args);
+            }
+        }
+    }
+    return true;
+};
+/**
+ * Add a listener for a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @param {*} [context=this] The context to invoke the listener with.
+ * @returns {EventEmitter} `this`.
+ * @public
+ */
+EventEmitter.prototype.on = function on(event, fn, context) {
+    return addListener(this, event, fn, context, false);
+};
+/**
+ * Add a one-time listener for a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @param {*} [context=this] The context to invoke the listener with.
+ * @returns {EventEmitter} `this`.
+ * @public
+ */
+EventEmitter.prototype.once = function once(event, fn, context) {
+    return addListener(this, event, fn, context, true);
+};
+/**
+ * Remove the listeners of a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn Only remove the listeners that match this function.
+ * @param {*} context Only remove the listeners that have this context.
+ * @param {Boolean} once Only remove one-time listeners.
+ * @returns {EventEmitter} `this`.
+ * @public
+ */
+EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
+    var evt = prefix ? prefix + event : event;
+    if (!this._events[evt])
+        return this;
+    if (!fn) {
+        clearEvent(this, evt);
+        return this;
+    }
+    var listeners = this._events[evt];
+    if (listeners.fn) {
+        if (listeners.fn === fn &&
+            (!once || listeners.once) &&
+            (!context || listeners.context === context)) {
+            clearEvent(this, evt);
+        }
+    }
+    else {
+        for (var i = 0, events = [], length = listeners.length; i < length; i++) {
+            if (listeners[i].fn !== fn ||
+                (once && !listeners[i].once) ||
+                (context && listeners[i].context !== context)) {
+                events.push(listeners[i]);
+            }
+        }
+        //
+        // Reset the array, or remove it completely if we have no more listeners.
+        //
+        if (events.length)
+            this._events[evt] = events.length === 1 ? events[0] : events;
+        else
+            clearEvent(this, evt);
+    }
+    return this;
+};
+/**
+ * Remove all listeners, or those of the specified event.
+ *
+ * @param {(String|Symbol)} [event] The event name.
+ * @returns {EventEmitter} `this`.
+ * @public
+ */
+EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
+    var evt;
+    if (event) {
+        evt = prefix ? prefix + event : event;
+        if (this._events[evt])
+            clearEvent(this, evt);
+    }
+    else {
+        this._events = new Events();
+        this._eventsCount = 0;
+    }
+    return this;
+};
+//
+// Alias methods names because people roll like that.
+//
+EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+//
+// Expose the prefix.
+//
+EventEmitter['prefixed'] = prefix;
+//
+// Allow `EventEmitter` to be imported as module namespace.
+//
+EventEmitter['EventEmitter'] = EventEmitter;
+/* harmony default export */ __webpack_exports__["default"] = (EventEmitter);
+
+
+/***/ }),
+
+/***/ "./src/core/log.ts":
+/*!*************************!*\
+  !*** ./src/core/log.ts ***!
+  \*************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/**
+ * @file logs & 统计
+ */
+function formatMsg(msg) {
+    return (typeof msg === 'string') ? new Error(msg) : msg;
+}
+/* harmony default export */ __webpack_exports__["default"] = ({
+    debug: false,
+    output: function (msg) {
+        return this.debug ? this.errorLog(msg) : this.infoLog(msg);
+    },
+    infoLog: function (msg) {
+        console.info(msg);
+    },
+    errorLog: function (msg) {
+        console.error(msg);
+    }
+});
+
+
+/***/ }),
+
+/***/ "./src/core/util.ts":
+/*!**************************!*\
+  !*** ./src/core/util.ts ***!
+  \**************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var crypto_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! crypto-js */ "./node_modules/crypto-js/index.js");
+/* harmony import */ var crypto_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(crypto_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+
+
+/**
+ * @file util tools
+ */
+var composeKey = function (part) { return ('skt1wins' + part); };
+/* harmony default export */ __webpack_exports__["default"] = ({
+    /**
+     * 创建 dom 元素
+     * @param {string} domstring
+     */
+    createElement: function (domstring) {
+        var elem = document.createElement('div');
+        elem.innerHTML = domstring;
+        return elem.firstElementChild;
+    },
+    styleElement: function (elem, data) {
+        for (var prop in data) {
+            var val = data[prop];
+            if (typeof val === 'number') {
+                val = val + 'px';
+            }
+            elem.style[prop] = val;
+        }
+    },
+    /**
+     * 解密
+     * @param {string} ciphertext 密文
+     * @param {string} key 密钥
+     */
+    decode: function (ciphertext, key) {
+        if ((key ^ 1) !== 1) {
+            key = composeKey('forever');
+        }
+        var plaintext = crypto_js__WEBPACK_IMPORTED_MODULE_0__["AES"].decrypt({
+            iv: null,
+            ciphertext: crypto_js__WEBPACK_IMPORTED_MODULE_0__["enc"].Hex.parse(ciphertext),
+            salt: crypto_js__WEBPACK_IMPORTED_MODULE_0__["lib"].WordArray.create(0)
+        }, key);
+        return plaintext.toString(crypto_js__WEBPACK_IMPORTED_MODULE_0__["enc"].Utf8);
+    },
+    /**
+     * 解析文件结束符, 域名规则检验
+     * @param {string} EOF
+     */
+    parseEOF: function (EOF) {
+        var ret = EOF.split('*');
+        var domains = ret[1] ? ret[1].split(',') : [];
+        var pass = true;
+        if (domains.length > 0) {
+            pass = Boolean(domains.find(function (domain) { return domain == location.host; }));
+        }
+        return {
+            line: ret[0],
+            pass: pass
+        };
+    },
+    /**
+     * 解析数据地理位置
+     * location.lng [-180, 180] location.lat [0, 180]
+     * @param {Object} data
+     * @param {Object} camera
+     */
+    parseLocation: function (data, camera) {
+        var location = data.location;
+        // 经纬度
+        if (location && location.lng !== undefined) {
+            var vector = this.calcSphereToWorld(location.lng, location.lat);
+            data.location = {
+                x: vector.x,
+                y: vector.y,
+                z: vector.z
+            };
+        }
+    },
+    /**
+     * 球面坐标转化成世界坐标
+     * @param {number} lng 经度
+     * @param {number} lat 纬度
+     * @param {number} radius 半径
+     */
+    calcSphereToWorld: function (lng, lat, radius) {
+        var spherical = new three__WEBPACK_IMPORTED_MODULE_1__["Spherical"]();
+        var vector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"]();
+        spherical.theta = lng * (Math.PI / 180);
+        spherical.phi = (90 - lat) * (Math.PI / 180);
+        spherical.radius = radius !== undefined ? radius : 1000;
+        vector.setFromSpherical(spherical);
+        return vector;
+    },
+    /**
+     * 世界坐标转为屏幕坐标
+     * @param {Object} location 世界坐标系
+     * @param {Object} camera 场景相机
+     */
+    calcWorldToScreen: function (location, camera) {
+        var vector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](location.x, location.y, location.z);
+        return vector.project(camera);
+    },
+    /**
+     * 屏幕坐标转为球面坐标
+     */
+    calcScreenToSphere: function (location, camera) {
+        var vector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](location.x, location.y, 0.99).unproject(camera);
+        var spherical = new three__WEBPACK_IMPORTED_MODULE_1__["Spherical"]();
+        spherical.setFromVector3(vector);
+        return {
+            lng: spherical.theta * 180 / Math.PI,
+            lat: 90 - spherical.phi * 180 / Math.PI
+        };
+    },
+    /**
+     * 计算画布大小
+     * @param {Object} opts 配置参数
+     * @param {HTMLElement} elem 容器元素
+     */
+    calcRenderSize: function (opts, elem) {
+        var winWidth = window.innerWidth;
+        var winHeight = window.innerHeight;
+        var width = parseInt(opts.width) || elem.parentNode.clientWidth || winWidth;
+        var height = parseInt(opts.height) || elem.parentNode.clientHeight || winHeight;
+        /%$/.test(opts.width) && (width = width / 100 * winWidth);
+        /%$/.test(opts.height) && (height = height / 100 * winHeight);
+        return { width: width, height: height, aspect: width / height };
+    },
+    /**
+     * 删除 object3d 对象
+     */
+    cleanup: function (parent, target) {
+        var _this = this;
+        if (target.children.length) {
+            target.children.forEach(function (item) { return _this.cleanup(target, item); });
+        }
+        else if (parent) {
+            parent.remove(target);
+        }
+    },
+    /**
+     * 查找渲染 scene 对象
+     * @param source
+     */
+    findScene: function (source, tid) {
+        var group = source.sceneGroup;
+        var id = tid !== void 0 ? tid : source.defaultSceneId;
+        var scene = group.find(function (item) { return item.id == id; });
+        return (scene || group[0]);
+    }
+});
+
+
+/***/ }),
+
+/***/ "./src/pano/animations/css.animation.ts":
+/*!**********************************************!*\
+  !*** ./src/pano/animations/css.animation.ts ***!
+  \**********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -52856,10 +53481,10 @@ var CssAnimation = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/animations/fly.animation.ts":
-/*!*****************************************!*\
-  !*** ./src/animations/fly.animation.ts ***!
-  \*****************************************/
+/***/ "./src/pano/animations/fly.animation.ts":
+/*!**********************************************!*\
+  !*** ./src/pano/animations/fly.animation.ts ***!
+  \**********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -52949,16 +53574,16 @@ var AnimationFly = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/animations/timeline.animation.ts":
-/*!**********************************************!*\
-  !*** ./src/animations/timeline.animation.ts ***!
-  \**********************************************/
+/***/ "./src/pano/animations/timeline.animation.ts":
+/*!***************************************************!*\
+  !*** ./src/pano/animations/timeline.animation.ts ***!
+  \***************************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _fly_animation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./fly.animation */ "./src/animations/fly.animation.ts");
+/* harmony import */ var _fly_animation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./fly.animation */ "./src/pano/animations/fly.animation.ts");
 
 /**
  * @file animation timeline
@@ -53012,16 +53637,16 @@ var Timeline = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/animations/tween.animation.ts":
-/*!*******************************************!*\
-  !*** ./src/animations/tween.animation.ts ***!
-  \*******************************************/
+/***/ "./src/pano/animations/tween.animation.ts":
+/*!************************************************!*\
+  !*** ./src/pano/animations/tween.animation.ts ***!
+  \************************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../log */ "./src/log.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
 
 /**
  * @file js frame animation
@@ -53063,7 +53688,7 @@ var Tween = /** @class */ (function () {
     Tween.prototype.start = function (keys, pano) {
         var _this = this;
         if (!this.obj || !this.target || !this.fn) {
-            _log__WEBPACK_IMPORTED_MODULE_0__["default"].errorLog('leak of necessary parameters');
+            _core_log__WEBPACK_IMPORTED_MODULE_0__["default"].errorLog('leak of necessary parameters');
         }
         else {
             this.startTime = Date.now();
@@ -53115,7 +53740,7 @@ var Tween = /** @class */ (function () {
             }
         }
         catch (e) {
-            _log__WEBPACK_IMPORTED_MODULE_0__["default"].errorLog(e);
+            _core_log__WEBPACK_IMPORTED_MODULE_0__["default"].errorLog(e);
             this.stop();
         }
     };
@@ -53131,10 +53756,10 @@ var Tween = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/controls/gyroControl.ts":
-/*!*************************************!*\
-  !*** ./src/controls/gyroControl.ts ***!
-  \*************************************/
+/***/ "./src/pano/controls/gyroControl.ts":
+/*!******************************************!*\
+  !*** ./src/pano/controls/gyroControl.ts ***!
+  \******************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -53238,10 +53863,10 @@ var GyroControl = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/controls/orbitControl.ts":
-/*!**************************************!*\
-  !*** ./src/controls/orbitControl.ts ***!
-  \**************************************/
+/***/ "./src/pano/controls/orbitControl.ts":
+/*!*******************************************!*\
+  !*** ./src/pano/controls/orbitControl.ts ***!
+  \*******************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -53883,329 +54508,10 @@ OrbitControl.prototype.constructor = OrbitControl;
 
 /***/ }),
 
-/***/ "./src/event.ts":
-/*!**********************!*\
-  !*** ./src/event.ts ***!
-  \**********************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-var has = Object.prototype.hasOwnProperty;
-var prefix = '~';
-/**
- * Constructor to create a storage for our `EE` objects.
- * An `Events` instance is a plain object whose properties are event names.
- *
- * @constructor
- * @private
- */
-function Events() { }
-//
-// We try to not inherit from `Object.prototype`. In some engines creating an
-// instance in this way is faster than calling `Object.create(null)` directly.
-// If `Object.create(null)` is not supported we prefix the event names with a
-// character to make sure that the built-in object properties are not
-// overridden or used as an attack vector.
-//
-if (Object.create) {
-    Events.prototype = Object.create(null);
-    //
-    // This hack is needed because the `__proto__` property is still inherited in
-    // some old browsers like Android 4, iPhone 5.1, Opera 11 and Safari 5.
-    //
-    if (!new Events()['__proto__'])
-        prefix = false;
-}
-/**
- * Representation of a single event listener.
- *
- * @param {Function} fn The listener function.
- * @param {*} context The context to invoke the listener with.
- * @param {Boolean} [once=false] Specify if the listener is a one-time listener.
- * @constructor
- * @private
- */
-function EE(fn, context, once) {
-    this.fn = fn;
-    this.context = context;
-    this.once = once || false;
-}
-/**
- * Add a listener for a given event.
- *
- * @param {EventEmitter} emitter Reference to the `EventEmitter` instance.
- * @param {(String|Symbol)} event The event name.
- * @param {Function} fn The listener function.
- * @param {*} context The context to invoke the listener with.
- * @param {Boolean} once Specify if the listener is a one-time listener.
- * @returns {EventEmitter}
- * @private
- */
-function addListener(emitter, event, fn, context, once) {
-    if (typeof fn !== 'function') {
-        throw new TypeError('The listener must be a function');
-    }
-    var listener = new EE(fn, context || emitter, once), evt = prefix ? prefix + event : event;
-    if (!emitter._events[evt])
-        emitter._events[evt] = listener, emitter._eventsCount++;
-    else if (!emitter._events[evt].fn)
-        emitter._events[evt].push(listener);
-    else
-        emitter._events[evt] = [emitter._events[evt], listener];
-    return emitter;
-}
-/**
- * Clear event by name.
- *
- * @param {EventEmitter} emitter Reference to the `EventEmitter` instance.
- * @param {(String|Symbol)} evt The Event name.
- * @private
- */
-function clearEvent(emitter, evt) {
-    if (--emitter._eventsCount === 0)
-        emitter._events = new Events();
-    else
-        delete emitter._events[evt];
-}
-/**
- * Minimal `EventEmitter` interface that is molded against the Node.js
- * `EventEmitter` interface.
- *
- * @constructor
- * @public
- */
-function EventEmitter() {
-    this._events = new Events();
-    this._eventsCount = 0;
-}
-/**
- * Return an array listing the events for which the emitter has registered
- * listeners.
- *
- * @returns {Array}
- * @public
- */
-EventEmitter.prototype.eventNames = function eventNames() {
-    var names = [], events, name;
-    if (this._eventsCount === 0)
-        return names;
-    for (name in (events = this._events)) {
-        if (has.call(events, name))
-            names.push(prefix ? name.slice(1) : name);
-    }
-    if (Object['getOwnPropertySymbols']) {
-        return names.concat(Object['getOwnPropertySymbols'](events));
-    }
-    return names;
-};
-/**
- * Return the listeners registered for a given event.
- *
- * @param {(String|Symbol)} event The event name.
- * @returns {Array} The registered listeners.
- * @public
- */
-EventEmitter.prototype.listeners = function listeners(event) {
-    var evt = prefix ? prefix + event : event, handlers = this._events[evt];
-    if (!handlers)
-        return [];
-    if (handlers.fn)
-        return [handlers.fn];
-    for (var i = 0, l = handlers.length, ee = new Array(l); i < l; i++) {
-        ee[i] = handlers[i].fn;
-    }
-    return ee;
-};
-/**
- * Return the number of listeners listening to a given event.
- *
- * @param {(String|Symbol)} event The event name.
- * @returns {Number} The number of listeners.
- * @public
- */
-EventEmitter.prototype.listenerCount = function listenerCount(event) {
-    var evt = prefix ? prefix + event : event, listeners = this._events[evt];
-    if (!listeners)
-        return 0;
-    if (listeners.fn)
-        return 1;
-    return listeners.length;
-};
-/**
- * Calls each of the listeners registered for a given event.
- *
- * @param {(String|Symbol)} event The event name.
- * @returns {Boolean} `true` if the event had listeners, else `false`.
- * @public
- */
-EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
-    var evt = prefix ? prefix + event : event;
-    if (!this._events[evt])
-        return false;
-    var listeners = this._events[evt], len = arguments.length, args, i;
-    if (listeners.fn) {
-        if (listeners.once)
-            this.removeListener(event, listeners.fn, undefined, true);
-        switch (len) {
-            case 1:
-                return listeners.fn.call(listeners.context), true;
-            case 2:
-                return listeners.fn.call(listeners.context, a1), true;
-            case 3:
-                return listeners.fn.call(listeners.context, a1, a2), true;
-            case 4:
-                return listeners.fn.call(listeners.context, a1, a2, a3), true;
-            case 5:
-                return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
-            case 6:
-                return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
-        }
-        for (i = 1, args = new Array(len - 1); i < len; i++) {
-            args[i - 1] = arguments[i];
-        }
-        listeners.fn.apply(listeners.context, args);
-    }
-    else {
-        var length = listeners.length, j;
-        for (i = 0; i < length; i++) {
-            if (listeners[i].once)
-                this.removeListener(event, listeners[i].fn, undefined, true);
-            switch (len) {
-                case 1:
-                    listeners[i].fn.call(listeners[i].context);
-                    break;
-                case 2:
-                    listeners[i].fn.call(listeners[i].context, a1);
-                    break;
-                case 3:
-                    listeners[i].fn.call(listeners[i].context, a1, a2);
-                    break;
-                case 4:
-                    listeners[i].fn.call(listeners[i].context, a1, a2, a3);
-                    break;
-                default:
-                    if (!args)
-                        for (j = 1, args = new Array(len - 1); j < len; j++) {
-                            args[j - 1] = arguments[j];
-                        }
-                    listeners[i].fn.apply(listeners[i].context, args);
-            }
-        }
-    }
-    return true;
-};
-/**
- * Add a listener for a given event.
- *
- * @param {(String|Symbol)} event The event name.
- * @param {Function} fn The listener function.
- * @param {*} [context=this] The context to invoke the listener with.
- * @returns {EventEmitter} `this`.
- * @public
- */
-EventEmitter.prototype.on = function on(event, fn, context) {
-    return addListener(this, event, fn, context, false);
-};
-/**
- * Add a one-time listener for a given event.
- *
- * @param {(String|Symbol)} event The event name.
- * @param {Function} fn The listener function.
- * @param {*} [context=this] The context to invoke the listener with.
- * @returns {EventEmitter} `this`.
- * @public
- */
-EventEmitter.prototype.once = function once(event, fn, context) {
-    return addListener(this, event, fn, context, true);
-};
-/**
- * Remove the listeners of a given event.
- *
- * @param {(String|Symbol)} event The event name.
- * @param {Function} fn Only remove the listeners that match this function.
- * @param {*} context Only remove the listeners that have this context.
- * @param {Boolean} once Only remove one-time listeners.
- * @returns {EventEmitter} `this`.
- * @public
- */
-EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
-    var evt = prefix ? prefix + event : event;
-    if (!this._events[evt])
-        return this;
-    if (!fn) {
-        clearEvent(this, evt);
-        return this;
-    }
-    var listeners = this._events[evt];
-    if (listeners.fn) {
-        if (listeners.fn === fn &&
-            (!once || listeners.once) &&
-            (!context || listeners.context === context)) {
-            clearEvent(this, evt);
-        }
-    }
-    else {
-        for (var i = 0, events = [], length = listeners.length; i < length; i++) {
-            if (listeners[i].fn !== fn ||
-                (once && !listeners[i].once) ||
-                (context && listeners[i].context !== context)) {
-                events.push(listeners[i]);
-            }
-        }
-        //
-        // Reset the array, or remove it completely if we have no more listeners.
-        //
-        if (events.length)
-            this._events[evt] = events.length === 1 ? events[0] : events;
-        else
-            clearEvent(this, evt);
-    }
-    return this;
-};
-/**
- * Remove all listeners, or those of the specified event.
- *
- * @param {(String|Symbol)} [event] The event name.
- * @returns {EventEmitter} `this`.
- * @public
- */
-EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
-    var evt;
-    if (event) {
-        evt = prefix ? prefix + event : event;
-        if (this._events[evt])
-            clearEvent(this, evt);
-    }
-    else {
-        this._events = new Events();
-        this._eventsCount = 0;
-    }
-    return this;
-};
-//
-// Alias methods names because people roll like that.
-//
-EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
-EventEmitter.prototype.addListener = EventEmitter.prototype.on;
-//
-// Expose the prefix.
-//
-EventEmitter['prefixed'] = prefix;
-//
-// Allow `EventEmitter` to be imported as module namespace.
-//
-EventEmitter['EventEmitter'] = EventEmitter;
-/* harmony default export */ __webpack_exports__["default"] = (EventEmitter);
-
-
-/***/ }),
-
-/***/ "./src/loaders/base.loader.ts":
-/*!************************************!*\
-  !*** ./src/loaders/base.loader.ts ***!
-  \************************************/
+/***/ "./src/pano/loaders/base.loader.ts":
+/*!*****************************************!*\
+  !*** ./src/pano/loaders/base.loader.ts ***!
+  \*****************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -54268,19 +54574,19 @@ var BaseLoader = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/loaders/resource.loader.ts":
-/*!****************************************!*\
-  !*** ./src/loaders/resource.loader.ts ***!
-  \****************************************/
+/***/ "./src/pano/loaders/resource.loader.ts":
+/*!*********************************************!*\
+  !*** ./src/pano/loaders/resource.loader.ts ***!
+  \*********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _base_loader__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./base.loader */ "./src/loaders/base.loader.ts");
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util */ "./src/util.ts");
-/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../log */ "./src/log.ts");
+/* harmony import */ var _base_loader__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./base.loader */ "./src/pano/loaders/base.loader.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -54311,8 +54617,8 @@ var ResourceLoader = /** @class */ (function (_super) {
             var list = String(ret[0]).split('~#~');
             var secretData = list.slice(0, 6);
             var secretKey = ret[1];
-            var key = _util__WEBPACK_IMPORTED_MODULE_2__["default"].decode(secretKey[0], 0xf);
-            var EOF = _util__WEBPACK_IMPORTED_MODULE_2__["default"].parseEOF(_util__WEBPACK_IMPORTED_MODULE_2__["default"].decode(secretKey[1], 0xe));
+            var key = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].decode(secretKey[0], 0xf);
+            var EOF = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].parseEOF(_core_util__WEBPACK_IMPORTED_MODULE_2__["default"].decode(secretKey[1], 0xe));
             if (!EOF.pass) {
                 throw new Error('incorrect product domian');
             }
@@ -54321,12 +54627,12 @@ var ResourceLoader = /** @class */ (function (_super) {
                 // find real cipher header
                 var header = ciphertext.substring(0, start);
                 var body = ciphertext.substring(start);
-                return _util__WEBPACK_IMPORTED_MODULE_2__["default"].decode(header, key) + body;
+                return _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].decode(header, key) + body;
             });
             return new Promise(function (resolve, reject) {
                 cubeLoader.load(base64s, function (tex) { return resolve(tex); }, null, function (e) { return reject(e); });
             });
-        }).catch(function (e) { return _log__WEBPACK_IMPORTED_MODULE_3__["default"].output(e); });
+        }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_3__["default"].output(e); });
     };
     /**
      * 加载 6 张复合顺序和命名的图
@@ -54337,7 +54643,7 @@ var ResourceLoader = /** @class */ (function (_super) {
         var urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(function (name) { return url + "/mobile_" + name + ".jpg"; });
         return new Promise(function (resolve, reject) {
             cubeLoader.load(urls, function (tex) { return resolve(tex); }, null, function (e) { return reject(e); });
-        }).catch(function (e) { return _log__WEBPACK_IMPORTED_MODULE_3__["default"].output(e); });
+        }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_3__["default"].output(e); });
     };
     /**
      * 多种方式加载贴图
@@ -54413,54 +54719,23 @@ function loadCanvas(url, timeout) {
         image.onerror = function () { return reject('load preview error'); };
         image.src = url;
         setTimeout(timeout, function () { return reject('load preview timeout'); });
-    }).catch(function (e) { return _log__WEBPACK_IMPORTED_MODULE_3__["default"].output(e); });
+    }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_3__["default"].output(e); });
 }
 /* harmony default export */ __webpack_exports__["default"] = (ResourceLoader);
 
 
 /***/ }),
 
-/***/ "./src/log.ts":
-/*!********************!*\
-  !*** ./src/log.ts ***!
-  \********************/
+/***/ "./src/pano/overlays/dom.overlay.ts":
+/*!******************************************!*\
+  !*** ./src/pano/overlays/dom.overlay.ts ***!
+  \******************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/**
- * @file logs & 统计
- */
-function formatMsg(msg) {
-    return (typeof msg === 'string') ? new Error(msg) : msg;
-}
-/* harmony default export */ __webpack_exports__["default"] = ({
-    debug: false,
-    output: function (msg) {
-        return this.debug ? this.errorLog(msg) : this.infoLog(msg);
-    },
-    infoLog: function (msg) {
-        console.info(msg);
-    },
-    errorLog: function (msg) {
-        console.error(msg);
-    }
-});
-
-
-/***/ }),
-
-/***/ "./src/overlays/dom.overlay.ts":
-/*!*************************************!*\
-  !*** ./src/overlays/dom.overlay.ts ***!
-  \*************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util */ "./src/util.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 
 /**
  * @file dom element overlay
@@ -54473,7 +54748,7 @@ var DomOverlay = /** @class */ (function () {
     }
     DomOverlay.prototype.create = function () {
         var data = this.data;
-        var node = _util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement("<div id=\"" + data.id + "\" class=\"pano-domoverlay\">" + data.content + "</div>");
+        var node = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement("<div id=\"" + data.id + "\" class=\"pano-domoverlay\">" + data.content + "</div>");
         if (data.cls) {
             node.className += " " + data.cls;
         }
@@ -54502,10 +54777,10 @@ var DomOverlay = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/overlays/frame.overlay.ts":
-/*!***************************************!*\
-  !*** ./src/overlays/frame.overlay.ts ***!
-  \***************************************/
+/***/ "./src/pano/overlays/frame.overlay.ts":
+/*!********************************************!*\
+  !*** ./src/pano/overlays/frame.overlay.ts ***!
+  \********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -54619,10 +54894,10 @@ var FrameOverlay = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/overlays/mesh.overlay.ts":
-/*!**************************************!*\
-  !*** ./src/overlays/mesh.overlay.ts ***!
-  \**************************************/
+/***/ "./src/pano/overlays/mesh.overlay.ts":
+/*!*******************************************!*\
+  !*** ./src/pano/overlays/mesh.overlay.ts ***!
+  \*******************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -54674,23 +54949,23 @@ var MeshOverlay = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/overlays/overlays.overlay.ts":
-/*!******************************************!*\
-  !*** ./src/overlays/overlays.overlay.ts ***!
-  \******************************************/
+/***/ "./src/pano/overlays/overlays.overlay.ts":
+/*!***********************************************!*\
+  !*** ./src/pano/overlays/overlays.overlay.ts ***!
+  \***********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util */ "./src/util.ts");
-/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../log */ "./src/log.ts");
-/* harmony import */ var _dom_overlay__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./dom.overlay */ "./src/overlays/dom.overlay.ts");
-/* harmony import */ var _mesh_overlay__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./mesh.overlay */ "./src/overlays/mesh.overlay.ts");
-/* harmony import */ var _sprite_overlay__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./sprite.overlay */ "./src/overlays/sprite.overlay.ts");
-/* harmony import */ var _frame_overlay__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./frame.overlay */ "./src/overlays/frame.overlay.ts");
-/* harmony import */ var _video_overlay__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./video.overlay */ "./src/overlays/video.overlay.ts");
+/* harmony import */ var _dom_overlay__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./dom.overlay */ "./src/pano/overlays/dom.overlay.ts");
+/* harmony import */ var _mesh_overlay__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./mesh.overlay */ "./src/pano/overlays/mesh.overlay.ts");
+/* harmony import */ var _sprite_overlay__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./sprite.overlay */ "./src/pano/overlays/sprite.overlay.ts");
+/* harmony import */ var _frame_overlay__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./frame.overlay */ "./src/pano/overlays/frame.overlay.ts");
+/* harmony import */ var _video_overlay__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./video.overlay */ "./src/pano/overlays/video.overlay.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
 
 
 
@@ -54783,8 +55058,8 @@ var Overlays = /** @class */ (function () {
      */
     Overlays.prototype.createDomOverlay = function (prop, cache) {
         var _this = this;
-        _util__WEBPACK_IMPORTED_MODULE_1__["default"].parseLocation(prop, this.pano.getCamera());
-        var item = new _dom_overlay__WEBPACK_IMPORTED_MODULE_3__["default"](prop);
+        _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].parseLocation(prop, this.pano.getCamera());
+        var item = new _dom_overlay__WEBPACK_IMPORTED_MODULE_1__["default"](prop);
         cache.domGroup.push(item);
         item.elem.onclick = function (e) {
             e.stopPropagation();
@@ -54802,7 +55077,7 @@ var Overlays = /** @class */ (function () {
         var root = pano.getRoot();
         var width = root.clientWidth / 2;
         var height = root.clientHeight / 2;
-        var position = _util__WEBPACK_IMPORTED_MODULE_1__["default"].calcWorldToScreen(item.data.location, pano.getCamera());
+        var position = _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].calcWorldToScreen(item.data.location, pano.getCamera());
         // z > 1 is backside
         if (position.z > 1) {
             item.hide();
@@ -54818,8 +55093,8 @@ var Overlays = /** @class */ (function () {
      */
     Overlays.prototype.createMeshOverlay = function (prop, cache) {
         var camera = this.pano.getCamera();
-        _util__WEBPACK_IMPORTED_MODULE_1__["default"].parseLocation(prop, camera);
-        var item = new _mesh_overlay__WEBPACK_IMPORTED_MODULE_4__["default"](prop);
+        _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].parseLocation(prop, camera);
+        var item = new _mesh_overlay__WEBPACK_IMPORTED_MODULE_2__["default"](prop);
         var particle = item.particle;
         if (!prop.rotation) {
             particle.lookAt(camera.position);
@@ -54838,13 +55113,13 @@ var Overlays = /** @class */ (function () {
         var pano = this.pano;
         var camera = pano.getCamera();
         var item;
-        _util__WEBPACK_IMPORTED_MODULE_1__["default"].parseLocation(prop, camera);
+        _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].parseLocation(prop, camera);
         if (prop.category == 'frame') {
             prop.lookat = camera.position;
-            item = new _frame_overlay__WEBPACK_IMPORTED_MODULE_6__["default"](prop);
+            item = new _frame_overlay__WEBPACK_IMPORTED_MODULE_4__["default"](prop);
         }
         else {
-            item = new _sprite_overlay__WEBPACK_IMPORTED_MODULE_5__["default"](AnimationOpts[prop.category]);
+            item = new _sprite_overlay__WEBPACK_IMPORTED_MODULE_3__["default"](AnimationOpts[prop.category]);
         }
         pano.addSceneObject(item.particle);
         cache.meshGroup.push(item);
@@ -54855,9 +55130,9 @@ var Overlays = /** @class */ (function () {
     Overlays.prototype.createVideoOverlay = function (prop, cache) {
         var pano = this.pano;
         var camera = pano.getCamera();
-        _util__WEBPACK_IMPORTED_MODULE_1__["default"].parseLocation(prop, camera);
+        _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].parseLocation(prop, camera);
         prop.lookat = camera.position;
-        var item = new _video_overlay__WEBPACK_IMPORTED_MODULE_7__["default"](prop);
+        var item = new _video_overlay__WEBPACK_IMPORTED_MODULE_5__["default"](prop);
         cache.detects.add(item.particle);
         cache.meshGroup.push(item);
     };
@@ -54892,7 +55167,7 @@ var Overlays = /** @class */ (function () {
             x: (evt.clientX / element.clientWidth) * 2 - 1,
             y: -(evt.clientY / element.clientHeight) * 2 + 1
         };
-        var vector = _util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToSphere(pos, camera);
+        var vector = _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].calcScreenToSphere(pos, camera);
         try {
             var group = this.getCurrent(this.cid).detects;
             if (group.children) {
@@ -54906,7 +55181,7 @@ var Overlays = /** @class */ (function () {
             }
         }
         catch (e) {
-            _log__WEBPACK_IMPORTED_MODULE_2__["default"].output(e);
+            _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e);
         }
     };
     /**
@@ -54988,10 +55263,10 @@ var Overlays = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/overlays/sprite.overlay.ts":
-/*!****************************************!*\
-  !*** ./src/overlays/sprite.overlay.ts ***!
-  \****************************************/
+/***/ "./src/pano/overlays/sprite.overlay.ts":
+/*!*********************************************!*\
+  !*** ./src/pano/overlays/sprite.overlay.ts ***!
+  \*********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -55076,18 +55351,18 @@ var rainTexture = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAAB
 
 /***/ }),
 
-/***/ "./src/overlays/video.overlay.ts":
-/*!***************************************!*\
-  !*** ./src/overlays/video.overlay.ts ***!
-  \***************************************/
+/***/ "./src/pano/overlays/video.overlay.ts":
+/*!********************************************!*\
+  !*** ./src/pano/overlays/video.overlay.ts ***!
+  \********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _ui_popup_ui__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../ui/popup.ui */ "./src/ui/popup.ui.ts");
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util */ "./src/util.ts");
+/* harmony import */ var _ui_popup_ui__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../ui/popup.ui */ "./src/pano/ui/popup.ui.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 
 
 
@@ -55111,7 +55386,7 @@ var videoOverlay = /** @class */ (function () {
         var _this = this;
         var data = this.data;
         var location = data.location;
-        var video = this.video = _util__WEBPACK_IMPORTED_MODULE_2__["default"].createElement("<video class=\"pano-video\" src=\"" + data.src + "\"" + (data.auto ? ' autoplay' : '') + (data.loop ? ' loop' : '') + " controls webkit-playsinlin></video>");
+        var video = this.video = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].createElement("<video class=\"pano-video\" src=\"" + data.src + "\"" + (data.auto ? ' autoplay' : '') + (data.loop ? ' loop' : '') + " controls webkit-playsinlin></video>");
         var layer = this.popup = new _ui_popup_ui__WEBPACK_IMPORTED_MODULE_1__["default"]({
             width: window.innerWidth,
             height: window.innerHeight,
@@ -55160,25 +55435,25 @@ var videoOverlay = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/pano.ts":
-/*!*********************!*\
-  !*** ./src/pano.ts ***!
-  \*********************/
+/***/ "./src/pano/pano.ts":
+/*!**************************!*\
+  !*** ./src/pano/pano.ts ***!
+  \**************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _controls_orbitControl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controls/orbitControl */ "./src/controls/orbitControl.ts");
-/* harmony import */ var _controls_gyroControl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./controls/gyroControl */ "./src/controls/gyroControl.ts");
-/* harmony import */ var _event__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./event */ "./src/event.ts");
-/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./log */ "./src/log.ts");
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./util */ "./src/util.ts");
-/* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./loaders/resource.loader */ "./src/loaders/resource.loader.ts");
-/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./animations/tween.animation */ "./src/animations/tween.animation.ts");
-/* harmony import */ var _overlays_overlays_overlay__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./overlays/overlays.overlay */ "./src/overlays/overlays.overlay.ts");
-/* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./plastic/inradius.plastic */ "./src/plastic/inradius.plastic.ts");
+/* harmony import */ var _controls_orbitControl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controls/orbitControl */ "./src/pano/controls/orbitControl.ts");
+/* harmony import */ var _controls_gyroControl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./controls/gyroControl */ "./src/pano/controls/gyroControl.ts");
+/* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
+/* harmony import */ var _overlays_overlays_overlay__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./overlays/overlays.overlay */ "./src/pano/overlays/overlays.overlay.ts");
+/* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
+/* harmony import */ var _core_event__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/event */ "./src/core/event.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -55235,7 +55510,7 @@ var defaultOpts = {
     height: null,
     sceneTrans: false
 };
-var myLoader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_6__["default"]();
+var myLoader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_3__["default"]();
 var Pano = /** @class */ (function () {
     function Pano(opts, source) {
         this.opts = null;
@@ -55248,9 +55523,9 @@ var Pano = /** @class */ (function () {
         this.gyro = null;
         this.currentData = null;
         this.frozen = true;
-        this.event = new _event__WEBPACK_IMPORTED_MODULE_3__["default"]();
+        this.event = new _core_event__WEBPACK_IMPORTED_MODULE_7__["default"]();
         this.pluginList = [];
-        var data = this.currentData = _util__WEBPACK_IMPORTED_MODULE_5__["default"].findScene(source);
+        var data = this.currentData = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].findScene(source);
         opts = Object.assign({}, defaultOpts, opts);
         this.opts = opts;
         this.source = source;
@@ -55259,8 +55534,8 @@ var Pano = /** @class */ (function () {
     Pano.prototype.initEnv = function (data) {
         var opts = this.opts;
         var container = opts.el;
-        var size = _util__WEBPACK_IMPORTED_MODULE_5__["default"].calcRenderSize(opts, container);
-        var root = this.root = _util__WEBPACK_IMPORTED_MODULE_5__["default"].createElement("<div class=\"pano-root\" style=\"width:" + size.width + "px;\n            height:" + size.height + "px;\"></div>");
+        var size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(opts, container);
+        var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].createElement("<div class=\"pano-root\" style=\"width:" + size.width + "px;\n            height:" + size.height + "px;\"></div>");
         var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
@@ -55277,7 +55552,7 @@ var Pano = /** @class */ (function () {
             this.gyro = new _controls_gyroControl__WEBPACK_IMPORTED_MODULE_2__["default"](this.camera, orbit);
         }
         // all overlays manager
-        this.overlays = new _overlays_overlays_overlay__WEBPACK_IMPORTED_MODULE_8__["default"](this, this.source['sceneGroup']);
+        this.overlays = new _overlays_overlays_overlay__WEBPACK_IMPORTED_MODULE_5__["default"](this, this.source['sceneGroup']);
     };
     Pano.prototype.resetEnv = function (data) {
         var fov = data.fov || this.opts.fov;
@@ -55309,7 +55584,7 @@ var Pano = /** @class */ (function () {
                         return [4 /*yield*/, myLoader.loadTexture(data_1.imgPath, 'canvas')];
                     case 2:
                         img = _a.sent();
-                        skyBox = this.skyBox = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_9__["default"]({ envMap: img });
+                        skyBox = this.skyBox = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__["default"]({ envMap: img });
                         skyBox.addTo(this.scene);
                         this.dispatch('scene-init', data_1, this);
                         this.render();
@@ -55317,14 +55592,14 @@ var Pano = /** @class */ (function () {
                                 .then(function (texture) {
                                 _this.skyBox.setMap(texture);
                                 _this.dispatch('scene-load', data_1, _this);
-                            }).catch(function (e) { return _log__WEBPACK_IMPORTED_MODULE_4__["default"].output('load scene: load source texture fail'); })];
+                            }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output('load scene: load source texture fail'); })];
                     case 3:
                         _a.sent();
                         this.animate();
                         return [3 /*break*/, 5];
                     case 4:
                         e_1 = _a.sent();
-                        _log__WEBPACK_IMPORTED_MODULE_4__["default"].output(e_1);
+                        _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output(e_1);
                         return [3 /*break*/, 5];
                     case 5: return [2 /*return*/];
                 }
@@ -55373,7 +55648,7 @@ var Pano = /** @class */ (function () {
     Pano.prototype.setFov = function (fov, duration) {
         var camera = this.getCamera();
         if (this.opts.fovTrans) {
-            new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_7__["default"](camera).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
+            new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__["default"](camera).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
                 .start(['fov'], this).process(function () { return camera.updateProjectionMatrix(); });
         }
         else {
@@ -55433,7 +55708,7 @@ var Pano = /** @class */ (function () {
         this.dispatch('scene-attachstart', this.currentData, this);
         var skyBox = this.skyBox;
         var oldMap = skyBox.getMap();
-        var newBox = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_9__["default"]({
+        var newBox = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__["default"]({
             envMap: texture,
             transparent: true,
             opacity: 0
@@ -55464,12 +55739,12 @@ var Pano = /** @class */ (function () {
     Pano.prototype.onResize = function () {
         var camera = this.getCamera();
         var root = this.getRoot();
-        var size = _util__WEBPACK_IMPORTED_MODULE_5__["default"].calcRenderSize(this.opts, root);
+        var size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(this.opts, root);
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.webgl.setSize(size.width, size.height);
         // set root element's size
-        _util__WEBPACK_IMPORTED_MODULE_5__["default"].styleElement(root, {
+        _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].styleElement(root, {
             width: size.width,
             height: size.height
         });
@@ -55569,7 +55844,7 @@ var Pano = /** @class */ (function () {
             _this.currentData = data;
             _this.resetEnv(data);
             _this.opts.sceneTrans ? _this.replaceAnim(texture) : _this.replaceTexture(texture);
-        }).catch(function (e) { return _log__WEBPACK_IMPORTED_MODULE_4__["default"].output('load scene: load source texture fail'); });
+        }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output('load scene: load source texture fail'); });
     };
     /**
      * 启动陀螺仪
@@ -55601,7 +55876,7 @@ var Pano = /** @class */ (function () {
      * 释放资源
      */
     Pano.prototype.dispose = function () {
-        _util__WEBPACK_IMPORTED_MODULE_5__["default"].cleanup(null, this.scene);
+        _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].cleanup(null, this.scene);
         this.stopGyroControl();
         this.dispatch('render-dispose', this);
         this.event.removeAllListeners();
@@ -55615,17 +55890,17 @@ var Pano = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/plastic/inradius.plastic.ts":
-/*!*****************************************!*\
-  !*** ./src/plastic/inradius.plastic.ts ***!
-  \*****************************************/
+/***/ "./src/pano/plastic/inradius.plastic.ts":
+/*!**********************************************!*\
+  !*** ./src/pano/plastic/inradius.plastic.ts ***!
+  \**********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/animations/tween.animation.ts");
+/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 
 
 /**
@@ -55700,16 +55975,16 @@ var Inradius = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/plugins/info.plugin.ts":
-/*!************************************!*\
-  !*** ./src/plugins/info.plugin.ts ***!
-  \************************************/
+/***/ "./src/pano/plugins/info.plugin.ts":
+/*!*****************************************!*\
+  !*** ./src/pano/plugins/info.plugin.ts ***!
+  \*****************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util */ "./src/util.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 
 /**
  * @file 版权遮罩层
@@ -55721,7 +55996,7 @@ var Info = /** @class */ (function () {
         this.createDom();
     }
     Info.prototype.createDom = function () {
-        var root = _util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-info"></div>');
+        var root = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-info"></div>');
         if (this.data.logo) {
             root.innerHTML += "<img src=\"" + this.data.logo + "\" width=\"70\">";
         }
@@ -55735,16 +56010,16 @@ var Info = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/plugins/multiple.plugin.ts":
-/*!****************************************!*\
-  !*** ./src/plugins/multiple.plugin.ts ***!
-  \****************************************/
+/***/ "./src/pano/plugins/multiple.plugin.ts":
+/*!*********************************************!*\
+  !*** ./src/pano/plugins/multiple.plugin.ts ***!
+  \*********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util */ "./src/util.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 
 /**
  * 多场景切换插件
@@ -55758,9 +56033,9 @@ var Multiple = /** @class */ (function () {
         this.bindEvent();
     }
     Multiple.prototype.create = function () {
-        var root = this.root = _util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-multiplescene"></div>');
-        var outer = this.outer = _util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-multiplescene-outer"></div>');
-        var inner = this.inner = _util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-multiplescene-inner"></div>');
+        var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-multiplescene"></div>');
+        var outer = this.outer = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-multiplescene-outer"></div>');
+        var inner = this.inner = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-multiplescene-inner"></div>');
         inner.innerHTML = this.data.map(function (item, i) {
             return "<div class=\"pano-multiplescene-item\" data-id=\"" + i + "\">\n                <img src=\"" + item.thumbPath + "\" class=\"pano-multiplescene-img\">\n                <span class=\"pano-multiplescene-name\">" + item.name + "</span>\n            </div>";
         }).join('');
@@ -55861,16 +56136,16 @@ var Multiple = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/plugins/rotate.plugin.ts":
-/*!**************************************!*\
-  !*** ./src/plugins/rotate.plugin.ts ***!
-  \**************************************/
+/***/ "./src/pano/plugins/rotate.plugin.ts":
+/*!*******************************************!*\
+  !*** ./src/pano/plugins/rotate.plugin.ts ***!
+  \*******************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/animations/tween.animation.ts");
+/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 
 /**
  * @file 漫游插件
@@ -55947,20 +56222,20 @@ var Rotate = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/plugins/wormhole.plugin.ts":
-/*!****************************************!*\
-  !*** ./src/plugins/wormhole.plugin.ts ***!
-  \****************************************/
+/***/ "./src/pano/plugins/wormhole.plugin.ts":
+/*!*********************************************!*\
+  !*** ./src/pano/plugins/wormhole.plugin.ts ***!
+  \*********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../loaders/resource.loader */ "./src/loaders/resource.loader.ts");
-/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../log */ "./src/log.ts");
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../util */ "./src/util.ts");
-/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/animations/tween.animation.ts");
+/* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 
 
 
@@ -55995,14 +56270,14 @@ var Wormhole = /** @class */ (function () {
             reflectivity: 1
         });
         var box = this.box = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, material);
-        var vector = this.vector = _util__WEBPACK_IMPORTED_MODULE_3__["default"].calcSphereToWorld(data.lng, data.lat);
+        var vector = this.vector = _core_util__WEBPACK_IMPORTED_MODULE_4__["default"].calcSphereToWorld(data.lng, data.lat);
         myLoader.loadTexture(data.bxlPath || data.texPath).then(function (texture) {
             texture.mapping = three__WEBPACK_IMPORTED_MODULE_0__["CubeRefractionMapping"];
             material.envMap = _this.texture = texture;
             box.position.set(vector.x, vector.y, vector.z);
             pano.addSceneObject(box);
             _this.bindEvents();
-        }).catch(function (e) { return _log__WEBPACK_IMPORTED_MODULE_2__["default"].errorLog(e); });
+        }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_3__["default"].errorLog(e); });
     };
     Wormhole.prototype.bindEvents = function () {
         var pano = this.pano;
@@ -56027,11 +56302,11 @@ var Wormhole = /** @class */ (function () {
             // camera lookAt.z > camera position.z
             target.z += this.direction ? 100 : -100;
             // camera lookAt
-            new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__["default"](vector).to(target).effect('quintEaseIn', 1000)
+            new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"](vector).to(target).effect('quintEaseIn', 1000)
                 .start(['x', 'y', 'z'], pano)
                 .complete(function () {
                 // camera position
-                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__["default"](camera.position).to(_this.vector).effect('quadEaseOut', 1000)
+                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"](camera.position).to(_this.vector).effect('quadEaseOut', 1000)
                     .start(['x', 'y', 'z'], pano)
                     .complete(function () {
                     _this.finish();
@@ -56066,7 +56341,7 @@ var Wormhole = /** @class */ (function () {
         });
         material.envMap = this.texture = this.backTexture;
         var box = this.box = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, material);
-        var vector = this.vector = _util__WEBPACK_IMPORTED_MODULE_3__["default"].calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
+        var vector = this.vector = _core_util__WEBPACK_IMPORTED_MODULE_4__["default"].calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
         box.position.set(vector.x, vector.y, vector.z);
         this.direction = !this.direction;
         this.pano.addSceneObject(box);
@@ -56079,337 +56354,10 @@ var Wormhole = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/runtime/ar.runtime.ts":
-/*!***********************************!*\
-  !*** ./src/runtime/ar.runtime.ts ***!
-  \***********************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util */ "./src/util.ts");
-
-
-/**
- * @file web ar
- * @TODO: use corner to set box's world position
- * http://bhollis.github.io/aruco-marker/demos/angular.html
- */
-var AR = window['AR'];
-var POS = window['POS'];
-var winWidth = window.innerWidth;
-var winHeight = window.innerHeight;
-var Runtime = /** @class */ (function () {
-    function Runtime() {
-        var _this = this;
-        var constraints = { audio: false, video: { facingMode: 'environment' } };
-        navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
-            var video = _this.video;
-            if ('srcObject' in video) {
-                video.srcObject = stream;
-            }
-            else {
-                video.src = window.URL.createObjectURL(stream);
-            }
-            video.onloadedmetadata = function (e) { return video.play(); };
-        }).catch(function (err) {
-            alert(err);
-        });
-        this.detector = new AR.Detector();
-        this.posit = new POS.Posit(35, winWidth);
-        this.createDom();
-        this.createRender();
-        this.tick();
-    }
-    Runtime.prototype.createDom = function () {
-        var video = this.video = _util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement("<video class=\"ar-video\" style=\"position:relative;z-index:1;\" autoplay playsinline></video>");
-        var canvas = _util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement("<canvas width=\"300\" height=\"300\"></canvas>");
-        this.context = canvas.getContext("2d");
-        document.body.appendChild(video);
-    };
-    Runtime.prototype.createRender = function () {
-        var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
-        var render = this.render = webgl.domElement;
-        webgl.setPixelRatio(window.devicePixelRatio);
-        webgl.setSize(winWidth, winHeight);
-        _util__WEBPACK_IMPORTED_MODULE_1__["default"].styleElement(render, {
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            zIndex: '999'
-        });
-        document.body.appendChild(render);
-        var scene = this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
-        var camera = this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](80, winWidth / winHeight, 1, 1000);
-        camera.position.set(0, 0, 600);
-        var texture = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load('../assets/webar/material.gif');
-        var geometry = new three__WEBPACK_IMPORTED_MODULE_0__["BoxBufferGeometry"](200, 200, 200);
-        var material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({ map: texture });
-        var mesh = this.mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, material);
-        scene.add(mesh);
-        webgl.render(scene, camera);
-    };
-    Runtime.prototype.tick = function () {
-        requestAnimationFrame(this.tick.bind(this));
-        this.webgl.render(this.scene, this.camera);
-        this.mesh.rotation.x += 0.005;
-        this.mesh.rotation.y += 0.01;
-        var context = this.context;
-        context.drawImage(this.video, 0, 0, 300, 300);
-        var markers = this.detector.detect(context.getImageData(0, 0, 300, 300));
-        markers.length ? this.show3d(markers[0]) : this.hide3d();
-    };
-    Runtime.prototype.show3d = function (marker) {
-        var corners = marker.corners;
-        var mesh = this.mesh;
-        corners.forEach(function (data) {
-            data.x = data.x - (winWidth / 2);
-            data.y = (winHeight / 2) - data.y;
-        });
-        var pos = this.posit.pose(corners);
-        mesh.position.set(pos.bestTranslation[0], pos.bestTranslation[1], pos.bestTranslation[2]);
-        mesh.visible = true;
-    };
-    Runtime.prototype.hide3d = function () {
-        this.mesh.visible = false;
-    };
-    return Runtime;
-}());
-/* harmony default export */ __webpack_exports__["default"] = (Runtime);
-
-
-/***/ }),
-
-/***/ "./src/runtime/vr.runtime.ts":
-/*!***********************************!*\
-  !*** ./src/runtime/vr.runtime.ts ***!
-  \***********************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _pano__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano */ "./src/pano.ts");
-/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../log */ "./src/log.ts");
-/* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../loaders/resource.loader */ "./src/loaders/resource.loader.ts");
-/* harmony import */ var _plugins_info_plugin__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../plugins/info.plugin */ "./src/plugins/info.plugin.ts");
-/* harmony import */ var _plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../plugins/rotate.plugin */ "./src/plugins/rotate.plugin.ts");
-/* harmony import */ var _plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../plugins/multiple.plugin */ "./src/plugins/multiple.plugin.ts");
-/* harmony import */ var _plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../plugins/wormhole.plugin */ "./src/plugins/wormhole.plugin.ts");
-/* harmony import */ var _animations_timeline_animation__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../animations/timeline.animation */ "./src/animations/timeline.animation.ts");
-var __assign = (undefined && undefined.__assign) || Object.assign || function(t) {
-    for (var s, i = 1, n = arguments.length; i < n; i++) {
-        s = arguments[i];
-        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-            t[p] = s[p];
-    }
-    return t;
-};
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-
-
-
-
-
-
-
-
-/**
- * @file 执行环境
- */
-var myLoader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_2__["default"]();
-var EnvQueue = /** @class */ (function () {
-    function EnvQueue() {
-    }
-    EnvQueue.add = function (fn, context) {
-        this.list.push({
-            context: context,
-            fn: fn.bind(context)
-        });
-    };
-    EnvQueue.excute = function () {
-        this.list.forEach(function (item) { return item.fn(); });
-    };
-    EnvQueue.remove = function (context) {
-        var list = this.list;
-        var index = list.find(function (item) { return item.context == context; });
-        list.splice(index, 1);
-    };
-    EnvQueue.len = function () {
-        return this.list.length;
-    };
-    EnvQueue.list = [];
-    return EnvQueue;
-}());
-;
-var Runtime = /** @class */ (function () {
-    function Runtime() {
-    }
-    /**
-     * 获取全景对象, use after scene-init
-     * @param {string} ref
-     */
-    Runtime.getInstance = function (ref) {
-        return this.instanceMap[ref];
-    };
-    /**
-     * 释放一个全景对象
-     * @param {string} ref
-     */
-    Runtime.releaseInstance = function (ref) {
-        var pano = this.instanceMap[ref];
-        if (pano) {
-            pano.dispose();
-            EnvQueue.remove(pano);
-        }
-        if (!EnvQueue.len()) {
-            window.removeEventListener('resize', onEnvResize);
-        }
-    };
-    /**
-     * 创建全景对象
-     * @param {HTMLElement} el root 元素
-     * @param {Object} source
-     */
-    Runtime.createRef = function (el, source) {
-        el = (typeof el == 'string') ? document.querySelector(el) : el;
-        if (!el || !el.parentNode) {
-            el = document.body;
-        }
-        var ref = el.getAttribute('ref') || "pano_" + this.uid++;
-        var opts = __assign({ el: el }, source['pano']);
-        el.setAttribute('ref', ref);
-        return this.instanceMap[ref] = new _pano__WEBPACK_IMPORTED_MODULE_0__["default"](opts, source);
-    };
-    Runtime.start = function (url, el, events) {
-        return __awaiter(this, void 0, void 0, function () {
-            var source, _a, data, pano, name_1;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        if (!(typeof url === 'string')) return [3 /*break*/, 2];
-                        return [4 /*yield*/, myLoader.fetchUrl(url)];
-                    case 1:
-                        _a = _b.sent();
-                        return [3 /*break*/, 3];
-                    case 2:
-                        _a = url;
-                        _b.label = 3;
-                    case 3:
-                        source = _a;
-                        data = source && source['sceneGroup'];
-                        if (!data) {
-                            return [2 /*return*/, _log__WEBPACK_IMPORTED_MODULE_1__["default"].output('load source error')];
-                        }
-                        pano = this.createRef(el, source);
-                        if (source['animation']) {
-                            _animations_timeline_animation__WEBPACK_IMPORTED_MODULE_7__["default"].install(source['animation'], pano);
-                        }
-                        else {
-                            pano.noTimeline();
-                        }
-                        if (source['rotate']) {
-                            pano.addPlugin(_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_4__["default"], source['rotate']);
-                        }
-                        if (source['multiScene']) {
-                            pano.addPlugin(_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_5__["default"], source['sceneGroup']);
-                        }
-                        if (source['info']) {
-                            pano.addPlugin(_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_3__["default"], source['info']);
-                        }
-                        if (source['wormhole']) {
-                            pano.addPlugin(_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_6__["default"], source['wormhole']);
-                        }
-                        // 用户订阅事件
-                        if (events) {
-                            for (name_1 in events) {
-                                pano.subscribe(name_1, events[name_1]);
-                            }
-                        }
-                        // add to env queue listeners
-                        EnvQueue.add(pano.onResize, pano);
-                        // load and render
-                        pano.run();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
-    Runtime.start3d = function () {
-        return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
-            return [2 /*return*/];
-        }); });
-    };
-    Runtime.uid = 0;
-    Runtime.instanceMap = {};
-    return Runtime;
-}());
-;
-var pastLoad = window.onload;
-window.onload = function () {
-    pastLoad && pastLoad.call(this);
-    var uid = 0;
-    var nodeList = document.querySelectorAll('pano');
-    for (var i = 0; i < nodeList.length; i++) {
-        var node = nodeList[i];
-        var auto = node.getAttribute('auto');
-        if (auto) {
-            Runtime.start(node.getAttribute('source'), node);
-        }
-    }
-};
-var onEnvResize = function (event) {
-    clearTimeout(Runtime.timeid);
-    Runtime.timeid = setTimeout(function () {
-        EnvQueue.excute();
-    }, 200);
-};
-window.addEventListener('resize', onEnvResize);
-/* harmony default export */ __webpack_exports__["default"] = (Runtime);
-
-
-/***/ }),
-
-/***/ "./src/ui/layer.ui.ts":
-/*!****************************!*\
-  !*** ./src/ui/layer.ui.ts ***!
-  \****************************/
+/***/ "./src/pano/ui/layer.ui.ts":
+/*!*********************************!*\
+  !*** ./src/pano/ui/layer.ui.ts ***!
+  \*********************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -56480,18 +56428,18 @@ var Layer = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/ui/popup.ui.ts":
-/*!****************************!*\
-  !*** ./src/ui/popup.ui.ts ***!
-  \****************************/
+/***/ "./src/pano/ui/popup.ui.ts":
+/*!*********************************!*\
+  !*** ./src/pano/ui/popup.ui.ts ***!
+  \*********************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util */ "./src/util.ts");
-/* harmony import */ var _layer_ui__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./layer.ui */ "./src/ui/layer.ui.ts");
-/* harmony import */ var _animations_css_animation__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../animations/css.animation */ "./src/animations/css.animation.ts");
+/* harmony import */ var _layer_ui__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./layer.ui */ "./src/pano/ui/layer.ui.ts");
+/* harmony import */ var _animations_css_animation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../animations/css.animation */ "./src/pano/animations/css.animation.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -56521,7 +56469,7 @@ var Popup = /** @class */ (function (_super) {
     function Popup(opts) {
         var _this = _super.call(this, Object.assign({}, defaultOpts, opts)) || this;
         _this.createCloseBtn();
-        _this.anim = new _animations_css_animation__WEBPACK_IMPORTED_MODULE_2__["default"](_this.root, {
+        _this.anim = new _animations_css_animation__WEBPACK_IMPORTED_MODULE_1__["default"](_this.root, {
             prop: 'transform',
             timing: 'ease-in',
             value: 'scale(0)'
@@ -56532,7 +56480,7 @@ var Popup = /** @class */ (function (_super) {
         var _this = this;
         var data = this.data;
         if (data.closeBtn) {
-            var btn = _util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<span class="pano-icon pano-layer-close"></span>');
+            var btn = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].createElement('<span class="pano-icon pano-layer-close"></span>');
             btn.addEventListener('click', function () { return _this.hide(); });
             this.root.appendChild(btn);
         }
@@ -56558,172 +56506,259 @@ var Popup = /** @class */ (function (_super) {
         }
     };
     return Popup;
-}(_layer_ui__WEBPACK_IMPORTED_MODULE_1__["default"]));
+}(_layer_ui__WEBPACK_IMPORTED_MODULE_0__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Popup);
 
 
 /***/ }),
 
-/***/ "./src/util.ts":
-/*!*********************!*\
-  !*** ./src/util.ts ***!
-  \*********************/
+/***/ "./src/runtime/ar.runtime.ts":
+/*!***********************************!*\
+  !*** ./src/runtime/ar.runtime.ts ***!
+  \***********************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var crypto_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! crypto-js */ "./node_modules/crypto-js/index.js");
-/* harmony import */ var crypto_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(crypto_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _ar_ar__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../ar/ar */ "./src/ar/ar.ts");
+
+/**
+ * @file web ar - runtime
+ */
+var Runtime = /** @class */ (function () {
+    function Runtime() {
+    }
+    Runtime.start = function (opts) {
+        new _ar_ar__WEBPACK_IMPORTED_MODULE_0__["default"](opts);
+    };
+    return Runtime;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (Runtime);
+
+
+/***/ }),
+
+/***/ "./src/runtime/vr.runtime.ts":
+/*!***********************************!*\
+  !*** ./src/runtime/vr.runtime.ts ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+/* harmony import */ var _pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/plugins/info.plugin */ "./src/pano/plugins/info.plugin.ts");
+/* harmony import */ var _pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../pano/plugins/rotate.plugin */ "./src/pano/plugins/rotate.plugin.ts");
+/* harmony import */ var _pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../pano/plugins/multiple.plugin */ "./src/pano/plugins/multiple.plugin.ts");
+/* harmony import */ var _pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/plugins/wormhole.plugin */ "./src/pano/plugins/wormhole.plugin.ts");
+/* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
+/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+var __assign = (undefined && undefined.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [0, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+
+
+
+
+
+
 
 
 /**
- * @file util tools
+ * @file 执行环境
  */
-var composeKey = function (part) { return ('skt1wins' + part); };
-/* harmony default export */ __webpack_exports__["default"] = ({
-    /**
-     * 创建 dom 元素
-     * @param {string} domstring
-     */
-    createElement: function (domstring) {
-        var elem = document.createElement('div');
-        elem.innerHTML = domstring;
-        return elem.firstElementChild;
-    },
-    styleElement: function (elem, data) {
-        for (var prop in data) {
-            var val = data[prop];
-            if (typeof val === 'number') {
-                val = val + 'px';
-            }
-            elem.style[prop] = val;
-        }
-    },
-    /**
-     * 解密
-     * @param {string} ciphertext 密文
-     * @param {string} key 密钥
-     */
-    decode: function (ciphertext, key) {
-        if ((key ^ 1) !== 1) {
-            key = composeKey('forever');
-        }
-        var plaintext = crypto_js__WEBPACK_IMPORTED_MODULE_0__["AES"].decrypt({
-            iv: null,
-            ciphertext: crypto_js__WEBPACK_IMPORTED_MODULE_0__["enc"].Hex.parse(ciphertext),
-            salt: crypto_js__WEBPACK_IMPORTED_MODULE_0__["lib"].WordArray.create(0)
-        }, key);
-        return plaintext.toString(crypto_js__WEBPACK_IMPORTED_MODULE_0__["enc"].Utf8);
-    },
-    /**
-     * 解析文件结束符, 域名规则检验
-     * @param {string} EOF
-     */
-    parseEOF: function (EOF) {
-        var ret = EOF.split('*');
-        var domains = ret[1] ? ret[1].split(',') : [];
-        var pass = true;
-        if (domains.length > 0) {
-            pass = Boolean(domains.find(function (domain) { return domain == location.host; }));
-        }
-        return {
-            line: ret[0],
-            pass: pass
-        };
-    },
-    /**
-     * 解析数据地理位置
-     * location.lng [-180, 180] location.lat [0, 180]
-     * @param {Object} data
-     * @param {Object} camera
-     */
-    parseLocation: function (data, camera) {
-        var location = data.location;
-        // 经纬度
-        if (location && location.lng !== undefined) {
-            var vector = this.calcSphereToWorld(location.lng, location.lat);
-            data.location = {
-                x: vector.x,
-                y: vector.y,
-                z: vector.z
-            };
-        }
-    },
-    /**
-     * 球面坐标转化成世界坐标
-     * @param {number} lng 经度
-     * @param {number} lat 纬度
-     * @param {number} radius 半径
-     */
-    calcSphereToWorld: function (lng, lat, radius) {
-        var spherical = new three__WEBPACK_IMPORTED_MODULE_1__["Spherical"]();
-        var vector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"]();
-        spherical.theta = lng * (Math.PI / 180);
-        spherical.phi = (90 - lat) * (Math.PI / 180);
-        spherical.radius = radius !== undefined ? radius : 1000;
-        vector.setFromSpherical(spherical);
-        return vector;
-    },
-    /**
-     * 世界坐标转为屏幕坐标
-     * @param {Object} location 世界坐标系
-     * @param {Object} camera 场景相机
-     */
-    calcWorldToScreen: function (location, camera) {
-        var vector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](location.x, location.y, location.z);
-        return vector.project(camera);
-    },
-    /**
-     * 屏幕坐标转为球面坐标
-     */
-    calcScreenToSphere: function (location, camera) {
-        var vector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](location.x, location.y, 0.99).unproject(camera);
-        var spherical = new three__WEBPACK_IMPORTED_MODULE_1__["Spherical"]();
-        spherical.setFromVector3(vector);
-        return {
-            lng: spherical.theta * 180 / Math.PI,
-            lat: 90 - spherical.phi * 180 / Math.PI
-        };
-    },
-    /**
-     * 计算画布大小
-     * @param {Object} opts 配置参数
-     * @param {HTMLElement} elem 容器元素
-     */
-    calcRenderSize: function (opts, elem) {
-        var winWidth = window.innerWidth;
-        var winHeight = window.innerHeight;
-        var width = parseInt(opts.width) || elem.parentNode.clientWidth || winWidth;
-        var height = parseInt(opts.height) || elem.parentNode.clientHeight || winHeight;
-        /%$/.test(opts.width) && (width = width / 100 * winWidth);
-        /%$/.test(opts.height) && (height = height / 100 * winHeight);
-        return { width: width, height: height, aspect: width / height };
-    },
-    /**
-     * 删除 object3d 对象
-     */
-    cleanup: function (parent, target) {
-        var _this = this;
-        if (target.children.length) {
-            target.children.forEach(function (item) { return _this.cleanup(target, item); });
-        }
-        else if (parent) {
-            parent.remove(target);
-        }
-    },
-    /**
-     * 查找渲染 scene 对象
-     * @param source
-     */
-    findScene: function (source, tid) {
-        var group = source.sceneGroup;
-        var id = tid !== void 0 ? tid : source.defaultSceneId;
-        var scene = group.find(function (item) { return item.id == id; });
-        return (scene || group[0]);
+var myLoader = new _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_0__["default"]();
+var EnvQueue = /** @class */ (function () {
+    function EnvQueue() {
     }
-});
+    EnvQueue.add = function (fn, context) {
+        this.list.push({
+            context: context,
+            fn: fn.bind(context)
+        });
+    };
+    EnvQueue.excute = function () {
+        this.list.forEach(function (item) { return item.fn(); });
+    };
+    EnvQueue.remove = function (context) {
+        var list = this.list;
+        var index = list.find(function (item) { return item.context == context; });
+        list.splice(index, 1);
+    };
+    EnvQueue.len = function () {
+        return this.list.length;
+    };
+    EnvQueue.list = [];
+    return EnvQueue;
+}());
+;
+var Runtime = /** @class */ (function () {
+    function Runtime() {
+    }
+    /**
+     * 获取全景对象, use after scene-init
+     * @param {string} ref
+     */
+    Runtime.getInstance = function (ref) {
+        return this.instanceMap[ref];
+    };
+    /**
+     * 释放一个全景对象
+     * @param {string} ref
+     */
+    Runtime.releaseInstance = function (ref) {
+        var pano = this.instanceMap[ref];
+        if (pano) {
+            pano.dispose();
+            EnvQueue.remove(pano);
+        }
+        if (!EnvQueue.len()) {
+            window.removeEventListener('resize', onEnvResize);
+        }
+    };
+    /**
+     * 创建全景对象
+     * @param {HTMLElement} el root 元素
+     * @param {Object} source
+     */
+    Runtime.createRef = function (el, source) {
+        el = (typeof el == 'string') ? document.querySelector(el) : el;
+        if (!el || !el.parentNode) {
+            el = document.body;
+        }
+        var ref = el.getAttribute('ref') || "pano_" + this.uid++;
+        var opts = __assign({ el: el }, source['pano']);
+        el.setAttribute('ref', ref);
+        return this.instanceMap[ref] = new _pano_pano__WEBPACK_IMPORTED_MODULE_6__["default"](opts, source);
+    };
+    Runtime.start = function (url, el, events) {
+        return __awaiter(this, void 0, void 0, function () {
+            var source, _a, data, pano, name_1;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        if (!(typeof url === 'string')) return [3 /*break*/, 2];
+                        return [4 /*yield*/, myLoader.fetchUrl(url)];
+                    case 1:
+                        _a = _b.sent();
+                        return [3 /*break*/, 3];
+                    case 2:
+                        _a = url;
+                        _b.label = 3;
+                    case 3:
+                        source = _a;
+                        data = source && source['sceneGroup'];
+                        if (!data) {
+                            return [2 /*return*/, _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output('load source error')];
+                        }
+                        pano = this.createRef(el, source);
+                        if (source['animation']) {
+                            _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_5__["default"].install(source['animation'], pano);
+                        }
+                        else {
+                            pano.noTimeline();
+                        }
+                        if (source['rotate']) {
+                            pano.addPlugin(_pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_2__["default"], source['rotate']);
+                        }
+                        if (source['multiScene']) {
+                            pano.addPlugin(_pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_3__["default"], source['sceneGroup']);
+                        }
+                        if (source['info']) {
+                            pano.addPlugin(_pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_1__["default"], source['info']);
+                        }
+                        if (source['wormhole']) {
+                            pano.addPlugin(_pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_4__["default"], source['wormhole']);
+                        }
+                        // 用户订阅事件
+                        if (events) {
+                            for (name_1 in events) {
+                                pano.subscribe(name_1, events[name_1]);
+                            }
+                        }
+                        // add to env queue listeners
+                        EnvQueue.add(pano.onResize, pano);
+                        // load and render
+                        pano.run();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    Runtime.start3d = function () {
+        return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
+            return [2 /*return*/];
+        }); });
+    };
+    Runtime.uid = 0;
+    Runtime.instanceMap = {};
+    return Runtime;
+}());
+;
+var pastLoad = window.onload;
+window.onload = function () {
+    pastLoad && pastLoad.call(this);
+    var uid = 0;
+    var nodeList = document.querySelectorAll('pano');
+    for (var i = 0; i < nodeList.length; i++) {
+        var node = nodeList[i];
+        var auto = node.getAttribute('auto');
+        if (auto) {
+            Runtime.start(node.getAttribute('source'), node);
+        }
+    }
+};
+var onEnvResize = function (event) {
+    clearTimeout(Runtime.timeid);
+    Runtime.timeid = setTimeout(function () {
+        EnvQueue.excute();
+    }, 200);
+};
+window.addEventListener('resize', onEnvResize);
+/* harmony default export */ __webpack_exports__["default"] = (Runtime);
 
 
 /***/ }),
