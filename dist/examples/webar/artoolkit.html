@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1, maximum-scale=1">
+        <title>artoolkit 使用</title>
+        <link rel="stylesheet" href="../../index.css">        
+    </head>
+    <body>
+        <script src="./artoolkit.min.js"></script>
+        <script src="./artoolkit.api.js"></script>
+        <video id="ar-video" style="position:relative;z-index:1;" autoplay playsinline></video>
+        <script>
+            let markerId;
+            const video = document.getElementById('ar-video');
+            video.width = window.innerWidth;
+            video.height = window.innerHeight;
+
+            const hdConstraints = {
+                audio: false,
+                video: {
+                    facingMode: 'environment'
+                }
+            };
+
+            const arController = new ARController(video, '../../assets/webar/camera_para.dat');
+            arController.onload = function() {
+                arController.loadMarker('../../assets/webar/patt.hiro', marker => {
+                    markerId = marker;
+                    console.log(marker);
+                });
+
+                arController.addEventListener('getMarker', ev => {
+                    if (ev.data.marker.idPatt === markerId) {
+                        console.log(111);
+                    }
+                });
+            }
+
+            const tick = function() {
+                arController.process(video);
+                requestAnimationFrame(tick);
+            };
+
+            navigator.mediaDevices.getUserMedia(hdConstraints).then(stream => {
+                if ('srcObject' in video) {
+                    video.srcObject = stream;
+                } else {
+                    video.src = window.URL.createObjectURL(stream);
+                }
+                
+                video.play();
+                tick();
+            }).catch(function(err) {
+                console.error(err);
+            });
+        </script>
+    </body>
+</html>
