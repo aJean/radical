@@ -3,7 +3,6 @@ import './styles/multiple.style.less';
 import './styles/overlays.style.less';
 import './styles/ui.style.less';
 import VRuntime from './src/runtime/vr.runtime';
-import ARuntime from './src/runtime/ar.runtime';
 
 /**
  * @file bxl lib
@@ -20,9 +19,5 @@ export default {
 
     dispose(ref: string) {
         return VRuntime.releaseInstance(ref);
-    },
-    
-    testAR(opts) {
-        ARuntime.start(opts);
     }
 };

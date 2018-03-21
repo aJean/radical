@@ -99,8 +99,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./styles/ui.style.less */ "./styles/ui.style.less");
 /* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _src_runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./src/runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
-/* harmony import */ var _src_runtime_ar_runtime__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./src/runtime/ar.runtime */ "./src/runtime/ar.runtime.ts");
-
 
 
 
@@ -118,9 +116,6 @@ __webpack_require__.r(__webpack_exports__);
     },
     dispose: function (ref) {
         return _src_runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__["default"].releaseInstance(ref);
-    },
-    testAR: function (opts) {
-        _src_runtime_ar_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].start(opts);
     }
 });
 
@@ -52794,117 +52789,6 @@ function CanvasRenderer() {
 
 /***/ }),
 
-/***/ "./src/ar/ar.ts":
-/*!**********************!*\
-  !*** ./src/ar/ar.ts ***!
-  \**********************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
-
-
-/**
- * @file webar
- * use js-aruco & jsartoolkit
- * http://bhollis.github.io/aruco-marker/demos/angular.html
- */
-var Aruco = window['AR'];
-var POS = window['POS'];
-var winWidth = window.innerWidth;
-var winHeight = window.innerHeight;
-var AR = /** @class */ (function () {
-    function AR(opts) {
-        var _this = this;
-        var constraints = { audio: false, video: { facingMode: 'environment' } };
-        navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
-            var video = _this.video;
-            if ('srcObject' in video) {
-                video.srcObject = stream;
-            }
-            else {
-                video.src = window.URL.createObjectURL(stream);
-            }
-            video.play();
-        }).catch(function (err) {
-            alert(err);
-        });
-        this.createDom();
-        this.createRender(opts.texurl);
-        if (opts.aruco) {
-            this.detector = new Aruco.Detector();
-            this.posit = new POS.Posit(35, winWidth);
-            this.tick();
-        }
-        else {
-            this.tickArtoolkit();
-        }
-    }
-    AR.prototype.createDom = function () {
-        var video = this.video = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement("<video class=\"ar-video\" style=\"position:relative;z-index:1;\" autoplay playsinline></video>");
-        var canvas = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement("<canvas width=\"300\" height=\"300\"></canvas>");
-        this.painter = canvas.getContext('2d');
-        document.body.appendChild(video);
-    };
-    AR.prototype.createRender = function (texurl) {
-        var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
-        var render = this.render = webgl.domElement;
-        webgl.setPixelRatio(window.devicePixelRatio);
-        webgl.setSize(winWidth, winHeight);
-        _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].styleElement(render, {
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            zIndex: '999'
-        });
-        document.body.appendChild(render);
-        var scene = this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
-        var camera = this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](80, winWidth / winHeight, 1, 1000);
-        camera.position.set(0, 0, 600);
-        var texture = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load(texurl);
-        var geometry = new three__WEBPACK_IMPORTED_MODULE_0__["BoxBufferGeometry"](200, 200, 200);
-        var material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({ map: texture });
-        var mesh = this.mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, material);
-        scene.add(mesh);
-        webgl.render(scene, camera);
-    };
-    AR.prototype.tick = function () {
-        requestAnimationFrame(this.tick.bind(this));
-        this.webgl.render(this.scene, this.camera);
-        this.mesh.rotation.x += 0.005;
-        this.mesh.rotation.y += 0.01;
-        var painter = this.painter;
-        painter.drawImage(this.video, 0, 0, 300, 300);
-        var markers = this.detector.detect(painter.getImageData(0, 0, 300, 300));
-        markers.length ? this.show3d(markers[0]) : this.hide3d();
-    };
-    AR.prototype.show3d = function (marker) {
-        var corners = marker.corners;
-        var mesh = this.mesh;
-        corners.forEach(function (data) {
-            data.x = data.x - (winWidth / 2);
-            data.y = (winHeight / 2) - data.y;
-        });
-        var pos = this.posit.pose(corners);
-        mesh.position.set(pos.bestTranslation[0], pos.bestTranslation[1], pos.bestTranslation[2]);
-        mesh.visible = true;
-    };
-    AR.prototype.hide3d = function () {
-        this.mesh.visible = false;
-    };
-    AR.prototype.tickArtoolkit = function () {
-        requestAnimationFrame(this.tick.bind(this));
-    };
-    return AR;
-}());
-/* harmony default export */ __webpack_exports__["default"] = (AR);
-
-
-/***/ }),
-
 /***/ "./src/core/event.ts":
 /*!***************************!*\
   !*** ./src/core/event.ts ***!
@@ -56512,33 +56396,6 @@ var Popup = /** @class */ (function (_super) {
 
 /***/ }),
 
-/***/ "./src/runtime/ar.runtime.ts":
-/*!***********************************!*\
-  !*** ./src/runtime/ar.runtime.ts ***!
-  \***********************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _ar_ar__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../ar/ar */ "./src/ar/ar.ts");
-
-/**
- * @file web ar - runtime
- */
-var Runtime = /** @class */ (function () {
-    function Runtime() {
-    }
-    Runtime.start = function (opts) {
-        new _ar_ar__WEBPACK_IMPORTED_MODULE_0__["default"](opts);
-    };
-    return Runtime;
-}());
-/* harmony default export */ __webpack_exports__["default"] = (Runtime);
-
-
-/***/ }),
-
 /***/ "./src/runtime/vr.runtime.ts":
 /*!***********************************!*\
   !*** ./src/runtime/vr.runtime.ts ***!
@@ -56608,7 +56465,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
 
 
 /**
- * @file 执行环境
+ * @file vr pano runtime
  */
 var myLoader = new _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_0__["default"]();
 var EnvQueue = /** @class */ (function () {

@@ -8,7 +8,7 @@ import Pano from '../pano/pano';
 import Log from '../core/log';
 
 /**
- * @file 执行环境
+ * @file vr pano runtime
  */
 
 const myLoader = new ResourceLoader();
