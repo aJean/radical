@@ -76,51 +76,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./index.ts");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/index.ts");
 /******/ })
 /************************************************************************/
 /******/ ({
-
-/***/ "./index.ts":
-/*!******************!*\
-  !*** ./index.ts ***!
-  \******************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _styles_pano_style_less__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./styles/pano.style.less */ "./styles/pano.style.less");
-/* harmony import */ var _styles_pano_style_less__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_styles_pano_style_less__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _styles_multiple_style_less__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./styles/multiple.style.less */ "./styles/multiple.style.less");
-/* harmony import */ var _styles_multiple_style_less__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_styles_multiple_style_less__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./styles/overlays.style.less */ "./styles/overlays.style.less");
-/* harmony import */ var _styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./styles/ui.style.less */ "./styles/ui.style.less");
-/* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _src_runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./src/runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
-
-
-
-
-
-/**
- * @file bxl lib
- */
-/* harmony default export */ __webpack_exports__["default"] = ({
-    start: function (source, el, events) {
-        _src_runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__["default"].start(source, el, events);
-    },
-    getPano: function (ref) {
-        return _src_runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__["default"].getInstance(ref);
-    },
-    dispose: function (ref) {
-        return _src_runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__["default"].releaseInstance(ref);
-    }
-});
-
-
-/***/ }),
 
 /***/ "./node_modules/crypto-js/aes.js":
 /*!***************************************!*\
@@ -53297,6 +53256,47 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         var id = tid !== void 0 ? tid : source.defaultSceneId;
         var scene = group.find(function (item) { return item.id == id; });
         return (scene || group[0]);
+    }
+});
+
+
+/***/ }),
+
+/***/ "./src/index.ts":
+/*!**********************!*\
+  !*** ./src/index.ts ***!
+  \**********************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _styles_pano_style_less__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../styles/pano.style.less */ "./styles/pano.style.less");
+/* harmony import */ var _styles_pano_style_less__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_styles_pano_style_less__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _styles_multiple_style_less__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../styles/multiple.style.less */ "./styles/multiple.style.less");
+/* harmony import */ var _styles_multiple_style_less__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_styles_multiple_style_less__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../styles/overlays.style.less */ "./styles/overlays.style.less");
+/* harmony import */ var _styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../styles/ui.style.less */ "./styles/ui.style.less");
+/* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
+
+
+
+
+
+/**
+ * @file bxl lib
+ */
+/* harmony default export */ __webpack_exports__["default"] = ({
+    start: function (source, el, events) {
+        _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__["default"].start(source, el, events);
+    },
+    getPano: function (ref) {
+        return _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__["default"].getInstance(ref);
+    },
+    dispose: function (ref) {
+        return _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__["default"].releaseInstance(ref);
     }
 });
 

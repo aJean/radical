@@ -1,8 +1,8 @@
-import './styles/pano.style.less';
-import './styles/multiple.style.less';
-import './styles/overlays.style.less';
-import './styles/ui.style.less';
-import VRuntime from './src/runtime/vr.runtime';
+import '../styles/pano.style.less';
+import '../styles/multiple.style.less';
+import '../styles/overlays.style.less';
+import '../styles/ui.style.less';
+import VRuntime from './runtime/vr.runtime';
 
 /**
  * @file bxl lib

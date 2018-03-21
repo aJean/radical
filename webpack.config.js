@@ -17,7 +17,7 @@ module.exports = {
         minimize: false
     },
     entry: {
-        lib: './index.ts'
+        lib: './src/index.ts'
     },
     output: {
         filename: '[name].js',
@@ -37,7 +37,7 @@ module.exports = {
         }, {
             test: /\.less$/,
             exclude: /node_modules/,
-            loader: ExtractTextPlugin.extract([{loader: 'css-loader', options: { minimize: true }},
+            loader: ExtractTextPlugin.extract([{loader: 'css-loader', options: {minimize: true}},
                 {loader: 'less-loader'}])
         }]
     },
