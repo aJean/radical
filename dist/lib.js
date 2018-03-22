@@ -55913,6 +55913,42 @@ var Info = /** @class */ (function () {
 
 /***/ }),
 
+/***/ "./src/pano/plugins/light.plugin.ts":
+/*!******************************************!*\
+  !*** ./src/pano/plugins/light.plugin.ts ***!
+  \******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+
+var Light = /** @class */ (function () {
+    function Light(pano) {
+        var geometry = new three__WEBPACK_IMPORTED_MODULE_0__["CubeGeometry"](10, 10, 10);
+        var material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshLambertMaterial"]({ color: 0xffaa00 });
+        var mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, material);
+        mesh.position.set(20, 20, 100);
+        mesh.castShadow = true;
+        var light = new three__WEBPACK_IMPORTED_MODULE_0__["AmbientLight"](0x111111);
+        var dlight = new three__WEBPACK_IMPORTED_MODULE_0__["SpotLight"](0xffffff);
+        dlight.position.set(30, 25, -2);
+        dlight.target = mesh;
+        dlight.castShadow = true;
+        pano.addSceneObject(light);
+        pano.addSceneObject(dlight);
+        pano.addSceneObject(mesh);
+        var helper = new three__WEBPACK_IMPORTED_MODULE_0__["CameraHelper"](dlight.shadow.camera);
+        pano.addSceneObject(helper);
+    }
+    return Light;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (Light);
+
+
+/***/ }),
+
 /***/ "./src/pano/plugins/multiple.plugin.ts":
 /*!*********************************************!*\
   !*** ./src/pano/plugins/multiple.plugin.ts ***!
@@ -56425,13 +56461,14 @@ var Popup = /** @class */ (function (_super) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
-/* harmony import */ var _pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/plugins/info.plugin */ "./src/pano/plugins/info.plugin.ts");
-/* harmony import */ var _pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../pano/plugins/rotate.plugin */ "./src/pano/plugins/rotate.plugin.ts");
-/* harmony import */ var _pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../pano/plugins/multiple.plugin */ "./src/pano/plugins/multiple.plugin.ts");
-/* harmony import */ var _pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/plugins/wormhole.plugin */ "./src/pano/plugins/wormhole.plugin.ts");
-/* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
-/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
-/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+/* harmony import */ var _pano_plugins_light_plugin__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/plugins/light.plugin */ "./src/pano/plugins/light.plugin.ts");
+/* harmony import */ var _pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../pano/plugins/info.plugin */ "./src/pano/plugins/info.plugin.ts");
+/* harmony import */ var _pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../pano/plugins/rotate.plugin */ "./src/pano/plugins/rotate.plugin.ts");
+/* harmony import */ var _pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/plugins/multiple.plugin */ "./src/pano/plugins/multiple.plugin.ts");
+/* harmony import */ var _pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../pano/plugins/wormhole.plugin */ "./src/pano/plugins/wormhole.plugin.ts");
+/* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
+/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
 var __assign = (undefined && undefined.__assign) || Object.assign || function(t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
         s = arguments[i];
@@ -56475,6 +56512,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+
 
 
 
@@ -56548,7 +56586,7 @@ var Runtime = /** @class */ (function () {
         var ref = el.getAttribute('ref') || "pano_" + this.uid++;
         var opts = __assign({ el: el }, source['pano']);
         el.setAttribute('ref', ref);
-        return this.instanceMap[ref] = new _pano_pano__WEBPACK_IMPORTED_MODULE_6__["default"](opts, source);
+        return this.instanceMap[ref] = new _pano_pano__WEBPACK_IMPORTED_MODULE_7__["default"](opts, source);
     };
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
@@ -56568,26 +56606,28 @@ var Runtime = /** @class */ (function () {
                         source = _a;
                         data = source && source['sceneGroup'];
                         if (!data) {
-                            return [2 /*return*/, _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output('load source error')];
+                            return [2 /*return*/, _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output('load source error')];
                         }
                         pano = this.createRef(el, source);
                         if (source['animation']) {
-                            _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_5__["default"].install(source['animation'], pano);
+                            _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_6__["default"].install(source['animation'], pano);
                         }
                         else {
                             pano.noTimeline();
                         }
+                        // 光照插件
+                        pano.addPlugin(_pano_plugins_light_plugin__WEBPACK_IMPORTED_MODULE_1__["default"]);
                         if (source['rotate']) {
-                            pano.addPlugin(_pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_2__["default"], source['rotate']);
+                            pano.addPlugin(_pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_3__["default"], source['rotate']);
                         }
                         if (source['multiScene']) {
-                            pano.addPlugin(_pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_3__["default"], source['sceneGroup']);
+                            pano.addPlugin(_pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_4__["default"], source['sceneGroup']);
                         }
                         if (source['info']) {
-                            pano.addPlugin(_pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_1__["default"], source['info']);
+                            pano.addPlugin(_pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_2__["default"], source['info']);
                         }
                         if (source['wormhole']) {
-                            pano.addPlugin(_pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_4__["default"], source['wormhole']);
+                            pano.addPlugin(_pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_5__["default"], source['wormhole']);
                         }
                         // 用户订阅事件
                         if (events) {

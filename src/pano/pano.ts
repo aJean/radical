@@ -190,7 +190,7 @@ export default class Pano {
      * @param {Object} Plugin 插件 class
      * @param {Object} data 插件数据
      */
-    addPlugin(Plugin, data) {
+    addPlugin(Plugin, data?) {
         const plugin = new Plugin(this, data);
         this.pluginList.push(plugin);
     }

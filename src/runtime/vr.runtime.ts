@@ -1,4 +1,5 @@
 import ResourceLoader from '../pano/loaders/resource.loader';
+import Light from '../pano/plugins/light.plugin';
 import Info from '../pano/plugins/info.plugin';
 import Rotate from '../pano/plugins/rotate.plugin';
 import Multiple from '../pano/plugins/multiple.plugin';
@@ -100,6 +101,9 @@ abstract class Runtime {
         } else {
             pano.noTimeline();
         }
+
+        // 光照插件
+        pano.addPlugin(Light);
 
         if (source['rotate']) {
             pano.addPlugin(Rotate, source['rotate']);
