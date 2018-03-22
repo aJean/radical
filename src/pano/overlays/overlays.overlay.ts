@@ -123,10 +123,11 @@ export default class Overlays {
      */
     updateDomOverlay(item) {
         const pano = this.pano;
-        const root = pano.getRoot();
-        const width = root.clientWidth / 2;
-        const height = root.clientHeight / 2;
+        const size = pano.getSize();
+        const width = size.width / 2;
+        const height = size.height / 2;
         const position = Util.calcWorldToScreen(item.data.location, pano.getCamera());
+
         // z > 1 is backside
         if (position.z > 1) {
             item.hide();
@@ -220,10 +221,10 @@ export default class Overlays {
         const pano = this.pano;
         const camera = pano.getCamera();
         const raycaster = this.raycaster;
-        const element = pano.getCanvas();
+        const size = pano.getSize();
         const pos = {
-            x: (evt.clientX / element.clientWidth) * 2 - 1,
-            y: -(evt.clientY / element.clientHeight) * 2 + 1
+            x: (evt.clientX / size.width) * 2 - 1,
+            y: -(evt.clientY / size.height) * 2 + 1
         };
         const vector = Util.calcScreenToSphere(pos, camera);
         
@@ -249,6 +250,11 @@ export default class Overlays {
     onOverlayHandle(instance) {
         const pano = this.pano;
         const data = instance.data;
+        const size = pano.getSize();
+        const origin = Util.calcWorldToScreen(data.location, pano.getCamera());
+        origin.x = Math.floor((origin.x * size.width + size.width) / 2);
+        origin.y = Math.floor((-origin.y * size.height + size.height) / 2);
+
         // for log & statistics & user behavior
         pano.dispatch('overlay-click', instance, pano);
         switch (data.actionType) {
@@ -263,7 +269,7 @@ export default class Overlays {
                 pano.dispatch('multiple-active', data);
                 break;
             case 'video':
-                instance.play();
+                instance.play(origin);
                 break;
         }
     }

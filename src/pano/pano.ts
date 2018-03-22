@@ -25,6 +25,7 @@ const myLoader = new ResourceLoader();
 export default class Pano {
     overlays: Overlays;
     source: any;
+    size: any;
     opts = null;
     root = null;
     webgl = null;
@@ -50,7 +51,7 @@ export default class Pano {
     initEnv(data) {
         const opts = this.opts;
         const container = opts.el;
-        const size = Util.calcRenderSize(opts, container);
+        const size = this.size = Util.calcRenderSize(container, opts);
         const root = this.root = Util.createElement(`<div class="pano-root" style="width:${size.width}px;
             height:${size.height}px;"></div>`);
         const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});
@@ -263,7 +264,7 @@ export default class Pano {
     onResize() {
         const camera = this.getCamera();
         const root = this.getRoot();
-        const size =  Util.calcRenderSize(this.opts, root);
+        const size =  this.size = Util.calcRenderSize(root);
 
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
@@ -371,6 +372,13 @@ export default class Pano {
      */
     supplyOverlayScenes(scenes) {
         this.overlays.addScenes(scenes);
+    }
+
+    /**
+     * 获取组件尺寸
+     */
+    getSize() {
+        return this.size;
     }
     
     /**

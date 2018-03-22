@@ -131,18 +131,23 @@ export default {
 
     /**
      * 计算画布大小
+     * @param {HTMLElement} elem 容器元素
      * @param {Object} opts 配置参数
-     * @param {HTMLElement} elem 容器元素 
      */
-    calcRenderSize(opts, elem) {
+    calcRenderSize(elem, opts?) {
         const winWidth = window.innerWidth;
         const winHeight = window.innerHeight;
 
-        let width = parseInt(opts.width) || elem.parentNode.clientWidth || winWidth;
-        let height = parseInt(opts.height) || elem.parentNode.clientHeight || winHeight;
+        let width = elem.parentNode.clientWidth || winWidth;
+        let height = elem.parentNode.clientHeight || winHeight;
 
-        /%$/.test(opts.width) && (width = width / 100 * winWidth);
-        /%$/.test(opts.height) && (height = height / 100 * winHeight);
+        if (opts && opts.width) {
+            width = /%$/.test(opts.width) ? (opts.width / 100 * winWidth) : parseInt(opts.width);
+        }
+
+        if (opts && opts.height) {
+            height = /%$/.test(opts.height) ? (opts.height / 100 * winHeight) : parseInt(opts.height);
+        }
 
         return {width, height, aspect: width / height};
     },

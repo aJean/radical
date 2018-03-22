@@ -60,7 +60,12 @@ export default class videoOverlay implements IPluggableOverlay {
 
     update() {}
 
-    play() {
+    /**
+     * 显示窗口 & 播放视频
+     * @param {Object} origin 当前动画的中心点
+     */
+    play(origin) {
+        this.popup.root.style.transformOrigin = origin.x + 'px ' + origin.y + 'px';
         this.popup.show();
         this.video.play();
     }

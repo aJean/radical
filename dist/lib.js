@@ -53223,16 +53223,20 @@ var composeKey = function (part) { return ('skt1wins' + part); };
     },
     /**
      * 计算画布大小
-     * @param {Object} opts 配置参数
      * @param {HTMLElement} elem 容器元素
+     * @param {Object} opts 配置参数
      */
-    calcRenderSize: function (opts, elem) {
+    calcRenderSize: function (elem, opts) {
         var winWidth = window.innerWidth;
         var winHeight = window.innerHeight;
-        var width = parseInt(opts.width) || elem.parentNode.clientWidth || winWidth;
-        var height = parseInt(opts.height) || elem.parentNode.clientHeight || winHeight;
-        /%$/.test(opts.width) && (width = width / 100 * winWidth);
-        /%$/.test(opts.height) && (height = height / 100 * winHeight);
+        var width = elem.parentNode.clientWidth || winWidth;
+        var height = elem.parentNode.clientHeight || winHeight;
+        if (opts && opts.width) {
+            width = /%$/.test(opts.width) ? (opts.width / 100 * winWidth) : parseInt(opts.width);
+        }
+        if (opts && opts.height) {
+            height = /%$/.test(opts.height) ? (opts.height / 100 * winHeight) : parseInt(opts.height);
+        }
         return { width: width, height: height, aspect: width / height };
     },
     /**
@@ -54958,9 +54962,9 @@ var Overlays = /** @class */ (function () {
      */
     Overlays.prototype.updateDomOverlay = function (item) {
         var pano = this.pano;
-        var root = pano.getRoot();
-        var width = root.clientWidth / 2;
-        var height = root.clientHeight / 2;
+        var size = pano.getSize();
+        var width = size.width / 2;
+        var height = size.height / 2;
         var position = _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].calcWorldToScreen(item.data.location, pano.getCamera());
         // z > 1 is backside
         if (position.z > 1) {
@@ -55046,10 +55050,10 @@ var Overlays = /** @class */ (function () {
         var pano = this.pano;
         var camera = pano.getCamera();
         var raycaster = this.raycaster;
-        var element = pano.getCanvas();
+        var size = pano.getSize();
         var pos = {
-            x: (evt.clientX / element.clientWidth) * 2 - 1,
-            y: -(evt.clientY / element.clientHeight) * 2 + 1
+            x: (evt.clientX / size.width) * 2 - 1,
+            y: -(evt.clientY / size.height) * 2 + 1
         };
         var vector = _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].calcScreenToSphere(pos, camera);
         try {
@@ -55074,6 +55078,10 @@ var Overlays = /** @class */ (function () {
     Overlays.prototype.onOverlayHandle = function (instance) {
         var pano = this.pano;
         var data = instance.data;
+        var size = pano.getSize();
+        var origin = _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].calcWorldToScreen(data.location, pano.getCamera());
+        origin.x = Math.floor((origin.x * size.width + size.width) / 2);
+        origin.y = Math.floor((-origin.y * size.height + size.height) / 2);
         // for log & statistics & user behavior
         pano.dispatch('overlay-click', instance, pano);
         switch (data.actionType) {
@@ -55088,7 +55096,7 @@ var Overlays = /** @class */ (function () {
                 pano.dispatch('multiple-active', data);
                 break;
             case 'video':
-                instance.play();
+                instance.play(origin);
                 break;
         }
     };
@@ -55293,7 +55301,12 @@ var videoOverlay = /** @class */ (function () {
         return planeMesh;
     };
     videoOverlay.prototype.update = function () { };
-    videoOverlay.prototype.play = function () {
+    /**
+     * 显示窗口 & 播放视频
+     * @param {Object} origin 当前动画的中心点
+     */
+    videoOverlay.prototype.play = function (origin) {
+        this.popup.root.style.transformOrigin = origin.x + 'px ' + origin.y + 'px';
         this.popup.show();
         this.video.play();
     };
@@ -55418,7 +55431,7 @@ var Pano = /** @class */ (function () {
     Pano.prototype.initEnv = function (data) {
         var opts = this.opts;
         var container = opts.el;
-        var size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(opts, container);
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(container, opts);
         var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].createElement("<div class=\"pano-root\" style=\"width:" + size.width + "px;\n            height:" + size.height + "px;\"></div>");
         var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
         webgl.autoClear = true;
@@ -55623,7 +55636,7 @@ var Pano = /** @class */ (function () {
     Pano.prototype.onResize = function () {
         var camera = this.getCamera();
         var root = this.getRoot();
-        var size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(this.opts, root);
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(root);
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.webgl.setSize(size.width, size.height);
@@ -55716,6 +55729,12 @@ var Pano = /** @class */ (function () {
      */
     Pano.prototype.supplyOverlayScenes = function (scenes) {
         this.overlays.addScenes(scenes);
+    };
+    /**
+     * 获取组件尺寸
+     */
+    Pano.prototype.getSize = function () {
+        return this.size;
     };
     /**
      * internal enter next scene
@@ -55954,9 +55973,9 @@ var Multiple = /** @class */ (function () {
         var node = this.findParent(e.target, 'pano-multiplescene-item');
         if (node && this.isActive) {
             var id = node.getAttribute('data-id');
-            var scene = this.data[id];
-            if (scene) {
-                this.pano.enterNext(scene);
+            var scene_1 = this.data[id];
+            if (scene_1) {
+                this.pano.enterNext(scene_1);
                 this.setActive(node);
             }
         }
