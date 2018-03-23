@@ -1,15 +1,19 @@
-import {Texture, CubeTextureLoader, Raycaster, BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Vector3} from 'three';
+import {Texture, Raycaster, BackSide, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Vector3} from 'three';
 import ResourceLoader from '../loaders/resource.loader';
 import Tween from '../animations/tween.animation';
 import Pano from '../pano';
+import Inradius from '../plastic/inradius.plastic';
+// 聚光灯
+import Light from '../plastic/light.plastic';
+import Shadow from '../plastic/shadow.plastic';
 import Log from '../../core/log';
 import Util from '../../core/util';
 
 /**
  * @file wormhole space through effection
+ * @TODO: ShadowMaterial
  * 在全景天空盒中, 相机指向 (0, 0, 1), 即右手坐标系 z 轴正方向
- * 在盒内实际上看的是反向贴图
- * 穿梭后要将相机恢复
+ * 在盒内实际上看的是反向贴图, 穿梭后要将相机恢复
  */
 
 const myLoader = new ResourceLoader();
@@ -19,8 +23,10 @@ export default class Wormhole {
     data: any;
     vector: any;
     texture: any;
-    box: any;
     backTexture: any;
+    hole: Inradius;
+    light: Light;
+    shadow: Shadow;
     direction = true;
     raycaster = new Raycaster();
 
@@ -34,23 +40,28 @@ export default class Wormhole {
 
     create() {
         const data = this.data;
-        const pano = this.pano;
-        const cubeLoader = new CubeTextureLoader();
-        const geometry = new SphereGeometry(100, 32, 16);
-        const material = new MeshBasicMaterial({
-            side: BackSide,
-            refractionRatio: 0,
-            reflectivity: 1
-        });
-        const box = this.box = new Mesh(geometry, material);
+        const pano = this.pano;       
         const vector = this.vector = Util.calcSphereToWorld(data.lng, data.lat);
-
+        // render shadow
+        pano.enableShadow();
         myLoader.loadTexture(data.bxlPath || data.texPath).then((texture: Texture) => {
-            texture.mapping = CubeRefractionMapping;
-            material.envMap = this.texture = texture;
-            box.position.set(vector.x, vector.y, vector.z);
+            const hole = this.hole = new Inradius({
+                light: true,
+                radius: 100, 
+                envMap: this.texture = texture
+            });
+            hole.setPosition(vector.x, vector.y, vector.z);
+            hole.addBy(pano);
 
-            pano.addSceneObject(box);
+            const shadow = this.shadow = new Shadow();
+            shadow.setPosition(vector.x, vector.y - 150, vector.z);
+            shadow.addBy(pano);
+
+            const light = this.light = new Light({debug: true});
+            light.setPosition(40, 60, -10);
+            light.setTarget(hole);
+            light.addBy(pano);
+
             this.bindEvents();
         }).catch(e => Log.errorLog(e));
     }
@@ -73,7 +84,7 @@ export default class Wormhole {
         };
 
         raycaster.setFromCamera(pos, camera);
-        const intersects = raycaster.intersectObjects([this.box]);
+        const intersects = raycaster.intersectObjects([this.hole.plastic]);
 
         if (intersects.length) {
             const vector = pano.getLookAtTarget();
@@ -97,9 +108,7 @@ export default class Wormhole {
     }
 
     rotate() {
-        this.box.rotation.x += 0.01;
-        this.box.rotation.y += 0.01;
-        this.box.rotation.z += 0.01;
+        this.hole.addRotate(0.01);
     }
 
     finish() {
@@ -110,29 +119,25 @@ export default class Wormhole {
 
         this.backTexture = pano.skyBox.getMap();
         pano.skyBox.setMap(this.texture);
-        pano.removeSceneObject(this.box);
+        pano.removeSceneObject(this.hole);
 
         pano.getCamera().position.set(0, 0, 0);
         pano.getLookAtTarget().set(0, 0, this.direction ? 1 : -1);
 
-        pano.removeSceneObject(this.box);
+        pano.removeSceneObject(this.hole);
         pano.getCanvas().removeEventListener('click', this.onDetect);
     }
 
     addBackDoor() {
-        const geometry = new SphereGeometry(100, 32, 16);
-        const material = new MeshBasicMaterial({
-            side: BackSide,
-            refractionRatio: 0,
-            reflectivity: 1
-        });
-        material.envMap = this.texture = this.backTexture;
-        const box = this.box = new Mesh(geometry, material);
+        const hole = this.hole;
         const vector = this.vector = Util.calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
-        box.position.set(vector.x, vector.y, vector.z);
+        const z = this.direction ? vector.z + 100 : vector.z - 100;
+
+        hole.setMap(this.texture = this.backTexture);
+        hole.setPosition(vector.x, vector.y, vector.z);
+        this.light.setPosition(vector.x, vector.y, z);
 
         this.direction = !this.direction;
-        this.pano.addSceneObject(box);
         this.bindEvents();
     }
 }

@@ -1,4 +1,4 @@
-import {BackSide, MeshBasicMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Math as TMath} from 'three';
+import {BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping} from 'three';
 import Tween from '../animations/tween.animation';
 
 /**
@@ -11,7 +11,8 @@ const defaultOpts = {
     widthSegments: 30,
     heightSegments: 16,
     transparent: false,
-    opacity: 1
+    opacity: 1,
+    light: false
 };
 export default class Inradius {
     data: any;
@@ -26,17 +27,30 @@ export default class Inradius {
 
     create() {
         const data = this.data;
-        const material = new MeshBasicMaterial({
-            envMap: data.envMap,
-            side: data.side,
-            refractionRatio: 0,
-            reflectivity: 1,
-            transparent: data.transparent,
-            opacity: data.opacity
-        });
+        const material = data.light ? 
+            new MeshPhongMaterial({
+                envMap: data.envMap,
+                side: data.side,
+                refractionRatio: 0,
+                reflectivity: 1,
+                specular: 'grey'
+            }) : 
+            new MeshBasicMaterial({
+                envMap: data.envMap,
+                side: data.side,
+                refractionRatio: 0,
+                reflectivity: 1,
+                transparent: data.transparent,
+                opacity: data.opacity
+            });
         const geometry = new SphereGeometry(data.radius, data.widthSegments, data.heightSegments);
+        const mesh = new Mesh(geometry, material);
 
-        this.plastic = new Mesh(geometry, material);
+        if (data.light) {
+            mesh.castShadow = true;
+        }
+
+        this.plastic = mesh;
     }
 
     getMap() {
@@ -56,12 +70,28 @@ export default class Inradius {
         texture.needsUpdate = true;
     }
 
+    setPosition(x, y, z) {
+        this.plastic.position.set(x, y, z);
+    }
+
     getPlastic() {
         return this.plastic;
     }
 
+    addRotate(num) {
+        const plastic = this.plastic;
+
+        plastic.rotation.x += num;
+        plastic.rotation.y += num;
+        plastic.rotation.z += num;
+    }
+
     addTo(scene) {
         scene.add(this.plastic);
+    }
+
+    addBy(pano) {
+        pano.addSceneObject(this.plastic);
     }
 
     fadeIn(pano, onComplete) {

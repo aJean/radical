@@ -102,9 +102,6 @@ abstract class Runtime {
             pano.noTimeline();
         }
 
-        // 光照插件
-        pano.addPlugin(Light);
-
         if (source['rotate']) {
             pano.addPlugin(Rotate, source['rotate']);
         }

@@ -1,4 +1,4 @@
-import {WebGLRenderer, Scene, PerspectiveCamera, Vector3, Math as TMath} from 'three';
+import {WebGLRenderer, Scene, PerspectiveCamera, Vector3, PCFSoftShadowMap, Math as TMath} from 'three';
 import OrbitControl from './controls/orbitControl';
 import GyroControl from './controls/gyroControl';
 import ResourceLoader from './loaders/resource.loader';
@@ -379,6 +379,21 @@ export default class Pano {
      */
     getSize() {
         return this.size;
+    }
+
+    /**
+     * 开启阴影
+     */
+    enableShadow() {
+        this.webgl.shadowMap.enabled = true;
+        this.webgl.shadowMap.type = PCFSoftShadowMap;
+    }
+
+    /**
+     * 关闭阴影
+     */
+    disableShadow() {
+        this.webgl.shadowMap.enabled = false;
     }
     
     /**
