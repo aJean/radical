@@ -1,4 +1,4 @@
-import {Texture, Raycaster, BackSide, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, Vector3} from 'three';
+import {Texture, Raycaster, } from 'three';
 import ResourceLoader from '../loaders/resource.loader';
 import Tween from '../animations/tween.animation';
 import Pano from '../pano';
@@ -11,7 +11,6 @@ import Util from '../../core/util';
 
 /**
  * @file wormhole space through effection
- * @TODO: ShadowMaterial
  * 在全景天空盒中, 相机指向 (0, 0, 1), 即右手坐标系 z 轴正方向
  * 在盒内实际上看的是反向贴图, 穿梭后要将相机恢复
  */
@@ -42,26 +41,24 @@ export default class Wormhole {
         const data = this.data;
         const pano = this.pano;       
         const vector = this.vector = Util.calcSphereToWorld(data.lng, data.lat);
-        // render shadow
-        pano.enableShadow();
+
         myLoader.loadTexture(data.bxlPath || data.texPath).then((texture: Texture) => {
             const hole = this.hole = new Inradius({
                 light: true,
+                cloud: true,
+                position: vector,
                 radius: 100, 
-                envMap: this.texture = texture
+                envMap: this.texture = texture,
             });
-            hole.setPosition(vector.x, vector.y, vector.z);
             hole.addBy(pano);
-
-            const shadow = this.shadow = new Shadow();
-            shadow.setPosition(vector.x, vector.y - 150, vector.z);
-            shadow.addBy(pano);
-
-            const light = this.light = new Light({debug: true});
-            light.setPosition(40, 60, -10);
+            
+            const light = this.light = new Light();
+            light.setPosition(vector.x, vector.y, vector.z -200);
             light.setTarget(hole);
             light.addBy(pano);
 
+            // render shadow
+            // pano.enableShadow();
             this.bindEvents();
         }).catch(e => Log.errorLog(e));
     }
@@ -76,11 +73,11 @@ export default class Wormhole {
     detect(evt) {
         const pano = this.pano;
         const camera = pano.getCamera();
+        const size = pano.getSize();
         const raycaster = this.raycaster;
-        const element = pano.getCanvas();
         const pos = {
-            x: (evt.clientX / element.clientWidth) * 2 - 1,
-            y: -(evt.clientY / element.clientHeight) * 2 + 1
+            x: (evt.clientX / size.width) * 2 - 1,
+            y: -(evt.clientY / size.height) * 2 + 1
         };
 
         raycaster.setFromCamera(pos, camera);
@@ -131,7 +128,7 @@ export default class Wormhole {
     addBackDoor() {
         const hole = this.hole;
         const vector = this.vector = Util.calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
-        const z = this.direction ? vector.z + 100 : vector.z - 100;
+        const z = this.direction ? vector.z + 200 : vector.z - 200;
 
         hole.setMap(this.texture = this.backTexture);
         hole.setPosition(vector.x, vector.y, vector.z);

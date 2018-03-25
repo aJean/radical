@@ -5,6 +5,7 @@ const defaultOpts = {
     intensity: 1,
     debug: false
 };
+
 export default class Light {
     data: any;
     plastic: any;
@@ -17,12 +18,14 @@ export default class Light {
 
     create() {
         const data = this.data;
-        const light = new SpotLight(data.color, data.intensity);
+        const light = this.plastic = new SpotLight(data.color, data.intensity);
 
-        light.castShadow = true;
-        this.plastic = light;
+        if (data.position) {
+            this.setPosition(data.position.x, data.position.y, data.position.z);
+        }
 
         if (data.debug) {
+            light.castShadow = true;
             this.helper = new CameraHelper(light.shadow.camera);
         }
     }

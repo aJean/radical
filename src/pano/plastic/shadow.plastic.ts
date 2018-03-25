@@ -1,4 +1,4 @@
-import {PlaneGeometry, MeshLambertMaterial, Mesh, DoubleSide} from 'three';
+import {PlaneGeometry, ShadowMaterial, Mesh, DoubleSide} from 'three';
 
 /**
  * @file 阴影接收平面, 首先要有光
@@ -7,7 +7,7 @@ import {PlaneGeometry, MeshLambertMaterial, Mesh, DoubleSide} from 'three';
 const defaultOpts = {
     width: 1000,
     height: 1000,
-    rad: Math.PI / 4,
+    rad: Math.PI / 2,
     opacity: 0.2,
     x: 0,
     y: 0,
@@ -25,13 +25,13 @@ export default class Shadow {
     create() {
         const data = this.data;
         const geometry = new PlaneGeometry(data.width, data.height, 32);
-        const material = new MeshLambertMaterial({color: 0xffffff, side: DoubleSide});
-        // material.opacity = data.opacity;
+        const material = new ShadowMaterial({side: DoubleSide});
+        material.opacity = data.opacity;
 
         const plane = this.plastic = new Mesh(geometry, material);
-        plane.receiveShadow = true;
         plane.rotateX(data.rad);        
         plane.position.set(data.x, data.y, data.z);
+        plane.receiveShadow = true;
     }
 
     setPosition(x, y, z) {

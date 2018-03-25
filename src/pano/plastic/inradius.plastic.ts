@@ -1,4 +1,4 @@
-import {BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping} from 'three';
+import {BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader, AdditiveBlending} from 'three';
 import Tween from '../animations/tween.animation';
 
 /**
@@ -17,6 +17,7 @@ const defaultOpts = {
 export default class Inradius {
     data: any;
     plastic: any;
+    cloud: any;
 
     constructor(data) {
         this.data = Object.assign({}, defaultOpts, data);
@@ -44,13 +45,26 @@ export default class Inradius {
                 opacity: data.opacity
             });
         const geometry = new SphereGeometry(data.radius, data.widthSegments, data.heightSegments);
-        const mesh = new Mesh(geometry, material);
+        const mesh = this.plastic = new Mesh(geometry, material);
 
         if (data.light) {
             mesh.castShadow = true;
         }
 
-        this.plastic = mesh;
+        if (data.cloud) {
+            this.cloud = new Mesh(
+                new SphereGeometry(data.radius + 1, 40, 40),
+                new MeshPhongMaterial({
+                    map: new TextureLoader().load('../assets/cloud.png'),
+                    transparent: true,
+                    opacity: 1
+                })
+            );
+        }
+
+        if (data.position) {
+            this.setPosition(data.position.x, data.position.y, data.position.z);
+        }
     }
 
     getMap() {
@@ -72,6 +86,7 @@ export default class Inradius {
 
     setPosition(x, y, z) {
         this.plastic.position.set(x, y, z);
+        this.cloud && this.cloud.position.set(x, y, z);
     }
 
     getPlastic() {
@@ -79,19 +94,21 @@ export default class Inradius {
     }
 
     addRotate(num) {
-        const plastic = this.plastic;
+        const target = this.cloud || this.plastic;
 
-        plastic.rotation.x += num;
-        plastic.rotation.y += num;
-        plastic.rotation.z += num;
+        target.rotation.x += num;
+        target.rotation.y += num;
+        target.rotation.z += num;
     }
 
     addTo(scene) {
         scene.add(this.plastic);
+        this.cloud && scene.add(this.cloud);
     }
 
     addBy(pano) {
         pano.addSceneObject(this.plastic);
+        this.cloud && pano.addSceneObject(this.cloud);
     }
 
     fadeIn(pano, onComplete) {

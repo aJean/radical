@@ -43,7 +43,7 @@ export default {
         const plaintext = AES.decrypt({
             iv: null,
             ciphertext: enc.Hex.parse(ciphertext),
-            salt: lib.WordArray.create(0)
+            salt: <any>lib.WordArray.create(0)
         }, key);
     
         return plaintext.toString(enc.Utf8);

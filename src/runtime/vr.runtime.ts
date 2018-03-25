@@ -1,5 +1,4 @@
 import ResourceLoader from '../pano/loaders/resource.loader';
-import Light from '../pano/plugins/light.plugin';
 import Info from '../pano/plugins/info.plugin';
 import Rotate from '../pano/plugins/rotate.plugin';
 import Multiple from '../pano/plugins/multiple.plugin';
