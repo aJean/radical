@@ -14,12 +14,11 @@
         "overlays": [{
             "type": "dom",
             "actionType": "custom",
-            "content": "定位",
+            "content": "清华大学",
             "location": {
-                "lng": 20,
-                "lat": 10
+                "lng": 1.25,
+                "lat": 7.87
             }
         }]
-    }],
-    "enableDevice": false
+    }]
 }
