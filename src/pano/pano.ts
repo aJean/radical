@@ -102,7 +102,7 @@ export default class Pano {
             this.render();
 
             await myLoader.loadTexture(data.bxlPath || data.texPath)
-                .then(texture => {      
+                .then(texture => {
                     this.skyBox.setMap(texture);
                     this.dispatch('scene-load', data, this);
                 }).catch(e => Log.output('load scene: load source texture fail'));

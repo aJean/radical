@@ -1,6 +1,6 @@
 {
     "title": "test bxl transfer",
-    "cretPath": "../assets/cret.pem",
+    "cretPath": "../assets/cret.txt",
     "info": {
         "author": "天气卡片-使用手机或模拟器浏览"
     },

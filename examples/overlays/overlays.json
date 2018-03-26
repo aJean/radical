@@ -1,6 +1,6 @@
 {
     "title": "test bxl transfer",
-    "cretPath": "../assets/cret.pem",
+    "cretPath": "../assets/cret.txt",
     "multiScene": true,
     "info": {
         "author": "覆盖物 + 帧动画 (scene3)"

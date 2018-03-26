@@ -53098,6 +53098,81 @@ function formatMsg(msg) {
 
 /***/ }),
 
+/***/ "./src/core/polyfill.ts":
+/*!******************************!*\
+  !*** ./src/core/polyfill.ts ***!
+  \******************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/**
+ * @file compact for old browser
+ */
+/* harmony default export */ __webpack_exports__["default"] = (function () {
+    if (!Object.assign) {
+        Object.defineProperty(Object, 'assign', {
+            enumerable: false,
+            configurable: true,
+            writable: true,
+            value: function (target) {
+                'use strict';
+                if (target === undefined || target === null) {
+                    throw new TypeError('Cannot convert first argument to object');
+                }
+                var to = Object(target);
+                for (var i = 1; i < arguments.length; i++) {
+                    var nextSource = arguments[i];
+                    if (nextSource === undefined || nextSource === null) {
+                        continue;
+                    }
+                    nextSource = Object(nextSource);
+                    var keysArray = Object.keys(Object(nextSource));
+                    for (var nextIndex = 0, len = keysArray.length; nextIndex < len; nextIndex++) {
+                        var nextKey = keysArray[nextIndex];
+                        var desc = Object.getOwnPropertyDescriptor(nextSource, nextKey);
+                        if (desc !== undefined && desc.enumerable) {
+                            to[nextKey] = nextSource[nextKey];
+                        }
+                    }
+                }
+                return to;
+            }
+        });
+    }
+    if (!Array.prototype.find) {
+        Object.defineProperty(Array.prototype, 'find', {
+            enumerable: false,
+            configurable: true,
+            writable: true,
+            value: function (predicate) {
+                if (this == null) {
+                    throw new TypeError('Array.prototype.find called on null or undefined');
+                }
+                if (typeof predicate !== 'function') {
+                    throw new TypeError('predicate must be a function');
+                }
+                var list = Object(this);
+                var length = list.length >>> 0;
+                var thisArg = arguments[1];
+                var value;
+                for (var i = 0; i < length; i++) {
+                    value = list[i];
+                    if (predicate.call(thisArg, value, i, list)) {
+                        return value;
+                    }
+                }
+                return undefined;
+            }
+        });
+    }
+});
+;
+
+
+/***/ }),
+
 /***/ "./src/core/util.ts":
 /*!**************************!*\
   !*** ./src/core/util.ts ***!
@@ -53283,7 +53358,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../styles/ui.style.less */ "./styles/ui.style.less");
 /* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
+/* harmony import */ var _core_polyfill__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./core/polyfill */ "./src/core/polyfill.ts");
+/* harmony import */ var _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
+
 
 
 
@@ -53292,15 +53369,16 @@ __webpack_require__.r(__webpack_exports__);
 /**
  * @file bxl lib
  */
+Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_4__["default"])();
 /* harmony default export */ __webpack_exports__["default"] = ({
     start: function (source, el, events) {
-        _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__["default"].start(source, el, events);
+        _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].start(source, el, events);
     },
     getPano: function (ref) {
-        return _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__["default"].getInstance(ref);
+        return _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].getInstance(ref);
     },
     dispose: function (ref) {
-        return _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_4__["default"].releaseInstance(ref);
+        return _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].releaseInstance(ref);
     }
 });
 

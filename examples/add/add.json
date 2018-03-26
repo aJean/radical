@@ -1,6 +1,6 @@
 {
     "title": "test bxl transfer",
-    "cretPath": "../assets/cret.pem",
+    "cretPath": "../assets/cret.txt",
     "info": {
         "author": "添加覆盖物"
     },

@@ -1,6 +1,6 @@
 {
     "title": "test bxl transfer",
-    "cretPath": "../assets/cret.pem",
+    "cretPath": "../assets/cret.txt",
     "info": {
         "author": "绵阳谊君舞蹈",
         "logo": "../assets/logo.png"

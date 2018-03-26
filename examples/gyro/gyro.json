@@ -1,6 +1,6 @@
 {
     "title": "test bxl transfer",
-    "cretPath": "../assets/cret.pem",
+    "cretPath": "../assets/cret.txt",
     "info": {
         "author": "陀螺仪 - 请使用手机浏览",
         "logo": "../assets/logo-gyro.png"
