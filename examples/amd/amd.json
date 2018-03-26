@@ -7,9 +7,9 @@
     "sceneGroup": [{
         "id": "scene0",
         "name": "罗浮宫",
-        "bxlPath": "../assets/scene7/scene7.bxl",
-        "imgPath": "../assets/scene7/scene7.jpg",
-        "thumbPath": "../assets/scene7/thumb7.jpg"
+        "bxlPath": "../assets/scene5/scene5.bxl",
+        "imgPath": "../assets/scene5/scene5.jpg",
+        "thumbPath": "../assets/scene5/thumb5.jpg"
     }],
     "enableDevice": false
 }

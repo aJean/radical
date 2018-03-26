@@ -53232,10 +53232,10 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         var width = elem.parentNode.clientWidth || winWidth;
         var height = elem.parentNode.clientHeight || winHeight;
         if (opts && opts.width) {
-            width = /%$/.test(opts.width) ? (opts.width / 100 * winWidth) : parseInt(opts.width);
+            width = /%$/.test(opts.width) ? (parseInt(opts.width) / 100 * winWidth) : parseInt(opts.width);
         }
         if (opts && opts.height) {
-            height = /%$/.test(opts.height) ? (opts.height / 100 * winHeight) : parseInt(opts.height);
+            height = /%$/.test(opts.height) ? (parseInt(opts.height) / 100 * winHeight) : parseInt(opts.height);
         }
         return { width: width, height: height, aspect: width / height };
     },

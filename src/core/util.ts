@@ -142,11 +142,11 @@ export default {
         let height = elem.parentNode.clientHeight || winHeight;
 
         if (opts && opts.width) {
-            width = /%$/.test(opts.width) ? (opts.width / 100 * winWidth) : parseInt(opts.width);
+            width = /%$/.test(opts.width) ? (parseInt(opts.width) / 100 * winWidth) : parseInt(opts.width);
         }
 
         if (opts && opts.height) {
-            height = /%$/.test(opts.height) ? (opts.height / 100 * winHeight) : parseInt(opts.height);
+            height = /%$/.test(opts.height) ? (parseInt(opts.height) / 100 * winHeight) : parseInt(opts.height);
         }
 
         return {width, height, aspect: width / height};
