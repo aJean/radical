@@ -11,6 +11,5 @@
         "bxlPath": "../assets/scene0/scene0.bxl",
         "imgPath": "../assets/scene0/scene0.jpg",
         "thumbPath": "../assets/scene0/thumb0.jpg"
-    }],
-    "enableDevice": false
+    }]
 }

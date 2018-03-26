@@ -53443,10 +53443,10 @@ var AnimationFly = /** @class */ (function () {
     AnimationFly.prototype.getPath = function (camera) {
         return [{
                 start: { fov: 160, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
-                end: { fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
+                end: { fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI },
                 time: 1500
             }, {
-                start: { fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI * 0.8 },
+                start: { fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI },
                 end: { fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI },
                 time: 1500
             }];
@@ -53761,13 +53761,16 @@ var GyroControl = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+
 
 /**
  * @file 全景相机控制器
  */
-function OrbitControl(object, domElement) {
+function OrbitControl(camera, domElement, pano) {
+    this.pano = pano;
     // camera
-    this.object = object;
+    this.camera = camera;
     this.domElement = (domElement !== undefined) ? domElement : document;
     // Set to false to disable this control
     this.enabled = true;
@@ -53826,8 +53829,8 @@ function OrbitControl(object, domElement) {
     };
     // for reset
     this.target0 = this.target.clone();
-    this.position0 = this.object.position.clone();
-    this.zoom0 = this.object.zoom;
+    this.position0 = this.camera.position.clone();
+    this.zoom0 = this.camera.zoom;
     // current position in spherical coordinates
     var spherical = new three__WEBPACK_IMPORTED_MODULE_0__["Spherical"]();
     // var sphericalDelta = new THREE.Spherical(1, Math.PI/2, Math.PI );
@@ -53874,14 +53877,14 @@ function OrbitControl(object, domElement) {
     };
     this.saveState = function () {
         scope.target0.copy(scope.target);
-        scope.position0.copy(scope.object.position);
-        scope.zoom0 = scope.object.zoom;
+        scope.position0.copy(scope.camera.position);
+        scope.zoom0 = scope.camera.zoom;
     };
     this.reset = function () {
         scope.target.copy(scope.target0);
-        scope.object.position.copy(scope.position0);
-        scope.object.zoom = scope.zoom0;
-        scope.object.updateProjectionMatrix();
+        scope.camera.position.copy(scope.position0);
+        scope.camera.zoom = scope.zoom0;
+        scope.camera.updateProjectionMatrix();
         scope.dispatchEvent(changeEvent);
         scope.update();
         state = STATE.NONE;
@@ -53890,12 +53893,12 @@ function OrbitControl(object, domElement) {
     this.update = (function () {
         var offset = new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"]();
         /* so camera.up is the orbit axis */
-        var quat = new three__WEBPACK_IMPORTED_MODULE_0__["Quaternion"]().setFromUnitVectors(object.up, new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](0, 1, 0));
+        var quat = new three__WEBPACK_IMPORTED_MODULE_0__["Quaternion"]().setFromUnitVectors(camera.up, new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](0, 1, 0));
         var quatInverse = quat.clone().inverse();
         var lastPosition = new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"]();
         var lastQuaternion = new three__WEBPACK_IMPORTED_MODULE_0__["Quaternion"]();
         return function update(sphericalNew) {
-            var position = scope.object.position;
+            var position = scope.camera.position;
             offset.copy(position).sub(scope.target);
             /* rotate offset to "y-axis-is-up" space */
             offset.applyQuaternion(quat);
@@ -53930,14 +53933,14 @@ function OrbitControl(object, domElement) {
             spherical.makeSafe();
             // 缩放
             if (scale !== 1) {
-                scope.object.fov *= scale;
-                if (scope.object.fov > scope.maxFov) {
-                    scope.object.fov = scope.maxFov;
+                scope.camera.fov *= scale;
+                if (scope.camera.fov > scope.maxFov) {
+                    scope.camera.fov = scope.maxFov;
                 }
-                else if (scope.object.fov < scope.minFov) {
-                    scope.object.fov = scope.minFov;
+                else if (scope.camera.fov < scope.minFov) {
+                    scope.camera.fov = scope.minFov;
                 }
-                scope.object.updateProjectionMatrix();
+                scope.camera.updateProjectionMatrix();
             }
             // move target to panned location
             scope.target.add(panOffset);
@@ -53946,7 +53949,7 @@ function OrbitControl(object, domElement) {
             offset.applyQuaternion(quatInverse);
             position.copy(scope.target).add(offset);
             // camera lookat
-            scope.object.lookAt(scope.target);
+            scope.camera.lookAt(scope.target);
             if (scope.enableDamping === true) {
                 sphericalDelta.theta *= (1 - scope.dampingFactor);
                 sphericalDelta.phi *= (1 - scope.dampingFactor);
@@ -53962,11 +53965,11 @@ function OrbitControl(object, domElement) {
              * using small-angle approximation cos(x/2) = 1 - x^2 / 8
              **/
             if (zoomChanged
-                || lastPosition.distanceToSquared(scope.object.position) > EPS
-                || 8 * (1 - lastQuaternion.dot(scope.object.quaternion)) > EPS) {
+                || lastPosition.distanceToSquared(scope.camera.position) > EPS
+                || 8 * (1 - lastQuaternion.dot(scope.camera.quaternion)) > EPS) {
                 scope.dispatchEvent(changeEvent);
-                lastPosition.copy(scope.object.position);
-                lastQuaternion.copy(scope.object.quaternion);
+                lastPosition.copy(scope.camera.position);
+                lastQuaternion.copy(scope.camera.quaternion);
                 zoomChanged = false;
                 return true;
             }
@@ -54025,21 +54028,21 @@ function OrbitControl(object, domElement) {
         var offset = new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"]();
         return function pan(deltaX, deltaY) {
             var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
-            if (scope.object instanceof three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"]) {
+            if (scope.camera instanceof three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"]) {
                 // perspective
-                var position = scope.object.position;
+                var position = scope.camera.position;
                 offset.copy(position).sub(scope.target);
                 var targetDistance = offset.length();
                 // half of the fov is center to top of screen
-                targetDistance *= Math.tan((scope.object.fov / 2) * Math.PI / 180.0);
+                targetDistance *= Math.tan((scope.camera.fov / 2) * Math.PI / 180.0);
                 // we actually don't use screenWidth, since perspective camera is fixed to screen height
-                panLeft(2 * deltaX * targetDistance / element.clientHeight, scope.object.matrix);
-                panUp(2 * deltaY * targetDistance / element.clientHeight, scope.object.matrix);
+                panLeft(2 * deltaX * targetDistance / element.clientHeight, scope.camera.matrix);
+                panUp(2 * deltaY * targetDistance / element.clientHeight, scope.camera.matrix);
             }
-            else if (scope.object instanceof three__WEBPACK_IMPORTED_MODULE_0__["OrthographicCamera"]) {
+            else if (scope.camera instanceof three__WEBPACK_IMPORTED_MODULE_0__["OrthographicCamera"]) {
                 // orthographic
-                panLeft(deltaX * (scope.object.right - scope.object.left) / scope.object.zoom / element.clientWidth, scope.object.matrix);
-                panUp(deltaY * (scope.object.top - scope.object.bottom) / scope.object.zoom / element.clientHeight, scope.object.matrix);
+                panLeft(deltaX * (scope.camera.right - scope.camera.left) / scope.camera.zoom / element.clientWidth, scope.camera.matrix);
+                panUp(deltaY * (scope.camera.top - scope.camera.bottom) / scope.camera.zoom / element.clientHeight, scope.camera.matrix);
             }
             else {
                 // camera neither orthographic nor perspective
@@ -54049,12 +54052,12 @@ function OrbitControl(object, domElement) {
         };
     }());
     function dollyIn(dollyScale) {
-        if (scope.object instanceof three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"]) {
+        if (scope.camera instanceof three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"]) {
             scale /= dollyScale;
         }
-        else if (scope.object instanceof three__WEBPACK_IMPORTED_MODULE_0__["OrthographicCamera"]) {
-            scope.object.zoom = Math.max(scope.minZoom, Math.min(scope.maxZoom, scope.object.zoom * dollyScale));
-            scope.object.updateProjectionMatrix();
+        else if (scope.camera instanceof three__WEBPACK_IMPORTED_MODULE_0__["OrthographicCamera"]) {
+            scope.camera.zoom = Math.max(scope.minZoom, Math.min(scope.maxZoom, scope.camera.zoom * dollyScale));
+            scope.camera.updateProjectionMatrix();
             zoomChanged = true;
         }
         else {
@@ -54063,12 +54066,12 @@ function OrbitControl(object, domElement) {
         }
     }
     function dollyOut(dollyScale) {
-        if (scope.object instanceof three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"]) {
+        if (scope.camera instanceof three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"]) {
             scale *= dollyScale;
         }
-        else if (scope.object instanceof three__WEBPACK_IMPORTED_MODULE_0__["OrthographicCamera"]) {
-            scope.object.zoom = Math.max(scope.minZoom, Math.min(scope.maxZoom, scope.object.zoom / dollyScale));
-            scope.object.updateProjectionMatrix();
+        else if (scope.camera instanceof three__WEBPACK_IMPORTED_MODULE_0__["OrthographicCamera"]) {
+            scope.camera.zoom = Math.max(scope.minZoom, Math.min(scope.maxZoom, scope.camera.zoom / dollyScale));
+            scope.camera.updateProjectionMatrix();
             zoomChanged = true;
         }
         else {
@@ -54148,14 +54151,26 @@ function OrbitControl(object, domElement) {
                 break;
         }
     }
+    var _rotatestart = null;
     function handleTouchStartRotate(event) {
         rotateStart.set(event.touches[0].pageX, event.touches[0].pageY);
+        _rotatestart = {
+            x: event.touches[0].pageX,
+            y: event.touches[0].pageY
+        };
     }
     function handleTouchStartDolly(event) {
         var dx = event.touches[0].pageX - event.touches[1].pageX;
         var dy = event.touches[0].pageY - event.touches[1].pageY;
         var distance = Math.sqrt(dx * dx + dy * dy);
         dollyStart.set(0, distance);
+        var pano = scope.pano;
+        var size = pano.getSize();
+        // center of tow fingers
+        pano.dispatch('scene-zoom', _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToSphere({
+            x: (event.touches[0].pageX + dx / 2) / size.width * 2 - 1,
+            y: -(event.touches[0].pageY + dy / 2) / size.height * 2 + 1
+        }, scope.camera), pano);
     }
     function handleTouchStartPan(event) {
         panStart.set(event.touches[0].pageX, event.touches[0].pageY);
@@ -54170,6 +54185,15 @@ function OrbitControl(object, domElement) {
         rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight * scope.rotateSpeed);
         rotateStart.copy(rotateEnd);
         scope.update();
+        var pano = scope.pano;
+        var size = pano.getSize();
+        if (_rotatestart) {
+            pano.dispatch('scene-drag', _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToSphere({
+                x: (_rotatestart.x / size.width) * 2 - 1,
+                y: -(_rotatestart.y / size.height) * 2 - 1
+            }, scope.camera), pano);
+            _rotatestart = null;
+        }
     }
     // 两指缩放
     function handleTouchMoveDolly(event) {
@@ -54194,7 +54218,9 @@ function OrbitControl(object, domElement) {
         panStart.copy(panEnd);
         scope.update();
     }
-    function handleTouchEnd(event) { }
+    function handleTouchEnd(event) {
+        _rotatestart = null;
+    }
     /*
      * event handlers - FSM: listen for events and reset state
      */
@@ -55444,7 +55470,7 @@ var Pano = /** @class */ (function () {
         this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
         this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](data.fov || opts.fov, size.aspect, 0.1, 10000);
         // control
-        var orbit = this.orbit = new _controls_orbitControl__WEBPACK_IMPORTED_MODULE_1__["default"](this.camera, webgl.domElement);
+        var orbit = this.orbit = new _controls_orbitControl__WEBPACK_IMPORTED_MODULE_1__["default"](this.camera, webgl.domElement, this);
         if (opts.gyro) {
             this.gyro = new _controls_gyroControl__WEBPACK_IMPORTED_MODULE_2__["default"](this.camera, orbit);
         }

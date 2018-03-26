@@ -65,7 +65,7 @@ export default class Pano {
         this.scene = new Scene();
         this.camera = new PerspectiveCamera(data.fov || opts.fov, size.aspect, 0.1, 10000);
         // control
-        const orbit = this.orbit = new OrbitControl(this.camera, webgl.domElement);
+        const orbit = this.orbit = new OrbitControl(this.camera, webgl.domElement, this);
         if (opts.gyro) {
             this.gyro = new GyroControl(this.camera, orbit);
         }
