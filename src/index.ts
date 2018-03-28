@@ -3,7 +3,8 @@ import '../styles/multiple.style.less';
 import '../styles/overlays.style.less';
 import '../styles/ui.style.less';
 import polyfill from './core/polyfill';
-import VRuntime from './runtime/vr.runtime';
+import PanoRuntime from './runtime/pano.runtime';
+import VrRuntime from './runtime/vr.runtime';
 
 /**
  * @file bxl lib
@@ -11,15 +12,19 @@ import VRuntime from './runtime/vr.runtime';
 
 polyfill();
 export default {
-    start(source, el, events?) {
-        VRuntime.start(source, el, events);
+    startPano(source, el, events?) {
+        PanoRuntime.start(source, el, events);
     },
 
     getPano(ref: string) {
-        return VRuntime.getInstance(ref);
+        return PanoRuntime.getInstance(ref);
     },
 
-    dispose(ref: string) {
-        return VRuntime.releaseInstance(ref);
+    disposePano(ref: string) {
+        return PanoRuntime.releaseInstance(ref);
+    },
+
+    startVR(el) {
+        VrRuntime.start(el);
     }
 };

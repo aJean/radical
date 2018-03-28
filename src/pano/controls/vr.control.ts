@@ -22,7 +22,7 @@ export default class VRControl {
 	// standing=true but the VRDisplay doesn't provide stageParameters.
 	userHeight = 1.6;
 
-    constructor(camera, onError) {
+    constructor(camera) {
         this.camera = camera;
         this.standingMatrix = new Matrix4();
 

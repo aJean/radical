@@ -1,165 +1,71 @@
-import ResourceLoader from '../pano/loaders/resource.loader';
-import Info from '../pano/plugins/info.plugin';
-import Rotate from '../pano/plugins/rotate.plugin';
-import Multiple from '../pano/plugins/multiple.plugin';
-import Wormhole from '../pano/plugins/wormhole.plugin';
-import Timeline from '../pano/animations/timeline.animation';
-import Pano from '../pano/pano';
-import Log from '../core/log';
+import {WebGLRenderer, PerspectiveCamera, Scene, CubeGeometry, MeshLambertMaterial, Mesh, SpotLight, PlaneGeometry, MeshPhongMaterial, DoubleSide, CameraHelper} from 'three';
+import Util from '../core/util';
+import VrControl from '../pano/controls/vr.control';
+import VrEffect from '../vr/effect.vr';
 
 /**
- * @file vr pano runtime
+ * @file wev vr test
  */
 
-const myLoader = new ResourceLoader();
-abstract class EnvQueue {
-    static list = [];
+export default abstract class VrRuntime {
+    static start(el) {
+        const webgl = new WebGLRenderer();
+        webgl.setPixelRatio(window.devicePixelRatio);
+        webgl.setSize(window.innerWidth, window.innerHeight);
+        webgl.setClearColor(0xeeeeee);
+        webgl.shadowMap.enabled = true;
 
-    static add(fn, context) {
-        this.list.push({
-            context: context,
-            fn: fn.bind(context)
-        });
+        document.querySelector(el).appendChild(webgl.domElement);
+
+        const scene = new Scene();
+        const camera = new PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        const geometry = new CubeGeometry(10, 10, 10);
+        const cubematerial = new MeshLambertMaterial({color: 0xef6500, opacity: 1, transparent: true});
+        const cube = new Mesh(geometry, cubematerial);
+
+        cube.position.set(0, 10, -40);
+        cube.rotation.set(Math.PI / 6, Math.PI / 4, 0);
+        cube.castShadow = true;
+        scene.add(cube);
+
+        const plane = new Mesh(new PlaneGeometry(50, 50), new MeshPhongMaterial({
+            color: 0xff0000,
+            shininess: 150,
+            specular: 0x222222,
+            side: DoubleSide
+        }));
+        plane.position.set(0, 0, -80);
+        plane.rotateX(Math.PI / 1.5);
+        
+        plane.receiveShadow = true;
+        scene.add(plane);
+
+        const spotLight = new SpotLight(0xffffff);
+        spotLight.name = 'Spot Light';
+        spotLight.angle = Math.PI / 5;
+        spotLight.penumbra = 0.3;
+        spotLight.position.set(10, 20, 10);
+        spotLight.castShadow = true;
+        spotLight.shadow.mapSize.width = 1024;
+        spotLight.shadow.mapSize.height = 1024;
+        spotLight.target = cube;
+        scene.add(spotLight);
+
+        scene.add(new CameraHelper(spotLight.shadow.camera));
+
+        const vrControl = new VrControl(camera);
+        const effect = new VrEffect(webgl);
+        effect.setSize(window.innerWidth, window.innerHeight);
+
+        const animate = () => {
+            cube.rotation.y += 0.01;
+            vrControl.update();
+            effect.render(scene, camera);
+            
+            requestAnimationFrame(animate);
+        };
+
+        animate();
     }
-
-    static excute() {
-        this.list.forEach(item => item.fn());
-    }
-
-    static remove(context) {
-        const list = this.list;
-        const index = list.find(item => item.context == context);
-        list.splice(index, 1);
-    }
-
-    static len() {
-        return this.list.length;
-    }
-};
-
-abstract class Runtime {
-    static timeid: any;
-    static uid = 0;
-    static instanceMap = {};
-
-    /**
-     * 获取全景对象, use after scene-init
-     * @param {string} ref 
-     */
-    static getInstance(ref) {
-        return this.instanceMap[ref];
-    }
-
-    /**
-     * 释放一个全景对象
-     * @param {string} ref 
-     */
-    static releaseInstance(ref) {
-        const pano = this.instanceMap[ref];
-        if (pano) {
-            pano.dispose();
-            EnvQueue.remove(pano);
-        }
-
-        if (!EnvQueue.len()) {
-            window.removeEventListener('resize', onEnvResize);
-        }
-    }
-
-    /**
-     * 创建全景对象
-     * @param {HTMLElement} el root 元素
-     * @param {Object} source
-     */
-    static createRef(el, source) {
-        el = (typeof el == 'string') ? document.querySelector(el) : el;
-
-        if (!el || !el.parentNode) {
-            el = document.body;
-        }
-
-        const ref = el.getAttribute('ref') || `pano_${this.uid++}`;
-        const opts = {el, ...source['pano']};
-        el.setAttribute('ref', ref);
-
-        return this.instanceMap[ref] = new Pano(opts, source);
-    }
-
-    static async start(url, el, events?) {
-        const source = typeof url === 'string' ? await myLoader.fetchUrl(url) : url;
-        const data = source && source['sceneGroup'];
-
-        if (!data) {
-            return Log.output('load source error');
-        }
-
-        try {
-            const pano = this.createRef(el, source);
-
-            if (source['animation']) {
-                Timeline.install(source['animation'], pano);
-            } else {
-                pano.noTimeline();
-            }
-    
-            if (source['rotate']) {
-                pano.addPlugin(Rotate, source['rotate']);
-            }
-    
-            if (source['multiScene']) {
-                pano.addPlugin(Multiple, source['sceneGroup']);
-            }
-    
-            if (source['info']) {
-                pano.addPlugin(Info, source['info']);
-            }
-    
-            if (source['wormhole']) {
-                pano.addPlugin(Wormhole, source['wormhole']);
-            }
-    
-            // 用户订阅事件
-            if (events) {
-                for (let name in events) {
-                    pano.subscribe(name, events[name]);
-                }
-            }
-            // add to env queue listeners
-            EnvQueue.add(pano.onResize, pano);
-            // load and render
-            pano.run();
-        } catch(e) {
-            events && events.nosupport && events.nosupport();
-            throw new Error('build error');
-        }
-    }
-
-    static async start3d() {}
-};
-
-const pastLoad = window.onload;
-window.onload = function() {
-    pastLoad && pastLoad.call(this);
-
-    let uid = 0;
-    const nodeList = document.querySelectorAll('pano');
-
-    for (let i = 0; i < nodeList.length; i++) {
-        const node = nodeList[i];
-        const auto = node.getAttribute('auto');
-
-        if (auto) {
-            Runtime.start(node.getAttribute('source'), node);
-        }
-    }  
-};
-
-const onEnvResize = event => {
-    clearTimeout(Runtime.timeid);
-    Runtime.timeid = setTimeout(function () {
-        EnvQueue.excute();
-    }, 200);
-};
-window.addEventListener('resize', onEnvResize);
-
-export default Runtime;
+}

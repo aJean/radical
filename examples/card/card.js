@@ -1,6 +1,6 @@
 let flag = 0;
 let oheight;
-bxl.start('./card.json', '.scene', {
+bxl.startPano('./card.json', '.scene', {
     'scene-init': function (data, pano) {
         const $root = $('.scene');
         // dom placeholder
