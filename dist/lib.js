@@ -53722,10 +53722,10 @@ var Tween = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/pano/controls/gyroControl.ts":
-/*!******************************************!*\
-  !*** ./src/pano/controls/gyroControl.ts ***!
-  \******************************************/
+/***/ "./src/pano/controls/gyro.control.ts":
+/*!*******************************************!*\
+  !*** ./src/pano/controls/gyro.control.ts ***!
+  \*******************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -53829,10 +53829,10 @@ var GyroControl = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/pano/controls/orbitControl.ts":
-/*!*******************************************!*\
-  !*** ./src/pano/controls/orbitControl.ts ***!
-  \*******************************************/
+/***/ "./src/pano/controls/orbit.control.ts":
+/*!********************************************!*\
+  !*** ./src/pano/controls/orbit.control.ts ***!
+  \********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -55446,8 +55446,8 @@ var videoOverlay = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _controls_orbitControl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controls/orbitControl */ "./src/pano/controls/orbitControl.ts");
-/* harmony import */ var _controls_gyroControl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./controls/gyroControl */ "./src/pano/controls/gyroControl.ts");
+/* harmony import */ var _controls_orbit_control__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controls/orbit.control */ "./src/pano/controls/orbit.control.ts");
+/* harmony import */ var _controls_gyro_control__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./controls/gyro.control */ "./src/pano/controls/gyro.control.ts");
 /* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 /* harmony import */ var _overlays_overlays_overlay__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./overlays/overlays.overlay */ "./src/pano/overlays/overlays.overlay.ts");
@@ -55548,9 +55548,9 @@ var Pano = /** @class */ (function () {
         this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
         this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](data.fov || opts.fov, size.aspect, 0.1, 10000);
         // control
-        var orbit = this.orbit = new _controls_orbitControl__WEBPACK_IMPORTED_MODULE_1__["default"](this.camera, webgl.domElement, this);
+        var orbit = this.orbit = new _controls_orbit_control__WEBPACK_IMPORTED_MODULE_1__["default"](this.camera, webgl.domElement, this);
         if (opts.gyro) {
-            this.gyro = new _controls_gyroControl__WEBPACK_IMPORTED_MODULE_2__["default"](this.camera, orbit);
+            this.gyro = new _controls_gyro_control__WEBPACK_IMPORTED_MODULE_2__["default"](this.camera, orbit);
         }
         // all overlays manager
         this.overlays = new _overlays_overlays_overlay__WEBPACK_IMPORTED_MODULE_5__["default"](this, this.source['sceneGroup']);
@@ -56776,35 +56776,41 @@ var Runtime = /** @class */ (function () {
                         if (!data) {
                             return [2 /*return*/, _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output('load source error')];
                         }
-                        pano = this.createRef(el, source);
-                        if (source['animation']) {
-                            _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_5__["default"].install(source['animation'], pano);
-                        }
-                        else {
-                            pano.noTimeline();
-                        }
-                        if (source['rotate']) {
-                            pano.addPlugin(_pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_2__["default"], source['rotate']);
-                        }
-                        if (source['multiScene']) {
-                            pano.addPlugin(_pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_3__["default"], source['sceneGroup']);
-                        }
-                        if (source['info']) {
-                            pano.addPlugin(_pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_1__["default"], source['info']);
-                        }
-                        if (source['wormhole']) {
-                            pano.addPlugin(_pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_4__["default"], source['wormhole']);
-                        }
-                        // 用户订阅事件
-                        if (events) {
-                            for (name_1 in events) {
-                                pano.subscribe(name_1, events[name_1]);
+                        try {
+                            pano = this.createRef(el, source);
+                            if (source['animation']) {
+                                _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_5__["default"].install(source['animation'], pano);
                             }
+                            else {
+                                pano.noTimeline();
+                            }
+                            if (source['rotate']) {
+                                pano.addPlugin(_pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_2__["default"], source['rotate']);
+                            }
+                            if (source['multiScene']) {
+                                pano.addPlugin(_pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_3__["default"], source['sceneGroup']);
+                            }
+                            if (source['info']) {
+                                pano.addPlugin(_pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_1__["default"], source['info']);
+                            }
+                            if (source['wormhole']) {
+                                pano.addPlugin(_pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_4__["default"], source['wormhole']);
+                            }
+                            // 用户订阅事件
+                            if (events) {
+                                for (name_1 in events) {
+                                    pano.subscribe(name_1, events[name_1]);
+                                }
+                            }
+                            // add to env queue listeners
+                            EnvQueue.add(pano.onResize, pano);
+                            // load and render
+                            pano.run();
                         }
-                        // add to env queue listeners
-                        EnvQueue.add(pano.onResize, pano);
-                        // load and render
-                        pano.run();
+                        catch (e) {
+                            events && events.nosupport && events.nosupport();
+                            throw new Error('build error');
+                        }
                         return [2 /*return*/];
                 }
             });

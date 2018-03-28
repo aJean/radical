@@ -70,7 +70,7 @@ export default class Pano {
             this.gyro = new GyroControl(this.camera, orbit);
         }
         // all overlays manager
-        this.overlays = new Overlays(this, this.source['sceneGroup']);        
+        this.overlays = new Overlays(this, this.source['sceneGroup']);
     }
 
     resetEnv(data) {

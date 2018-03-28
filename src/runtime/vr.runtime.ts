@@ -81,7 +81,7 @@ abstract class Runtime {
         const ref = el.getAttribute('ref') || `pano_${this.uid++}`;
         const opts = {el, ...source['pano']};
         el.setAttribute('ref', ref);
-        
+
         return this.instanceMap[ref] = new Pano(opts, source);
     }
 
@@ -93,41 +93,45 @@ abstract class Runtime {
             return Log.output('load source error');
         }
 
-        const pano = this.createRef(el, source);
+        try {
+            const pano = this.createRef(el, source);
 
-        if (source['animation']) {
-            Timeline.install(source['animation'], pano);
-        } else {
-            pano.noTimeline();
-        }
-
-        if (source['rotate']) {
-            pano.addPlugin(Rotate, source['rotate']);
-        }
-
-        if (source['multiScene']) {
-            pano.addPlugin(Multiple, source['sceneGroup']);
-        }
-
-        if (source['info']) {
-            pano.addPlugin(Info, source['info']);
-        }
-
-        if (source['wormhole']) {
-            pano.addPlugin(Wormhole, source['wormhole']);
-        }
-
-        // 用户订阅事件
-        if (events) {
-            for (let name in events) {
-                pano.subscribe(name, events[name]);
+            if (source['animation']) {
+                Timeline.install(source['animation'], pano);
+            } else {
+                pano.noTimeline();
             }
+    
+            if (source['rotate']) {
+                pano.addPlugin(Rotate, source['rotate']);
+            }
+    
+            if (source['multiScene']) {
+                pano.addPlugin(Multiple, source['sceneGroup']);
+            }
+    
+            if (source['info']) {
+                pano.addPlugin(Info, source['info']);
+            }
+    
+            if (source['wormhole']) {
+                pano.addPlugin(Wormhole, source['wormhole']);
+            }
+    
+            // 用户订阅事件
+            if (events) {
+                for (let name in events) {
+                    pano.subscribe(name, events[name]);
+                }
+            }
+            // add to env queue listeners
+            EnvQueue.add(pano.onResize, pano);
+            // load and render
+            pano.run();
+        } catch(e) {
+            events && events.nosupport && events.nosupport();
+            throw new Error('build error');
         }
-
-        // add to env queue listeners
-        EnvQueue.add(pano.onResize, pano);
-        // load and render
-        pano.run();
     }
 
     static async start3d() {}

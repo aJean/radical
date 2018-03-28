@@ -33,7 +33,6 @@ export default class VRControl {
         if (navigator.getVRDisplays) {
             navigator.getVRDisplays().then(displays => this.gotVRDisplays(displays))
                 .catch(() => Log.output('Unable to get VR Displays'));
-    
         }
     
     }
@@ -41,8 +40,8 @@ export default class VRControl {
 	gotVRDisplays(displays) {
 		this.vrDisplays = displays;
 
-		if ( displays.length > 0 ) {
-			this.vrDisplay = displays[ 0 ];
+		if (displays.length > 0) {
+			this.vrDisplay = displays[0];
 		} else {
 			Log.output('VR input not available');
 		}
