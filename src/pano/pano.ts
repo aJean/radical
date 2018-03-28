@@ -1,6 +1,6 @@
 import {WebGLRenderer, Scene, PerspectiveCamera, Vector3, PCFSoftShadowMap, Math as TMath} from 'three';
-import OrbitControl from './controls/orbitControl';
-import GyroControl from './controls/gyroControl';
+import OrbitControl from './controls/orbit.control';
+import GyroControl from './controls/gyro.control';
 import ResourceLoader from './loaders/resource.loader';
 import Tween from './animations/tween.animation';
 import Overlays from './overlays/overlays.overlay';
