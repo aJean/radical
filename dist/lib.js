@@ -56123,12 +56123,12 @@ var Inradius = /** @class */ (function () {
     };
     Inradius.prototype.fadeIn = function (pano, onComplete) {
         var material = this.plastic.material;
-        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](material).to({ opacity: 1 }).effect('linear', 1500)
+        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](material).to({ opacity: 1 }).effect('linear', 1000)
             .start(['opacity'], pano).complete(onComplete);
     };
     Inradius.prototype.fadeOut = function (pano, onComplete) {
         var material = this.plastic.material;
-        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](material).to({ opacity: 0 }).effect('linear', 1500)
+        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](material).to({ opacity: 0 }).effect('linear', 1000)
             .start(['opacity'], pano).complete(onComplete);
     };
     Inradius.prototype.dispose = function () {

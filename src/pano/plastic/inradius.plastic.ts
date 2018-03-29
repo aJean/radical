@@ -114,14 +114,14 @@ export default class Inradius {
     fadeIn(pano, onComplete) {
         const material = this.plastic.material;
 
-        new Tween(material).to({opacity: 1}).effect('linear', 1500)
+        new Tween(material).to({opacity: 1}).effect('linear', 1000)
             .start(['opacity'], pano).complete(onComplete);
     }
 
     fadeOut(pano, onComplete) {
         const material = this.plastic.material;
 
-        new Tween(material).to({opacity: 0}).effect('linear', 1500)
+        new Tween(material).to({opacity: 0}).effect('linear', 1000)
             .start(['opacity'], pano).complete(onComplete);
     }
 
