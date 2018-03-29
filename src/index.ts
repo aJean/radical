@@ -4,7 +4,7 @@ import '../styles/overlays.style.less';
 import '../styles/ui.style.less';
 import polyfill from './core/polyfill';
 import PanoRuntime from './runtime/pano.runtime';
-import VrRuntime from './runtime/vr.runtime';
+import VRuntime from './runtime/vr.runtime';
 
 /**
  * @file bxl lib
@@ -25,6 +25,6 @@ export default {
     },
 
     startVR(el) {
-        VrRuntime.start(el);
+        VRuntime.start(el);
     }
 };

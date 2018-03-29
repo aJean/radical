@@ -1,7 +1,8 @@
 import {WebGLRenderer, PerspectiveCamera, Scene, CubeGeometry, MeshLambertMaterial, Mesh, SpotLight, PlaneGeometry, MeshPhongMaterial, DoubleSide, CameraHelper} from 'three';
 import Util from '../core/util';
-import VrControl from '../pano/controls/vr.control';
-import VrEffect from '../vr/effect.vr';
+import VRControl from '../pano/controls/vr.control';
+import VREffect from '../vr/effect.vr';
+import VRManager from '../vr/manager.vr';
 
 /**
  * @file wev vr test
@@ -10,15 +11,17 @@ import VrEffect from '../vr/effect.vr';
 export default abstract class VrRuntime {
     static start(el) {
         const webgl = new WebGLRenderer();
+        const height = Math.max(screen.availHeight, window.innerHeight);
+        const width = window.innerWidth;
+
         webgl.setPixelRatio(window.devicePixelRatio);
-        webgl.setSize(window.innerWidth, window.innerHeight);
-        webgl.setClearColor(0xeeeeee);
+        webgl.setSize(width, height);
         webgl.shadowMap.enabled = true;
 
         document.querySelector(el).appendChild(webgl.domElement);
 
         const scene = new Scene();
-        const camera = new PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new PerspectiveCamera(90, width / height, 0.1, 1000);
 
         const geometry = new CubeGeometry(10, 10, 10);
         const cubematerial = new MeshLambertMaterial({color: 0xef6500, opacity: 1, transparent: true});
@@ -54,9 +57,11 @@ export default abstract class VrRuntime {
 
         scene.add(new CameraHelper(spotLight.shadow.camera));
 
-        const vrControl = new VrControl(camera);
-        const effect = new VrEffect(webgl);
-        effect.setSize(window.innerWidth, window.innerHeight);
+        const vrControl = new VRControl(camera);
+        const effect = new VREffect(webgl);
+        effect.setSize(width, height);
+
+        VRManager.createButton(webgl);
 
         const animate = () => {
             cube.rotation.y += 0.01;

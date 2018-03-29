@@ -56975,6 +56975,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _pano_controls_vr_control__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/controls/vr.control */ "./src/pano/controls/vr.control.ts");
 /* harmony import */ var _vr_effect_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vr/effect.vr */ "./src/vr/effect.vr.ts");
+/* harmony import */ var _vr_manager_vr__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../vr/manager.vr */ "./src/vr/manager.vr.ts");
+
 
 
 
@@ -56986,13 +56988,14 @@ var VrRuntime = /** @class */ (function () {
     }
     VrRuntime.start = function (el) {
         var webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]();
+        var height = Math.max(screen.availHeight, window.innerHeight);
+        var width = window.innerWidth;
         webgl.setPixelRatio(window.devicePixelRatio);
-        webgl.setSize(window.innerWidth, window.innerHeight);
-        webgl.setClearColor(0xeeeeee);
+        webgl.setSize(width, height);
         webgl.shadowMap.enabled = true;
         document.querySelector(el).appendChild(webgl.domElement);
         var scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
-        var camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](90, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](90, width / height, 0.1, 1000);
         var geometry = new three__WEBPACK_IMPORTED_MODULE_0__["CubeGeometry"](10, 10, 10);
         var cubematerial = new three__WEBPACK_IMPORTED_MODULE_0__["MeshLambertMaterial"]({ color: 0xef6500, opacity: 1, transparent: true });
         var cube = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, cubematerial);
@@ -57023,7 +57026,8 @@ var VrRuntime = /** @class */ (function () {
         scene.add(new three__WEBPACK_IMPORTED_MODULE_0__["CameraHelper"](spotLight.shadow.camera));
         var vrControl = new _pano_controls_vr_control__WEBPACK_IMPORTED_MODULE_1__["default"](camera);
         var effect = new _vr_effect_vr__WEBPACK_IMPORTED_MODULE_2__["default"](webgl);
-        effect.setSize(window.innerWidth, window.innerHeight);
+        effect.setSize(width, height);
+        _vr_manager_vr__WEBPACK_IMPORTED_MODULE_3__["default"].createButton(webgl);
         var animate = function () {
             cube.rotation.y += 0.01;
             vrControl.update();
@@ -57397,6 +57401,94 @@ __webpack_require__.r(__webpack_exports__);
     }
 });
 ;
+
+
+/***/ }),
+
+/***/ "./src/vr/manager.vr.ts":
+/*!******************************!*\
+  !*** ./src/vr/manager.vr.ts ***!
+  \******************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+
+/**
+ * @file webvr manager
+ */
+var Manager = /** @class */ (function () {
+    function Manager() {
+    }
+    Manager.createButton = function (webgl) {
+        var _this = this;
+        this.webgl = webgl;
+        if ('getVRDisplays' in navigator) {
+            var button_1 = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<buttom style="display:none;"></button>');
+            this.stylizeElement(button_1);
+            document.body.appendChild(button_1);
+            window.addEventListener('vrdisplayconnect', function (event) { return _this.showEnter(event.display, button_1); }, false);
+            window.addEventListener('vrdisplaydisconnect', function () { return _this.showNotFound(button_1); }, false);
+            window.addEventListener('vrdisplaypresentchange', function (event) {
+                button_1.textContent = event.display.isPresenting ? 'EXIT VR' : 'ENTER VR';
+            }, false);
+            window.addEventListener('vrdisplayactivate', function (event) {
+                event.display.requestPresent([{ source: webgl.domElement }]);
+            }, false);
+            navigator.getVRDisplays()
+                .then(function (displays) { return displays.length > 0 ? _this.showEnter(displays[0], button_1) : _this.showNotFound(button_1); });
+        }
+        else {
+            var message = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<a href="https://webvr.info" style="left:calc(50% - 90px);width:180px;text-decoration:none;">WEBVR NOT SUPPORTED</a>');
+            this.stylizeElement(message);
+            document.body.appendChild(message);
+        }
+    };
+    Manager.showEnter = function (display, button) {
+        button.style.display = '';
+        button.style.cursor = 'pointer';
+        button.style.left = 'calc(50% - 50px)';
+        button.style.width = '100px';
+        button.textContent = 'ENTER VR';
+        button.onmouseenter = function () { button.style.opacity = '1.0'; };
+        button.onmouseleave = function () { button.style.opacity = '0.5'; };
+        button.onclick = function () {
+            display.isPresenting ? display.exitPresent() : display.requestPresent([{ source: renderer.domElement }]);
+        };
+        this.webgl.vr.setDevice(display);
+    };
+    Manager.showNotFound = function (button) {
+        button.style.display = '';
+        button.style.cursor = 'auto';
+        button.style.left = 'calc(50% - 75px)';
+        button.style.width = '150px';
+        button.textContent = 'VR NOT FOUND';
+        button.onmouseenter = null;
+        button.onmouseleave = null;
+        button.onclick = null;
+        this.webgl.vr.setDevice(null);
+    };
+    Manager.stylizeElement = function (element) {
+        _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].styleElement(element, {
+            position: 'absolute',
+            bottom: '20px',
+            padding: '12px 6px',
+            border: '1px solid #fff',
+            borderRadius: '4px',
+            background: 'transparent',
+            color: '#fff',
+            font: 'normal 13px sans-serif',
+            textAlign: 'center',
+            opacity: '0.5',
+            outline: 'none',
+            zIndex: '999'
+        });
+    };
+    return Manager;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (Manager);
 
 
 /***/ }),

@@ -1,128 +1,91 @@
+import Util from '../core/util';
+
 /**
- * @author mrdoob / http://mrdoob.com
- * @author Mugen87 / https://github.com/Mugen87
- *
- * Based on @tojiro's vr-samples-utils.js
+ * @file webvr manager
  */
 
-export default {
-    createButton: function (renderer) {
-        function showEnterVR(display) {
-            button.style.display = '';
+export default abstract class Manager {
+    static webgl: any;
 
-            button.style.cursor = 'pointer';
-            button.style.left = 'calc(50% - 50px)';
-            button.style.width = '100px';
-
-            button.textContent = 'ENTER VR';
-
-            button.onmouseenter = function () { button.style.opacity = '1.0'; };
-            button.onmouseleave = function () { button.style.opacity = '0.5'; };
-
-            button.onclick = function () {
-                display.isPresenting ? display.exitPresent() : display.requestPresent([{ source: renderer.domElement }]);
-            };
-            renderer.vr.setDevice(display);
-        }
-
-        function showVRNotFound() {
-            button.style.display = '';
-
-            button.style.cursor = 'auto';
-            button.style.left = 'calc(50% - 75px)';
-            button.style.width = '150px';
-
-            button.textContent = 'VR NOT FOUND';
-
-            button.onmouseenter = null;
-            button.onmouseleave = null;
-
-            button.onclick = null;
-
-            renderer.vr.setDevice(null);
-        }
-
-        function stylizeElement(element) {
-            element.style.position = 'absolute';
-            element.style.bottom = '20px';
-            element.style.padding = '12px 6px';
-            element.style.border = '1px solid #fff';
-            element.style.borderRadius = '4px';
-            element.style.background = 'transparent';
-            element.style.color = '#fff';
-            element.style.font = 'normal 13px sans-serif';
-            element.style.textAlign = 'center';
-            element.style.opacity = '0.5';
-            element.style.outline = 'none';
-            element.style.zIndex = '999';
-        }
+    static createButton(webgl) {
+        this.webgl = webgl;
 
         if ('getVRDisplays' in navigator) {
-            var button = document.createElement('button');
-            button.style.display = 'none';
+            const button = Util.createElement('<buttom style="display:none;"></button>');
 
-            stylizeElement(button);
+            this.stylizeElement(button);
+            document.body.appendChild(button);            
 
-            window.addEventListener('vrdisplayconnect', function (event: any) {
-                showEnterVR(event.display);
-            }, false);
+            window.addEventListener('vrdisplayconnect', (event: any) => this.showEnter(event.display, button), false);
+            window.addEventListener('vrdisplaydisconnect', () => this.showNotFound(button), false);
 
-            window.addEventListener('vrdisplaydisconnect', function (event) {
-
-                showVRNotFound();
-
-            }, false);
-
-            window.addEventListener('vrdisplaypresentchange', function (event: any) {
+            window.addEventListener('vrdisplaypresentchange', (event: any) => {
                 button.textContent = event.display.isPresenting ? 'EXIT VR' : 'ENTER VR';
             }, false);
 
-            window.addEventListener('vrdisplayactivate', function (event: any) {
-                event.display.requestPresent([{ source: renderer.domElement }]);
+            window.addEventListener('vrdisplayactivate', (event: any) => {
+                event.display.requestPresent([{ source: webgl.domElement }]);
             }, false);
 
             navigator.getVRDisplays()
-                .then(function (displays) {
-                    if (displays.length > 0) {
-                        showEnterVR(displays[0]);
-                    } else {
-                        showVRNotFound();
-                    }
-                });
-            return button;
+                .then(displays => displays.length > 0 ? this.showEnter(displays[0], button) : this.showNotFound(button));
+
         } else {
-            var message = document.createElement('a');
-            message.href = 'https://webvr.info';
-            message.innerHTML = 'WEBVR NOT SUPPORTED';
-
-            message.style.left = 'calc(50% - 90px)';
-            message.style.width = '180px';
-            message.style.textDecoration = 'none';
-
-            stylizeElement(message);
-
-            return message;
+            const message = Util.createElement('<a href="https://webvr.info" style="left:calc(50% - 90px);width:180px;text-decoration:none;">WEBVR NOT SUPPORTED</a>');
+            
+            this.stylizeElement(message);
+            document.body.appendChild(message);
         }
-    },
-
-    // DEPRECATED
-
-    checkAvailability: function () {
-        console.warn('WEBVR.checkAvailability has been deprecated.');
-        return new Promise(function () {});
-    },
-
-    getMessageContainer: function () {
-        console.warn('WEBVR.getMessageContainer has been deprecated.');
-        return document.createElement('div');
-    },
-
-    getButton: function () {
-        console.warn('WEBVR.getButton has been deprecated.');
-        return document.createElement('div');
-    },
-
-    getVRDisplay: function () {
-        console.warn('WEBVR.getVRDisplay has been deprecated.');
     }
-};
+
+    static showEnter(display, button) {
+        button.style.display = '';
+
+        button.style.cursor = 'pointer';
+        button.style.left = 'calc(50% - 50px)';
+        button.style.width = '100px';
+
+        button.textContent = 'ENTER VR';
+
+        button.onmouseenter = function () { button.style.opacity = '1.0'; };
+        button.onmouseleave = function () { button.style.opacity = '0.5'; };
+        button.onclick = function () {
+            display.isPresenting ? display.exitPresent() : display.requestPresent([{source: renderer.domElement}]);
+        };
+        this.webgl.vr.setDevice(display);
+    }
+
+    static showNotFound(button) {
+        button.style.display = '';
+
+        button.style.cursor = 'auto';
+        button.style.left = 'calc(50% - 75px)';
+        button.style.width = '150px';
+
+        button.textContent = 'VR NOT FOUND';
+
+        button.onmouseenter = null;
+        button.onmouseleave = null;
+
+        button.onclick = null;
+
+        this.webgl.vr.setDevice(null);
+    }
+
+    static stylizeElement(element) {
+        Util.styleElement(element, {
+            position: 'absolute',
+            bottom: '20px',
+            padding: '12px 6px',
+            border: '1px solid #fff',
+            borderRadius: '4px',
+            background: 'transparent',
+            color: '#fff',
+            font: 'normal 13px sans-serif',
+            textAlign: 'center',
+            opacity: '0.5',
+            outline: 'none',
+            zIndex: '999'
+        });
+    }
+}
