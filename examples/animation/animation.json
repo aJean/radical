@@ -17,6 +17,6 @@
         }]
     }],
     "animation": {
-        "fly": true
+        "fly": "fly2"
     }
 }

@@ -53467,13 +53467,15 @@ __webpack_require__.r(__webpack_exports__);
 function calc(t, b, c, d) {
     return c * t / d + b;
 }
+var defaultOpts = {
+    special: 'step'
+};
 var AnimationFly = /** @class */ (function () {
-    function AnimationFly(camera) {
+    function AnimationFly(camera, type) {
         this.time = 0;
-        this.type = 'fly';
         this.finished = false;
         this.enable = false;
-        this.path = this.getPath(this.camera = camera);
+        this.path = this.getPath(this.camera = camera, this.type = type);
     }
     /**
      * set camera position when pano first render
@@ -53523,16 +53525,25 @@ var AnimationFly = /** @class */ (function () {
             return camera.updateProjectionMatrix();
         }
     };
-    AnimationFly.prototype.getPath = function (camera) {
-        return [{
-                start: { fov: 160, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
-                end: { fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI },
-                time: 1500
-            }, {
-                start: { fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI },
-                end: { fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI },
-                time: 1500
-            }];
+    AnimationFly.prototype.getPath = function (camera, type) {
+        if (type === void 0) { type = 'fly1'; }
+        var FlyPath = {
+            fly1: [{
+                    start: { fov: 160, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
+                    end: { fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI },
+                    time: 1500
+                }, {
+                    start: { fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI },
+                    end: { fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI },
+                    time: 1500
+                }],
+            fly2: [{
+                    start: { fov: 150, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
+                    'end': { fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI },
+                    time: 4000
+                }]
+        };
+        return FlyPath[type];
     };
     AnimationFly.prototype.isEnd = function () {
         return this.finished;
@@ -53568,7 +53579,7 @@ var Timeline = /** @class */ (function () {
         this.pano = pano;
         // minor planet
         if (opts.fly) {
-            var fly = new _fly_animation__WEBPACK_IMPORTED_MODULE_0__["default"](camera);
+            var fly = new _fly_animation__WEBPACK_IMPORTED_MODULE_0__["default"](camera, opts.fly);
             this.lines.push(fly);
         }
         pano.subscribe('scene-init', this.onTimeInit, this);
@@ -55882,7 +55893,7 @@ var Pano = /** @class */ (function () {
         return this.scene;
     };
     /**
-     * 获取控制器
+     * 获取轨道控制器
      */
     Pano.prototype.getControl = function () {
         return this.orbit;
@@ -56386,13 +56397,14 @@ var Rotate = /** @class */ (function () {
         canvas.addEventListener('touchstart', this.onDisturb);
         canvas.addEventListener('mousedown', this.onDisturb);
         canvas.addEventListener('touchend', this.onRecover);
+        canvas.addEventListener('touchcancel', this.onRecover);
         canvas.addEventListener('mouseup', this.onRecover);
     }
     Rotate.prototype.create = function () {
         var data = this.data;
         var pano = this.pano;
-        // target y set only once
-        this.target = { y: pano.getCamera().position.y };
+        // 使用极角来旋转, camera.position.y 会有问题
+        this.target = { polar: pano.getControl().getPolarAngle() };
         pano.setRotateSpeed(data.speed);
         setTimeout(function () { return pano.setRotate(true); }, data.start);
     };
@@ -56413,11 +56425,12 @@ var Rotate = /** @class */ (function () {
         clearTimeout(this.timeid);
         var data = this.data;
         var pano = this.pano;
-        var camera = pano.getCamera();
+        var orbit = pano.getControl();
         this.timeid = setTimeout(function () {
-            _this.tween = new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"](camera.position).to(_this.target)
-                .effect('linear', data.recover)
-                .start(['y'], pano);
+            _this.tween = new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"]({ polar: orbit.getPolarAngle() }).to(_this.target)
+                .effect('quadEaseOut', data.recover)
+                .start(['polar'], pano)
+                .process(function (oldVal, newVal) { return orbit.rotateUp(oldVal - newVal); });
             pano.setRotate(true);
         }, data.lazy);
     };
@@ -56427,6 +56440,7 @@ var Rotate = /** @class */ (function () {
             canvas.removeEventListener('touchstart', this.onDisturb);
             canvas.removeEventListener('mousedown', this.onDisturb);
             canvas.removeEventListener('touchend', this.onRecover);
+            canvas.removeEventListener('touchcancel', this.onRecover);
             canvas.removeEventListener('mouseup', this.onRecover);
             this.tween.stop();
         }

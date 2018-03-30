@@ -32,16 +32,17 @@ export default class Rotate {
         canvas.addEventListener('touchstart', this.onDisturb);
         canvas.addEventListener('mousedown', this.onDisturb);
         canvas.addEventListener('touchend', this.onRecover);
+        canvas.addEventListener('touchcancel', this.onRecover);
         canvas.addEventListener('mouseup', this.onRecover);
     }
 
     create() {
         const data = this.data;
         const pano = this.pano;
-        // target y set only once
-        this.target = {y: pano.getCamera().position.y};        
+        // 使用极角来旋转, camera.position.y 会有问题
+        this.target = {polar: pano.getControl().getPolarAngle()};        
         pano.setRotateSpeed(data.speed);
-        setTimeout(() => pano.setRotate(true), data.start);
+        setTimeout(() => pano.setRotate(true), data.start);        
     }
 
     /**
@@ -62,12 +63,13 @@ export default class Rotate {
         clearTimeout(this.timeid);
         const data = this.data;
         const pano = this.pano;
-        const camera = pano.getCamera();
+        const orbit = pano.getControl();
 
         this.timeid = setTimeout(() => {
-            this.tween = new Tween(camera.position).to(this.target)
-                .effect('linear', data.recover)
-                .start(['y'], pano);
+            this.tween = new Tween({polar: orbit.getPolarAngle()}).to(this.target)
+                .effect('quadEaseOut', data.recover)
+                .start(['polar'], pano)
+                .process((oldVal, newVal) => orbit.rotateUp(oldVal - newVal));
             pano.setRotate(true);
         }, data.lazy);
     }
@@ -79,6 +81,7 @@ export default class Rotate {
             canvas.removeEventListener('touchstart', this.onDisturb);
             canvas.removeEventListener('mousedown', this.onDisturb);
             canvas.removeEventListener('touchend', this.onRecover);
+            canvas.removeEventListener('touchcancel', this.onRecover);
             canvas.removeEventListener('mouseup', this.onRecover);
             this.tween.stop();
         } catch (e) {}

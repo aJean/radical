@@ -14,7 +14,7 @@ export default abstract class Timeline {
         this.pano = pano;
         // minor planet
         if (opts.fly) {
-            const fly = new AnimationFly(camera);
+            const fly = new AnimationFly(camera, opts.fly);
             this.lines.push(fly);
         }
 

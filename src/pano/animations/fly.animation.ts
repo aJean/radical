@@ -6,16 +6,19 @@ function calc (t, b, c, d) {
     return c * t / d + b; 
 }
 
+const defaultOpts = {
+    special: 'step'
+};
 export default class AnimationFly {
     path: any;
     camera: any;
+    type: string;
     time = 0;
-    type = 'fly';
     finished = false;
     enable = false;
 
-    constructor(camera) {
-        this.path = this.getPath(this.camera = camera);
+    constructor(camera, type) {
+        this.path = this.getPath(this.camera = camera, this.type = type);
     }
 
     /** 
@@ -84,16 +87,25 @@ export default class AnimationFly {
         }
     }
 
-    getPath(camera) {
-        return [{
-            start: {fov: 160, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
-            end: {fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI},
-            time: 1500
-        }, {
-            start: {fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI},
-            end: {fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI},
-            time: 1500
-        }];
+    getPath(camera, type = 'fly1') {
+        const FlyPath = {
+            fly1: [{
+                    start: {fov: 160, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
+                    end: {fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI},
+                    time: 1500
+                }, {
+                    start: {fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI},
+                    end: {fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI},
+                    time: 1500
+                }],
+            fly2: [{
+                start: {fov: 150, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
+                'end': {fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz:  Math.PI},
+                time: 4000
+            }]
+        };
+
+        return FlyPath[type];
     }
 
     isEnd() {

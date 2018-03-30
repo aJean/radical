@@ -299,7 +299,7 @@ export default class Pano {
     }
 
     /**
-     * 获取控制器
+     * 获取轨道控制器
      */
     getControl() {
         return this.orbit;
