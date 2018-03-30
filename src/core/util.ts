@@ -138,8 +138,8 @@ export default {
         const winWidth = window.innerWidth;
         const winHeight = window.innerHeight;
 
-        let width = elem.parentNode.clientWidth || winWidth;
-        let height = elem.parentNode.clientHeight || winHeight;
+        let width = winWidth;
+        let height = winHeight;
 
         if (opts && opts.width) {
             width = /%$/.test(opts.width) ? (parseInt(opts.width) / 100 * winWidth) : parseInt(opts.width);

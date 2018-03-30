@@ -52,8 +52,7 @@ export default class Pano {
         const opts = this.opts;
         const container = opts.el;
         const size = this.size = Util.calcRenderSize(container, opts);
-        const root = this.root = Util.createElement(`<div class="pano-root" style="width:${size.width}px;
-            height:${size.height}px;"></div>`);
+        const root = this.root = Util.createElement(`<div class="pano-root"></div>`);
         const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
@@ -269,11 +268,6 @@ export default class Pano {
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.webgl.setSize(size.width, size.height);
-        // set root element's size
-        Util.styleElement(root, {
-            width: size.width,
-            height: size.height
-        });
     }
 
     /**

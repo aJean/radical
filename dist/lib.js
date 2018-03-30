@@ -53304,8 +53304,8 @@ var composeKey = function (part) { return ('skt1wins' + part); };
     calcRenderSize: function (elem, opts) {
         var winWidth = window.innerWidth;
         var winHeight = window.innerHeight;
-        var width = elem.parentNode.clientWidth || winWidth;
-        var height = elem.parentNode.clientHeight || winHeight;
+        var width = winWidth;
+        var height = winHeight;
         if (opts && opts.width) {
             width = /%$/.test(opts.width) ? (parseInt(opts.width) / 100 * winWidth) : parseInt(opts.width);
         }
@@ -55648,7 +55648,7 @@ var Pano = /** @class */ (function () {
         var opts = this.opts;
         var container = opts.el;
         var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(container, opts);
-        var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].createElement("<div class=\"pano-root\" style=\"width:" + size.width + "px;\n            height:" + size.height + "px;\"></div>");
+        var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].createElement("<div class=\"pano-root\"></div>");
         var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
@@ -55856,11 +55856,6 @@ var Pano = /** @class */ (function () {
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.webgl.setSize(size.width, size.height);
-        // set root element's size
-        _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].styleElement(root, {
-            width: size.width,
-            height: size.height
-        });
     };
     /**
      * 获取相机
