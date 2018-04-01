@@ -39,6 +39,8 @@ export default abstract class Manager {
     }
 
     static showEnter(display, button) {
+        const webgl = this.webgl;
+
         button.style.display = '';
 
         button.style.cursor = 'pointer';
@@ -50,9 +52,15 @@ export default abstract class Manager {
         button.onmouseenter = function () { button.style.opacity = '1.0'; };
         button.onmouseleave = function () { button.style.opacity = '0.5'; };
         button.onclick = function () {
-            display.isPresenting ? display.exitPresent() : display.requestPresent([{source: renderer.domElement}]);
+            if (display.isPresenting) {
+                display.exitPresent();
+                button.innerHTML = 'ENTER VR';
+            } else {
+                display.requestPresent([{source: webgl.domElement}]);
+                button.innerHTML = 'EXIT VR';
+            }
         };
-        this.webgl.vr.setDevice(display);
+        webgl.vr.setDevice(display);
     }
 
     static showNotFound(button) {

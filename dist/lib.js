@@ -57035,13 +57035,14 @@ var VrRuntime = /** @class */ (function () {
         scene.add(new three__WEBPACK_IMPORTED_MODULE_0__["CameraHelper"](spotLight.shadow.camera));
         var vrControl = new _pano_controls_vr_control__WEBPACK_IMPORTED_MODULE_1__["default"](camera);
         var effect = new _vr_effect_vr__WEBPACK_IMPORTED_MODULE_2__["default"](webgl);
-        effect.setSize(width, height);
+        vrControl.standing = true;
+        effect.setSize(width, height, false);
         _vr_manager_vr__WEBPACK_IMPORTED_MODULE_3__["default"].createButton(webgl);
         var animate = function () {
             cube.rotation.y += 0.01;
             vrControl.update();
             effect.render(scene, camera);
-            requestAnimationFrame(animate);
+            effect.requestAnimationFrame(animate);
         };
         animate();
     };
@@ -57456,6 +57457,7 @@ var Manager = /** @class */ (function () {
         }
     };
     Manager.showEnter = function (display, button) {
+        var webgl = this.webgl;
         button.style.display = '';
         button.style.cursor = 'pointer';
         button.style.left = 'calc(50% - 50px)';
@@ -57464,9 +57466,16 @@ var Manager = /** @class */ (function () {
         button.onmouseenter = function () { button.style.opacity = '1.0'; };
         button.onmouseleave = function () { button.style.opacity = '0.5'; };
         button.onclick = function () {
-            display.isPresenting ? display.exitPresent() : display.requestPresent([{ source: renderer.domElement }]);
+            if (display.isPresenting) {
+                display.exitPresent();
+                button.innerHTML = 'ENTER VR';
+            }
+            else {
+                display.requestPresent([{ source: webgl.domElement }]);
+                button.innerHTML = 'EXIT VR';
+            }
         };
-        this.webgl.vr.setDevice(display);
+        webgl.vr.setDevice(display);
     };
     Manager.showNotFound = function (button) {
         button.style.display = '';

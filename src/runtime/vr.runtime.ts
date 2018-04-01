@@ -59,7 +59,8 @@ export default abstract class VrRuntime {
 
         const vrControl = new VRControl(camera);
         const effect = new VREffect(webgl);
-        effect.setSize(width, height);
+        vrControl.standing = true;
+        effect.setSize(width, height, false);
 
         VRManager.createButton(webgl);
 
@@ -68,7 +69,7 @@ export default abstract class VrRuntime {
             vrControl.update();
             effect.render(scene, camera);
             
-            requestAnimationFrame(animate);
+            effect.requestAnimationFrame(animate);
         };
 
         animate();
