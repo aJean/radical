@@ -54863,7 +54863,7 @@ var DomOverlay = /** @class */ (function () {
     }
     DomOverlay.prototype.create = function () {
         var data = this.data;
-        var node = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement("<div id=\"" + data.id + "\" class=\"pano-domoverlay\"><div class=\"pano-domoverlay-title\">" + data.content + "</div><div class=\"pano-domoverlay-icon\"></div></div>");
+        var node = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement("<div id=\"" + data.id + "\" class=\"pano-domoverlay\">" + data.content + "</div>");
         if (data.cls) {
             node.className += " " + data.cls;
         }
