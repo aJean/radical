@@ -17,7 +17,7 @@ export default class DomOverlay implements IPluggableOverlay {
 
     create() {
         const data = this.data;
-        const node = Util.createElement(`<div id="${data.id}" class="pano-domoverlay">${data.content}</div>`);
+        const node = Util.createElement(`<div id="${data.id}" class="pano-domoverlay"><div class="pano-domoverlay-title">${data.content}</div><div class="pano-domoverlay-icon"></div></div>`);
 
         if (data.cls) {
             node.className += ` ${data.cls}`;
