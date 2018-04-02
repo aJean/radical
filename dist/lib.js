@@ -53867,7 +53867,7 @@ function OrbitControl(camera, domElement, pano) {
     this.camera = camera;
     this.domElement = (domElement !== undefined) ? domElement : document;
     // Set to false to disable this control
-    this.enabled = true;
+    this.enabled = false;
     // look at panoram's front
     this.target = new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](0, 0, 1);
     // How far you can dolly in and out ( PerspectiveCamera only )
@@ -56002,10 +56002,12 @@ var Pano = /** @class */ (function () {
         }
     };
     /**
-     * 开场动画结束
+     * 开场动画结束, 控制器需要在这时候开启
      */
     Pano.prototype.noTimeline = function () {
+        // to judgement scene-ready and scene-load which is first
         this.frozen = false;
+        this.orbit.enabled = true;
         this.startGyroControl();
         // entrance animation end, scene become stable
         this.dispatch('scene-ready', this.currentData, this);

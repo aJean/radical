@@ -423,10 +423,12 @@ export default class Pano {
     }
 
     /** 
-     * 开场动画结束
+     * 开场动画结束, 控制器需要在这时候开启
      */
     noTimeline() {
+        // to judgement scene-ready and scene-load which is first
         this.frozen = false;
+        this.orbit.enabled = true;
         this.startGyroControl();
         // entrance animation end, scene become stable
         this.dispatch('scene-ready', this.currentData, this);

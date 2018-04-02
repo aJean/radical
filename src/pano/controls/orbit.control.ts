@@ -11,7 +11,7 @@ function OrbitControl(camera, domElement, pano) {
     this.camera = camera;
     this.domElement = (domElement !== undefined) ? domElement : document;
     // Set to false to disable this control
-    this.enabled = true;
+    this.enabled = false;
     // look at panoram's front
     this.target = new Vector3(0, 0, 1);
     // How far you can dolly in and out ( PerspectiveCamera only )
