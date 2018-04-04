@@ -12,8 +12,8 @@ import VRuntime from './runtime/vr.runtime';
 
 polyfill();
 export default {
-    startPano(source, el, events?) {
-        PanoRuntime.start(source, el, events);
+    startPano(url, el, events?) {
+        PanoRuntime.start(url, el, events);
     },
 
     getPano(ref: string) {
@@ -24,7 +24,7 @@ export default {
         return PanoRuntime.releaseInstance(ref);
     },
 
-    startVR(el) {
-        VRuntime.start(el);
+    startVR(url, el) {
+        VRuntime.start(url, el);
     }
 };

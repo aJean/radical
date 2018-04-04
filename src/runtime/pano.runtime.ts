@@ -79,17 +79,15 @@ abstract class Runtime {
         }
 
         const ref = el.getAttribute('ref') || `pano_${this.uid++}`;
-        const opts = {el, ...source['pano']};
         el.setAttribute('ref', ref);
 
-        return this.instanceMap[ref] = new Pano(opts, source);
+        return this.instanceMap[ref] = new Pano(el, source);
     }
 
     static async start(url, el, events?) {
         const source = typeof url === 'string' ? await myLoader.fetchUrl(url) : url;
-        const data = source && source['sceneGroup'];
 
-        if (!data) {
+        if (!(source && source['sceneGroup'])) {
             return Log.output('load source error');
         }
 
@@ -133,8 +131,6 @@ abstract class Runtime {
             throw new Error('build error');
         }
     }
-
-    static async start3d() {}
 };
 
 const pastLoad = window.onload;

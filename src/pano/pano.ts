@@ -14,7 +14,6 @@ import Util from '../core/util';
  */
 
 const defaultOpts = {
-    el: undefined,
     gyro: false,
     fov: 100,
     width: null,
@@ -39,11 +38,10 @@ export default class Pano {
     event = new EventEmitter();
     pluginList = [];
 
-    constructor(opts, source) {
+    constructor(el, source) {
         const data = this.currentData = Util.findScene(source);
-        opts = Object.assign({}, defaultOpts, opts);
 
-        this.opts = opts;
+        this.opts = Object.assign({el}, defaultOpts, source['pano']);
         this.source = source;
         this.initEnv(data);
     }
