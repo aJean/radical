@@ -54784,7 +54784,7 @@ function loadCanvas(url, timeout) {
     return new Promise(function (resolve, reject) {
         var texture = new three__WEBPACK_IMPORTED_MODULE_0__["CubeTexture"]();
         var image = new Image();
-        image.setAttribute('crossOrigin', 'anonymous');
+        image.crossOrigin = "anonymous";
         var count = 0;
         image.onload = function () {
             var canvas;
