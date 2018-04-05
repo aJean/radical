@@ -56935,7 +56935,6 @@ var Runtime = /** @class */ (function () {
 var pastLoad = window.onload;
 window.onload = function () {
     pastLoad && pastLoad.call(this);
-    var uid = 0;
     var nodeList = document.querySelectorAll('pano');
     for (var i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
@@ -57013,12 +57012,13 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
  * @file wev vr runtime
  */
 var myLoader = new _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_0__["default"]();
-var VrRuntime = /** @class */ (function () {
-    function VrRuntime() {
+var vrList = [];
+var Runtime = /** @class */ (function () {
+    function Runtime() {
     }
-    VrRuntime.start = function (url, el, events) {
+    Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
-            var source, _a, pano, name_1;
+            var source, _a, polyfill, pano, name_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -57039,6 +57039,9 @@ var VrRuntime = /** @class */ (function () {
                         if (!(source && source['sceneGroup'])) {
                             return [2 /*return*/, _core_log__WEBPACK_IMPORTED_MODULE_1__["default"].output('load source error')];
                         }
+                        if (window['WebVRPolyfill']) {
+                            polyfill = new window['WebVRPolyfill']();
+                        }
                         try {
                             pano = new _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__["default"](el, source).deco();
                             // 用户订阅事件
@@ -57049,6 +57052,7 @@ var VrRuntime = /** @class */ (function () {
                             }
                             pano.run();
                             _vr_helper_vr__WEBPACK_IMPORTED_MODULE_3__["default"].createButton(pano.webgl);
+                            vrList.push(pano);
                         }
                         catch (e) {
                             events && events.nosupport && events.nosupport();
@@ -57059,9 +57063,28 @@ var VrRuntime = /** @class */ (function () {
             });
         });
     };
-    return VrRuntime;
+    Runtime.getInstance = function (index) {
+        return vrList[index];
+    };
+    Runtime.releaseInstance = function (index) {
+        var pano = vrList[index];
+        pano && pano.dispose();
+    };
+    return Runtime;
 }());
-/* harmony default export */ __webpack_exports__["default"] = (VrRuntime);
+/* harmony default export */ __webpack_exports__["default"] = (Runtime);
+var pastLoad = window.onload;
+window.onload = function () {
+    pastLoad && pastLoad.call(this);
+    var nodeList = document.querySelectorAll('vrpano');
+    for (var i = 0; i < nodeList.length; i++) {
+        var node = nodeList[i];
+        var auto = node.getAttribute('auto');
+        if (auto) {
+            Runtime.start(node.getAttribute('source'), node);
+        }
+    }
+};
 
 
 /***/ }),

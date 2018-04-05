@@ -8,8 +8,10 @@ import Helper from '../vr/helper.vr';
  * @file wev vr runtime
  */
 
-const myLoader = new ResourceLoader(); 
-export default abstract class VrRuntime {
+const myLoader = new ResourceLoader();
+const vrList = [];
+
+export default abstract class Runtime {
     static async start(url, el, events?) {
         const source = typeof url === 'string' ? await myLoader.fetchUrl(url) : url;
         el = (typeof el == 'string') ? document.querySelector(el) : el;
@@ -20,6 +22,10 @@ export default abstract class VrRuntime {
 
         if (!(source && source['sceneGroup'])) {
             return Log.output('load source error');
+        }
+
+        if (window['WebVRPolyfill']) {
+            const polyfill = new window['WebVRPolyfill']();
         }
 
         try {
@@ -34,9 +40,35 @@ export default abstract class VrRuntime {
 
             pano.run();
             Helper.createButton(pano.webgl);
+            vrList.push(pano);
         } catch (e) {
             events && events.nosupport && events.nosupport();
             throw new Error('build error');
         }
     }
+
+    static getInstance(index) {
+        return vrList[index];
+    }
+
+    static releaseInstance(index) {
+        const pano = vrList[index];
+        pano && pano.dispose();
+    }
 }
+
+const pastLoad = window.onload;
+window.onload = function() {
+    pastLoad && pastLoad.call(this);
+
+    const nodeList = document.querySelectorAll('vrpano');
+
+    for (let i = 0; i < nodeList.length; i++) {
+        const node = nodeList[i];
+        const auto = node.getAttribute('auto');
+
+        if (auto) {
+            Runtime.start(node.getAttribute('source'), node);
+        }
+    }  
+};

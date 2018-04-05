@@ -12,6 +12,7 @@ import Log from '../core/log';
  */
 
 const myLoader = new ResourceLoader();
+
 abstract class EnvQueue {
     static list = [];
 
@@ -137,7 +138,6 @@ const pastLoad = window.onload;
 window.onload = function() {
     pastLoad && pastLoad.call(this);
 
-    let uid = 0;
     const nodeList = document.querySelectorAll('pano');
 
     for (let i = 0; i < nodeList.length; i++) {
