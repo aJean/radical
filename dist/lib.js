@@ -53380,9 +53380,9 @@ Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_4__["default"])();
         return _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].getInstance(ref);
     },
     disposePano: function (ref) {
-        return _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].releaseInstance(ref);
+        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].releaseInstance(ref);
     },
-    startVR: function (url, el) {
+    startVR: function (url, el, events) {
         _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].start(url, el);
     }
 });
@@ -56966,13 +56966,10 @@ window.addEventListener('resize', onEnvResize);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
-/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
-/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
-/* harmony import */ var _pano_controls_vr_control__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/controls/vr.control */ "./src/pano/controls/vr.control.ts");
-/* harmony import */ var _vr_effect_vr__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../vr/effect.vr */ "./src/vr/effect.vr.ts");
-/* harmony import */ var _vr_manager_vr__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../vr/manager.vr */ "./src/vr/manager.vr.ts");
+/* harmony import */ var _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+/* harmony import */ var _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vr/pano.vr */ "./src/vr/pano.vr.ts");
+/* harmony import */ var _vr_helper_vr__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../vr/helper.vr */ "./src/vr/helper.vr.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -57012,13 +57009,10 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
 
 
 
-
-
-
 /**
- * @file wev vr test
+ * @file wev vr runtime
  */
-var myLoader = new _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_1__["default"]();
+var myLoader = new _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_0__["default"]();
 var VrRuntime = /** @class */ (function () {
     function VrRuntime() {
     }
@@ -57043,10 +57037,10 @@ var VrRuntime = /** @class */ (function () {
                             el = document.body;
                         }
                         if (!(source && source['sceneGroup'])) {
-                            return [2 /*return*/, _core_log__WEBPACK_IMPORTED_MODULE_3__["default"].output('load source error')];
+                            return [2 /*return*/, _core_log__WEBPACK_IMPORTED_MODULE_1__["default"].output('load source error')];
                         }
                         try {
-                            pano = new _pano_pano__WEBPACK_IMPORTED_MODULE_2__["default"](el, source);
+                            pano = new _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__["default"](el, source).deco();
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
@@ -57054,6 +57048,7 @@ var VrRuntime = /** @class */ (function () {
                                 }
                             }
                             pano.run();
+                            _vr_helper_vr__WEBPACK_IMPORTED_MODULE_3__["default"].createButton(pano.webgl);
                         }
                         catch (e) {
                             events && events.nosupport && events.nosupport();
@@ -57063,57 +57058,6 @@ var VrRuntime = /** @class */ (function () {
                 }
             });
         });
-    };
-    VrRuntime.test = function (el) {
-        var webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]();
-        var height = Math.max(screen.availHeight, window.innerHeight);
-        var width = window.innerWidth;
-        webgl.setPixelRatio(window.devicePixelRatio);
-        webgl.setSize(width, height);
-        webgl.shadowMap.enabled = true;
-        document.querySelector(el).appendChild(webgl.domElement);
-        var scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
-        var camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](90, width / height, 0.1, 1000);
-        var geometry = new three__WEBPACK_IMPORTED_MODULE_0__["CubeGeometry"](10, 10, 10);
-        var cubematerial = new three__WEBPACK_IMPORTED_MODULE_0__["MeshLambertMaterial"]({ color: 0xef6500, opacity: 1, transparent: true });
-        var cube = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, cubematerial);
-        cube.position.set(0, 10, -40);
-        cube.rotation.set(Math.PI / 6, Math.PI / 4, 0);
-        cube.castShadow = true;
-        scene.add(cube);
-        var plane = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](50, 50), new three__WEBPACK_IMPORTED_MODULE_0__["MeshPhongMaterial"]({
-            color: 0xff0000,
-            shininess: 150,
-            specular: 0x222222,
-            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
-        }));
-        plane.position.set(0, 0, -80);
-        plane.rotateX(Math.PI / 1.5);
-        plane.receiveShadow = true;
-        scene.add(plane);
-        var spotLight = new three__WEBPACK_IMPORTED_MODULE_0__["SpotLight"](0xffffff);
-        spotLight.name = 'Spot Light';
-        spotLight.angle = Math.PI / 5;
-        spotLight.penumbra = 0.3;
-        spotLight.position.set(10, 20, 10);
-        spotLight.castShadow = true;
-        spotLight.shadow.mapSize.width = 1024;
-        spotLight.shadow.mapSize.height = 1024;
-        spotLight.target = cube;
-        scene.add(spotLight);
-        scene.add(new three__WEBPACK_IMPORTED_MODULE_0__["CameraHelper"](spotLight.shadow.camera));
-        var vrControl = new _pano_controls_vr_control__WEBPACK_IMPORTED_MODULE_4__["default"](camera);
-        var effect = new _vr_effect_vr__WEBPACK_IMPORTED_MODULE_5__["default"](webgl);
-        vrControl.standing = true;
-        effect.setSize(width, height, false);
-        _vr_manager_vr__WEBPACK_IMPORTED_MODULE_6__["default"].createButton(webgl);
-        var animate = function () {
-            cube.rotation.y += 0.01;
-            vrControl.update();
-            effect.render(scene, camera);
-            effect.requestAnimationFrame(animate);
-        };
-        animate();
     };
     return VrRuntime;
 }());
@@ -57484,10 +57428,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/vr/manager.vr.ts":
-/*!******************************!*\
-  !*** ./src/vr/manager.vr.ts ***!
-  \******************************/
+/***/ "./src/vr/helper.vr.ts":
+/*!*****************************!*\
+  !*** ./src/vr/helper.vr.ts ***!
+  \*****************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -57498,10 +57442,10 @@ __webpack_require__.r(__webpack_exports__);
 /**
  * @file webvr manager
  */
-var Manager = /** @class */ (function () {
-    function Manager() {
+var Helper = /** @class */ (function () {
+    function Helper() {
     }
-    Manager.createButton = function (webgl) {
+    Helper.createButton = function (webgl) {
         var _this = this;
         this.webgl = webgl;
         if ('getVRDisplays' in navigator) {
@@ -57525,7 +57469,7 @@ var Manager = /** @class */ (function () {
             document.body.appendChild(message);
         }
     };
-    Manager.showEnter = function (display, button) {
+    Helper.showEnter = function (display, button) {
         var webgl = this.webgl;
         button.style.display = '';
         button.style.cursor = 'pointer';
@@ -57546,7 +57490,7 @@ var Manager = /** @class */ (function () {
         };
         webgl.vr.setDevice(display);
     };
-    Manager.showNotFound = function (button) {
+    Helper.showNotFound = function (button) {
         button.style.display = '';
         button.style.cursor = 'auto';
         button.style.left = 'calc(50% - 75px)';
@@ -57557,7 +57501,7 @@ var Manager = /** @class */ (function () {
         button.onclick = null;
         this.webgl.vr.setDevice(null);
     };
-    Manager.stylizeElement = function (element) {
+    Helper.stylizeElement = function (element) {
         _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].styleElement(element, {
             position: 'absolute',
             bottom: '20px',
@@ -57573,9 +57517,52 @@ var Manager = /** @class */ (function () {
             zIndex: '999'
         });
     };
-    return Manager;
+    return Helper;
 }());
-/* harmony default export */ __webpack_exports__["default"] = (Manager);
+/* harmony default export */ __webpack_exports__["default"] = (Helper);
+
+
+/***/ }),
+
+/***/ "./src/vr/pano.vr.ts":
+/*!***************************!*\
+  !*** ./src/vr/pano.vr.ts ***!
+  \***************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
+/* harmony import */ var _pano_controls_vr_control__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/controls/vr.control */ "./src/pano/controls/vr.control.ts");
+/* harmony import */ var _effect_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./effect.vr */ "./src/vr/effect.vr.ts");
+
+
+
+/**
+ * @file vr pano decorator
+ */
+var VPano = /** @class */ (function () {
+    function VPano(el, source) {
+        this.type = 'vr-pano';
+        this.pano = new _pano_pano__WEBPACK_IMPORTED_MODULE_0__["default"](el, source);
+    }
+    VPano.prototype.deco = function () {
+        var pano = this.pano;
+        var effect = new _effect_vr__WEBPACK_IMPORTED_MODULE_2__["default"](pano.webgl);
+        pano.orbit = new _pano_controls_vr_control__WEBPACK_IMPORTED_MODULE_1__["default"](pano.camera);
+        pano.animate = function () {
+            this.updateControl();
+            this.dispatch('render-process', this.currentData, this);
+            effect.render(this.scene, this.camera);
+            effect.requestAnimationFrame(this.animate.bind(this));
+        };
+        delete pano.gyro;
+        return pano;
+    };
+    return VPano;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (VPano);
 
 
 /***/ }),

@@ -4,7 +4,7 @@ import Util from '../core/util';
  * @file webvr manager
  */
 
-export default abstract class Manager {
+export default abstract class Helper {
     static webgl: any;
 
     static createButton(webgl) {
