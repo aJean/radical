@@ -9,9 +9,11 @@ import Helper from '../vr/helper.vr';
  */
 
 const myLoader = new ResourceLoader();
-const vrList = [];
 
 export default abstract class Runtime {
+    static uid = 0;
+    static instanceMap = {};
+
     static async start(url, el, events?) {
         const source = typeof url === 'string' ? await myLoader.fetchUrl(url) : url;
         el = (typeof el == 'string') ? document.querySelector(el) : el;
@@ -29,7 +31,9 @@ export default abstract class Runtime {
         }
 
         try {
-            const pano = new VPano(el, source).deco();
+            const ref = el.getAttribute('ref') || `vpano_${this.uid++}`;
+            const pano = this.instanceMap[ref] = new VPano(el, source).deco();
+            el.setAttribute('ref', ref);            
             
             // 用户订阅事件
             if (events) {
@@ -40,19 +44,18 @@ export default abstract class Runtime {
 
             pano.run();
             Helper.createButton(pano.webgl);
-            vrList.push(pano);
         } catch (e) {
             events && events.nosupport && events.nosupport();
             throw new Error('build error');
         }
     }
 
-    static getInstance(index) {
-        return vrList[index];
+    static getInstance(ref) {
+        return this.instanceMap[ref];
     }
 
-    static releaseInstance(index) {
-        const pano = vrList[index];
+    static releaseInstance(ref) {
+        const pano = this.instanceMap[ref];
         pano && pano.dispose();
     }
 }

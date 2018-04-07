@@ -57012,13 +57012,12 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
  * @file wev vr runtime
  */
 var myLoader = new _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_0__["default"]();
-var vrList = [];
 var Runtime = /** @class */ (function () {
     function Runtime() {
     }
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
-            var source, _a, polyfill, pano, name_1;
+            var source, _a, polyfill, ref, pano, name_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -57043,7 +57042,9 @@ var Runtime = /** @class */ (function () {
                             polyfill = new window['WebVRPolyfill']();
                         }
                         try {
-                            pano = new _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__["default"](el, source).deco();
+                            ref = el.getAttribute('ref') || "vpano_" + this.uid++;
+                            pano = this.instanceMap[ref] = new _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__["default"](el, source).deco();
+                            el.setAttribute('ref', ref);
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
@@ -57052,7 +57053,6 @@ var Runtime = /** @class */ (function () {
                             }
                             pano.run();
                             _vr_helper_vr__WEBPACK_IMPORTED_MODULE_3__["default"].createButton(pano.webgl);
-                            vrList.push(pano);
                         }
                         catch (e) {
                             events && events.nosupport && events.nosupport();
@@ -57063,13 +57063,15 @@ var Runtime = /** @class */ (function () {
             });
         });
     };
-    Runtime.getInstance = function (index) {
-        return vrList[index];
+    Runtime.getInstance = function (ref) {
+        return this.instanceMap[ref];
     };
-    Runtime.releaseInstance = function (index) {
-        var pano = vrList[index];
+    Runtime.releaseInstance = function (ref) {
+        var pano = this.instanceMap[ref];
         pano && pano.dispose();
     };
+    Runtime.uid = 0;
+    Runtime.instanceMap = {};
     return Runtime;
 }());
 /* harmony default export */ __webpack_exports__["default"] = (Runtime);
