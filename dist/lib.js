@@ -54873,7 +54873,11 @@ var DomOverlay = /** @class */ (function () {
         var elem = this.elem;
         var data = this.data;
         if (x !== data.x || y !== data.y) {
-            elem.style.cssText = "display:block;left:" + x + "px;top:" + y + "px";
+            _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].styleElement(elem, {
+                display: 'block',
+                top: y,
+                left: x
+            });
         }
         data.x = x;
         data.y = y;

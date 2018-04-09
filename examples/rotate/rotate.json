@@ -12,9 +12,19 @@
         "name": "罗浮宫",
         "bxlPath": "../assets/scene6/scene6.bxl",
         "imgPath": "../assets/scene6/scene6.jpg",
-        "thumbPath": "../assets/scene6/thumb6.jpg"
+        "thumbPath": "../assets/scene6/thumb6.jpg",
+        "overlays": [{
+            "id": "test",
+            "type": "dom",
+            "actionType": "custom",
+            "content": "检测是否抖动",
+            "location": {
+                "lng": 0,
+                "lat": 0
+            }
+        }]
     }],
     "animation": {
-        "fly": "fly1"
+        "fly": false
     }
 }
