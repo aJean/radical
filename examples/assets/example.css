@@ -66,6 +66,10 @@ body {
     margin: 20px 0;
 }
 
+.overlay-panel .delete {
+    color: red;
+}
+
 .pano-domoverlay {
     position: absolute;
     height: 20px;

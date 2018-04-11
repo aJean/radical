@@ -11,6 +11,7 @@
     <body>
         <div id="test" ref="mytest"></div>
         <div class="overlay-panel">
+            <p><button class="delete">删除 overlay</button></p>
             <p><button class="add">添加 overlay</button></p>
             <div class="show-point">
                 <p>点击 lng: <span></span></p>
@@ -26,25 +27,32 @@
         <script src="../../dist/lib.js"></script>
         <script>
             let pos;
+            let selected;
             bxl.startPano('./add.json', '#test', {
                 'pano-click': function (data) {
                     pos = data;
                     $('.show-point span').first().html(data.lng.toFixed(2));
                     $('.show-point span').last().html(data.lat.toFixed(2));
+                },
+                'overlay-click': function (data) {
+                    selected = data;
                 }
             });
 
             $('.overlay-panel .add').on('click', function () {
                 const pano = bxl.getPano('mytest');
                 pos && pano.addOverlay({
-                    'overlays': [{
-                        type: 'dom',
-                        actionType: 'custom',
-                        content: '<strong>动态热点</strong>',
-                        location: pos
-                    }]
+                    actionType: 'custom',
+                    content: '<strong>动态热点</strong>',
+                    location: pos
                 });
              });
+
+            $('.overlay-panel .delete').on('click', function () {
+                const pano = bxl.getPano('mytest');
+                pano.removeOverlay(selected);
+                selected = null;
+            });
 
              $('.overlay-panel .lookat').on('click', function () {
                 const pano = bxl.getPano('mytest');

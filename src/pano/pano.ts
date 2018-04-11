@@ -353,10 +353,17 @@ export default class Pano {
     }
 
     /**
-     * 添加热点覆盖物, 目前支持 dom
+     * 添加热点覆盖物, 目前仅支持 dom
      */
     addOverlay(data) {
-        this.overlays.create(data);
+        this.overlays.create([{...data, type: 'dom'}]);
+    }
+
+    /**
+     * 删除热点覆盖物, 目前仅支持 dom
+     */
+    removeOverlay(data) {
+        this.overlays.delete(data);
     }
 
     /**

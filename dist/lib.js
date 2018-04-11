@@ -52748,6 +52748,31 @@ function CanvasRenderer() {
 
 /***/ }),
 
+/***/ "./src/core/detect.ts":
+/*!****************************!*\
+  !*** ./src/core/detect.ts ***!
+  \****************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/**
+ * @file data detect
+ */
+var Detect = /** @class */ (function () {
+    function Detect() {
+    }
+    Detect.connect = function (props, pano) {
+        console.log(props);
+    };
+    return Detect;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (Detect);
+
+
+/***/ }),
+
 /***/ "./src/core/event.ts":
 /*!***************************!*\
   !*** ./src/core/event.ts ***!
@@ -53358,9 +53383,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../styles/ui.style.less */ "./styles/ui.style.less");
 /* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _core_polyfill__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./core/polyfill */ "./src/core/polyfill.ts");
-/* harmony import */ var _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./runtime/pano.runtime */ "./src/runtime/pano.runtime.ts");
-/* harmony import */ var _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
+/* harmony import */ var _core_detect__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./core/detect */ "./src/core/detect.ts");
+/* harmony import */ var _core_polyfill__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./core/polyfill */ "./src/core/polyfill.ts");
+/* harmony import */ var _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./runtime/pano.runtime */ "./src/runtime/pano.runtime.ts");
+/* harmony import */ var _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
+
 
 
 
@@ -53371,19 +53398,20 @@ __webpack_require__.r(__webpack_exports__);
 /**
  * @file bxl lib
  */
-Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_4__["default"])();
+Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_5__["default"])();
 /* harmony default export */ __webpack_exports__["default"] = ({
+    detect: _core_detect__WEBPACK_IMPORTED_MODULE_4__["default"],
     startPano: function (url, el, events) {
-        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].start(url, el, events);
+        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].start(url, el, events);
     },
     getPano: function (ref) {
-        return _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].getInstance(ref);
+        return _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].getInstance(ref);
     },
     disposePano: function (ref) {
-        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].releaseInstance(ref);
+        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].releaseInstance(ref);
     },
     startVR: function (url, el, events) {
-        _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].start(url, el);
+        _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_7__["default"].start(url, el);
     }
 });
 
@@ -55095,6 +55123,8 @@ __webpack_require__.r(__webpack_exports__);
 
 /**
  * @file 管理所有场景下的覆盖物
+ * list 保存点击覆盖物时进入场景数据
+ * overlays 由 pano scene-attach 事件管理
  * @TODO: cid 缓存当前场景 overlays, 但是切换场景时还是 remove - create 机制
  */
 var AnimationOpts = {
@@ -55133,31 +55163,32 @@ var Overlays = /** @class */ (function () {
         });
         pano.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
     }
-    Overlays.prototype.init = function (data) {
-        // scene cache id
-        if (!data.id) {
-            data.id = 'pano' + Date.now();
+    Overlays.prototype.init = function (scene) {
+        if (!scene.overlays) {
+            return;
         }
-        this.cid = data.id;
-        this.create(data);
+        if (!scene.id) {
+            scene.id = 'pano' + Date.now();
+        }
+        this.cid = scene.id;
+        this.create(scene.overlays);
     };
-    Overlays.prototype.create = function (data) {
+    Overlays.prototype.create = function (list) {
         var _this = this;
         var cache = this.getCurrent(this.cid);
-        var props = data.overlays || [];
-        props.forEach(function (prop) {
-            switch (prop.type) {
+        list.forEach(function (data) {
+            switch (data.type) {
                 case 'dom':
-                    _this.createDomOverlay(prop, cache);
+                    _this.createDomOverlay(data, cache);
                     break;
                 case 'mesh':
-                    _this.createMeshOverlay(prop, cache);
+                    _this.createMeshOverlay(data, cache);
                     break;
                 case 'animation':
-                    _this.createAnimationOverlay(prop, cache);
+                    _this.createAnimationOverlay(data, cache);
                     break;
                 case 'video':
-                    _this.createVideoOverlay(prop, cache);
+                    _this.createVideoOverlay(data, cache);
                     break;
             }
         });
@@ -55257,7 +55288,7 @@ var Overlays = /** @class */ (function () {
     };
     /**
      * 获取当前的缓存对象
-     * @param {any} id 场景id
+     * @param {string} id 场景id
      */
     Overlays.prototype.getCurrent = function (id) {
         var data = this.maps[id];
@@ -55332,6 +55363,20 @@ var Overlays = /** @class */ (function () {
         }
     };
     /**
+     * 删除特定的 dom overlay
+     * @param {Object} data
+     */
+    Overlays.prototype.delete = function (data) {
+        var pano = this.pano;
+        var cache = this.getCurrent(this.cid);
+        cache.domGroup.forEach(function (item, i) {
+            if (item == data) {
+                cache.domGroup.splice(i, 1);
+                pano.removeDomObject(item.elem);
+            }
+        });
+    };
+    /**
      * 删除当前场景下的所有 overlays
      */
     Overlays.prototype.removeOverlays = function () {
@@ -55371,7 +55416,6 @@ var Overlays = /** @class */ (function () {
     };
     /**
      * 展示 overlays
-     * @todo 加入缓存机制, 这个方法才有意义, 当前是 remove + create
      */
     Overlays.prototype.showOverlays = function (data) {
         if (data) {
@@ -55582,6 +55626,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_event__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/event */ "./src/core/event.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+var __assign = (undefined && undefined.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -55943,10 +55995,16 @@ var Pano = /** @class */ (function () {
         this.root.removeChild(obj);
     };
     /**
-     * 添加热点覆盖物, 目前支持 dom
+     * 添加热点覆盖物, 目前仅支持 dom
      */
     Pano.prototype.addOverlay = function (data) {
-        this.overlays.create(data);
+        this.overlays.create([__assign({}, data, { type: 'dom' })]);
+    };
+    /**
+     * 删除热点覆盖物, 目前仅支持 dom
+     */
+    Pano.prototype.removeOverlay = function (data) {
+        this.overlays.delete(data);
     };
     /**
      * 为 overlays 补充场景数据

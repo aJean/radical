@@ -12,7 +12,7 @@
         <div id="test"></div>
         <script src="../../dist/lib.js"></script>
         <script>
-            bxl.startPano({
+            const json = {
                 "title": "test bxl transfer",
                 "cretPath": "../assets/cret.txt",
                 "info": {
@@ -36,7 +36,13 @@
                         }
                     }]
                 }]
-            }, '#test');
+            };
+            console.log(bxl)
+
+            bxl.startPano(json, '#test', {
+                'scene-create': function (pano) {
+                }
+            });
         </script>
     </body>
 </html>

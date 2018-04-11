@@ -10,6 +10,8 @@ import Log from '../../core/log';
 
 /**
  * @file 管理所有场景下的覆盖物
+ * list 保存点击覆盖物时进入场景数据
+ * overlays 由 pano scene-attach 事件管理
  * @TODO: cid 缓存当前场景 overlays, 但是切换场景时还是 remove - create 机制
  */
 
@@ -56,33 +58,35 @@ export default class Overlays {
         pano.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
     }
 
-    init(data) {
-        // scene cache id
-        if (!data.id) {
-            data.id = 'pano' + Date.now();
+    init(scene) {
+        if (!scene.overlays) {
+            return;
         }
 
-        this.cid = data.id;
-        this.create(data);
+        if (!scene.id) {
+            scene.id = 'pano' + Date.now();
+        }
+
+        this.cid = scene.id;
+        this.create(scene.overlays);
     }
 
-    create(data) {
+    create(list) {
         const cache = this.getCurrent(this.cid);
-        const props = data.overlays || [];
 
-        props.forEach(prop => {
-            switch (prop.type) {
+        list.forEach(data => {
+            switch (data.type) {
                 case 'dom':
-                    this.createDomOverlay(prop, cache);
+                    this.createDomOverlay(data, cache);
                     break;
                 case 'mesh':
-                    this.createMeshOverlay(prop, cache);
+                    this.createMeshOverlay(data, cache);
                     break;
                 case 'animation':
-                    this.createAnimationOverlay(prop, cache);
+                    this.createAnimationOverlay(data, cache);
                     break;
                 case 'video':
-                    this.createVideoOverlay(prop, cache);
+                    this.createVideoOverlay(data, cache);
                     break;
             }
         });
@@ -195,7 +199,7 @@ export default class Overlays {
 
     /**
      * 获取当前的缓存对象
-     * @param {any} id 场景id
+     * @param {string} id 场景id
      */
     getCurrent(id) {
         const data = this.maps[id];
@@ -275,6 +279,22 @@ export default class Overlays {
     }
 
     /**
+     * 删除特定的 dom overlay
+     * @param {Object} data 
+     */
+    delete(data) {
+        const pano = this.pano;
+        const cache = this.getCurrent(this.cid);
+
+        cache.domGroup.forEach((item, i) => {
+            if (item == data) {
+                cache.domGroup.splice(i, 1);
+                pano.removeDomObject(item.elem);
+            }
+        });
+    }
+
+    /**
      * 删除当前场景下的所有 overlays
      */
     removeOverlays() {
@@ -320,7 +340,6 @@ export default class Overlays {
 
     /**
      * 展示 overlays
-     * @todo 加入缓存机制, 这个方法才有意义, 当前是 remove + create
      */
     showOverlays(data) {
         if (data) {
