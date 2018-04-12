@@ -25,6 +25,6 @@
         }]
     }],
     "animation": {
-        "fly": false
+        "fly": "fly1"
     }
 }

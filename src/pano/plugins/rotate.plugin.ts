@@ -24,16 +24,18 @@ export default class Rotate {
         this.onDisturb = this.onDisturb.bind(this);
         this.onRecover = this.onRecover.bind(this);
 
-        const canvas = pano.getCanvas();
-        pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', this.create, this);
+        pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', () => {
+            this.create();
+
+            const canvas = pano.getCanvas();
+            canvas.addEventListener('touchstart', this.onDisturb);
+            canvas.addEventListener('mousedown', this.onDisturb);
+            canvas.addEventListener('touchend', this.onRecover);
+            canvas.addEventListener('mouseup', this.onRecover);
+        });
+
         pano.subscribe('scene-attachstart', () => pano.setRotate(false));
         pano.subscribe('scene-attach', () => pano.setRotate(true));
-   
-        canvas.addEventListener('touchstart', this.onDisturb);
-        canvas.addEventListener('mousedown', this.onDisturb);
-        canvas.addEventListener('touchend', this.onRecover);
-        canvas.addEventListener('touchcancel', this.onRecover);
-        canvas.addEventListener('mouseup', this.onRecover);
     }
 
     create() {
@@ -81,7 +83,6 @@ export default class Rotate {
             canvas.removeEventListener('touchstart', this.onDisturb);
             canvas.removeEventListener('mousedown', this.onDisturb);
             canvas.removeEventListener('touchend', this.onRecover);
-            canvas.removeEventListener('touchcancel', this.onRecover);
             canvas.removeEventListener('mouseup', this.onRecover);
             this.tween.stop();
         } catch (e) {}

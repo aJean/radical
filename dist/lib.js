@@ -56448,19 +56448,21 @@ var defaultOpts = {
 };
 var Rotate = /** @class */ (function () {
     function Rotate(pano, data) {
+        var _this = this;
         this.data = Object.assign({}, defaultOpts, data);
         this.pano = pano;
         this.onDisturb = this.onDisturb.bind(this);
         this.onRecover = this.onRecover.bind(this);
-        var canvas = pano.getCanvas();
-        pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', this.create, this);
+        pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', function () {
+            _this.create();
+            var canvas = pano.getCanvas();
+            canvas.addEventListener('touchstart', _this.onDisturb);
+            canvas.addEventListener('mousedown', _this.onDisturb);
+            canvas.addEventListener('touchend', _this.onRecover);
+            canvas.addEventListener('mouseup', _this.onRecover);
+        });
         pano.subscribe('scene-attachstart', function () { return pano.setRotate(false); });
         pano.subscribe('scene-attach', function () { return pano.setRotate(true); });
-        canvas.addEventListener('touchstart', this.onDisturb);
-        canvas.addEventListener('mousedown', this.onDisturb);
-        canvas.addEventListener('touchend', this.onRecover);
-        canvas.addEventListener('touchcancel', this.onRecover);
-        canvas.addEventListener('mouseup', this.onRecover);
     }
     Rotate.prototype.create = function () {
         var data = this.data;
@@ -56502,7 +56504,6 @@ var Rotate = /** @class */ (function () {
             canvas.removeEventListener('touchstart', this.onDisturb);
             canvas.removeEventListener('mousedown', this.onDisturb);
             canvas.removeEventListener('touchend', this.onRecover);
-            canvas.removeEventListener('touchcancel', this.onRecover);
             canvas.removeEventListener('mouseup', this.onRecover);
             this.tween.stop();
         }
