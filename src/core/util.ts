@@ -88,7 +88,7 @@ export default {
     },
 
     /**
-     * 球面坐标转化成世界坐标
+     * 球面坐标转化成世界坐标, theta ~ x, phi ~ y
      * @param {number} lng 经度
      * @param {number} lat 纬度
      * @param {number} radius 半径

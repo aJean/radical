@@ -1,7 +1,8 @@
 import {PerspectiveCamera, Vector3, Euler, Quaternion, Spherical, Math as TMath, Camera} from 'three';
 
 /**
- * @file 陀螺仪控制器
+ * @file gyro control
+ * 翻转到底部临界时会因为 orbit control 触发旋转
  */
 
 export default class GyroControl {
@@ -45,9 +46,9 @@ export default class GyroControl {
 
         // orient the device
         quaternion.setFromEuler(this.euler);
-        // camera looks out the back of the device, not the top
+        // 设备初始为平放状态，这里将手机竖起来符合用户习惯
         quaternion.multiply(this.q1);
-        // adjust for screen orientation
+        // 竖屏 or 横屏
         quaternion.multiply(this.q0.setFromAxisAngle(this.zee, -orient));
         // imu 变化转为球面坐标
         spherical.setFromVector3(camera.getWorldDirection());
@@ -84,11 +85,11 @@ export default class GyroControl {
     }
 
     update() {
-        // z axis
+        // z axis 0 ~ 360
         const alpha = this.deviceOrien.alpha ? TMath.degToRad(this.deviceOrien.alpha) : 0;
-        // x axis
+        // x axis -180 ~ 180
         const beta = this.deviceOrien.beta ? TMath.degToRad(this.deviceOrien.beta) : 0;
-        // y axis
+        // y axis -90 ~ 90
         const gamma = this.deviceOrien.gamma ? TMath.degToRad(this.deviceOrien.gamma) : 0;
         // landscape or vertical
         const orient = this.screenOrien ? TMath.degToRad(this.screenOrien) : 0;

@@ -53286,7 +53286,7 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         }
     },
     /**
-     * 球面坐标转化成世界坐标
+     * 球面坐标转化成世界坐标, theta ~ x, phi ~ y
      * @param {number} lng 经度
      * @param {number} lat 纬度
      * @param {number} radius 半径
@@ -53778,7 +53778,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 
 /**
- * @file 陀螺仪控制器
+ * @file gyro control
+ * 翻转到底部临界时会因为 orbit control 触发旋转
  */
 var GyroControl = /** @class */ (function () {
     function GyroControl(camera, control) {
@@ -53812,9 +53813,9 @@ var GyroControl = /** @class */ (function () {
         var quaternion = this.camera.quaternion;
         // orient the device
         quaternion.setFromEuler(this.euler);
-        // camera looks out the back of the device, not the top
+        // 设备初始为平放状态，这里将手机竖起来符合用户习惯
         quaternion.multiply(this.q1);
-        // adjust for screen orientation
+        // 竖屏 or 横屏
         quaternion.multiply(this.q0.setFromAxisAngle(this.zee, -orient));
         // imu 变化转为球面坐标
         spherical.setFromVector3(camera.getWorldDirection());
@@ -53845,11 +53846,11 @@ var GyroControl = /** @class */ (function () {
         this.screenOrien = 0;
     };
     GyroControl.prototype.update = function () {
-        // z axis
+        // z axis 0 ~ 360
         var alpha = this.deviceOrien.alpha ? three__WEBPACK_IMPORTED_MODULE_0__["Math"].degToRad(this.deviceOrien.alpha) : 0;
-        // x axis
+        // x axis -180 ~ 180
         var beta = this.deviceOrien.beta ? three__WEBPACK_IMPORTED_MODULE_0__["Math"].degToRad(this.deviceOrien.beta) : 0;
-        // y axis
+        // y axis -90 ~ 90
         var gamma = this.deviceOrien.gamma ? three__WEBPACK_IMPORTED_MODULE_0__["Math"].degToRad(this.deviceOrien.gamma) : 0;
         // landscape or vertical
         var orient = this.screenOrien ? three__WEBPACK_IMPORTED_MODULE_0__["Math"].degToRad(this.screenOrien) : 0;
@@ -54019,7 +54020,7 @@ function OrbitControl(camera, domElement, pano) {
         var quatInverse = quat.clone().inverse();
         var lastPosition = new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"]();
         var lastQuaternion = new three__WEBPACK_IMPORTED_MODULE_0__["Quaternion"]();
-        return function update(sphericalNew) {
+        return function update(gyroSpherical) {
             var position = scope.camera.position;
             offset.copy(position).sub(scope.target);
             /* rotate offset to "y-axis-is-up" space */
@@ -54042,9 +54043,10 @@ function OrbitControl(camera, domElement, pano) {
                     state = STATE.NONE;
                 }
             }
-            if (sphericalNew) {
-                spherical.theta += sphericalNew.theta;
-                spherical.phi += sphericalNew.phi;
+            // 陀螺仪的增量
+            if (gyroSpherical) {
+                spherical.theta += gyroSpherical.theta;
+                spherical.phi += gyroSpherical.phi;
             }
             spherical.theta += sphericalDelta.theta;
             spherical.phi += sphericalDelta.phi;
