@@ -200,8 +200,8 @@ export default class Pano {
         this.event.off(type, fn, context);
     }
 
-    dispatch(type, arg1?, arg2?) {
-        this.event.emit(type, arg1, arg2);
+    dispatch(type, arg1?, arg2?, arg3?) {
+        this.event.emit(type, arg1, arg2, arg3);
     }
 
     /**

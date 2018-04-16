@@ -27,8 +27,9 @@
                 }],
             }, '#test', {
                 // 拖动起点
-                'scene-drag': function (data, pano) {
-                    console.log(data);
+                'scene-drag': function (c1, c2, pano) {
+                    console.log(c1);
+                    console.log(c2);
                 },
                 // 缩放起点
                 'scene-zoom': function (data, pano) {

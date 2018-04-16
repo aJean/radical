@@ -413,10 +413,6 @@ function OrbitControl(camera, domElement, pano) {
     let _rotatestart = null;
     function handleTouchStartRotate(event) {
         rotateStart.set(event.touches[0].pageX, event.touches[0].pageY);
-        _rotatestart = {
-            x: event.touches[0].pageX,
-            y: event.touches[0].pageY
-        };
     }
 
     function handleTouchStartDolly(event) {
@@ -452,13 +448,8 @@ function OrbitControl(camera, domElement, pano) {
         const pano = scope.pano;
         const size = pano.getSize();
 
-        if (_rotatestart) {
-            pano.dispatch('scene-drag', Util.calcScreenToSphere({
-                x: (_rotatestart.x / size.width) * 2 - 1,
-                y: -(_rotatestart.y / size.height) * 2 -1
-            }, scope.camera), pano);
-
-            _rotatestart = null;
+        if (!_rotatestart) {
+            _rotatestart = Util.calcScreenToSphere({x: 0, y: 0}, scope.camera);
         }
     }
     // 两指缩放
@@ -486,6 +477,10 @@ function OrbitControl(camera, domElement, pano) {
     }
 
     function handleTouchEnd(event) {
+        if (_rotatestart) {
+            const pano = scope.pano;
+            pano.dispatch('scene-drag', _rotatestart, Util.calcScreenToSphere({x: 0, y: 0}, scope.camera), pano);
+        }
         _rotatestart = null;
     }
 

@@ -54278,10 +54278,6 @@ function OrbitControl(camera, domElement, pano) {
     var _rotatestart = null;
     function handleTouchStartRotate(event) {
         rotateStart.set(event.touches[0].pageX, event.touches[0].pageY);
-        _rotatestart = {
-            x: event.touches[0].pageX,
-            y: event.touches[0].pageY
-        };
     }
     function handleTouchStartDolly(event) {
         var dx = event.touches[0].pageX - event.touches[1].pageX;
@@ -54311,12 +54307,8 @@ function OrbitControl(camera, domElement, pano) {
         scope.update();
         var pano = scope.pano;
         var size = pano.getSize();
-        if (_rotatestart) {
-            pano.dispatch('scene-drag', _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToSphere({
-                x: (_rotatestart.x / size.width) * 2 - 1,
-                y: -(_rotatestart.y / size.height) * 2 - 1
-            }, scope.camera), pano);
-            _rotatestart = null;
+        if (!_rotatestart) {
+            _rotatestart = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToSphere({ x: 0, y: 0 }, scope.camera);
         }
     }
     // 两指缩放
@@ -54343,6 +54335,10 @@ function OrbitControl(camera, domElement, pano) {
         scope.update();
     }
     function handleTouchEnd(event) {
+        if (_rotatestart) {
+            var pano_1 = scope.pano;
+            pano_1.dispatch('scene-drag', _rotatestart, _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToSphere({ x: 0, y: 0 }, scope.camera), pano_1);
+        }
         _rotatestart = null;
     }
     /*
@@ -55865,8 +55861,8 @@ var Pano = /** @class */ (function () {
     Pano.prototype.unsubscribe = function (type, fn, context) {
         this.event.off(type, fn, context);
     };
-    Pano.prototype.dispatch = function (type, arg1, arg2) {
-        this.event.emit(type, arg1, arg2);
+    Pano.prototype.dispatch = function (type, arg1, arg2, arg3) {
+        this.event.emit(type, arg1, arg2, arg3);
     };
     /**
      * 渲染场景贴图
