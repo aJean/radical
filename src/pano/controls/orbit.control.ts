@@ -141,7 +141,7 @@ function OrbitControl(camera, domElement, pano) {
         var quatInverse = quat.clone().inverse();
         var lastPosition = new Vector3();
         var lastQuaternion = new Quaternion();
-        return function update(gyroSpherical) {
+        return function update(gyroTheta, gyroPhi) {
             var position = scope.camera.position;
             offset.copy(position).sub(scope.target);
             /* rotate offset to "y-axis-is-up" space */
@@ -163,9 +163,9 @@ function OrbitControl(camera, domElement, pano) {
                 }
             }
             // 陀螺仪的增量
-            if (gyroSpherical) {
-                spherical.theta += gyroSpherical.theta;
-                spherical.phi += gyroSpherical.phi;
+            if (gyroTheta || gyroPhi) {
+                spherical.theta += gyroTheta;
+                spherical.phi += gyroPhi;
             }
 
             spherical.theta += sphericalDelta.theta;
@@ -229,7 +229,6 @@ function OrbitControl(camera, domElement, pano) {
         scope.domElement.removeEventListener('touchmove', onTouchMove, false);
         document.removeEventListener('mousemove', onMouseMove, false);
         document.removeEventListener('mouseup', onMouseUp, false);
-        window.removeEventListener('keydown', onKeyDown, false);
     };
 
     function getAutoRotationAngle() {
@@ -681,13 +680,13 @@ function OrbitControl(camera, domElement, pano) {
         }
         event.preventDefault();
     }
+
     scope.domElement.addEventListener('contextmenu', onContextMenu, false);
     scope.domElement.addEventListener('mousedown', onMouseDown, false);
     scope.domElement.addEventListener('wheel', onMouseWheel, false);
     scope.domElement.addEventListener('touchstart', onTouchStart, false);
     scope.domElement.addEventListener('touchend', onTouchEnd, false);
     scope.domElement.addEventListener('touchmove', onTouchMove, false);
-    window.addEventListener('keydown', onKeyDown, false);
     // force an update at start
     this.update();
 };

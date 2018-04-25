@@ -53793,57 +53793,61 @@ var GyroControl = /** @class */ (function () {
         this.q0 = new three__WEBPACK_IMPORTED_MODULE_0__["Quaternion"]();
         // - PI/2 around the x-axis
         this.q1 = new three__WEBPACK_IMPORTED_MODULE_0__["Quaternion"](-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+        this.lastBeta = 0;
+        this.lastSpherical = new three__WEBPACK_IMPORTED_MODULE_0__["Spherical"]();
         this.spherical = new three__WEBPACK_IMPORTED_MODULE_0__["Spherical"]();
-        this.diffSpherical = new three__WEBPACK_IMPORTED_MODULE_0__["Spherical"]();
         camera.rotation.reorder('YXZ');
         this.camera = camera.clone();
         this.control = control;
-        this.onDeviceOrientationChangeEvent = function (event) { return _this.deviceOrien = event; };
-        this.onScreenOrientationChangeEvent = function (event) { return _this.screenOrien = Number(window.orientation) || 0; };
+        this.onDeviceOrientationChange = function (event) { return _this.deviceOrien = event; };
+        this.onScreenOrientationChange = function (event) { return _this.screenOrien = Number(window.orientation) || 0; };
     }
     /**
-     * The angles alpha, beta and gamma form a set of intrinsic Tait-Bryan angles of type Z-X'-Y''
+     * 计算角度更新到 orbit camera
      */
     GyroControl.prototype.calcQuaternion = function (alpha, beta, gamma, orient) {
         // 'ZXY' for the device, but 'YXZ' for us
         this.euler.set(beta, alpha, -gamma, 'YXZ');
         var camera = this.camera;
+        var quaternion = camera.quaternion;
         var spherical = this.spherical;
-        var diffSpherical = this.diffSpherical;
-        var quaternion = this.camera.quaternion;
         // orient the device
         quaternion.setFromEuler(this.euler);
         // 设备初始为平放状态，这里将手机竖起来符合用户习惯
         quaternion.multiply(this.q1);
         // 竖屏 or 横屏
         quaternion.multiply(this.q0.setFromAxisAngle(this.zee, -orient));
-        // imu 变化转为球面坐标
+        // 获取球面坐标
         spherical.setFromVector3(camera.getWorldDirection());
-        var lastSpherical = this.lastSpherical;
-        // 计算设备方向的增量
-        if (lastSpherical) {
-            diffSpherical.set(1, -spherical.phi + lastSpherical.phi, spherical.theta - lastSpherical.theta);
-            this.control.update(diffSpherical);
+        if (this.lastBeta) {
+            var theta = spherical.theta - this.lastSpherical.theta;
+            var phi = this.lastSpherical.phi - spherical.phi;
+            if (beta < 0.2) {
+                theta = 0;
+                phi = beta - this.lastBeta;
+            }
+            if (Math.abs(beta) > 2.8) {
+                theta = phi = 0;
+            }
+            this.control.update(theta, phi);
         }
-        else {
-            lastSpherical = this.lastSpherical = new three__WEBPACK_IMPORTED_MODULE_0__["Spherical"]();
-        }
-        lastSpherical.set(1, spherical.phi, spherical.theta);
+        this.lastBeta = beta;
+        this.lastSpherical.setFromVector3(camera.getWorldDirection());
     };
     GyroControl.prototype.connect = function () {
-        window.addEventListener('orientationchange', this.onScreenOrientationChangeEvent, false);
-        window.addEventListener('deviceorientation', this.onDeviceOrientationChangeEvent, false);
+        window.addEventListener('orientationchange', this.onScreenOrientationChange, false);
+        window.addEventListener('deviceorientation', this.onDeviceOrientationChange, false);
         // run once on load
-        this.onScreenOrientationChangeEvent();
+        this.onScreenOrientationChange();
         this.enabled = true;
     };
     GyroControl.prototype.disconnect = function () {
-        window.removeEventListener('orientationchange', this.onScreenOrientationChangeEvent, false);
-        window.removeEventListener('deviceorientation', this.onDeviceOrientationChangeEvent, false);
+        window.removeEventListener('orientationchange', this.onScreenOrientationChange, false);
+        window.removeEventListener('deviceorientation', this.onDeviceOrientationChange, false);
         this.enabled = false;
-        this.lastSpherical = null;
         this.deviceOrien = {};
         this.screenOrien = 0;
+        this.lastBeta = 0;
     };
     GyroControl.prototype.update = function () {
         // z axis 0 ~ 360
@@ -54020,7 +54024,7 @@ function OrbitControl(camera, domElement, pano) {
         var quatInverse = quat.clone().inverse();
         var lastPosition = new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"]();
         var lastQuaternion = new three__WEBPACK_IMPORTED_MODULE_0__["Quaternion"]();
-        return function update(gyroSpherical) {
+        return function update(gyroTheta, gyroPhi) {
             var position = scope.camera.position;
             offset.copy(position).sub(scope.target);
             /* rotate offset to "y-axis-is-up" space */
@@ -54044,9 +54048,9 @@ function OrbitControl(camera, domElement, pano) {
                 }
             }
             // 陀螺仪的增量
-            if (gyroSpherical) {
-                spherical.theta += gyroSpherical.theta;
-                spherical.phi += gyroSpherical.phi;
+            if (gyroTheta || gyroPhi) {
+                spherical.theta += gyroTheta;
+                spherical.phi += gyroPhi;
             }
             spherical.theta += sphericalDelta.theta;
             spherical.phi += sphericalDelta.phi;
@@ -54109,7 +54113,6 @@ function OrbitControl(camera, domElement, pano) {
         scope.domElement.removeEventListener('touchmove', onTouchMove, false);
         document.removeEventListener('mousemove', onMouseMove, false);
         document.removeEventListener('mouseup', onMouseUp, false);
-        window.removeEventListener('keydown', onKeyDown, false);
     };
     function getAutoRotationAngle() {
         return 2 * Math.PI / 60 / 60 * scope.autoRotateSpeed;
@@ -54530,7 +54533,6 @@ function OrbitControl(camera, domElement, pano) {
     scope.domElement.addEventListener('touchstart', onTouchStart, false);
     scope.domElement.addEventListener('touchend', onTouchEnd, false);
     scope.domElement.addEventListener('touchmove', onTouchMove, false);
-    window.addEventListener('keydown', onKeyDown, false);
     // force an update at start
     this.update();
 }
@@ -55786,7 +55788,7 @@ var Pano = /** @class */ (function () {
      * 在渲染帧中更新控制器
      */
     Pano.prototype.updateControl = function () {
-        var control = this.gyro && this.gyro.enabled ? this.gyro : this.orbit;
+        var control = this.gyro || this.orbit;
         !this.frozen && control.update();
     };
     /**
@@ -56043,21 +56045,24 @@ var Pano = /** @class */ (function () {
         }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output('load scene: load source texture fail'); });
     };
     /**
-     * 启动陀螺仪
+     * 启动控制器
      */
-    Pano.prototype.startGyroControl = function () {
+    Pano.prototype.startControl = function () {
         if (this.gyro && !this.gyro.enabled) {
             this.gyro.connect();
         }
+        this.orbit.enabled = true;
     };
     /**
-     * 停止陀螺仪
+     * 停止控制器
      */
-    Pano.prototype.stopGyroControl = function () {
+    Pano.prototype.stopControl = function () {
         if (this.gyro) {
             this.gyro.disconnect();
             delete this.gyro;
         }
+        this.orbit.enabled = false;
+        delete this.orbit;
     };
     /**
      * 开场动画结束, 控制器需要在这时候开启
@@ -56065,8 +56070,7 @@ var Pano = /** @class */ (function () {
     Pano.prototype.noTimeline = function () {
         // to judgement scene-ready and scene-load which is first
         this.frozen = false;
-        this.orbit.enabled = true;
-        this.startGyroControl();
+        this.startControl();
         // entrance animation end, scene become stable
         this.dispatch('scene-ready', this.currentData, this);
     };
@@ -56075,7 +56079,7 @@ var Pano = /** @class */ (function () {
      */
     Pano.prototype.dispose = function () {
         _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].cleanup(null, this.scene);
-        this.stopGyroControl();
+        this.stopControl();
         this.dispatch('render-dispose', this);
         this.event.removeAllListeners();
         this.webgl.dispose();

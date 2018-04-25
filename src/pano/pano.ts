@@ -113,7 +113,7 @@ export default class Pano {
      * 在渲染帧中更新控制器
      */
     updateControl() {
-        const control = this.gyro && this.gyro.enabled ? this.gyro : this.orbit;
+        const control = this.gyro || this.orbit;
         !this.frozen && control.update();
     }
 
@@ -409,22 +409,27 @@ export default class Pano {
     }
 
     /** 
-     * 启动陀螺仪
+     * 启动控制器
      */
-    startGyroControl() {
+    startControl() {
         if (this.gyro && !this.gyro.enabled) {
             this.gyro.connect();
         }
+        
+        this.orbit.enabled = true;
     }
 
     /** 
-     * 停止陀螺仪
+     * 停止控制器
      */
-    stopGyroControl() {
+    stopControl() {
         if (this.gyro) {
             this.gyro.disconnect();
             delete this.gyro;
         }
+
+        this.orbit.enabled = false;
+        delete this.orbit;
     }
 
     /** 
@@ -433,8 +438,7 @@ export default class Pano {
     noTimeline() {
         // to judgement scene-ready and scene-load which is first
         this.frozen = false;
-        this.orbit.enabled = true;
-        this.startGyroControl();
+        this.startControl();
         // entrance animation end, scene become stable
         this.dispatch('scene-ready', this.currentData, this);
     }
@@ -445,7 +449,7 @@ export default class Pano {
     dispose() {
         Util.cleanup(null, this.scene);
 
-        this.stopGyroControl();
+        this.stopControl();
         this.dispatch('render-dispose', this);
         this.event.removeAllListeners();
         this.webgl.dispose();

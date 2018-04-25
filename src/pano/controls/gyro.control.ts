@@ -7,10 +7,9 @@ import {PerspectiveCamera, Vector3, Euler, Quaternion, Spherical, Math as TMath,
 
 export default class GyroControl {
     control: any;
-    onDeviceOrientationChangeEvent: any;
-    onScreenOrientationChangeEvent: any;
+    onDeviceOrientationChange: any;
+    onScreenOrientationChange: any;
     camera: any;
-    lastSpherical: any;
     enabled = false;
     deviceOrien: any = {};
     screenOrien = 0;
@@ -20,68 +19,75 @@ export default class GyroControl {
     q0 = new Quaternion();
     // - PI/2 around the x-axis
     q1 = new Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+    lastBeta = 0;
+    lastSpherical = new Spherical();
     spherical = new Spherical();
-    diffSpherical = new Spherical();
 
     constructor(camera, control) {
         camera.rotation.reorder('YXZ');
 
         this.camera = camera.clone();
         this.control = control;
-        this.onDeviceOrientationChangeEvent = event => this.deviceOrien = event;
-        this.onScreenOrientationChangeEvent = event => this.screenOrien = Number(window.orientation) || 0;
+        this.onDeviceOrientationChange = event => this.deviceOrien = event;
+        this.onScreenOrientationChange = event => this.screenOrien = Number(window.orientation) || 0;
     }
 
     /** 
-     * The angles alpha, beta and gamma form a set of intrinsic Tait-Bryan angles of type Z-X'-Y''
+     * 计算角度更新到 orbit camera
      */
     calcQuaternion(alpha, beta, gamma, orient) {
         // 'ZXY' for the device, but 'YXZ' for us
         this.euler.set(beta, alpha, -gamma, 'YXZ');
 
         const camera = this.camera;
+        const quaternion = camera.quaternion;
         const spherical = this.spherical;
-        const diffSpherical = this.diffSpherical;
-        const quaternion = this.camera.quaternion;
-
+        
         // orient the device
         quaternion.setFromEuler(this.euler);
         // 设备初始为平放状态，这里将手机竖起来符合用户习惯
         quaternion.multiply(this.q1);
         // 竖屏 or 横屏
         quaternion.multiply(this.q0.setFromAxisAngle(this.zee, -orient));
-        // imu 变化转为球面坐标
+        // 获取球面坐标
         spherical.setFromVector3(camera.getWorldDirection());
 
-        let lastSpherical = this.lastSpherical;
-        
-        // 计算设备方向的增量
-        if (lastSpherical) {
-            diffSpherical.set(1, -spherical.phi + lastSpherical.phi, spherical.theta - lastSpherical.theta);
-            this.control.update(diffSpherical);
-        } else {
-            lastSpherical = this.lastSpherical = new Spherical();
+        if (this.lastBeta) {
+            let theta = spherical.theta - this.lastSpherical.theta;
+            let phi = this.lastSpherical.phi - spherical.phi;
+
+            if (beta < 0.2) {
+                theta = 0;
+                phi = beta - this.lastBeta;
+            }
+            
+            if (Math.abs(beta) > 2.8) {
+                theta = phi = 0;
+            }
+
+            this.control.update(theta, phi);
         }
 
-        lastSpherical.set(1, spherical.phi, spherical.theta);
+        this.lastBeta = beta;
+        this.lastSpherical.setFromVector3(camera.getWorldDirection());
     }
 
     connect() {
-        window.addEventListener('orientationchange', this.onScreenOrientationChangeEvent, false);
-        window.addEventListener('deviceorientation', this.onDeviceOrientationChangeEvent, false);
+        window.addEventListener('orientationchange', this.onScreenOrientationChange, false);
+        window.addEventListener('deviceorientation', this.onDeviceOrientationChange, false);
         // run once on load
-        this.onScreenOrientationChangeEvent();
+        this.onScreenOrientationChange();
         this.enabled = true;
     }
 
     disconnect() {
-        window.removeEventListener('orientationchange', this.onScreenOrientationChangeEvent, false);
-        window.removeEventListener('deviceorientation', this.onDeviceOrientationChangeEvent, false);
+        window.removeEventListener('orientationchange', this.onScreenOrientationChange, false);
+        window.removeEventListener('deviceorientation', this.onDeviceOrientationChange, false);
 
         this.enabled = false;
-        this.lastSpherical = null;
         this.deviceOrien = {};
         this.screenOrien = 0;
+        this.lastBeta = 0;
     }
 
     update() {
