@@ -1,4 +1,5 @@
 import {PlaneGeometry, ShadowMaterial, Mesh, DoubleSide} from 'three';
+import Plastic from './abstract.plastic';
 
 /**
  * @file 阴影接收平面, 首先要有光
@@ -13,11 +14,12 @@ const defaultOpts = {
     y: 0,
     z: 0
 };
-export default class Shadow {
+export default class Shadow extends Plastic {
     data: any;
     plastic: any;
 
     constructor(opts?) {
+        super();
         this.data = Object.assign({}, defaultOpts, opts);
         this.create();
     }
@@ -32,17 +34,5 @@ export default class Shadow {
         plane.rotateX(data.rad);        
         plane.position.set(data.x, data.y, data.z);
         plane.receiveShadow = true;
-    }
-
-    setPosition(x, y, z) {
-        this.plastic.position.set(x, y, z);
-    }
-
-    addTo(scene) {
-        scene.add(this.plastic);
-    }
-
-    addBy(pano) {
-        pano.addSceneObject(this.plastic);
     }
 }

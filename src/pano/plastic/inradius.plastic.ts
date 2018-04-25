@@ -1,4 +1,4 @@
-import {BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader, AdditiveBlending} from 'three';
+import {BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader} from 'three';
 import Tween from '../animations/tween.animation';
 
 /**
