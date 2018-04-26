@@ -77,7 +77,7 @@ export default {
         const location = data.location;
         // 经纬度
         if (location && location.lng !== undefined) {
-            const vector = this.calcSphereToWorld(location.lng, location.lat);
+            const vector = this.calcSphereToWorld(location.lng, location.lat, location.radius);
 
             data.location = {
                 x: vector.x,

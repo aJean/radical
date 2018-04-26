@@ -37,10 +37,18 @@
                     }]
                 }]
             };
-            console.log(bxl)
 
             bxl.startPano(json, '#test', {
                 'scene-create': function (pano) {
+                    pano.addOverlay({
+                        type: 'thru',
+                        actionType: 'custom',
+                        list: ['49776493052', '49776347175', '50141043497']
+                    });
+                },
+
+                'overlay-click': function (data) {
+                    console.log(data);
                 }
             });
         </script>

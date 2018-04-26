@@ -1,20 +1,25 @@
 import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
 import {IPluggableOverlay} from '../interface/overlay.interface';
+import Tween from '../animations/tween.animation';
 
 /**
- * @file mesh overlay, static return three mesh object
- * @todo normalization object
+ * @file 星际穿越 overlay
  */
 
+const defaultOpts = {
+    width: 100,
+    height: 100
+};
 export default class MeshOverlay implements IPluggableOverlay {
     data: any;
     particle: any;
-    type = "mesh";
+    pano: any;
+    type = "thru";
 
-    constructor (data, vector?) {
-        this.data = data;
+    constructor (data, pano) {
+        this.pano = pano;
+        this.data = Object.assign({}, defaultOpts, data);;
         this.particle = this.create();
-        vector && this.particle.lookAt(vector);
     }
 
     create() {
@@ -22,6 +27,7 @@ export default class MeshOverlay implements IPluggableOverlay {
         const texture = new TextureLoader().load(data.img);
         const material = new MeshBasicMaterial({
             map: texture,
+            opacity: 0,
             transparent: true
         });
         const plane = new PlaneGeometry(data.width, data.height);
@@ -31,17 +37,25 @@ export default class MeshOverlay implements IPluggableOverlay {
         planeMesh.name = data.id;
         planeMesh['instance'] = this;
 
+        planeMesh.lookAt(this.pano.getCamera().position);
         return planeMesh;
     }
 
     update() {}
 
     show() {
-        this.particle.visible = true;
+        const particle = this.particle;
+        particle.visible = true;
+
+        new Tween(particle.material).to({opacity: 1}).effect('quintEaseIn', 1000)
+            .start(['opacity'], this.pano);
     }
 
     hide() {
-        this.particle.visible = false;
+        const particle = this.particle;
+        
+        new Tween(particle.material).to({opacity: 0}).effect('quintEaseIn', 1000)
+            .start(['opacity'], this.pano).complete(() => particle.visible = false);
     }
 
     dispose() {

@@ -1,6 +1,7 @@
 import {Vector3, Raycaster, Group} from 'three';
 import DomOverlay from './dom.overlay';
 import MeshOverlay from './mesh.overlay';
+import ThruOverlay from './thru.overlay';
 import SpriteOverlay from './sprite.overlay';
 import FrameOverlay from './frame.overlay';
 import VideoOverlay from './video.overlay';
@@ -82,6 +83,9 @@ export default class Overlays {
                 case 'mesh':
                     this.createMeshOverlay(data, cache);
                     break;
+                case 'thru':
+                    this.createThruOverlay(data, cache);
+                    break;
                 case 'animation':
                     this.createAnimationOverlay(data, cache);
                     break;
@@ -149,17 +153,38 @@ export default class Overlays {
         const camera = this.pano.getCamera();
 
         Util.parseLocation(prop, camera);
-        const item = new MeshOverlay(prop);
+        const item = new MeshOverlay(prop, camera.position);
         const particle = item.particle;
 
-        if (!prop.rotation) {
-            particle.lookAt(camera.position);
-        } else {
-            particle.rotation.set(prop.rotation.x, prop.rotation.y, prop.rotation.z);
-        }
         // 加入可检测分组
         cache.detects.add(particle);
         cache.meshGroup.push(item);
+    }
+
+    /**
+     * 创建以当前中心点均匀分布的 覆盖物
+     */
+    createThruOverlay(prop, cache) {
+        const pano = this.pano
+        // scereen center
+        const pos = new Vector3(0, 0, -1).unproject(pano.getCamera());
+        const factor = 300 / window.devicePixelRatio;
+        const los = [{x: pos.x - factor, y: pos.y + factor, z: 1000},
+            {x: pos.x + factor, y: pos.y + factor, z: 1000},
+            {x: pos.x, y: pos.y - factor, z: 1000}];
+
+        prop.list.forEach((id, i) => {
+            const item = new ThruOverlay({
+                scene: id,
+                location: los[i],
+                img: `https://img7.bdstatic.com/img/image/quanjing/tinyearth/${id}_tinyearth.jpg`
+            }, pano);
+            item.show();
+
+            // 加入可检测分组
+            cache.detects.add(item.particle);
+            cache.meshGroup.push(item);
+        });
     }
 
     /**
@@ -190,8 +215,7 @@ export default class Overlays {
         const camera = pano.getCamera();
 
         Util.parseLocation(prop, camera);
-        prop.lookat = camera.position;
-        const item = new VideoOverlay(prop);
+        const item = new VideoOverlay(prop, camera.position);
 
         cache.detects.add(item.particle);
         cache.meshGroup.push(item);
@@ -238,8 +262,15 @@ export default class Overlays {
             if (group.children) {
                 raycaster.setFromCamera(pos, camera);
                 const intersects = raycaster.intersectObjects(group.children, false);
-                intersects.length ? this.onOverlayHandle(intersects[0].object['instance'])
-                    : pano.dispatch('pano-click', vector, pano);
+                // disbale dom event
+                if (intersects.length) {
+                    evt.stopPropagation();
+                    evt.preventDefault();
+
+                    this.onOverlayHandle(intersects[0].object['instance']);
+                } else {
+                    pano.dispatch('pano-click', vector, pano);
+                }
             } else {
                 pano.dispatch('pano-click', vector, pano);
             }

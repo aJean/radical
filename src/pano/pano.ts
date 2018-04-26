@@ -3,7 +3,7 @@ import OrbitControl from './controls/orbit.control';
 import GyroControl from './controls/gyro.control';
 import ResourceLoader from './loaders/resource.loader';
 import Tween from './animations/tween.animation';
-import Overlays from './overlays/overlays.overlay';
+import Overlays from './overlays/overlays';
 import Inradius from './plastic/inradius.plastic';
 import EventEmitter from '../core/event';
 import Log from '../core/log';
@@ -353,10 +353,11 @@ export default class Pano {
     }
 
     /**
-     * 添加热点覆盖物, 目前仅支持 dom
+     * 添加热点覆盖物, default = dom
      */
     addOverlay(data) {
-        this.overlays.create([{...data, type: 'dom'}]);
+        data.type = data.type || 'dom';
+        this.overlays.create([{...data}]);
     }
 
     /**

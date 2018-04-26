@@ -57,7 +57,6 @@ export default class Wormhole {
             light.setTarget(hole);
             light.addBy(pano);
 
-            // render shadow
             // pano.enableShadow();
             this.bindEvents();
         }).catch(e => Log.errorLog(e));

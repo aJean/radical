@@ -53252,7 +53252,7 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         var location = data.location;
         // 经纬度
         if (location && location.lng !== undefined) {
-            var vector = this.calcSphereToWorld(location.lng, location.lat);
+            var vector = this.calcSphereToWorld(location.lng, location.lat, location.radius);
             data.location = {
                 x: vector.x,
                 y: vector.y,
@@ -55033,21 +55033,20 @@ __webpack_require__.r(__webpack_exports__);
  * @todo normalization object
  */
 var MeshOverlay = /** @class */ (function () {
-    function MeshOverlay(data) {
+    function MeshOverlay(data, vector) {
         this.type = "mesh";
         this.data = data;
         this.particle = this.create();
+        vector && this.particle.lookAt(vector);
     }
     MeshOverlay.prototype.create = function () {
         var data = this.data;
-        var loader = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]();
-        var texture = loader.load(data.img);
+        var texture = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load(data.img);
         var material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
             map: texture,
             transparent: true
         });
-        var scale = 1;
-        var plane = new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](data.width * scale, data.height * scale);
+        var plane = new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](data.width, data.height);
         var planeMesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](plane, material);
         planeMesh.position.set(data.location.x, data.location.y, data.location.z);
         planeMesh.name = data.id;
@@ -55072,10 +55071,10 @@ var MeshOverlay = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/pano/overlays/overlays.overlay.ts":
-/*!***********************************************!*\
-  !*** ./src/pano/overlays/overlays.overlay.ts ***!
-  \***********************************************/
+/***/ "./src/pano/overlays/overlays.ts":
+/*!***************************************!*\
+  !*** ./src/pano/overlays/overlays.ts ***!
+  \***************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -55084,11 +55083,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _dom_overlay__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./dom.overlay */ "./src/pano/overlays/dom.overlay.ts");
 /* harmony import */ var _mesh_overlay__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./mesh.overlay */ "./src/pano/overlays/mesh.overlay.ts");
-/* harmony import */ var _sprite_overlay__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./sprite.overlay */ "./src/pano/overlays/sprite.overlay.ts");
-/* harmony import */ var _frame_overlay__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./frame.overlay */ "./src/pano/overlays/frame.overlay.ts");
-/* harmony import */ var _video_overlay__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./video.overlay */ "./src/pano/overlays/video.overlay.ts");
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
-/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
+/* harmony import */ var _thru_overlay__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./thru.overlay */ "./src/pano/overlays/thru.overlay.ts");
+/* harmony import */ var _sprite_overlay__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./sprite.overlay */ "./src/pano/overlays/sprite.overlay.ts");
+/* harmony import */ var _frame_overlay__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./frame.overlay */ "./src/pano/overlays/frame.overlay.ts");
+/* harmony import */ var _video_overlay__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./video.overlay */ "./src/pano/overlays/video.overlay.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
+
 
 
 
@@ -55160,6 +55161,9 @@ var Overlays = /** @class */ (function () {
                 case 'mesh':
                     _this.createMeshOverlay(data, cache);
                     break;
+                case 'thru':
+                    _this.createThruOverlay(data, cache);
+                    break;
                 case 'animation':
                     _this.createAnimationOverlay(data, cache);
                     break;
@@ -55184,7 +55188,7 @@ var Overlays = /** @class */ (function () {
      */
     Overlays.prototype.createDomOverlay = function (prop, cache) {
         var _this = this;
-        _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].parseLocation(prop, this.pano.getCamera());
+        _core_util__WEBPACK_IMPORTED_MODULE_7__["default"].parseLocation(prop, this.pano.getCamera());
         var item = new _dom_overlay__WEBPACK_IMPORTED_MODULE_1__["default"](prop);
         cache.domGroup.push(item);
         item.elem.onclick = function (e) {
@@ -55203,7 +55207,7 @@ var Overlays = /** @class */ (function () {
         var size = pano.getSize();
         var width = size.width / 2;
         var height = size.height / 2;
-        var position = _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].calcWorldToScreen(item.data.location, pano.getCamera());
+        var position = _core_util__WEBPACK_IMPORTED_MODULE_7__["default"].calcWorldToScreen(item.data.location, pano.getCamera());
         // z > 1 is backside
         if (position.z > 1) {
             item.hide();
@@ -55219,18 +55223,35 @@ var Overlays = /** @class */ (function () {
      */
     Overlays.prototype.createMeshOverlay = function (prop, cache) {
         var camera = this.pano.getCamera();
-        _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].parseLocation(prop, camera);
-        var item = new _mesh_overlay__WEBPACK_IMPORTED_MODULE_2__["default"](prop);
+        _core_util__WEBPACK_IMPORTED_MODULE_7__["default"].parseLocation(prop, camera);
+        var item = new _mesh_overlay__WEBPACK_IMPORTED_MODULE_2__["default"](prop, camera.position);
         var particle = item.particle;
-        if (!prop.rotation) {
-            particle.lookAt(camera.position);
-        }
-        else {
-            particle.rotation.set(prop.rotation.x, prop.rotation.y, prop.rotation.z);
-        }
         // 加入可检测分组
         cache.detects.add(particle);
         cache.meshGroup.push(item);
+    };
+    /**
+     * 创建以当前中心点均匀分布的 覆盖物
+     */
+    Overlays.prototype.createThruOverlay = function (prop, cache) {
+        var pano = this.pano;
+        // scereen center
+        var pos = new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](0, 0, -1).unproject(pano.getCamera());
+        var factor = 300 / window.devicePixelRatio;
+        var los = [{ x: pos.x - factor, y: pos.y + factor, z: 1000 },
+            { x: pos.x + factor, y: pos.y + factor, z: 1000 },
+            { x: pos.x, y: pos.y - factor, z: 1000 }];
+        prop.list.forEach(function (id, i) {
+            var item = new _thru_overlay__WEBPACK_IMPORTED_MODULE_3__["default"]({
+                scene: id,
+                location: los[i],
+                img: "https://img7.bdstatic.com/img/image/quanjing/tinyearth/" + id + "_tinyearth.jpg"
+            }, pano);
+            item.show();
+            // 加入可检测分组
+            cache.detects.add(item.particle);
+            cache.meshGroup.push(item);
+        });
     };
     /**
      * 创建动画覆盖物
@@ -55239,13 +55260,13 @@ var Overlays = /** @class */ (function () {
         var pano = this.pano;
         var camera = pano.getCamera();
         var item;
-        _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].parseLocation(prop, camera);
+        _core_util__WEBPACK_IMPORTED_MODULE_7__["default"].parseLocation(prop, camera);
         if (prop.category == 'frame') {
             prop.lookat = camera.position;
-            item = new _frame_overlay__WEBPACK_IMPORTED_MODULE_4__["default"](prop);
+            item = new _frame_overlay__WEBPACK_IMPORTED_MODULE_5__["default"](prop);
         }
         else {
-            item = new _sprite_overlay__WEBPACK_IMPORTED_MODULE_3__["default"](AnimationOpts[prop.category]);
+            item = new _sprite_overlay__WEBPACK_IMPORTED_MODULE_4__["default"](AnimationOpts[prop.category]);
         }
         pano.addSceneObject(item.particle);
         cache.meshGroup.push(item);
@@ -55256,9 +55277,8 @@ var Overlays = /** @class */ (function () {
     Overlays.prototype.createVideoOverlay = function (prop, cache) {
         var pano = this.pano;
         var camera = pano.getCamera();
-        _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].parseLocation(prop, camera);
-        prop.lookat = camera.position;
-        var item = new _video_overlay__WEBPACK_IMPORTED_MODULE_5__["default"](prop);
+        _core_util__WEBPACK_IMPORTED_MODULE_7__["default"].parseLocation(prop, camera);
+        var item = new _video_overlay__WEBPACK_IMPORTED_MODULE_6__["default"](prop, camera.position);
         cache.detects.add(item.particle);
         cache.meshGroup.push(item);
     };
@@ -55293,21 +55313,28 @@ var Overlays = /** @class */ (function () {
             x: (evt.clientX / size.width) * 2 - 1,
             y: -(evt.clientY / size.height) * 2 + 1
         };
-        var vector = _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].calcScreenToSphere(pos, camera);
+        var vector = _core_util__WEBPACK_IMPORTED_MODULE_7__["default"].calcScreenToSphere(pos, camera);
         try {
             var group = this.getCurrent(this.cid).detects;
             if (group.children) {
                 raycaster.setFromCamera(pos, camera);
                 var intersects = raycaster.intersectObjects(group.children, false);
-                intersects.length ? this.onOverlayHandle(intersects[0].object['instance'])
-                    : pano.dispatch('pano-click', vector, pano);
+                // disbale dom event
+                if (intersects.length) {
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                    this.onOverlayHandle(intersects[0].object['instance']);
+                }
+                else {
+                    pano.dispatch('pano-click', vector, pano);
+                }
             }
             else {
                 pano.dispatch('pano-click', vector, pano);
             }
         }
         catch (e) {
-            _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e);
+            _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output(e);
         }
     };
     /**
@@ -55317,7 +55344,7 @@ var Overlays = /** @class */ (function () {
         var pano = this.pano;
         var data = instance.data;
         var size = pano.getSize();
-        var origin = _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].calcWorldToScreen(data.location, pano.getCamera());
+        var origin = _core_util__WEBPACK_IMPORTED_MODULE_7__["default"].calcWorldToScreen(data.location, pano.getCamera());
         origin.x = Math.floor((origin.x * size.width + size.width) / 2);
         origin.y = Math.floor((-origin.y * size.height + size.height) / 2);
         // for log & statistics & user behavior
@@ -55494,6 +55521,73 @@ var rainTexture = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAAB
 
 /***/ }),
 
+/***/ "./src/pano/overlays/thru.overlay.ts":
+/*!*******************************************!*\
+  !*** ./src/pano/overlays/thru.overlay.ts ***!
+  \*******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
+
+
+/**
+ * @file 星际穿越 overlay
+ */
+var defaultOpts = {
+    width: 100,
+    height: 100
+};
+var MeshOverlay = /** @class */ (function () {
+    function MeshOverlay(data, pano) {
+        this.type = "thru";
+        this.pano = pano;
+        this.data = Object.assign({}, defaultOpts, data);
+        ;
+        this.particle = this.create();
+    }
+    MeshOverlay.prototype.create = function () {
+        var data = this.data;
+        var texture = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load(data.img);
+        var material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: texture,
+            opacity: 0,
+            transparent: true
+        });
+        var plane = new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](data.width, data.height);
+        var planeMesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](plane, material);
+        planeMesh.position.set(data.location.x, data.location.y, data.location.z);
+        planeMesh.name = data.id;
+        planeMesh['instance'] = this;
+        planeMesh.lookAt(this.pano.getCamera().position);
+        return planeMesh;
+    };
+    MeshOverlay.prototype.update = function () { };
+    MeshOverlay.prototype.show = function () {
+        var particle = this.particle;
+        particle.visible = true;
+        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](particle.material).to({ opacity: 1 }).effect('quintEaseIn', 1000)
+            .start(['opacity'], this.pano);
+    };
+    MeshOverlay.prototype.hide = function () {
+        var particle = this.particle;
+        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](particle.material).to({ opacity: 0 }).effect('quintEaseIn', 1000)
+            .start(['opacity'], this.pano).complete(function () { return particle.visible = false; });
+    };
+    MeshOverlay.prototype.dispose = function () {
+        delete this.particle['instance'];
+        this.particle.geometry.dispose();
+    };
+    return MeshOverlay;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (MeshOverlay);
+
+
+/***/ }),
+
 /***/ "./src/pano/overlays/video.overlay.ts":
 /*!********************************************!*\
   !*** ./src/pano/overlays/video.overlay.ts ***!
@@ -55520,10 +55614,11 @@ var defaultOpts = {
     auto: false
 };
 var videoOverlay = /** @class */ (function () {
-    function videoOverlay(data) {
+    function videoOverlay(data, vector) {
         this.type = "video";
         this.data = Object.assign({}, defaultOpts, data);
         this.particle = this.create();
+        vector && this.particle.lookAt(vector);
     }
     videoOverlay.prototype.create = function () {
         var _this = this;
@@ -55546,7 +55641,6 @@ var videoOverlay = /** @class */ (function () {
         var plane = new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](data.width, data.height);
         var planeMesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](plane, material);
         planeMesh.position.set(location.x, location.y, location.z);
-        planeMesh.lookAt(data.lookat);
         planeMesh.name = data.id;
         planeMesh['instance'] = this;
         return planeMesh;
@@ -55597,7 +55691,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _controls_gyro_control__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./controls/gyro.control */ "./src/pano/controls/gyro.control.ts");
 /* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
-/* harmony import */ var _overlays_overlays_overlay__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./overlays/overlays.overlay */ "./src/pano/overlays/overlays.overlay.ts");
+/* harmony import */ var _overlays_overlays__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./overlays/overlays */ "./src/pano/overlays/overlays.ts");
 /* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
 /* harmony import */ var _core_event__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/event */ "./src/core/event.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
@@ -55706,7 +55800,7 @@ var Pano = /** @class */ (function () {
             this.gyro = new _controls_gyro_control__WEBPACK_IMPORTED_MODULE_2__["default"](this.camera, orbit);
         }
         // all overlays manager
-        this.overlays = new _overlays_overlays_overlay__WEBPACK_IMPORTED_MODULE_5__["default"](this, this.source['sceneGroup']);
+        this.overlays = new _overlays_overlays__WEBPACK_IMPORTED_MODULE_5__["default"](this, this.source['sceneGroup']);
     };
     Pano.prototype.resetEnv = function (data) {
         var fov = data.fov || this.opts.fov;
@@ -55971,10 +56065,11 @@ var Pano = /** @class */ (function () {
         this.root.removeChild(obj);
     };
     /**
-     * 添加热点覆盖物, 目前仅支持 dom
+     * 添加热点覆盖物, default = dom
      */
     Pano.prototype.addOverlay = function (data) {
-        this.overlays.create([__assign({}, data, { type: 'dom' })]);
+        data.type = data.type || 'dom';
+        this.overlays.create([__assign({}, data)]);
     };
     /**
      * 删除热点覆盖物, 目前仅支持 dom
@@ -56665,7 +56760,6 @@ var Wormhole = /** @class */ (function () {
             light.setPosition(vector.x, vector.y, vector.z - 200);
             light.setTarget(hole);
             light.addBy(pano);
-            // render shadow
             // pano.enableShadow();
             _this.bindEvents();
         }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_5__["default"].errorLog(e); });

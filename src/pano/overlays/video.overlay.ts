@@ -21,9 +21,10 @@ export default class videoOverlay implements IPluggableOverlay {
     popup: Popup;
     type = "video";
 
-    constructor(data) {
+    constructor(data, vector?) {
         this.data = Object.assign({}, defaultOpts, data);
         this.particle = this.create();
+        vector && this.particle.lookAt(vector);
     }
 
     create() {
@@ -51,7 +52,6 @@ export default class videoOverlay implements IPluggableOverlay {
         const planeMesh = new Mesh(plane, material);
 
         planeMesh.position.set(location.x, location.y, location.z);
-        planeMesh.lookAt(data.lookat);
         planeMesh.name = data.id;
         planeMesh['instance'] = this;
 
