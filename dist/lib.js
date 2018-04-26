@@ -52748,31 +52748,6 @@ function CanvasRenderer() {
 
 /***/ }),
 
-/***/ "./src/core/detect.ts":
-/*!****************************!*\
-  !*** ./src/core/detect.ts ***!
-  \****************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/**
- * @file data detect
- */
-var Detect = /** @class */ (function () {
-    function Detect() {
-    }
-    Detect.connect = function (props, pano) {
-        console.log(props);
-    };
-    return Detect;
-}());
-/* harmony default export */ __webpack_exports__["default"] = (Detect);
-
-
-/***/ }),
-
 /***/ "./src/core/event.ts":
 /*!***************************!*\
   !*** ./src/core/event.ts ***!
@@ -53383,10 +53358,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../styles/ui.style.less */ "./styles/ui.style.less");
 /* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _core_detect__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./core/detect */ "./src/core/detect.ts");
-/* harmony import */ var _core_polyfill__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./core/polyfill */ "./src/core/polyfill.ts");
-/* harmony import */ var _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./runtime/pano.runtime */ "./src/runtime/pano.runtime.ts");
-/* harmony import */ var _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
+/* harmony import */ var _core_polyfill__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./core/polyfill */ "./src/core/polyfill.ts");
+/* harmony import */ var _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./runtime/pano.runtime */ "./src/runtime/pano.runtime.ts");
+/* harmony import */ var _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
+/* harmony import */ var _pano_plugins_complete_plugin__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./pano/plugins/complete.plugin */ "./src/pano/plugins/complete.plugin.ts");
 
 
 
@@ -53394,25 +53369,26 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+// TODO: delete after testing
 
 /**
  * @file bxl lib
  */
-Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_5__["default"])();
+Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_4__["default"])();
 /* harmony default export */ __webpack_exports__["default"] = ({
-    detect: _core_detect__WEBPACK_IMPORTED_MODULE_4__["default"],
     startPano: function (url, el, events) {
-        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].start(url, el, events);
+        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].start(url, el, events);
     },
     getPano: function (ref) {
-        return _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].getInstance(ref);
+        return _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].getInstance(ref);
     },
     disposePano: function (ref) {
-        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].releaseInstance(ref);
+        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].releaseInstance(ref);
     },
     startVR: function (url, el, events) {
-        _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_7__["default"].start(url, el);
-    }
+        _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].start(url, el);
+    },
+    testMapping: _pano_plugins_complete_plugin__WEBPACK_IMPORTED_MODULE_7__["default"]
 });
 
 
@@ -53824,7 +53800,7 @@ var GyroControl = /** @class */ (function () {
             var phi = this.lastSpherical.phi - spherical.phi;
             if (beta < 0.2) {
                 theta = 0;
-                phi = beta - this.lastBeta;
+                beta > this.lastBeta && (phi = beta - this.lastBeta);
             }
             if (Math.abs(beta) > 2.8) {
                 theta = phi = 0;
@@ -56103,6 +56079,18 @@ var Pano = /** @class */ (function () {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
+/* harmony import */ var _plastic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./plastic */ "./src/pano/plastic/plastic.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
 
 
 /**
@@ -56117,11 +56105,14 @@ var defaultOpts = {
     opacity: 1,
     light: false
 };
-var Inradius = /** @class */ (function () {
+var Inradius = /** @class */ (function (_super) {
+    __extends(Inradius, _super);
     function Inradius(data) {
-        this.data = Object.assign({}, defaultOpts, data);
-        this.setRefraction(data.envMap);
-        this.create();
+        var _this = _super.call(this) || this;
+        _this.data = Object.assign({}, defaultOpts, data);
+        _this.setRefraction(data.envMap);
+        _this.create();
+        return _this;
     }
     Inradius.prototype.create = function () {
         var data = this.data;
@@ -56208,7 +56199,7 @@ var Inradius = /** @class */ (function () {
         plastic.parent.remove(plastic);
     };
     return Inradius;
-}());
+}(_plastic__WEBPACK_IMPORTED_MODULE_2__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Inradius);
 
 
@@ -56224,16 +56215,31 @@ var Inradius = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _plastic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./plastic */ "./src/pano/plastic/plastic.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
 
 var defaultOpts = {
     color: 0xffffff,
     intensity: 1,
     debug: false
 };
-var Light = /** @class */ (function () {
+var Light = /** @class */ (function (_super) {
+    __extends(Light, _super);
     function Light(opts) {
-        this.data = Object.assign({}, defaultOpts, opts);
-        this.create();
+        var _this = _super.call(this) || this;
+        _this.data = Object.assign({}, defaultOpts, opts);
+        _this.create();
+        return _this;
     }
     Light.prototype.create = function () {
         var data = this.data;
@@ -56261,8 +56267,91 @@ var Light = /** @class */ (function () {
         this.helper && pano.addSceneObject(this.helper);
     };
     return Light;
-}());
+}(_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Light);
+
+
+/***/ }),
+
+/***/ "./src/pano/plastic/plastic.ts":
+/*!*************************************!*\
+  !*** ./src/pano/plastic/plastic.ts ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/**
+ * @file 内置物体材质抽象类
+ * @TODO: 提取公共方法
+ */
+var Plastic = /** @class */ (function () {
+    function Plastic() {
+    }
+    Plastic.prototype.setPosition = function (x, y, z) {
+        this.plastic.position.set(x, y, z);
+    };
+    Plastic.prototype.addTo = function (scene) {
+        scene.add(this.plastic);
+    };
+    Plastic.prototype.addBy = function (pano) {
+        pano.addSceneObject(this.plastic);
+    };
+    Plastic.prototype.dispose = function () {
+        var plastic = this.plastic;
+        plastic.material.envMap.dispose();
+        plastic.material.dispose();
+        plastic.parent.remove(plastic);
+    };
+    return Plastic;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (Plastic);
+
+
+/***/ }),
+
+/***/ "./src/pano/plugins/complete.plugin.ts":
+/*!*********************************************!*\
+  !*** ./src/pano/plugins/complete.plugin.ts ***!
+  \*********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+
+/**
+ * @file uv mapping
+ * 每一个面由两个三角形组成, 底部对应 uv 顶点 0, 1, 3 顶部对应 1, 2, 3
+ * 顶点从低端开始逆时针
+ */
+/* harmony default export */ __webpack_exports__["default"] = (function (id) {
+    var webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
+    var render = webgl.domElement;
+    webgl.setPixelRatio(window.devicePixelRatio);
+    webgl.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById(id).appendChild(render);
+    var scene = this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
+    var camera = this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](80, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.set(0, 0, 600);
+    var texture = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load('../../../bxl-ar/examples/assets/material.gif');
+    var geometry = new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](300, 300, 1, 1);
+    geometry.faceVertexUvs[0][0] = [new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](0, 0), new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](1, 0), new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](0, 1)];
+    geometry.faceVertexUvs[0][1] = [new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](1, 0), new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](1, 1), new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](0, 1)];
+    var material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({ map: texture });
+    var mesh = this.mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, material);
+    var axesHelper = new three__WEBPACK_IMPORTED_MODULE_0__["AxesHelper"](300);
+    scene.add(axesHelper);
+    scene.add(mesh);
+    webgl.render(scene, camera);
+    function tick() {
+        webgl.render(scene, camera);
+        requestAnimationFrame(tick);
+    }
+    tick();
+});
 
 
 /***/ }),

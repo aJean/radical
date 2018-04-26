@@ -1,4 +1,5 @@
 import {SpotLight, CameraHelper} from 'three';
+import Plastic from './plastic';
 
 const defaultOpts = {
     color: 0xffffff,
@@ -6,12 +7,11 @@ const defaultOpts = {
     debug: false
 };
 
-export default class Light {
-    data: any;
-    plastic: any;
+export default class Light extends Plastic {
     helper: any;
 
     constructor(opts?) {
+        super();
         this.data = Object.assign({}, defaultOpts, opts);
         this.create();
     }

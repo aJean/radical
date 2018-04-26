@@ -1,5 +1,5 @@
 import {PlaneGeometry, ShadowMaterial, Mesh, DoubleSide} from 'three';
-import Plastic from './abstract.plastic';
+import Plastic from './plastic';
 
 /**
  * @file 阴影接收平面, 首先要有光
@@ -15,9 +15,6 @@ const defaultOpts = {
     z: 0
 };
 export default class Shadow extends Plastic {
-    data: any;
-    plastic: any;
-
     constructor(opts?) {
         super();
         this.data = Object.assign({}, defaultOpts, opts);

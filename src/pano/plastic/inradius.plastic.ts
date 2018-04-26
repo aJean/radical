@@ -1,5 +1,6 @@
 import {BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader} from 'three';
 import Tween from '../animations/tween.animation';
+import Plastic from './plastic';
 
 /**
  * @file 内切球
@@ -14,12 +15,11 @@ const defaultOpts = {
     opacity: 1,
     light: false
 };
-export default class Inradius {
-    data: any;
-    plastic: any;
+export default class Inradius extends Plastic {
     cloud: any;
 
     constructor(data) {
+        super();
         this.data = Object.assign({}, defaultOpts, data);
         
         this.setRefraction(data.envMap);

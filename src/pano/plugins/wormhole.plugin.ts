@@ -1,4 +1,4 @@
-import {Texture, Raycaster, } from 'three';
+import {Texture, Raycaster} from 'three';
 import ResourceLoader from '../loaders/resource.loader';
 import Tween from '../animations/tween.animation';
 import Pano from '../pano';
