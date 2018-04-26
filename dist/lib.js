@@ -53800,7 +53800,7 @@ var GyroControl = /** @class */ (function () {
             var phi = this.lastSpherical.phi - spherical.phi;
             if (beta < 0.2) {
                 theta = 0;
-                beta > this.lastBeta && (phi = beta - this.lastBeta);
+                phi = beta - this.lastBeta;
             }
             if (Math.abs(beta) > 2.8) {
                 theta = phi = 0;
