@@ -94,6 +94,8 @@ export default class Overlays {
                     break;
             }
         });
+
+        return cache;
     }
 
     findScene(id) {
@@ -166,21 +168,16 @@ export default class Overlays {
      */
     createThruOverlay(prop, cache) {
         const pano = this.pano
-        // scereen center
-        const pos = new Vector3(0, 0, -1).unproject(pano.getCamera());
-        const factor = 300 / window.devicePixelRatio;
-        const los = [{x: pos.x - factor, y: pos.y + factor, z: 1000},
-            {x: pos.x + factor, y: pos.y + factor, z: 1000},
-            {x: pos.x, y: pos.y - factor, z: 1000}];
 
-        prop.list.forEach((id, i) => {
+        prop.list.forEach((data, i) => {
             const item = new ThruOverlay({
-                scene: id,
-                location: los[i],
-                img: `https://img7.bdstatic.com/img/image/quanjing/tinyearth/${id}_tinyearth.jpg`
+                scene: data.id,
+                img: data.img,
+                factor: prop.factor,
+                radius: prop.radius
             }, pano);
-            item.show();
 
+            item.show();
             // 加入可检测分组
             cache.detects.add(item.particle);
             cache.meshGroup.push(item);
@@ -212,10 +209,9 @@ export default class Overlays {
      */
     createVideoOverlay(prop, cache) {
         const pano = this.pano;
-        const camera = pano.getCamera();
 
-        Util.parseLocation(prop, camera);
-        const item = new VideoOverlay(prop, camera.position);
+        Util.parseLocation(prop, pano.getCamera());
+        const item = new VideoOverlay(prop, pano);
 
         cache.detects.add(item.particle);
         cache.meshGroup.push(item);
@@ -286,9 +282,6 @@ export default class Overlays {
         const pano = this.pano;
         const data = instance.data;
         const size = pano.getSize();
-        const origin = Util.calcWorldToScreen(data.location, pano.getCamera());
-        origin.x = Math.floor((origin.x * size.width + size.width) / 2);
-        origin.y = Math.floor((-origin.y * size.height + size.height) / 2);
 
         // for log & statistics & user behavior
         pano.dispatch('overlay-click', instance, pano);
@@ -304,7 +297,7 @@ export default class Overlays {
                 pano.dispatch('multiple-active', data);
                 break;
             case 'video':
-                instance.play(origin);
+                instance.play();
                 break;
         }
     }

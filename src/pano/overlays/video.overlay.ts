@@ -15,16 +15,17 @@ const defaultOpts = {
     auto: false
 };
 export default class videoOverlay implements IPluggableOverlay {
+    pano: any;
     data: any;
     particle: any;
     video: any;
     popup: Popup;
     type = "video";
 
-    constructor(data, vector?) {
+    constructor(data, pano) {
+        this.pano = pano;
         this.data = Object.assign({}, defaultOpts, data);
         this.particle = this.create();
-        vector && this.particle.lookAt(vector);
     }
 
     create() {
@@ -52,6 +53,7 @@ export default class videoOverlay implements IPluggableOverlay {
         const planeMesh = new Mesh(plane, material);
 
         planeMesh.position.set(location.x, location.y, location.z);
+        planeMesh.lookAt(this.pano.getCamera().position);
         planeMesh.name = data.id;
         planeMesh['instance'] = this;
 
@@ -62,9 +64,13 @@ export default class videoOverlay implements IPluggableOverlay {
 
     /**
      * 显示窗口 & 播放视频
-     * @param {Object} origin 当前动画的中心点
      */
-    play(origin) {
+    play() {
+        const size = this.pano.getSize();
+        const origin = Util.calcWorldToScreen(this.data.location, this.pano.getCamera());
+        origin.x = Math.floor((origin.x * size.width + size.width) / 2);
+        origin.y = Math.floor((-origin.y * size.height + size.height) / 2);
+
         this.popup.root.style.transformOrigin = origin.x + 'px ' + origin.y + 'px';
         this.popup.show();
         this.video.play();

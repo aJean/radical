@@ -71,7 +71,7 @@ export default class Rotate {
             this.tween = new Tween({polar: orbit.getPolarAngle()}).to(this.target)
                 .effect('quadEaseOut', data.recover)
                 .start(['polar'], pano)
-                .process((oldVal, newVal) => orbit.rotateUp(oldVal - newVal));
+                .process((newVal, oldVal) => orbit.rotateUp(oldVal - newVal));
             pano.setRotate(true);
         }, data.lazy);
     }

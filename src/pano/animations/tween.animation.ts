@@ -32,6 +32,16 @@ const EFFECT = {
 
     quintEaseOut(t, b, c, d): number {
         return c * ((t = t/d - 1) * t * t * t * t + 1) + b;
+    },
+
+    backIn(t, b, c, d) {
+        const s = 1.70158;
+        return c * (t /= d) * t * ((s + 1) * t - s) + b;
+    },
+
+    backOut(t, b, c, d) {
+        const s = 1.70158;
+        return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
     }
 };
 
@@ -104,7 +114,7 @@ export default class Tween {
             if (t < duration) {
                 this.forEach(record, key => {
                     const val = fn(t, record[key], target[key] - record[key], duration);
-                    this.onProcess && this.onProcess(obj[key], val);
+                    this.onProcess && this.onProcess(val, obj[key], key);
                     obj[key] = val;
                 });
             } else {

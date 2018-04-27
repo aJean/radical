@@ -95,6 +95,13 @@ abstract class Runtime {
         try {
             const pano = this.createRef(el, source);
 
+            // 用户订阅事件
+            if (events) {
+                for (let name in events) {
+                    pano.subscribe(name, events[name]);
+                }
+            }
+
             if (source['animation']) {
                 Timeline.install(source['animation'], pano);
             } else {
@@ -117,12 +124,6 @@ abstract class Runtime {
                 pano.addPlugin(Wormhole, source['wormhole']);
             }
     
-            // 用户订阅事件
-            if (events) {
-                for (let name in events) {
-                    pano.subscribe(name, events[name]);
-                }
-            }
             // add to env queue listeners
             EnvQueue.add(pano.onResize, pano);
             // load and render

@@ -102,7 +102,7 @@ export default class Pano {
                 .then(texture => {
                     this.skyBox.setMap(texture);
                     this.dispatch('scene-load', data, this);
-                }).catch(e => Log.output('load scene: load source texture fail'));
+                }).catch(e => Log.output(e));
             this.animate();
         } catch(e) {
             Log.output(e);
@@ -357,7 +357,7 @@ export default class Pano {
      */
     addOverlay(data) {
         data.type = data.type || 'dom';
-        this.overlays.create([{...data}]);
+        return this.overlays.create([{...data}]);
     }
 
     /**
@@ -406,7 +406,7 @@ export default class Pano {
                 this.currentData = data;
                 this.resetEnv(data);
                 this.opts.sceneTrans ? this.replaceAnim(texture) : this.replaceTexture(texture);
-            }).catch(e => Log.output('load scene: load source texture fail'));
+            }).catch(e => Log.output(e));
     }
 
     /** 

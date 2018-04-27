@@ -173,5 +173,24 @@ export default {
         const scene = group.find(item => item.id == id);
 
         return (scene || group[0]);
+    },
+    
+    /**
+     * 扩展对象允许覆盖
+     */
+    assign(obj, ...args) {
+        if (!args.length || obj == null) {
+            return obj;
+        }
+
+        args.forEach(source => {
+            for (let key in source) {
+                if (source[key] !== void 0) {
+                    obj[key] = source[key];
+                }
+            }
+        });
+
+        return obj;
     }
 };
