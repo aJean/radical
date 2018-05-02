@@ -1,6 +1,7 @@
 import Pano from '../pano/pano';
 import VRControl from '../pano/controls/vr.control';
 import VREffect from './effect.vr';
+import Helper from '../vr/helper.vr';
 
 /**
  * @file vr pano decorator 
@@ -27,8 +28,7 @@ export default class VPano {
             effect.requestAnimationFrame(this.animate.bind(this));
         };
 
-        delete pano.gyro;
-
+        Helper.createButton(pano.webgl);
         return pano;
     }
 }

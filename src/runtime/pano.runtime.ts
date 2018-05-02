@@ -116,8 +116,8 @@ abstract class Runtime {
                 pano.addPlugin(Multiple, source['sceneGroup']);
             }
     
-            if (source['info']) {
-                pano.addPlugin(Info, source['info']);
+            if (source['info'] !== false) {
+                pano.addPlugin(Info);
             }
     
             if (source['wormhole']) {
@@ -130,7 +130,7 @@ abstract class Runtime {
             pano.run();
         } catch(e) {
             events && events.nosupport && events.nosupport();
-            throw new Error('build error');
+            throw new Error(e);
         }
     }
 };
@@ -157,6 +157,7 @@ const onEnvResize = event => {
         EnvQueue.excute();
     }, 200);
 };
-window.addEventListener('resize', onEnvResize);
+const eventType = /Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'orientationchange' : 'resize';
+window.addEventListener(eventType, onEnvResize);
 
 export default Runtime;

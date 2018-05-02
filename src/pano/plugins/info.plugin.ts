@@ -5,24 +5,37 @@ import Util from '../../core/util';
  */
 
 export default class Info {
-    data: any;
+    element: any;
     pano: any;
     
-    constructor(pano, data) {
+    constructor(pano) {
         this.pano = pano;
-        this.data = data;
-    
-        this.createDom();
+        
+        this.createDom(pano.currentData.info);
+        pano.subscribe('scene-attach', data => {
+            this.renderDom(data.info);
+        });
     }
 
-    createDom() {
-        const root = Util.createElement('<div class="pano-info"></div>');
+    createDom(data) {
+        const element = this.element = Util.createElement('<div class="pano-info"></div>');
 
-        if (this.data.logo) {
-            root.innerHTML +=  `<img src="${this.data.logo}" width="70">`;
+        if (data.logo) {
+            element.innerHTML =  `<img src="${data.logo}" width="70">`;
         }
-        root.innerHTML += `<div class="pano-info-name">${this.data.author}</div>`;
+        element.innerHTML += `<div class="pano-info-name">${data.author}</div>`;
 
-        this.pano.getRoot().appendChild(root);
+        this.pano.getRoot().appendChild(element);
+    }
+
+    renderDom(data) {
+        const element = this.element;
+
+        if (data.logo) {
+            element.innerHTML = `<img src="${data.logo}" width="70">`;
+        } else {
+            element.innerHTML = '';
+        }
+        element.innerHTML += `<div class="pano-info-name">${data.author}</div>`;
     }
 }

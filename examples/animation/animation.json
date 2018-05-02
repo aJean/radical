@@ -1,10 +1,10 @@
 {
     "title": "test bxl transfer",
     "cretPath": "../assets/cret.txt",
-    "info": {
-        "author": "plants - 入场动画"
-    },
     "sceneGroup": [{
+        "info": {
+            "author": "plants - 入场动画"
+        },
         "id": "scene0",
         "name": "罗浮宫",
         "bxlPath": "../assets/scene0/scene0.bxl",

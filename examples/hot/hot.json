@@ -1,11 +1,11 @@
 {
     "title": "test bxl transfer",
     "cretPath": "../assets/cret.txt",
-    "info": {
-        "author": "绵阳谊君舞蹈",
-        "logo": "../assets/logo.png"
-    },
     "sceneGroup": [{
+        "info": {
+            "author": "绵阳谊君舞蹈",
+            "logo": "../assets/logo.png"
+        },
         "id": "scene0",
         "name": "罗浮宫",
         "fov": 100,

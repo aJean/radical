@@ -1,13 +1,13 @@
 {
     "title": "test bxl transfer",
     "cretPath": "../assets/cret.txt",
-    "info": {
-        "author": "scene - 漫游"
-    },
     "rotate": {
         "speed": 0.3
     },
     "sceneGroup": [{
+        "info": {
+            "author": "scene - 漫游"
+        },
         "id": "scene0",
         "name": "罗浮宫",
         "bxlPath": "../assets/scene6/scene6.bxl",

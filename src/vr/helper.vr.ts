@@ -20,7 +20,8 @@ export default abstract class Helper {
             window.addEventListener('vrdisplaydisconnect', () => this.showNotFound(button), false);
 
             window.addEventListener('vrdisplaypresentchange', (event: any) => {
-                button.textContent = event.display.isPresenting ? 'EXIT VR' : 'ENTER VR';
+                const display = event.display || event.detail.display;
+                button.textContent = display.isPresenting ? 'EXIT VR' : 'ENTER VR';
             }, false);
 
             window.addEventListener('vrdisplayactivate', (event: any) => {

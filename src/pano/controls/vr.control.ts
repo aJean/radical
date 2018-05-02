@@ -1,10 +1,11 @@
-import {Matrix4} from 'three';
+import {Quaternion, Matrix4, Vector3} from 'three';
 import Log from '../../core/log';
 
 /**
  * @file vr control
  */
 
+const rotateMatrix = new Matrix4().makeRotationAxis(new Vector3(0, 1, 0).normalize(), Math.PI);
 export default class VRControl {
     camera: any;
     vrDisplay: any;
@@ -17,10 +18,10 @@ export default class VRControl {
     scale = 1;
     // If true will use "standing space" coordinate system where y=0 is the
 	// floor and x=0, z=0 is the center of the room.
-    standing = false;
+    standing = true;
     // Distance from the users eyes to the floor in meters. Used when
 	// standing=true but the VRDisplay doesn't provide stageParameters.
-	userHeight = 1.6;
+    userHeight = 1.6;
 
     constructor(camera) {
         this.camera = camera;
@@ -79,15 +80,17 @@ export default class VRControl {
 			} else if (vrDisplay.getPose) {
 				pose = vrDisplay.getPose();
 			}
-
 			if (pose.orientation !== null) {
-				camera.quaternion.fromArray( pose.orientation );
+                console.log(pose.orientation.applyMatrix4)
+
+                camera.quaternion.fromArray(rotateMatrix.multiply(pose.orientation));
+                // camera.quaternion.setFromAxisAngle(new Vector3(0, 1, 0), Math.PI);
 			}
 
 			if ( pose.position !== null ) {
 				camera.position.fromArray(pose.position);
 			} else {
-				camera.position.set( 0, 0, 0 );
+				camera.position.set(0, 0, 0);
 			}
 
 			if (this.standing) {
@@ -98,7 +101,8 @@ export default class VRControl {
 				} else {
 					camera.position.setY(camera.position.y + this.userHeight);
 				}
-			}
+            }
+
 			camera.position.multiplyScalar(this.scale);
 		}
 	}

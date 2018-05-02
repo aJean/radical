@@ -1,14 +1,14 @@
 {
     "title": "test bxl transfer",
     "cretPath": "../assets/cret.txt",
-    "info": {
-        "author": "陀螺仪 - 请使用手机浏览",
-        "logo": "../assets/logo-gyro.png"
-    },
     "pano": {
         "gyro": true
     },
     "sceneGroup": [{
+        "info": {
+            "author": "陀螺仪 - 请使用手机浏览",
+            "logo": "../assets/logo-gyro.png"
+        },
         "id": "scene0",
         "name": "罗浮宫",
         "texPath": "../assets/scene7/",

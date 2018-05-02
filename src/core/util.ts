@@ -136,7 +136,7 @@ export default {
      */
     calcRenderSize(elem, opts?) {
         const winWidth = window.innerWidth;
-        const winHeight = window.innerHeight;
+        const winHeight = document.documentElement.clientHeight;
 
         let width = winWidth;
         let height = winHeight;

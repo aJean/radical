@@ -2,7 +2,7 @@ import {WebGLRenderer, PerspectiveCamera, Scene, CubeGeometry, MeshLambertMateri
 import ResourceLoader from '../pano/loaders/resource.loader';
 import Log from '../core/log';
 import VPano from '../vr/pano.vr';
-import Helper from '../vr/helper.vr';
+import Timeline from '../pano/animations/timeline.animation';
 
 /**
  * @file wev vr runtime
@@ -10,7 +10,33 @@ import Helper from '../vr/helper.vr';
 
 const myLoader = new ResourceLoader();
 
+abstract class EnvQueue {
+    static list = [];
+
+    static add(fn, context) {
+        this.list.push({
+            context: context,
+            fn: fn.bind(context)
+        });
+    }
+
+    static excute() {
+        this.list.forEach(item => item.fn());
+    }
+
+    static remove(context) {
+        const list = this.list;
+        const index = list.find(item => item.context == context);
+        list.splice(index, 1);
+    }
+
+    static len() {
+        return this.list.length;
+    }
+};
+
 export default abstract class Runtime {
+    static timeid: any;    
     static uid = 0;
     static instanceMap = {};
 
@@ -27,7 +53,9 @@ export default abstract class Runtime {
         }
 
         if (window['WebVRPolyfill']) {
-            const polyfill = new window['WebVRPolyfill']();
+            const polyfill = new window['WebVRPolyfill']({
+                BUFFER_SCALE: 0.75
+            });
         }
 
         try {
@@ -41,12 +69,18 @@ export default abstract class Runtime {
                     pano.subscribe(name, events[name]);
                 }
             }
+            // 动画
+            if (source['animation']) {
+                Timeline.install(source['animation'], pano);
+            } else {
+                pano.noTimeline();
+            }
 
+            EnvQueue.add(pano.onResize, pano);
             pano.run();
-            Helper.createButton(pano.webgl);
         } catch (e) {
             events && events.nosupport && events.nosupport();
-            throw new Error('build error');
+            throw new Error(e);
         }
     }
 
@@ -57,6 +91,7 @@ export default abstract class Runtime {
     static releaseInstance(ref) {
         const pano = this.instanceMap[ref];
         pano && pano.dispose();
+        EnvQueue.remove(pano);
     }
 }
 
@@ -75,3 +110,12 @@ window.onload = function() {
         }
     }  
 };
+
+const onEnvResize = event => {
+    clearTimeout(Runtime.timeid);
+    Runtime.timeid = setTimeout(function () {
+        EnvQueue.excute();
+    }, 200);
+};
+const eventType = /Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'orientationchange' : 'resize';
+window.addEventListener(eventType, onEnvResize);

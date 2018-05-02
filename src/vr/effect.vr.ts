@@ -42,8 +42,6 @@ export default function (renderer, onError?) {
         });
     }
 
-    //
-
     this.isPresenting = false;
 
     var scope = this;
@@ -79,7 +77,6 @@ export default function (renderer, onError?) {
             var eyeParamsL = vrDisplay.getEyeParameters('left');
             renderer.setPixelRatio(1);
             renderer.setSize(eyeParamsL.renderWidth * 2, eyeParamsL.renderHeight, false);
-
         } else {
             renderer.setPixelRatio(rendererPixelRatio);
             renderer.setSize(width, height, updateStyle);

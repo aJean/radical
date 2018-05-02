@@ -1,10 +1,10 @@
 {
     "title": "test bxl transfer",
     "cretPath": "../assets/cret.txt",
-    "info": {
-        "author": "AMD - 异步模块加载"
-    },
     "sceneGroup": [{
+        "info": {
+            "author": "AMD - 异步模块加载"
+        },
         "id": "scene0",
         "name": "罗浮宫",
         "bxlPath": "../assets/scene5/scene5.bxl",
