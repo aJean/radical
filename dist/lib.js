@@ -53783,7 +53783,6 @@ __webpack_require__.r(__webpack_exports__);
 
 /**
  * @file gyro control
- * 翻转到底部临界时会因为 orbit control 触发旋转
  */
 var GyroControl = /** @class */ (function () {
     function GyroControl(camera, control) {
@@ -53865,6 +53864,7 @@ var GyroControl = /** @class */ (function () {
         if (alpha === 0 && beta === 0 && gamma === 0 && orient === 0) {
             return;
         }
+        // 不是每次都会更新, lead to state will not be STATE.NONE
         this.calcQuaternion(alpha.toFixed(5), beta.toFixed(5), gamma.toFixed(5), orient);
     };
     /**
@@ -54517,6 +54517,7 @@ function OrbitControl(camera, domElement, pano) {
                 state = STATE.NONE;
         }
     }
+    // update 中 设置 state = NONE
     function onTouchEnd(event) {
         if (scope.enabled === false) {
             return;

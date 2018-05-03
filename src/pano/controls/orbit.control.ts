@@ -148,6 +148,7 @@ function OrbitControl(camera, domElement, pano) {
             offset.applyQuaternion(quat);
             /* angle from z-axis around y-axi */
             spherical.setFromVector3(offset);
+            
             if (scope.autoRotate && state === STATE.NONE) {
                 rotateLeft(getAutoRotationAngle());
             } else if (state === STATE.SLIDER) {
@@ -570,6 +571,7 @@ function OrbitControl(camera, domElement, pano) {
             || (state !== STATE.NONE && state !== STATE.ROTATE)) {
             return;
         }
+
         event.preventDefault();
         event.stopPropagation();
         handleMouseWheel(event);
@@ -665,6 +667,7 @@ function OrbitControl(camera, domElement, pano) {
         }
     }
 
+    // update 中 设置 state = NONE
     function onTouchEnd(event) {
         if (scope.enabled === false) {
             return;

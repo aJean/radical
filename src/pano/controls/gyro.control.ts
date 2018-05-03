@@ -2,7 +2,6 @@ import {PerspectiveCamera, Vector3, Euler, Quaternion, Spherical, Math as TMath,
 
 /**
  * @file gyro control
- * 翻转到底部临界时会因为 orbit control 触发旋转
  */
 
 export default class GyroControl {
@@ -104,6 +103,7 @@ export default class GyroControl {
             return;
         }
 
+        // 不是每次都会更新, lead to state will not be STATE.NONE
         this.calcQuaternion(alpha.toFixed(5), beta.toFixed(5), gamma.toFixed(5), orient);
     }
 
