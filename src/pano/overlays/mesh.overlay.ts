@@ -45,7 +45,11 @@ export default class MeshOverlay implements IPluggableOverlay {
     }
 
     dispose() {
-        delete this.particle['instance'];
-        this.particle.geometry.dispose();
+        const particle = this.particle;
+
+        delete particle['instance'];
+        particle.geometry.dispose();
+        particle.material.map.dispose();
+        particle.material.dispose();
     }
 }

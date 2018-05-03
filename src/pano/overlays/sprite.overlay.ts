@@ -86,7 +86,10 @@ class SpriteOverlay implements IPluggableOverlay {
     }
 
     dispose() {
-        this.particle.geometry.dispose();
+        const particle = this.particle;
+
+        particle.geometry.dispose();
+        particle.material.dispose();
     }
 }
 

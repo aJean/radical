@@ -1,7 +1,6 @@
 import {Vector3, Raycaster, Group} from 'three';
 import DomOverlay from './dom.overlay';
 import MeshOverlay from './mesh.overlay';
-import ThruOverlay from './thru.overlay';
 import SpriteOverlay from './sprite.overlay';
 import FrameOverlay from './frame.overlay';
 import VideoOverlay from './video.overlay';
@@ -46,15 +45,11 @@ export default class Overlays {
         this.pano = pano;
         this.list = list;
 
-        pano.subscribe('scene-ready', scene => this.init(scene));
-        pano.subscribe('scene-attachstart', scene => this.removeOverlays());
+        pano.subscribe('scene-ready', this.init, this);
+        pano.subscribe('scene-attachstart', this.removeOverlays, this);
         // per scene change
-        pano.subscribe('scene-attach', scene => this.init(scene));
-        pano.subscribe('render-process', scene => {
-            const cache = this.getCurrent(scene.id);
-            cache.domGroup.forEach(item => this.updateDomOverlay(item));
-            cache.meshGroup.forEach(item => item.update());
-        });
+        pano.subscribe('scene-attach', this.init, this);
+        pano.subscribe('render-process', this.updateOverlays, this);
 
         pano.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
     }
@@ -82,9 +77,6 @@ export default class Overlays {
                     break;
                 case 'mesh':
                     this.createMeshOverlay(data, cache);
-                    break;
-                case 'thru':
-                    this.createThruOverlay(data, cache);
                     break;
                 case 'animation':
                     this.createAnimationOverlay(data, cache);
@@ -161,27 +153,6 @@ export default class Overlays {
         // 加入可检测分组
         cache.detects.add(particle);
         cache.meshGroup.push(item);
-    }
-
-    /**
-     * 创建以当前中心点均匀分布的 覆盖物
-     */
-    createThruOverlay(prop, cache) {
-        const pano = this.pano
-
-        prop.list.forEach((data, i) => {
-            const item = new ThruOverlay({
-                scene: data.id,
-                img: data.img,
-                factor: prop.factor,
-                radius: prop.radius
-            }, pano);
-
-            item.show();
-            // 加入可检测分组
-            cache.detects.add(item.particle);
-            cache.meshGroup.push(item);
-        });
     }
 
     /**
@@ -318,6 +289,12 @@ export default class Overlays {
         });
     }
 
+    updateOverlays(scene) {
+        const cache = this.getCurrent(scene.id);
+        cache.domGroup.forEach(item => this.updateDomOverlay(item));
+        cache.meshGroup.forEach(item => item.update());
+    }
+
     /**
      * 删除当前场景下的所有 overlays
      */
@@ -370,5 +347,14 @@ export default class Overlays {
             data.domGroup.forEach(item => item.show());
             data.meshGroup.forEach(item => item.show());
         }
+    }
+
+    dispose() {
+        const pano = this.pano;
+
+        pano.unsubscribe('scene-ready', this.init, this);
+        pano.unsubscribe('scene-attachstart', this.removeOverlays, this);
+        pano.unsubscribe('scene-attach', this.init, this);
+        pano.unsubscribe('render-process', this.updateOverlays, this);
     }
 }

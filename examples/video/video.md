@@ -1,29 +1,46 @@
 <div id="test"></div>
-<script src="../lib.js"></script>
+<script src="../../dist/lib.js"></script>
 <script>
-    bxl.start({
-        "title": "test bxl transfer",
-        "cretPath": "../../assets/cret.pem",
-        "info": {
-            "author": "视频播放 - 点击播放"
+    const json = {
+        title: 'test bxl transfer',
+        cretPath: '../assets/cret.txt',
+        thru: {
+            lazy: 3000
         },
-        "sceneGroup": [{
-            "id": "scene5",
-            "name": "罗浮宫",
-            "bxlPath": "../../assets/scene6/scene6.bxl",
-            "imgPath": "../../assets/scene6/scene6.jpg",
-            "thumbPath": "../../assets/scene6/thumb6.jpg",
-            "overlays": [{
-                "id": "sintel",
-                "type": "video",
-                "actionType": "video",
-                "src": "../../assets/video/sintel.mp4",
-                "img": "../../assets/video/sign.png",
-                "location": {
-                    "lng": 0,
-                    "lat": 0
+        sceneGroup: [{
+            info: {
+                author: '视频播放 - 点击播放'
+            },
+            id: 'scene5',
+            name: '罗浮宫',
+            bxlPath: '../assets/scene6/scene6.bxl',
+            imgPath: '../assets/scene6/scene6.jpg',
+            thumbPath: '../assets/scene6/thumb6.jpg',
+            overlays: [{
+                id: 'sintel',
+                type: 'video',
+                actionType: 'video',
+                src: '../assets/video/sintel.mp4',
+                img: '../assets/video/sign.png',
+                location: {
+                    lng: 0,
+                    lat: 0
                 }
             }]
         }]
-    }, '#test');
+    };
+
+    bxl.startPano(json, '#test', {
+        'scene-load': function (data, pano) {
+            pano.addOverlay({
+                type: 'thru',
+                actionType: 'custom',
+                list: [{id: '49776493052', img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776493052_tinyearth.jpg'}, {id: '49776347175', img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776347175_tinyearth.jpg'}, {id: '50141043497', img:'https://img7.bdstatic.com/img/image/quanjing/tinyearth/50141043497_tinyearth.jpg'}]
+            });
+        },
+
+        'overlay-click': function (data) {
+            console.log(data);
+        }
+    });
 </script>

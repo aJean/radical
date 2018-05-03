@@ -3,6 +3,7 @@ import Info from '../pano/plugins/info.plugin';
 import Rotate from '../pano/plugins/rotate.plugin';
 import Multiple from '../pano/plugins/multiple.plugin';
 import Wormhole from '../pano/plugins/wormhole.plugin';
+import Thru from '../pano/plugins/thru.plugin';
 import Timeline from '../pano/animations/timeline.animation';
 import Pano from '../pano/pano';
 import Log from '../core/log';
@@ -100,6 +101,10 @@ abstract class Runtime {
                 for (let name in events) {
                     pano.subscribe(name, events[name]);
                 }
+            }
+
+            if (source['thru']) {
+                pano.addPlugin(Thru, source['thru']);
             }
 
             if (source['animation']) {

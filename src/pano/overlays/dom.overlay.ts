@@ -30,13 +30,11 @@ export default class DomOverlay implements IPluggableOverlay {
         const elem = this.elem;
         const data = this.data;
 
-        if (x !== data.x || y !== data.y) {
-            Util.styleElement(elem, {
-                display: 'block',
-                top: y,
-                left: x
-            });
-        }
+        Util.styleElement(elem, {
+            display: 'block',
+            top: y,
+            left: x
+        });
 
         data.x = x;
         data.y = y;

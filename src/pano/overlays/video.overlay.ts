@@ -89,9 +89,14 @@ export default class videoOverlay implements IPluggableOverlay {
     }
 
     dispose() {
-        delete this.particle['instance'];
+        const particle = this.particle;
+
+        delete particle['instance'];
+        particle.geometry.dispose();
+        particle.material.map.dispose();
+        particle.material.dispose();
+
         this.video.pause();
-        this.particle.geometry.dispose();
         this.popup.dispose();
     }
 }

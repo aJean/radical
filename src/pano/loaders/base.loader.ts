@@ -49,7 +49,7 @@ export default abstract class BaseLoader {
             const xhr = new XMLHttpRequest();
             xhr.open('GET', url);
             xhr.responseType = type || 'json';
-            xhr.withCredentials = true;
+            // xhr.withCredentials = true;
         
             xhr.onload = () => {
                 const ret = xhr.response;

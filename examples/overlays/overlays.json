@@ -6,6 +6,9 @@
         "fovTrans": true,
         "sceneTrans": true
     },
+    "thru": {
+        "lazy": 1000
+    },
     "sceneGroup": [{
         "info": {
             "author": "覆盖物 + 帧动画 (scene1)"

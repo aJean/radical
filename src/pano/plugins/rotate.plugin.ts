@@ -1,4 +1,3 @@
-import Pano from '../pano';
 import Tween from '../animations/tween.animation';
 
 /**
@@ -13,12 +12,12 @@ const defaultOpts = {
 };
 export default class Rotate {
     data: any;
-    pano: Pano;
+    pano: any;
     timeid: any;
     target: any;
     tween: Tween;
 
-    constructor(pano: Pano, data) {
+    constructor(pano, data) {
         this.data = Object.assign({}, defaultOpts, data);
         this.pano = pano;
         this.onDisturb = this.onDisturb.bind(this);
