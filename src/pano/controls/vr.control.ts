@@ -59,7 +59,6 @@ export default class VRControl {
 	getVRDisplays = function () {
 		Log.output('getVRDisplays() is being deprecated');
 		return this.vrDisplays;
-
 	}
 
 	getStandingMatrix() {
@@ -81,9 +80,7 @@ export default class VRControl {
 				pose = vrDisplay.getPose();
 			}
 			if (pose.orientation !== null) {
-                console.log(pose.orientation.applyMatrix4)
-
-                camera.quaternion.fromArray(rotateMatrix.multiply(pose.orientation));
+                camera.quaternion.fromArray(pose.orientation);
                 // camera.quaternion.setFromAxisAngle(new Vector3(0, 1, 0), Math.PI);
 			}
 

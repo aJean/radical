@@ -54548,116 +54548,6 @@ OrbitControl.prototype.constructor = OrbitControl;
 
 /***/ }),
 
-/***/ "./src/pano/controls/vr.control.ts":
-/*!*****************************************!*\
-  !*** ./src/pano/controls/vr.control.ts ***!
-  \*****************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
-
-
-/**
- * @file vr control
- */
-var rotateMatrix = new three__WEBPACK_IMPORTED_MODULE_0__["Matrix4"]().makeRotationAxis(new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](0, 1, 0).normalize(), Math.PI);
-var VRControl = /** @class */ (function () {
-    function VRControl(camera) {
-        var _this = this;
-        // the Rift SDK returns the position in meters
-        // this scale factor allows the user to define how meters
-        // are converted to scene units.
-        this.scale = 1;
-        // If true will use "standing space" coordinate system where y=0 is the
-        // floor and x=0, z=0 is the center of the room.
-        this.standing = true;
-        // Distance from the users eyes to the floor in meters. Used when
-        // standing=true but the VRDisplay doesn't provide stageParameters.
-        this.userHeight = 1.6;
-        this.getVRDisplays = function () {
-            _core_log__WEBPACK_IMPORTED_MODULE_1__["default"].output('getVRDisplays() is being deprecated');
-            return this.vrDisplays;
-        };
-        this.camera = camera;
-        this.standingMatrix = new three__WEBPACK_IMPORTED_MODULE_0__["Matrix4"]();
-        if ('VRFrameData' in window) {
-            this.frameData = new VRFrameData();
-        }
-        if (navigator.getVRDisplays) {
-            navigator.getVRDisplays().then(function (displays) { return _this.gotVRDisplays(displays); })
-                .catch(function () { return _core_log__WEBPACK_IMPORTED_MODULE_1__["default"].output('Unable to get VR Displays'); });
-        }
-    }
-    VRControl.prototype.gotVRDisplays = function (displays) {
-        this.vrDisplays = displays;
-        if (displays.length > 0) {
-            this.vrDisplay = displays[0];
-        }
-        else {
-            _core_log__WEBPACK_IMPORTED_MODULE_1__["default"].output('VR input not available');
-        }
-    };
-    VRControl.prototype.getVRDisplay = function () {
-        return this.vrDisplay;
-    };
-    VRControl.prototype.setVRDisplay = function (value) {
-        this.vrDisplay = value;
-    };
-    VRControl.prototype.getStandingMatrix = function () {
-        return this.standingMatrix;
-    };
-    VRControl.prototype.update = function () {
-        var vrDisplay = this.vrDisplay;
-        var frameData = this.frameData;
-        var standingMatrix = this.standingMatrix;
-        var camera = this.camera;
-        if (vrDisplay) {
-            var pose = void 0;
-            if (vrDisplay.getFrameData) {
-                vrDisplay.getFrameData(frameData);
-                pose = frameData.pose;
-            }
-            else if (vrDisplay.getPose) {
-                pose = vrDisplay.getPose();
-            }
-            if (pose.orientation !== null) {
-                console.log(pose.orientation.applyMatrix4);
-                camera.quaternion.fromArray(rotateMatrix.multiply(pose.orientation));
-                // camera.quaternion.setFromAxisAngle(new Vector3(0, 1, 0), Math.PI);
-            }
-            if (pose.position !== null) {
-                camera.position.fromArray(pose.position);
-            }
-            else {
-                camera.position.set(0, 0, 0);
-            }
-            if (this.standing) {
-                if (vrDisplay.stageParameters) {
-                    camera.updateMatrix();
-                    standingMatrix.fromArray(vrDisplay.stageParameters.sittingToStandingTransform);
-                    camera.applyMatrix(standingMatrix);
-                }
-                else {
-                    camera.position.setY(camera.position.y + this.userHeight);
-                }
-            }
-            camera.position.multiplyScalar(this.scale);
-        }
-    };
-    VRControl.prototype.dispose = function () {
-        this.vrDisplay = null;
-    };
-    return VRControl;
-}());
-/* harmony default export */ __webpack_exports__["default"] = (VRControl);
-
-
-/***/ }),
-
 /***/ "./src/pano/loaders/base.loader.ts":
 /*!*****************************************!*\
   !*** ./src/pano/loaders/base.loader.ts ***!
@@ -57446,7 +57336,7 @@ var Runtime = /** @class */ (function () {
                         }
                         try {
                             ref = el.getAttribute('ref') || "vpano_" + this.uid++;
-                            pano = this.instanceMap[ref] = new _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__["default"](el, source).deco();
+                            pano = this.instanceMap[ref] = new _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__["default"](el, source);
                             el.setAttribute('ref', ref);
                             // 用户订阅事件
                             if (events) {
@@ -57582,7 +57472,7 @@ __webpack_require__.r(__webpack_exports__);
             renderer.setSize(eyeParamsL.renderWidth * 2, eyeParamsL.renderHeight, false);
         }
         else {
-            renderer.setPixelRatio(rendererPixelRatio);
+            renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(width, height, updateStyle);
         }
     };
@@ -57605,8 +57495,15 @@ __webpack_require__.r(__webpack_exports__);
             }
         }
         else if (wasPresenting) {
-            renderer.setPixelRatio(rendererPixelRatio);
-            renderer.setSize(rendererSize.width, rendererSize.height, rendererUpdateStyle);
+            var width = rendererSize.width;
+            var height = rendererSize.height;
+            renderer.setPixelRatio(window.devicePixelRatio);
+            if (window.innerWidth > window.innerHeight) {
+                renderer.setSize(Math.max(width, height), Math.min(width, height), rendererUpdateStyle);
+            }
+            else {
+                renderer.setSize(Math.min(width, height), Math.max(width, height), rendererUpdateStyle);
+            }
         }
     }
     window.addEventListener('vrdisplaypresentchange', onVRDisplayPresentChange, false);
@@ -57978,36 +57875,51 @@ var Helper = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
-/* harmony import */ var _pano_controls_vr_control__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/controls/vr.control */ "./src/pano/controls/vr.control.ts");
-/* harmony import */ var _effect_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./effect.vr */ "./src/vr/effect.vr.ts");
-/* harmony import */ var _vr_helper_vr__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../vr/helper.vr */ "./src/vr/helper.vr.ts");
+/* harmony import */ var _effect_vr__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./effect.vr */ "./src/vr/effect.vr.ts");
+/* harmony import */ var _vr_helper_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vr/helper.vr */ "./src/vr/helper.vr.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 
 
 
 
 /**
- * @file vr pano decorator
+ * @file vr pano
  */
-var VPano = /** @class */ (function () {
+var VPano = /** @class */ (function (_super) {
+    __extends(VPano, _super);
     function VPano(el, source) {
-        this.type = 'vr-pano';
-        this.pano = new _pano_pano__WEBPACK_IMPORTED_MODULE_0__["default"](el, source);
+        var _this = _super.call(this, el, source) || this;
+        _this.type = 'vr-pano';
+        _this.effectRender = new _effect_vr__WEBPACK_IMPORTED_MODULE_1__["default"](_this.webgl);
+        _vr_helper_vr__WEBPACK_IMPORTED_MODULE_2__["default"].createButton(_this.webgl);
+        return _this;
     }
-    VPano.prototype.deco = function () {
-        var pano = this.pano;
-        var effect = new _effect_vr__WEBPACK_IMPORTED_MODULE_2__["default"](pano.webgl);
-        pano.orbit = new _pano_controls_vr_control__WEBPACK_IMPORTED_MODULE_1__["default"](pano.camera);
-        pano.animate = function () {
-            this.updateControl();
-            this.dispatch('render-process', this.currentData, this);
-            effect.render(this.scene, this.camera);
-            effect.requestAnimationFrame(this.animate.bind(this));
-        };
-        _vr_helper_vr__WEBPACK_IMPORTED_MODULE_3__["default"].createButton(pano.webgl);
-        return pano;
+    VPano.prototype.animate = function () {
+        this.updateControl();
+        this.dispatch('render-process', this.currentData, this);
+        this.effectRender.render(this.scene, this.camera);
+        this.effectRender.requestAnimationFrame(this.animate.bind(this));
+    };
+    VPano.prototype.onResize = function () {
+        var camera = this.getCamera();
+        var root = this.getRoot();
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].calcRenderSize(root);
+        camera.aspect = size.aspect;
+        camera.updateProjectionMatrix();
+        this.effectRender.setSize(size.width, size.height);
     };
     return VPano;
-}());
+}(_pano_pano__WEBPACK_IMPORTED_MODULE_0__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (VPano);
 
 

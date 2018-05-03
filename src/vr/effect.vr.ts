@@ -51,15 +51,11 @@ export default function (renderer, onError?) {
     var rendererPixelRatio = renderer.getPixelRatio();
 
     this.getVRDisplay = function () {
-
         return vrDisplay;
-
     };
 
     this.setVRDisplay = function (value) {
-
         vrDisplay = value;
-
     };
 
     this.getVRDisplays = function () {
@@ -75,10 +71,11 @@ export default function (renderer, onError?) {
 
         if (scope.isPresenting) {
             var eyeParamsL = vrDisplay.getEyeParameters('left');
+            
             renderer.setPixelRatio(1);
             renderer.setSize(eyeParamsL.renderWidth * 2, eyeParamsL.renderHeight, false);
         } else {
-            renderer.setPixelRatio(rendererPixelRatio);
+            renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(width, height, updateStyle);
         }
     };
@@ -111,12 +108,16 @@ export default function (renderer, onError?) {
             }
 
         } else if (wasPresenting) {
+            const width = rendererSize.width;
+            const height = rendererSize.height;
 
-            renderer.setPixelRatio(rendererPixelRatio);
-            renderer.setSize(rendererSize.width, rendererSize.height, rendererUpdateStyle);
-
+            renderer.setPixelRatio(window.devicePixelRatio);
+            if (window.innerWidth > window.innerHeight) {
+                renderer.setSize(Math.max(width, height), Math.min(width, height), rendererUpdateStyle);
+            } else {
+                renderer.setSize(Math.min(width, height), Math.max(width, height), rendererUpdateStyle);
+            }
         }
-
     }
 
     window.addEventListener('vrdisplaypresentchange', onVRDisplayPresentChange, false);

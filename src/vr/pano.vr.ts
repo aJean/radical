@@ -2,33 +2,38 @@ import Pano from '../pano/pano';
 import VRControl from '../pano/controls/vr.control';
 import VREffect from './effect.vr';
 import Helper from '../vr/helper.vr';
+import Util from '../core/util';
 
 /**
- * @file vr pano decorator 
+ * @file vr pano
  */
 
-export default class VPano {
-    pano: Pano;
+export default class VPano extends Pano {
     type = 'vr-pano';
+    effectRender: any;
 
     constructor (el, source) {
-        this.pano = new Pano(el, source);
+        super(el, source);
+
+        this.effectRender = new VREffect(this.webgl);
+        Helper.createButton(this.webgl);
     }
-    
-    deco() {
-        const pano = this.pano;
-        const effect = new VREffect(pano.webgl);
 
-        pano.orbit = new VRControl(pano.camera);
-        pano.animate = function() {
-            this.updateControl();
-            this.dispatch('render-process', this.currentData, this);
-            effect.render(this.scene, this.camera);
+    animate() {
+        this.updateControl();
+        this.dispatch('render-process', this.currentData, this);
+        this.effectRender.render(this.scene, this.camera);
 
-            effect.requestAnimationFrame(this.animate.bind(this));
-        };
+        this.effectRender.requestAnimationFrame(this.animate.bind(this));
+    }
 
-        Helper.createButton(pano.webgl);
-        return pano;
+    onResize() {
+        const camera = this.getCamera();
+        const root = this.getRoot();
+        const size =  this.size = Util.calcRenderSize(root);
+
+        camera.aspect = size.aspect;
+        camera.updateProjectionMatrix();
+        this.effectRender.setSize(size.width, size.height);
     }
 }

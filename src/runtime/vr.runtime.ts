@@ -60,7 +60,7 @@ export default abstract class Runtime {
 
         try {
             const ref = el.getAttribute('ref') || `vpano_${this.uid++}`;
-            const pano = this.instanceMap[ref] = new VPano(el, source).deco();
+            const pano = this.instanceMap[ref] = new VPano(el, source);
             el.setAttribute('ref', ref);            
             
             // 用户订阅事件

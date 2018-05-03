@@ -4105,7 +4105,6 @@
         }
         if (this.rotateInstructions_) {
             if (!util$2.isLandscapeMode() && util$2.isMobile()) {
-                console.log(this.layer_.source.parentElement)
                 this.rotateInstructions_.showTemporarily(10000, this.layer_.source.parentElement);
             } else {
                 this.rotateInstructions_.update(this.layer_.source.parentElement);
