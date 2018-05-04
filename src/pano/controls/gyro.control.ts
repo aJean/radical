@@ -55,13 +55,15 @@ export default class GyroControl {
             let theta = spherical.theta - this.lastSpherical.theta;
             let phi = this.lastSpherical.phi - spherical.phi;
 
-            if (beta < 0.2) {
-                theta = 0;
-                phi = beta - this.lastBeta;
-            }
-            
-            if (Math.abs(beta) > 2.8) {
-                theta = phi = 0;
+            if (orient == 0) {
+                if (beta < 0.2) {
+                    theta = 0;
+                    phi = beta - this.lastBeta;
+                }
+                
+                if (Math.abs(beta) > 2.8) {
+                    theta = phi = 0;
+                }
             }
 
             this.control.update(theta, phi);

@@ -53825,12 +53825,14 @@ var GyroControl = /** @class */ (function () {
         if (this.lastBeta) {
             var theta = spherical.theta - this.lastSpherical.theta;
             var phi = this.lastSpherical.phi - spherical.phi;
-            if (beta < 0.2) {
-                theta = 0;
-                phi = beta - this.lastBeta;
-            }
-            if (Math.abs(beta) > 2.8) {
-                theta = phi = 0;
+            if (orient == 0) {
+                if (beta < 0.2) {
+                    theta = 0;
+                    phi = beta - this.lastBeta;
+                }
+                if (Math.abs(beta) > 2.8) {
+                    theta = phi = 0;
+                }
             }
             this.control.update(theta, phi);
         }
@@ -56583,23 +56585,29 @@ var defaultOpts = {
     factor: 500,
     effect: 'scale',
     lazy: 3000,
-    limit: 3
+    limit: 3,
+    server: null,
+    request: null
 };
 var Thru = /** @class */ (function () {
     function Thru(pano, data) {
         this.timeid = 0;
         this.loader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_3__["default"]();
+        this.raycaster = new three__WEBPACK_IMPORTED_MODULE_0__["Raycaster"]();
         this.group = [];
         this.pano = pano;
         this.data = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].assign({}, defaultOpts, data);
+        this.onCanvasHandle = this.onCanvasHandle.bind(this);
         var scene = this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
         var camera = this.camera = pano.getCamera().clone();
-        pano.webgl.autoClear = false;
+        var webgl = pano.webgl;
+        webgl.autoClear = false;
         pano.subscribe('render-process', this.render, this);
         pano.subscribe('scene-ready', this.load, this);
         pano.subscribe('scene-drag', this.needToShow, this);
         pano.subscribe('scene-attachstart', this.needToHide, this);
-        pano.subscribe('scene-attach', this.needToShow, this);
+        pano.subscribe('scene-attach', this.load, this);
+        webgl.domElement.addEventListener('click', this.onCanvasHandle);
     }
     Thru.prototype.render = function () {
         var pano = this.pano;
@@ -56607,11 +56615,18 @@ var Thru = /** @class */ (function () {
         camera.rotation.copy(pano.getCamera().rotation);
         pano.webgl.render(this.scene, camera);
     };
-    Thru.prototype.load = function () {
+    Thru.prototype.load = function (data) {
         var _this = this;
-        var list = [{ id: '49776493052', img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776493052_tinyearth.jpg' }, { id: '49776347175', img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776347175_tinyearth.jpg' }, { id: '50141043497', img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/50141043497_tinyearth.jpg' }];
+        var server = this.data.server;
+        var list = [{ id: '49776493052', sid: '10551446979534058343',
+                img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776493052_tinyearth.jpg' }, { id: '49776347175', sid: '14641098511916445626',
+                img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776347175_tinyearth.jpg' }, { id: '50141043497', sid: '11641757629491658054',
+                img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/50141043497_tinyearth.jpg' }];
+        if (!server) {
+            return console.log('thru server missed!');
+        }
         this.cleanup();
-        this.loader.fetchUrl('https://image.baidu.com/img/image/quanjing/panorecommend?category=decoration&setid=')
+        this.loader.fetchUrl(server + data.id)
             .then(function (res) {
             _this.create(list);
             _this.needToShow();
@@ -56622,6 +56637,7 @@ var Thru = /** @class */ (function () {
         var data = this.data;
         var radius = data.radius;
         var group = this.group;
+        data.list = list;
         this.cleanup();
         list.forEach(function (item) {
             var material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
@@ -56688,26 +56704,66 @@ var Thru = /** @class */ (function () {
                     .start(['opacity'], _this.pano).complete(function () { return item.visible = false; });
         });
     };
+    Thru.prototype.onCanvasHandle = function (evt) {
+        var pano = this.pano;
+        var raycaster = this.raycaster;
+        var size = pano.getSize();
+        var pos = {
+            x: (evt.clientX / size.width) * 2 - 1,
+            y: -(evt.clientY / size.height) * 2 + 1
+        };
+        var group = this.group;
+        var request = this.data.request;
+        var list = this.data.list;
+        if (group.length) {
+            raycaster.setFromCamera(pos, pano.getCamera());
+            var intersects = raycaster.intersectObjects(group, false);
+            // disbale dom event
+            if (intersects.length) {
+                evt.stopPropagation();
+                evt.preventDefault();
+                // find data by id
+                var id_1 = intersects[0].object['data'].id;
+                var sid = intersects[0].object['data'].sid;
+                if (request && id_1 && sid) {
+                    this.loader.fetchUrl(request + '&setid=' + sid + '&sceneid=' + id_1)
+                        .then(function (res) {
+                        var data = res.data;
+                        var sceneGroup = res.data.sceneGroup;
+                        data.defaultSceneId = id_1;
+                        if (sceneGroup) {
+                            pano.enterNext(sceneGroup.find(function (item) { return item.id == id_1; }));
+                            pano.dispatch('thru-change', data, pano);
+                        }
+                    });
+                }
+            }
+        }
+    };
     Thru.prototype.cleanup = function () {
         var group = this.group;
+        var scene = this.scene;
         group.forEach(function (child) {
+            delete child['data'];
             child.visible = false;
             child.material.map.dispose();
             child.material.dispose();
-            child.geometry.remove();
+            child.geometry.dispose();
             scene.remove(child);
         });
         group.length = 0;
     };
     Thru.prototype.dispose = function () {
         var pano = this.pano;
-        pano.webgl.autoClear = true;
+        var webgl = pano.webgl;
+        webgl.autoClear = true;
         this.cleanup();
         pano.unsubscribe('render-process', this.render, this);
         pano.unsubscribe('scene-drag', this.needToShow, this);
         pano.unsubscribe('scene-ready', this.needToShow, this);
         pano.unsubscribe('scene-attachstart', this.needToHide, this);
         pano.unsubscribe('scene-attach', this.needToShow, this);
+        webgl.domElement.removeEventListener('click', this.onCanvasHandle);
     };
     return Thru;
 }());

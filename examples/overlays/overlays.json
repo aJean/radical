@@ -7,7 +7,9 @@
         "sceneTrans": true
     },
     "thru": {
-        "lazy": 1000
+        "lazy": 1000,
+        "server": "https://image.baidu.com/img/image/quanjing/panorecommend?category=decoration&setid=",
+        "request": "http://bjyz-newmedia07.epc.baidu.com:8080/img/image/quanjing/bxlpanoinfo?sf=1"
     },
     "sceneGroup": [{
         "info": {

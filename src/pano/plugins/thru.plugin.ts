@@ -1,4 +1,4 @@
-import {TextureLoader, MeshBasicMaterial, CircleGeometry, Mesh, Vector3, Scene, AdditiveBlending} from 'three';
+import {TextureLoader, MeshBasicMaterial, CircleGeometry, Mesh, Vector3, Scene, AdditiveBlending, Raycaster} from 'three';
 import Tween from '../animations/tween.animation';
 import Util from '../../core/util';
 import Loader from '../loaders/resource.loader';
@@ -13,7 +13,9 @@ const defaultOpts = {
     factor: 500,
     effect: 'scale',
     lazy: 3000,
-    limit: 3
+    limit: 3,
+    server: null,
+    request: null
 };
 export default class Thru {
     data: any;
@@ -22,21 +24,26 @@ export default class Thru {
     pano: any;
     timeid = 0;
     loader = new Loader();
+    raycaster = new Raycaster();
     group = [];
 
     constructor (pano, data) {
         this.pano = pano;
         this.data = Util.assign({}, defaultOpts, data);
+        this.onCanvasHandle = this.onCanvasHandle.bind(this);
 
         const scene = this.scene = new Scene();
         const camera = this.camera = pano.getCamera().clone();
+        const webgl = pano.webgl;
 
-        pano.webgl.autoClear = false;
+        webgl.autoClear = false;
         pano.subscribe('render-process', this.render, this);
         pano.subscribe('scene-ready', this.load, this);
         pano.subscribe('scene-drag', this.needToShow, this);
         pano.subscribe('scene-attachstart', this.needToHide, this);
-        pano.subscribe('scene-attach', this.needToShow, this);
+        pano.subscribe('scene-attach', this.load, this);
+
+        webgl.domElement.addEventListener('click', this.onCanvasHandle);
     }
 
     render() {
@@ -47,11 +54,19 @@ export default class Thru {
         pano.webgl.render(this.scene, camera);       
     }
 
-    load() {
-        const list = [{id: '49776493052', img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776493052_tinyearth.jpg'}, {id: '49776347175', img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776347175_tinyearth.jpg'}, {id: '50141043497', img:'https://img7.bdstatic.com/img/image/quanjing/tinyearth/50141043497_tinyearth.jpg'}];
+    load(data) {
+        const server = this.data.server;
+        const list = [{id: '49776493052', sid: '10551446979534058343',
+            img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776493052_tinyearth.jpg'}, {id: '49776347175', sid: '14641098511916445626',
+            img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776347175_tinyearth.jpg'}, {id: '50141043497', sid:'11641757629491658054',
+            img:'https://img7.bdstatic.com/img/image/quanjing/tinyearth/50141043497_tinyearth.jpg'}];
+
+        if (!server) {
+            return console.log('thru server missed!');
+        }
         
         this.cleanup();
-        this.loader.fetchUrl('https://image.baidu.com/img/image/quanjing/panorecommend?category=decoration&setid=')
+        this.loader.fetchUrl(server + data.id)
             .then(res => {
                 this.create(list);
                 this.needToShow();
@@ -64,6 +79,7 @@ export default class Thru {
         const radius = data.radius;
         const group = this.group;
 
+        data.list = list;
         this.cleanup();
 
         list.forEach(item => {
@@ -141,14 +157,55 @@ export default class Thru {
         });
     }
 
+    onCanvasHandle(evt) {
+        const pano = this.pano;
+        const raycaster = this.raycaster;
+        const size = pano.getSize();
+        const pos = {
+            x: (evt.clientX / size.width) * 2 - 1,
+            y: -(evt.clientY / size.height) * 2 + 1
+        };
+        const group = this.group;
+        const request = this.data.request;
+        const list = this.data.list;
+
+        if (group.length) {
+            raycaster.setFromCamera(pos, pano.getCamera());
+            const intersects = raycaster.intersectObjects(group, false);
+            // disbale dom event
+            if (intersects.length) {
+                evt.stopPropagation();
+                evt.preventDefault();
+                // find data by id
+                const id = intersects[0].object['data'].id;
+                const sid = intersects[0].object['data'].sid;
+                if (request && id && sid) {
+                    this.loader.fetchUrl(request + '&setid=' + sid + '&sceneid=' + id)
+                        .then(res => {
+                            const data = res.data;
+                            const sceneGroup = res.data.sceneGroup;
+                            data.defaultSceneId = id;
+
+                            if (sceneGroup) {
+                                pano.enterNext(sceneGroup.find(item => item.id == id));
+                                pano.dispatch('thru-change', data, pano);
+                            }
+                        });
+                }
+            }
+        }
+    }
+
     cleanup() {
         const group = this.group;
+        const scene = this.scene;
 
         group.forEach(child => {
+            delete child['data'];
             child.visible = false;
             child.material.map.dispose();
             child.material.dispose();
-            child.geometry.remove();
+            child.geometry.dispose();
             scene.remove(child);
         });
         group.length = 0;
@@ -156,7 +213,8 @@ export default class Thru {
 
     dispose() {
         const pano = this.pano;
-        pano.webgl.autoClear = true;
+        const webgl = pano.webgl;
+        webgl.autoClear = true;
 
         this.cleanup();
         pano.unsubscribe('render-process', this.render, this);
@@ -164,5 +222,7 @@ export default class Thru {
         pano.unsubscribe('scene-ready', this.needToShow, this);
         pano.unsubscribe('scene-attachstart', this.needToHide, this);
         pano.unsubscribe('scene-attach', this.needToShow, this);
+
+        webgl.domElement.removeEventListener('click', this.onCanvasHandle);
     }
 }
