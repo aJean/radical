@@ -56591,6 +56591,10 @@ var defaultOpts = {
 };
 var Thru = /** @class */ (function () {
     function Thru(pano, data) {
+        // prevent excessive click
+        this.active = true;
+        // lock when animating
+        this.animating = false;
         this.timeid = 0;
         this.loader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_3__["default"]();
         this.raycaster = new three__WEBPACK_IMPORTED_MODULE_0__["Raycaster"]();
@@ -56663,6 +56667,9 @@ var Thru = /** @class */ (function () {
         return new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](0, 0, 1).unproject(projectCamera);
     };
     Thru.prototype.needToHide = function () {
+        if (this.animating) {
+            return;
+        }
         clearTimeout(this.timeid);
         this.hide();
     };
@@ -56671,6 +56678,7 @@ var Thru = /** @class */ (function () {
         clearTimeout(this.timeid);
         this.timeid = setTimeout(function () {
             _this.show();
+            _this.active = true;
         }, this.data.lazy);
     };
     Thru.prototype.show = function () {
@@ -56695,16 +56703,27 @@ var Thru = /** @class */ (function () {
     };
     Thru.prototype.hide = function () {
         var _this = this;
+        this.animating = true;
         this.group.forEach(function (item) {
             _this.data.effect == 'scale'
                 ? new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"]({ scale: 1 }).to({ scale: 0 }).effect('backOut', 1000)
                     .start(['scale'], _this.pano).process(function (val) { return item.scale.set(val, val, 1); })
-                    .complete(function () { return item.visible = false; })
+                    .complete(function () {
+                    _this.animating = false;
+                    item.visible = false;
+                })
                 : new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](item.material).to({ opacity: 0 }).effect('quintEaseIn', 1000)
-                    .start(['opacity'], _this.pano).complete(function () { return item.visible = false; });
+                    .start(['opacity'], _this.pano).complete(function () {
+                    _this.animating = false;
+                    item.visible = false;
+                });
         });
     };
     Thru.prototype.onCanvasHandle = function (evt) {
+        var _this = this;
+        if (!this.active) {
+            return;
+        }
         var pano = this.pano;
         var raycaster = this.raycaster;
         var size = pano.getSize();
@@ -56720,6 +56739,7 @@ var Thru = /** @class */ (function () {
             var intersects = raycaster.intersectObjects(group, false);
             // disbale dom event
             if (intersects.length) {
+                this.active = false;
                 evt.stopPropagation();
                 evt.preventDefault();
                 // find data by id
@@ -56735,6 +56755,9 @@ var Thru = /** @class */ (function () {
                             pano.enterNext(sceneGroup.find(function (item) { return item.id == id_1; }));
                             pano.dispatch('thru-change', data, pano);
                         }
+                    }).catch(function (e) {
+                        _this.active = true;
+                        console.log(e);
                     });
                 }
             }

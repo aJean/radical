@@ -22,6 +22,10 @@ export default class Thru {
     scene: any;
     camera: any;
     pano: any;
+    // prevent excessive click
+    active = true;
+    // lock when animating
+    animating = false;
     timeid = 0;
     loader = new Loader();
     raycaster = new Raycaster();
@@ -112,6 +116,10 @@ export default class Thru {
     }
 
     needToHide() {
+        if (this.animating) {
+            return;
+        }
+
         clearTimeout(this.timeid);
         this.hide();        
     }
@@ -120,6 +128,7 @@ export default class Thru {
         clearTimeout(this.timeid);
         this.timeid = setTimeout(() => {
             this.show();
+            this.active = true;            
         }, this.data.lazy);
     }
 
@@ -147,17 +156,28 @@ export default class Thru {
     }
 
     hide() {
+        this.animating = true;        
         this.group.forEach(item => {
             this.data.effect == 'scale'
                 ? new Tween({scale: 1}).to({scale: 0}).effect('backOut', 1000)
                     .start(['scale'], this.pano).process(val => item.scale.set(val, val, 1))
-                    .complete(() => item.visible = false)
+                    .complete(() => {
+                        this.animating = false;
+                        item.visible = false;
+                    })
                 : new Tween(item.material).to({opacity: 0}).effect('quintEaseIn', 1000)
-                .start(['opacity'], this.pano).complete(() => item.visible = false);
+                .start(['opacity'], this.pano).complete(() => {
+                    this.animating = false;
+                    item.visible = false;
+                });
         });
     }
 
     onCanvasHandle(evt) {
+        if (!this.active) {
+            return;
+        }
+
         const pano = this.pano;
         const raycaster = this.raycaster;
         const size = pano.getSize();
@@ -174,6 +194,7 @@ export default class Thru {
             const intersects = raycaster.intersectObjects(group, false);
             // disbale dom event
             if (intersects.length) {
+                this.active = false;
                 evt.stopPropagation();
                 evt.preventDefault();
                 // find data by id
@@ -190,6 +211,9 @@ export default class Thru {
                                 pano.enterNext(sceneGroup.find(item => item.id == id));
                                 pano.dispatch('thru-change', data, pano);
                             }
+                        }).catch(e => {
+                            this.active = true;
+                            console.log(e);
                         });
                 }
             }
