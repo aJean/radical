@@ -39,14 +39,6 @@
             };
 
             bxl.startPano(json, '#test', {
-                'scene-load': function (data, pano) {
-                    pano.addOverlay({
-                        type: 'thru',
-                        actionType: 'custom',
-                        list: [{id: '49776493052', img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776493052_tinyearth.jpg'}, {id: '49776347175', img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776347175_tinyearth.jpg'}, {id: '50141043497', img:'https://img7.bdstatic.com/img/image/quanjing/tinyearth/50141043497_tinyearth.jpg'}]
-                    });
-                },
-
                 'overlay-click': function (data) {
                     console.log(data);
                 }
