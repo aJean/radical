@@ -27,7 +27,7 @@ export default {
     },
 
     startVR(url, el, events?) {
-        VRuntime.start(url, el);
+        VRuntime.start(url, el, events);
     },
 
     testMapping

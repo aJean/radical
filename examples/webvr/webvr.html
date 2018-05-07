@@ -13,10 +13,12 @@
         <script src="./third_party/webvr.polyfill.js"></script>
         <script src="../../dist/lib.js"></script>
         <script>
-            const polyfill = new WebVRPolyfill();
             bxl.startVR({
                 title: 'test bxl transfer',
                 cretPath: '../assets/cret.txt',
+                vr: {
+                    ui: true
+                },
                 sceneGroup: [{
                     info: {
                         author: '绵阳谊君舞蹈',
@@ -24,9 +26,9 @@
                     },
                     id: 'scene0',
                     name: '罗浮宫',
-                    bxlPath: '../assets/scene0/scene0.bxl',
-                    imgPath: '../assets/scene0/scene0.jpg',
-                    thumbPath: '../assets/scene0/thumb0.jpg'
+                    texPath: '../assets/vrimg/',
+                    imgPath: '../assets/vrimg/preview.jpg',
+                    thumbPath: '../assets/vrimg/thumb.jpg'
                 }]
             }, '#test');
         </script>

@@ -59,10 +59,8 @@ export default function (renderer, onError?) {
     };
 
     this.getVRDisplays = function () {
-
         console.warn('THREE.VREffect: getVRDisplays() is being deprecated.');
         return vrDisplays;
-
     };
 
     this.setSize = function (width, height, updateStyle) {
@@ -71,11 +69,11 @@ export default function (renderer, onError?) {
 
         if (scope.isPresenting) {
             var eyeParamsL = vrDisplay.getEyeParameters('left');
-            
-            renderer.setPixelRatio(1);
+
+            renderer.setPixelRatio(3);
             renderer.setSize(eyeParamsL.renderWidth * 2, eyeParamsL.renderHeight, false);
         } else {
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(rendererPixelRatio);
             renderer.setSize(width, height, updateStyle);
         }
     };
@@ -87,31 +85,26 @@ export default function (renderer, onError?) {
     var defaultRightBounds = [0.5, 0.0, 0.5, 1.0];
 
     function onVRDisplayPresentChange() {
-
         var wasPresenting = scope.isPresenting;
         scope.isPresenting = vrDisplay !== undefined && vrDisplay.isPresenting;
 
         if (scope.isPresenting) {
-
             var eyeParamsL = vrDisplay.getEyeParameters('left');
             var eyeWidth = eyeParamsL.renderWidth;
             var eyeHeight = eyeParamsL.renderHeight;
 
             if (!wasPresenting) {
-
                 rendererPixelRatio = renderer.getPixelRatio();
                 rendererSize = renderer.getSize();
 
-                renderer.setPixelRatio(1);
+                renderer.setPixelRatio(3);
                 renderer.setSize(eyeWidth * 2, eyeHeight, false);
-
             }
-
         } else if (wasPresenting) {
             const width = rendererSize.width;
             const height = rendererSize.height;
 
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(rendererPixelRatio);
             if (window.innerWidth > window.innerHeight) {
                 renderer.setSize(Math.max(width, height), Math.min(width, height), rendererUpdateStyle);
             } else {
@@ -123,91 +116,57 @@ export default function (renderer, onError?) {
     window.addEventListener('vrdisplaypresentchange', onVRDisplayPresentChange, false);
 
     this.setFullScreen = function (boolean) {
-
         return new Promise(function (resolve, reject) {
-
             if (vrDisplay === undefined) {
-
                 reject(new Error('No VR hardware found.'));
                 return;
-
             }
 
             if (scope.isPresenting === boolean) {
-
                 resolve();
                 return;
-
             }
 
             if (boolean) {
-
                 resolve(vrDisplay.requestPresent([{ source: canvas }]));
-
             } else {
-
                 resolve(vrDisplay.exitPresent());
-
             }
-
         });
-
     };
 
     this.requestPresent = function () {
-
         return this.setFullScreen(true);
-
     };
 
     this.exitPresent = function () {
-
         return this.setFullScreen(false);
-
     };
 
     this.requestAnimationFrame = function (f) {
-
         if (vrDisplay !== undefined) {
-
             return vrDisplay.requestAnimationFrame(f);
-
         } else {
-
             return window.requestAnimationFrame(f);
-
         }
-
     };
 
     this.cancelAnimationFrame = function (h) {
-
         if (vrDisplay !== undefined) {
-
             vrDisplay.cancelAnimationFrame(h);
-
         } else {
-
             window.cancelAnimationFrame(h);
-
         }
-
     };
 
     this.submitFrame = function () {
-
         if (vrDisplay !== undefined && scope.isPresenting) {
-
             vrDisplay.submitFrame();
-
         }
-
     };
 
     this.autoSubmitFrame = true;
-
     // render
-
     var cameraL = new PerspectiveCamera();
     cameraL.layers.enable(1);
 
@@ -215,23 +174,16 @@ export default function (renderer, onError?) {
     cameraR.layers.enable(2);
 
     this.render = function (scene, camera, renderTarget, forceClear) {
-
         if (vrDisplay && scope.isPresenting) {
-
             var autoUpdate = scene.autoUpdate;
-
             if (autoUpdate) {
-
                 scene.updateMatrixWorld();
                 scene.autoUpdate = false;
-
             }
 
             if (Array.isArray(scene)) {
-
                 console.warn('THREE.VREffect.render() no longer supports arrays. Use object.layers instead.');
                 scene = scene[0];
-
             }
 
             // When rendering we don't care what the recommended size is, only what the actual size
@@ -242,17 +194,13 @@ export default function (renderer, onError?) {
             var rightBounds;
 
             if (layers.length) {
-
                 var layer = layers[0];
 
                 leftBounds = layer.leftBounds !== null && layer.leftBounds.length === 4 ? layer.leftBounds : defaultLeftBounds;
                 rightBounds = layer.rightBounds !== null && layer.rightBounds.length === 4 ? layer.rightBounds : defaultRightBounds;
-
             } else {
-
                 leftBounds = defaultLeftBounds;
                 rightBounds = defaultRightBounds;
-
             }
 
             renderRectL = {
@@ -269,15 +217,12 @@ export default function (renderer, onError?) {
             };
 
             if (renderTarget) {
-
                 renderer.setRenderTarget(renderTarget);
                 renderTarget.scissorTest = true;
 
             } else {
-
                 renderer.setRenderTarget(null);
                 renderer.setScissorTest(true);
-
             }
 
             if (renderer.autoClear || forceClear) renderer.clear();
@@ -309,9 +254,7 @@ export default function (renderer, onError?) {
                 cameraR.updateMatrix();
                 cameraR.matrix.multiply(eyeMatrixR);
                 cameraR.matrix.decompose(cameraR.position, cameraR.quaternion, cameraR.scale);
-
             } else {
-
                 var eyeParamsL = vrDisplay.getEyeParameters('left');
                 var eyeParamsR = vrDisplay.getEyeParameters('right');
 
@@ -323,17 +266,14 @@ export default function (renderer, onError?) {
 
                 cameraL.translateOnAxis(eyeTranslationL, cameraL.scale.x);
                 cameraR.translateOnAxis(eyeTranslationR, cameraR.scale.x);
-
             }
 
             // render left eye
             if (renderTarget) {
-
                 renderTarget.viewport.set(renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height);
                 renderTarget.scissor.set(renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height);
 
             } else {
-
                 renderer.setViewport(renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height);
                 renderer.setScissor(renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height);
 
@@ -342,58 +282,43 @@ export default function (renderer, onError?) {
 
             // render right eye
             if (renderTarget) {
-
                 renderTarget.viewport.set(renderRectR.x, renderRectR.y, renderRectR.width, renderRectR.height);
                 renderTarget.scissor.set(renderRectR.x, renderRectR.y, renderRectR.width, renderRectR.height);
-
             } else {
-
                 renderer.setViewport(renderRectR.x, renderRectR.y, renderRectR.width, renderRectR.height);
                 renderer.setScissor(renderRectR.x, renderRectR.y, renderRectR.width, renderRectR.height);
-
             }
             renderer.render(scene, cameraR, renderTarget, forceClear);
 
             if (renderTarget) {
-
                 renderTarget.viewport.set(0, 0, size.width, size.height);
                 renderTarget.scissor.set(0, 0, size.width, size.height);
                 renderTarget.scissorTest = false;
                 renderer.setRenderTarget(null);
 
             } else {
-
                 renderer.setViewport(0, 0, size.width, size.height);
                 renderer.setScissorTest(false);
-
             }
 
             if (autoUpdate) {
-
                 scene.autoUpdate = true;
-
             }
 
             if (scope.autoSubmitFrame) {
-
                 scope.submitFrame();
-
             }
 
             return;
-
         }
 
         // Regular render mode if not HMD
 
         renderer.render(scene, camera, renderTarget, forceClear);
-
     };
 
     this.dispose = function () {
-
         window.removeEventListener('vrdisplaypresentchange', onVRDisplayPresentChange, false);
-
     };
 
     //
@@ -403,24 +328,17 @@ export default function (renderer, onError?) {
 
     // Compute model matrices of the eyes with respect to the head.
     function getEyeMatrices(frameData) {
-
         // Compute the matrix for the position of the head based on the pose
         if (frameData.pose.orientation) {
-
             poseOrientation.fromArray(frameData.pose.orientation);
             headMatrix.makeRotationFromQuaternion(poseOrientation);
-
         } else {
-
             headMatrix.identity();
-
         }
 
         if (frameData.pose.position) {
-
             posePosition.fromArray(frameData.pose.position);
             headMatrix.setPosition(posePosition);
-
         }
 
         // The view matrix transforms vertices from sitting space to eye space. As such, the view matrix can be thought of as a product of two matrices:
@@ -443,7 +361,6 @@ export default function (renderer, onError?) {
     }
 
     function fovToNDCScaleOffset(fov) {
-
         var pxscale = 2.0 / (fov.leftTan + fov.rightTan);
         var pxoffset = (fov.leftTan - fov.rightTan) * pxscale * 0.5;
         var pyscale = 2.0 / (fov.upTan + fov.downTan);
@@ -453,7 +370,6 @@ export default function (renderer, onError?) {
     }
 
     function fovPortToProjection(fov, rightHanded, zNear, zFar) {
-
         rightHanded = rightHanded === undefined ? true : rightHanded;
         zNear = zNear === undefined ? 0.01 : zNear;
         zFar = zFar === undefined ? 10000.0 : zFar;
@@ -495,11 +411,9 @@ export default function (renderer, onError?) {
 
         mobj.transpose();
         return mobj;
-
     }
 
     function fovToProjection(fov, rightHanded, zNear, zFar) {
-
         var DEG2RAD = Math.PI / 180.0;
 
         var fovPort = {
@@ -508,9 +422,6 @@ export default function (renderer, onError?) {
             leftTan: Math.tan(fov.leftDegrees * DEG2RAD),
             rightTan: Math.tan(fov.rightDegrees * DEG2RAD)
         };
-
         return fovPortToProjection(fovPort, rightHanded, zNear, zFar);
-
     }
-
 };

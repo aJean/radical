@@ -16,7 +16,10 @@ export default class VPano extends Pano {
         super(el, source);
 
         this.effectRender = new VREffect(this.webgl);
-        Helper.createButton(this.webgl);
+        // 使用 ui button
+        if (source.vr && source.vr.ui === true) {
+            this.getDisplay().then(display => Helper.createButton(this.webgl, display));
+        }
     }
 
     animate() {
@@ -30,10 +33,14 @@ export default class VPano extends Pano {
     onResize() {
         const camera = this.getCamera();
         const root = this.getRoot();
-        const size =  this.size = Util.calcRenderSize(root);
+        const size = this.size = Util.calcRenderSize(root);
 
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.effectRender.setSize(size.width, size.height);
+    }
+
+    getDisplay() {
+        return navigator.getVRDisplays().then(displays => displays.length > 0 ? displays[0] : null);
     }
 }

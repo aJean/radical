@@ -30,10 +30,15 @@ export default class DomOverlay implements IPluggableOverlay {
         const elem = this.elem;
         const data = this.data;
 
+        if (!data.width) {
+            data.width = elem.offsetWidth;
+            data.height = elem.offsetHeight;
+        }
+
         Util.styleElement(elem, {
             display: 'block',
-            top: y,
-            left: x
+            top: y - data.height / 2,
+            left: x - data.width / 2
         });
 
         data.x = x;

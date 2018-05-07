@@ -285,6 +285,7 @@ export default class Overlays {
             if (item == data) {
                 cache.domGroup.splice(i, 1);
                 pano.removeDomObject(item.elem);
+                item.dispose();
             }
         });
     }

@@ -53406,7 +53406,7 @@ Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_4__["default"])();
         _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].releaseInstance(ref);
     },
     startVR: function (url, el, events) {
-        _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].start(url, el);
+        _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].start(url, el, events);
     },
     testMapping: _pano_plugins_complete_plugin__WEBPACK_IMPORTED_MODULE_7__["default"]
 });
@@ -54800,10 +54800,14 @@ var DomOverlay = /** @class */ (function () {
     DomOverlay.prototype.update = function (x, y) {
         var elem = this.elem;
         var data = this.data;
+        if (!data.width) {
+            data.width = elem.offsetWidth;
+            data.height = elem.offsetHeight;
+        }
         _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].styleElement(elem, {
             display: 'block',
-            top: y,
-            left: x
+            top: y - data.height / 2,
+            left: x - data.width / 2
         });
         data.x = x;
         data.y = y;
@@ -55265,6 +55269,7 @@ var Overlays = /** @class */ (function () {
             if (item == data) {
                 cache.domGroup.splice(i, 1);
                 pano.removeDomObject(item.elem);
+                item.dispose();
             }
         });
     };
@@ -55628,7 +55633,7 @@ var Pano = /** @class */ (function () {
         var container = opts.el;
         var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(container, opts);
         var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].createElement("<div class=\"pano-root\"></div>");
-        var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
+        var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true });
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(size.width, size.height);
@@ -57548,11 +57553,11 @@ __webpack_require__.r(__webpack_exports__);
         rendererUpdateStyle = updateStyle;
         if (scope.isPresenting) {
             var eyeParamsL = vrDisplay.getEyeParameters('left');
-            renderer.setPixelRatio(1);
+            renderer.setPixelRatio(3);
             renderer.setSize(eyeParamsL.renderWidth * 2, eyeParamsL.renderHeight, false);
         }
         else {
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(rendererPixelRatio);
             renderer.setSize(width, height, updateStyle);
         }
     };
@@ -57570,14 +57575,14 @@ __webpack_require__.r(__webpack_exports__);
             if (!wasPresenting) {
                 rendererPixelRatio = renderer.getPixelRatio();
                 rendererSize = renderer.getSize();
-                renderer.setPixelRatio(1);
+                renderer.setPixelRatio(3);
                 renderer.setSize(eyeWidth * 2, eyeHeight, false);
             }
         }
         else if (wasPresenting) {
             var width = rendererSize.width;
             var height = rendererSize.height;
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(rendererPixelRatio);
             if (window.innerWidth > window.innerHeight) {
                 renderer.setSize(Math.max(width, height), Math.min(width, height), rendererUpdateStyle);
             }
@@ -57865,7 +57870,7 @@ __webpack_require__.r(__webpack_exports__);
 var Helper = /** @class */ (function () {
     function Helper() {
     }
-    Helper.createButton = function (webgl) {
+    Helper.createButton = function (webgl, display) {
         var _this = this;
         this.webgl = webgl;
         if ('getVRDisplays' in navigator) {
@@ -57881,8 +57886,7 @@ var Helper = /** @class */ (function () {
             window.addEventListener('vrdisplayactivate', function (event) {
                 event.display.requestPresent([{ source: webgl.domElement }]);
             }, false);
-            navigator.getVRDisplays()
-                .then(function (displays) { return displays.length > 0 ? _this.showEnter(displays[0], button_1) : _this.showNotFound(button_1); });
+            display ? this.showEnter(display, button_1) : this.showNotFound(button_1);
         }
         else {
             var message = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<a href="https://webvr.info" style="left:calc(50% - 90px);width:180px;text-decoration:none;">WEBVR NOT SUPPORTED</a>');
@@ -57909,7 +57913,7 @@ var Helper = /** @class */ (function () {
                 button.innerHTML = 'EXIT VR';
             }
         };
-        webgl.vr.setDevice(display);
+        // webgl.vr.setDevice(display);
     };
     Helper.showNotFound = function (button) {
         button.style.display = '';
@@ -57981,7 +57985,10 @@ var VPano = /** @class */ (function (_super) {
         var _this = _super.call(this, el, source) || this;
         _this.type = 'vr-pano';
         _this.effectRender = new _effect_vr__WEBPACK_IMPORTED_MODULE_1__["default"](_this.webgl);
-        _vr_helper_vr__WEBPACK_IMPORTED_MODULE_2__["default"].createButton(_this.webgl);
+        // 使用 ui button
+        if (source.vr && source.vr.ui === true) {
+            _this.getDisplay().then(function (display) { return _vr_helper_vr__WEBPACK_IMPORTED_MODULE_2__["default"].createButton(_this.webgl, display); });
+        }
         return _this;
     }
     VPano.prototype.animate = function () {
@@ -57997,6 +58004,9 @@ var VPano = /** @class */ (function (_super) {
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.effectRender.setSize(size.width, size.height);
+    };
+    VPano.prototype.getDisplay = function () {
+        return navigator.getVRDisplays().then(function (displays) { return displays.length > 0 ? displays[0] : null; });
     };
     return VPano;
 }(_pano_pano__WEBPACK_IMPORTED_MODULE_0__["default"]));

@@ -7,7 +7,7 @@ import Util from '../core/util';
 export default abstract class Helper {
     static webgl: any;
 
-    static createButton(webgl) {
+    static createButton(webgl, display) {
         this.webgl = webgl;
 
         if ('getVRDisplays' in navigator) {
@@ -28,9 +28,7 @@ export default abstract class Helper {
                 event.display.requestPresent([{ source: webgl.domElement }]);
             }, false);
 
-            navigator.getVRDisplays()
-                .then(displays => displays.length > 0 ? this.showEnter(displays[0], button) : this.showNotFound(button));
-
+            display ? this.showEnter(display, button) : this.showNotFound(button);
         } else {
             const message = Util.createElement('<a href="https://webvr.info" style="left:calc(50% - 90px);width:180px;text-decoration:none;">WEBVR NOT SUPPORTED</a>');
             
@@ -50,8 +48,8 @@ export default abstract class Helper {
 
         button.textContent = 'ENTER VR';
 
-        button.onmouseenter = function () { button.style.opacity = '1.0'; };
-        button.onmouseleave = function () { button.style.opacity = '0.5'; };
+        button.onmouseenter = function () {button.style.opacity = '1.0';};
+        button.onmouseleave = function () {button.style.opacity = '0.5';};
         button.onclick = function () {
             if (display.isPresenting) {
                 display.exitPresent();
@@ -61,7 +59,7 @@ export default abstract class Helper {
                 button.innerHTML = 'EXIT VR';
             }
         };
-        webgl.vr.setDevice(display);
+        // webgl.vr.setDevice(display);
     }
 
     static showNotFound(button) {

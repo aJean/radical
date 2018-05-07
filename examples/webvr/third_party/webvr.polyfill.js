@@ -3998,7 +3998,7 @@
 
     function CardboardVRDisplay(config) {
         var defaults = util$2.extend({}, options);
-        this.config = util$2.extend(defaults, config || {});
+        this.config = util.extend(defaults, config);
         this.displayName = 'Cardboard VRDisplay';
         this.capabilities.hasOrientation = true;
         this.capabilities.canPresent = true;
@@ -4048,6 +4048,7 @@
             console.error('Invalid eye provided: %s', whichEye);
             return null;
         }
+
         return {
             fieldOfView: fieldOfView,
             offset: offset,
@@ -4378,7 +4379,7 @@
         if (this._polyfillDisplaysPopulated) {
             return this.polyfillDisplays;
         }
-        if (util.isMobile()) {
+        if (util.isMobile()) {            
             var vrDisplay = new cardboardVrDisplay({
                 MOBILE_WAKE_LOCK: this.config.MOBILE_WAKE_LOCK,
                 DEBUG: this.config.DEBUG,
