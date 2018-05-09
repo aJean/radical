@@ -53285,6 +53285,21 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         return vector.project(camera);
     },
     /**
+     * 逆归一化
+     * @param {Object} location 屏幕坐标
+     * @param {Object} size 渲染器 size
+     */
+    inverseNdc: function (location, size) {
+        return {
+            x: Math.floor((location.x * size.width + size.width) / 2),
+            y: Math.floor((-location.y * size.height + size.height) / 2),
+            z: location.z
+        };
+    },
+    caleSphereToScreen: function (lng, lat, radius, camera, size) {
+        return this.inverseNdc(this.calcWorldToScreen(this.calcSphereToWorld(lng, lat, radius), camera), size);
+    },
+    /**
      * 屏幕坐标转为球面坐标
      */
     calcScreenToSphere: function (location, camera) {
@@ -53378,10 +53393,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_styles_overlays_style_less__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../styles/ui.style.less */ "./styles/ui.style.less");
 /* harmony import */ var _styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_styles_ui_style_less__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _core_polyfill__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./core/polyfill */ "./src/core/polyfill.ts");
-/* harmony import */ var _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./runtime/pano.runtime */ "./src/runtime/pano.runtime.ts");
-/* harmony import */ var _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
-/* harmony import */ var _pano_plugins_complete_plugin__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./pano/plugins/complete.plugin */ "./src/pano/plugins/complete.plugin.ts");
+/* harmony import */ var _styles_vr_style_less__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../styles/vr.style.less */ "./styles/vr.style.less");
+/* harmony import */ var _styles_vr_style_less__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_styles_vr_style_less__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _core_polyfill__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./core/polyfill */ "./src/core/polyfill.ts");
+/* harmony import */ var _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./runtime/pano.runtime */ "./src/runtime/pano.runtime.ts");
+/* harmony import */ var _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
+/* harmony import */ var _pano_plugins_complete_plugin__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./pano/plugins/complete.plugin */ "./src/pano/plugins/complete.plugin.ts");
+
 
 
 
@@ -53394,21 +53412,21 @@ __webpack_require__.r(__webpack_exports__);
 /**
  * @file bxl lib
  */
-Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_4__["default"])();
+Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_5__["default"])();
 /* harmony default export */ __webpack_exports__["default"] = ({
     startPano: function (url, el, events) {
-        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].start(url, el, events);
+        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].start(url, el, events);
     },
     getPano: function (ref) {
-        return _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].getInstance(ref);
+        return _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].getInstance(ref);
     },
     disposePano: function (ref) {
-        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_5__["default"].releaseInstance(ref);
+        _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].releaseInstance(ref);
     },
     startVR: function (url, el, events) {
-        _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_6__["default"].start(url, el, events);
+        _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_7__["default"].start(url, el, events);
     },
-    testMapping: _pano_plugins_complete_plugin__WEBPACK_IMPORTED_MODULE_7__["default"]
+    testMapping: _pano_plugins_complete_plugin__WEBPACK_IMPORTED_MODULE_8__["default"]
 });
 
 
@@ -56272,7 +56290,7 @@ __webpack_require__.r(__webpack_exports__);
  * 顶点从低端开始逆时针
  */
 /* harmony default export */ __webpack_exports__["default"] = (function (id) {
-    var webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
+    var webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true });
     var render = webgl.domElement;
     webgl.setPixelRatio(window.devicePixelRatio);
     webgl.setSize(window.innerWidth, window.innerHeight);
@@ -57320,7 +57338,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
 /* harmony import */ var _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vr/pano.vr */ "./src/vr/pano.vr.ts");
-/* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
+/* harmony import */ var _vr_divider_vr__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../vr/divider.vr */ "./src/vr/divider.vr.ts");
+/* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -57360,6 +57379,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
 
 
 
+
 /**
  * @file wev vr runtime
  */
@@ -57393,7 +57413,7 @@ var Runtime = /** @class */ (function () {
     }
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
-            var source, _a, polyfill, ref, pano, name_1;
+            var source, _a, ref, vpano, name_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -57414,30 +57434,27 @@ var Runtime = /** @class */ (function () {
                         if (!(source && source['sceneGroup'])) {
                             return [2 /*return*/, _core_log__WEBPACK_IMPORTED_MODULE_1__["default"].output('load source error')];
                         }
-                        if (window['WebVRPolyfill']) {
-                            polyfill = new window['WebVRPolyfill']({
-                                BUFFER_SCALE: 0.75
-                            });
-                        }
                         try {
                             ref = el.getAttribute('ref') || "vpano_" + this.uid++;
-                            pano = this.instanceMap[ref] = new _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__["default"](el, source);
+                            vpano = this.instanceMap[ref] = new _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__["default"](el, source);
                             el.setAttribute('ref', ref);
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
-                                    pano.subscribe(name_1, events[name_1]);
+                                    vpano.subscribe(name_1, events[name_1]);
                                 }
                             }
                             // 动画
                             if (source['animation']) {
-                                _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_3__["default"].install(source['animation'], pano);
+                                _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_4__["default"].install(source['animation'], vpano);
                             }
                             else {
-                                pano.noTimeline();
+                                vpano.noTimeline();
                             }
-                            EnvQueue.add(pano.onResize, pano);
-                            pano.run();
+                            // webvr divider
+                            vpano.addPlugin(_vr_divider_vr__WEBPACK_IMPORTED_MODULE_3__["default"]);
+                            EnvQueue.add(vpano.onResize, vpano);
+                            vpano.run();
                         }
                         catch (e) {
                             events && events.nosupport && events.nosupport();
@@ -57481,6 +57498,165 @@ var onEnvResize = function (event) {
 };
 var eventType = /Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'orientationchange' : 'resize';
 window.addEventListener(eventType, onEnvResize);
+
+
+/***/ }),
+
+/***/ "./src/vr/assets.vr.ts":
+/*!*****************************!*\
+  !*** ./src/vr/assets.vr.ts ***!
+  \*****************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/**
+ * @file vr panel assets
+ */
+/* harmony default export */ __webpack_exports__["default"] = ({
+    setImg: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAFHElEQVR4nO2bf2hWVRjHP2/bHFvRRs5BKS3KGSZYQZ6FaNQkSM0y+qGtlIigHxCIYRYVBNUfJY2gIgMp0ugXSlpkQWhSQ9wpkASJdIGGliyVGTXZpqw/nnPHeZ/3+t53vvfe7a73C4Nznh/nPvf77p7z3OecCxVUUMH/Gbmg0d3drXUtwGPAIqAVqAN6AQt8CnwCnCnj2vcDb7r2k8DHZYyFMQZrbQ54C3gE+A241xizP8w+l5NbvyBEVwW8DBwAngFmIzcP0AzcDmwC9gHmPOOtATYAk93fBicrF7cATwCTgJnAq1EOmoAq5Nd9zg1SDDOBXcCto40SmArUe/16JysXl6v+tCgHTcCLwN2juGAdsBm4YhQ+4wo+AS3AGqUfBj4AFgNtyJxwQNlcjDwymYRPwKNArdcfBpYDDwHbkcnvXeB6YKcapwOZHzIHn4BFSrcR+CzEpx94EBjwZDngtnhDSwc+ATOU7qMifn8CPyjZ9FgiShk+AXVKdzLC9y/Vv7D8cNKHT0Cv0s2O8NV67Z8J+AT8pHSryZ8UfdwBzFKyH+MKKk34BGxWulnA50CTki9GMkEfvRTOCZlAtdfeBDyL5P0BFgKHkbW/CskOrw4Z5yVgKKEYE4VPwBngYWSN9/PyeuC6ImPsAt6JPbKUoFPhLiQV7i/R/3tgKXA2zqDSRNjb4JdItretiN9J4ClgAXAqgbhSQxgBIM/8UuQl56jSvQFcBnRSXj1gXOBcBAQ4DBxXsp/JT4MzjSgCJjzGioCw645JLGlftBEpU+0J0e1xusY0A0qTgAVAD/A0MCVEP8XpepxtKkiLgHbga6QAGoXJzrY90Ygc0iCgESl5h1V9TxGeR9Q4n8QfhzQIWENhuawLuBG5wUbX7lI2zRTWKGNH0gTkgJVKtht5xv2dmG4n261sV+Jt3iSBpAlopbA2vxoYDLEddDof08h/O40dSROgNyr+If+X1+h2NsXGiBWVTDDh8X9X/YuQDZZzoc3ZFBsjViRNwEHgiJJ1Er7vOMnpfBxxYySGpAkYRjZYfMwFdpD/n9DmZHOV7UY3RmKojjYpG+uQ/Xo/F5iH5P5BEtQQ4tfrfBNFGpNgH3IYIqxo2kD4zQ85n74E4wLSWwV2IhXmEyXYnnC2egM2EaS5DO5A9g9fA46F6I853XRnmwrSmAN89AFrgbeRcpuPNhJe8sJQqQiNxUXHEyYMAdbaWuBaJW6y1rYU85sIBFQjb5F/AKuUbipwyFq71VqrD4AA2SegAVkxXgcuKWJ3J7DXWrtEK7JMQBWwFbipRPt6YIu1dp4vTHsZjBOPAzeHyH9FiitnkXNP/oHMGuA9a+01uG29rBJQA7ygZH8DHcaYrwKBtbYJeaFa6Nm1AiuA9yG7j8B8CgutK/ybBzDGHAfuAvSB6XuCRlYJmKP6+40xX4QZGmMGKKwz3BA0skqA/vX3Rdhr/Yh/Vgn4V/XDttp86CXydNDIKgE9qj/fWntpEfsO1R858J1VAr4hv1RWC3xora3Xhtba+yjcnNkeNLK6DPYiZ5kf8GTtSLbXCexFzjcGN+/vLg0gp96B7BIA8DywBPleIcAMYH2E3zpjzEgtIquPAMAhZD0/HWHnYwvyVcwISiFA1/XjqNocJf8sYj+Fp9FKwbdIOvxLhN0g8AqwzBiTd6axlEdgLXAlcBXyddd3ow6zEENIqdz/bO58j9pa5OT6cmAZ8iVbM/KfcRCZ8Nb7//YVVFBBBQH+A0Ww9UPcErIoAAAAAElFTkSuQmCC',
+    bgImg: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABUklEQVR4nO3SsQ3CQBBFQR9y6Drovx7qID9KwBYcQnoz8Wr1g7dtAAAAACSMM0dzzvvqIXzfGOPx7ma/8O/5wRZ+7zhzdFu9gv8mgDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcTtF26PZSsAAAAAgLVeXREF7PDaKuIAAAAASUVORK5CYII=',
+    arrow2: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABACAYAAAB7jnWuAAADKElEQVRoge3YS6hVVRzH8c/1cSMxjB6T0iiKgqKBUlRakhX0EIoiK6KcKD0G9phUEBaYQbO0BpUI0QPpaU0spSe97FLUQBIKo+g1ySRRvGQPG/zv4R7WXbdz9j57bQn8z85v7b3/37vPWd+71uJQHeQaGhkZORh978FKjE5rufEQ1uCOsc8z2wQYxtO4sTtsC2AGXsVl6UAbAEdhE85N8r+wrDTAbGzGGUk+iiXYVBLgVLyFE5J8NxbjY5hSqPlZYw3S5r/ggk7zUgAX410ck+Tf4nxs6w6bBrgWb+KIJP8S5+G79IYmAW7Bi5ie5O9jEX7N3dQUwEo8lXnea2Lu757sxkEBhrAWqzJj68VU++O/HjAIwDCeN+717npYfCV/93pIXQ/MwEZcmhm7W/zD6avqABwt1HpOkv+JZXiuysOqAszGFpye5KNiCr5R8XmVAE4Tap2T5L8LtX5StTn9/wjPxkeZ5j9jYd3m/QJcIq/WHTJqbRpgifheZyb5F5iP7wdp3gvgNrxgolrfw0UmUWtTAA/gicz4Rj3UWrXSWdBR64rMtevFW+lptyrV/RcOY8MkzftWa9XqvIHG1FoHoFG11gF4KdO8tlqr1hSxSEzrvjaadwA+zOSP4Iq2AK5DukU+HK/j5jYAfhNm25KMTcezuKs0AOzDlUK9aT2K1UJSxQBgv9g6P5657n6sw9SSAHBALDIfzFy7XEzZ4ZIAnVqF2/FPkl8jdruzSgPAk7hBGLG7FokFyrGlAeBl4YO9ST5PLMNOLA0Ab4tpujPJTxHrxDNLA8BnYv33Y5Ifjw/E8qwoAHw91mh7kh8p3lItdVfdG/4kluGNqbvO5rRRddfdHXfUvSEzVkndg2zP9+MmPJYZ61vdgx5QHMCdYhmf1nLhkcNKAnTqIdxqorqv1kPdTR5SrcP1Jqr7QrGbyqq76WO6V3A59iT5XGzFSaUB4B15dZ8so+5SR7WfYwF+SPLjxCJ4QWkA+Gas0VdJPkuctCwuDcC4uj9N8o66l5YGgF3iAHtzkk/DM20AEOq+SkbdbQEwibrbBGBc3feKZV4jxzyH6v9d/wJJd55yLoomyAAAAABJRU5ErkJggg==',
+    arrow1: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABACAYAAAB7jnWuAAADMUlEQVRoge3ZW4hVVRzH8c9YYyTGRDovZVEUBYUPhmKZRpqRGXSBlLC0lxQruj1EPaTRDbo8VFN0UV+smOxCN8iMNCVKGop6iIKiKNJ8yaJIippyevifg+Nqz5455+y1fZn/42/N3v8va6/9nb3WYbwOcXUNDAwsxRM4EvfioToBJuBJ9GIyHsRj6KoT4PAkuwnPY2JdALcV5MvwBibVAbAe1+CfZGwRtuGY3ADwLC7Dn8n4WXgf03IDwFu4AL8lf3MGPsSpuQE0Gs3DniQ/oTE2MzcAfI65+DbJp+I9nJ8bAL7D2fgsyY/C27giNwD8hPnYkeTdeBGrcgMQC3IRXiu47hmsyQ0Af2EJNhSM3aNDdY8FAP4VU35/wVhH6h4rAAzhTtxaMLYMb2pD3a0ANOtRrMBgkl8oXtMpuQHgOcXqnq1FdbcLAJuxEL8m+enYidNyA2g0Ohc/Jvnx+ACzcgNwQN3fJHlT3QtzA8D3mINPk3yyeFRLcgMQ6l6A7UnejU1YnRuAA+p+taDPU1ibGwD+xlLF6r4bfYapOwcA5eq+Ef0a6s4FQLm6r9RQd06AZpWquw4AStRdFwDhgzvSsE6AxXjgUAEsx+tiBz68BuoAuEXsvLqT/B0syAnQhfvwSMHYJlyCP9KteVV1GJ7GtQVjj+Nm4Yksa2AiXhqh+V3iI3aoGVQ9Az1iDzE/yffjBjErB1WVAL3YgjOTfBBX4eWii6oCOBHv4pQk34fLsXWkC6sAmC42rMcl+V4hn4/LLu4UYI442Dg6yXeJw46vRrtBJ2/BYjG1afMvG2CjNu8EYES1is/03WO9UTsApWrFz63crBWAMrX2a6i1leaMfRGWqbVPzMpQwVglAEfgBfE+p7VWHHC3XaMB9IjFdl6S78d1WNdJ89EAesXCmpHkg+JA4pVOm5cBnCTUenKS/y4exbYqmo8EMF38Uzk2yffiInxSVfMigHOEWnuS/Aeh1q+rbM7BHrhYTHva/IsGWOXNhwOsUKzWj7So1nYAVmKj/z+OLeJg+pdczZsADxfk/bhUG2ptByD9qaYPV4t9fvaagOvF8co+3G7YJ/N4jVcd9R8E9KDjWzEIIwAAAABJRU5ErkJggg=='
+});
+
+
+/***/ }),
+
+/***/ "./src/vr/divider.vr.ts":
+/*!******************************!*\
+  !*** ./src/vr/divider.vr.ts ***!
+  \******************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+/* harmony import */ var _assets_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./assets.vr */ "./src/vr/assets.vr.ts");
+
+
+
+/**
+ * @file UI Viewer, 拆分器
+ * @TODO: move webvr.polyfill's html ui to here
+ */
+var Divider = /** @class */ (function () {
+    function Divider(vpano) {
+        var _this = this;
+        this.loader = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]();
+        this.vpano = vpano;
+        vpano.subscribe('scene-load', function () {
+            _this.createPanel();
+            _this.createBtn();
+            _this.initCalc();
+        });
+        vpano.subscribe('render-process', this.update, this);
+    }
+    Divider.prototype.initCalc = function () {
+        var width = Math.max(window.innerWidth, window.innerHeight) / 2;
+        var height = Math.min(window.innerWidth, window.innerHeight);
+    };
+    Divider.prototype.createBtn = function () {
+        var vpano = this.vpano;
+        var root = vpano.getRoot();
+        var backBtn = this.backBtn = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="vr-back"></div>');
+        backBtn.onclick = function () {
+            root.removeChild(backBtn);
+            enterBtn.style.display = 'block';
+            vpano.exit();
+        };
+        var enterBtn = this.backBtn = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="vr-enter">ENTER VR</div>');
+        enterBtn.onclick = function () {
+            enterBtn.style.display = 'none';
+            vpano.enter().then(function () { return root.appendChild(backBtn); });
+        };
+        root.appendChild(enterBtn);
+    };
+    Divider.prototype.createPanel = function () {
+        var vpano = this.vpano;
+        var camera = vpano.getCamera();
+        var group = new three__WEBPACK_IMPORTED_MODULE_0__["Group"]();
+        var panelMesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](775, 236), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            color: '#000',
+            transparent: true,
+            opacity: 0.8,
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
+        }));
+        panelMesh.name = 'vr-panel';
+        panelMesh.renderOrder = 1;
+        var arrowMesh1 = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](32, 64), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: this.loader.load(_assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].arrow1),
+            transparent: true,
+            depthTest: false,
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
+        }));
+        arrowMesh1.renderOrder = 2;
+        var arrowMesh2 = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](32, 64), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: this.loader.load(_assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].arrow2),
+            transparent: true,
+            depthTest: false,
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
+        }));
+        arrowMesh2.renderOrder = 2;
+        var setMesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](64, 64), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: this.loader.load(_assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].setImg),
+            transparent: true,
+            depthTest: false,
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
+        }));
+        setMesh.renderOrder = 2;
+        var obj = this.buildCanvasText('1 / 5');
+        var canvas = obj.canvas;
+        var spriteMesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](canvas.width, canvas.height), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: new three__WEBPACK_IMPORTED_MODULE_0__["CanvasTexture"](canvas),
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"],
+            transparent: true
+        }));
+        spriteMesh.rotation.y = Math.PI;
+        spriteMesh.renderOrder = 3;
+        panelMesh.position.set(0, -300, 1000);
+        arrowMesh1.position.set(230, -300, 1000);
+        arrowMesh2.position.set(-80, -300, 1000);
+        setMesh.position.set(-250, -300, 1000);
+        spriteMesh.position.set(70, -300, 1000);
+        group.add(panelMesh);
+        group.add(arrowMesh1);
+        group.add(arrowMesh2);
+        group.add(setMesh);
+        group.add(spriteMesh);
+        vpano.addSceneObject(group);
+    };
+    Divider.prototype.update = function () {
+    };
+    Divider.prototype.dispose = function () {
+        var vpano = this.vpano;
+        var root = vpano.getRoot();
+        root.removeChild(this.backBtn);
+        root.removeChild(this.enterBtn);
+        vpano.unSubscribe('render-process', this.update, this);
+    };
+    Divider.prototype.buildCanvasText = function (text) {
+        var fontface = 'Arial';
+        var fontsize = 42;
+        var canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 128;
+        var context = canvas.getContext('2d');
+        context.font = "Bold " + fontsize + "px " + fontface;
+        var metrics = context.measureText(text);
+        context.lineWidth = 4;
+        context.textAlign = 'center';
+        context.fillStyle = '#fff';
+        context.fillText(text, canvas.width / 2, canvas.height / 2 + 10);
+        return { canvas: canvas, metrics: metrics };
+    };
+    ;
+    return Divider;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (Divider);
 
 
 /***/ }),
@@ -57639,9 +57815,9 @@ __webpack_require__.r(__webpack_exports__);
     };
     this.autoSubmitFrame = true;
     // render
-    var cameraL = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"]();
+    var cameraL = this.cameraL = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"]();
     cameraL.layers.enable(1);
-    var cameraR = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"]();
+    var cameraR = this.cameraR = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"]();
     cameraR.layers.enable(2);
     this.render = function (scene, camera, renderTarget, forceClear) {
         if (vrDisplay && scope.isPresenting) {
@@ -57689,14 +57865,14 @@ __webpack_require__.r(__webpack_exports__);
                 renderer.setRenderTarget(null);
                 renderer.setScissorTest(true);
             }
-            if (renderer.autoClear || forceClear)
+            if (renderer.autoClear || forceClear) {
                 renderer.clear();
-            if (camera.parent === null)
+            }
+            if (camera.parent === null) {
                 camera.updateMatrixWorld();
-            camera.matrixWorld.decompose(cameraL.position, cameraL.quaternion, cameraL.scale);
-            cameraR.position.copy(cameraL.position);
-            cameraR.quaternion.copy(cameraL.quaternion);
-            cameraR.scale.copy(cameraL.scale);
+            }
+            cameraL.copy(camera);
+            cameraR.copy(camera);
             if (vrDisplay.getFrameData) {
                 vrDisplay.depthNear = camera.near;
                 vrDisplay.depthFar = camera.far;
@@ -57853,102 +58029,6 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/vr/helper.vr.ts":
-/*!*****************************!*\
-  !*** ./src/vr/helper.vr.ts ***!
-  \*****************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
-
-/**
- * @file webvr manager
- */
-var Helper = /** @class */ (function () {
-    function Helper() {
-    }
-    Helper.createButton = function (webgl, display) {
-        var _this = this;
-        this.webgl = webgl;
-        if ('getVRDisplays' in navigator) {
-            var button_1 = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<buttom style="display:none;"></button>');
-            this.stylizeElement(button_1);
-            document.body.appendChild(button_1);
-            window.addEventListener('vrdisplayconnect', function (event) { return _this.showEnter(event.display, button_1); }, false);
-            window.addEventListener('vrdisplaydisconnect', function () { return _this.showNotFound(button_1); }, false);
-            window.addEventListener('vrdisplaypresentchange', function (event) {
-                var display = event.display || event.detail.display;
-                button_1.textContent = display.isPresenting ? 'EXIT VR' : 'ENTER VR';
-            }, false);
-            window.addEventListener('vrdisplayactivate', function (event) {
-                event.display.requestPresent([{ source: webgl.domElement }]);
-            }, false);
-            display ? this.showEnter(display, button_1) : this.showNotFound(button_1);
-        }
-        else {
-            var message = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<a href="https://webvr.info" style="left:calc(50% - 90px);width:180px;text-decoration:none;">WEBVR NOT SUPPORTED</a>');
-            this.stylizeElement(message);
-            document.body.appendChild(message);
-        }
-    };
-    Helper.showEnter = function (display, button) {
-        var webgl = this.webgl;
-        button.style.display = '';
-        button.style.cursor = 'pointer';
-        button.style.left = 'calc(50% - 50px)';
-        button.style.width = '100px';
-        button.textContent = 'ENTER VR';
-        button.onmouseenter = function () { button.style.opacity = '1.0'; };
-        button.onmouseleave = function () { button.style.opacity = '0.5'; };
-        button.onclick = function () {
-            if (display.isPresenting) {
-                display.exitPresent();
-                button.innerHTML = 'ENTER VR';
-            }
-            else {
-                display.requestPresent([{ source: webgl.domElement }]);
-                button.innerHTML = 'EXIT VR';
-            }
-        };
-        // webgl.vr.setDevice(display);
-    };
-    Helper.showNotFound = function (button) {
-        button.style.display = '';
-        button.style.cursor = 'auto';
-        button.style.left = 'calc(50% - 75px)';
-        button.style.width = '150px';
-        button.textContent = 'VR NOT FOUND';
-        button.onmouseenter = null;
-        button.onmouseleave = null;
-        button.onclick = null;
-        this.webgl.vr.setDevice(null);
-    };
-    Helper.stylizeElement = function (element) {
-        _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].styleElement(element, {
-            position: 'absolute',
-            bottom: '20px',
-            padding: '12px 6px',
-            border: '1px solid #fff',
-            borderRadius: '4px',
-            background: 'transparent',
-            color: '#fff',
-            font: 'normal 13px sans-serif',
-            textAlign: 'center',
-            opacity: '0.5',
-            outline: 'none',
-            zIndex: '999'
-        });
-    };
-    return Helper;
-}());
-/* harmony default export */ __webpack_exports__["default"] = (Helper);
-
-
-/***/ }),
-
 /***/ "./src/vr/pano.vr.ts":
 /*!***************************!*\
   !*** ./src/vr/pano.vr.ts ***!
@@ -57960,8 +58040,7 @@ var Helper = /** @class */ (function () {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
 /* harmony import */ var _effect_vr__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./effect.vr */ "./src/vr/effect.vr.ts");
-/* harmony import */ var _vr_helper_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vr/helper.vr */ "./src/vr/helper.vr.ts");
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -57975,7 +58054,6 @@ var __extends = (undefined && undefined.__extends) || (function () {
 
 
 
-
 /**
  * @file vr pano
  */
@@ -57984,11 +58062,15 @@ var VPano = /** @class */ (function (_super) {
     function VPano(el, source) {
         var _this = _super.call(this, el, source) || this;
         _this.type = 'vr-pano';
-        _this.effectRender = new _effect_vr__WEBPACK_IMPORTED_MODULE_1__["default"](_this.webgl);
-        // 使用 ui button
-        if (source.vr && source.vr.ui === true) {
-            _this.getDisplay().then(function (display) { return _vr_helper_vr__WEBPACK_IMPORTED_MODULE_2__["default"].createButton(_this.webgl, display); });
+        _this.state = 0;
+        if (window['WebVRPolyfill']) {
+            var polyfill = new window['WebVRPolyfill']({
+                PROVIDE_MOBILE_VRDISPLAY: true,
+                CARDBOARD_UI_DISABLED: true
+            });
         }
+        _this.effectRender = new _effect_vr__WEBPACK_IMPORTED_MODULE_1__["default"](_this.webgl);
+        _this.getDisplay().then(function (display) { return _this.display = display; });
         return _this;
     }
     VPano.prototype.animate = function () {
@@ -58000,13 +58082,29 @@ var VPano = /** @class */ (function (_super) {
     VPano.prototype.onResize = function () {
         var camera = this.getCamera();
         var root = this.getRoot();
-        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].calcRenderSize(root);
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].calcRenderSize(root);
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.effectRender.setSize(size.width, size.height);
     };
     VPano.prototype.getDisplay = function () {
         return navigator.getVRDisplays().then(function (displays) { return displays.length > 0 ? displays[0] : null; });
+    };
+    VPano.prototype.getCameraL = function () {
+        return this.effectRender.cameraL;
+    };
+    VPano.prototype.getCameraR = function () {
+        return this.effectRender.cameraR;
+    };
+    VPano.prototype.enter = function () {
+        this.state = 1;
+        return this.display.requestPresent([{
+                source: this.webgl.domElement
+            }]);
+    };
+    VPano.prototype.exit = function () {
+        this.state = 0;
+        return this.display.exitPresent();
     };
     return VPano;
 }(_pano_pano__WEBPACK_IMPORTED_MODULE_0__["default"]));
@@ -58051,6 +58149,17 @@ var VPano = /** @class */ (function (_super) {
 /***/ "./styles/ui.style.less":
 /*!******************************!*\
   !*** ./styles/ui.style.less ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
+/***/ "./styles/vr.style.less":
+/*!******************************!*\
+  !*** ./styles/vr.style.less ***!
   \******************************/
 /*! no static exports found */
 /***/ (function(module, exports) {

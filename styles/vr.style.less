@@ -1,0 +1,47 @@
+/* vr objects */
+
+.pano-root {
+    .vr-back {
+        position: absolute;
+        left: 17px;
+        top: 17px;
+        width: 25px;
+        height: 25px;
+        background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAA5CAYAAAC4YUKZAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDE0IDc5LjE1MTQ4MSwgMjAxMy8wMy8xMy0xMjowOToxNSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIChNYWNpbnRvc2gpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOkQzNUUwNTdBMURGQTExRTg4OUUzQTcyOUEwREREOUY0IiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOkQzNUUwNTdCMURGQTExRTg4OUUzQTcyOUEwREREOUY0Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6RDM1RTA1NzgxREZBMTFFODg5RTNBNzI5QTBEREQ5RjQiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6RDM1RTA1NzkxREZBMTFFODg5RTNBNzI5QTBEREQ5RjQiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz7CbplNAAABz0lEQVR42syZvS8EQRjGF5eTXCMhOgUNlY6GkkJoUQjKi0pUOir/gGsVKlGdWoOShoqKxoUGia9Ecch4VvYS9t7ZvZudmXsm+TV3s7u//Xp25p1AKRW0gHXwDh7AvO+Dt4Ft9b895QJ/LQ92wULs91xo5kOgAMpgSviv6OMWdINTVd8+wfLvRXAs0AcuBYEPMFPr51JgENwKAi9g/G9fVwIj4FEQuAfD8f4uBCbAmyBwAwakbWwLzIKqIHABenXb2RQogm9B4AR0JW1rS2BDye0AdKZt7yKGa20HdDSynywCebCnEdiKBAOXEgVwqBFYa3Z/JgI94Ew4ePhWLJmclEkMX2lieNr01jbTeQhUBIFnMJblAW+046gmhu+kGHYhMRkNxeLtGvTbyJm0DnOaGD5PimGbEiuaGD5Oi2FbEpuaDChHIRW4lAhTrpQ1hrNIhGe4byOGTSWsxrCJhPUYNpE4sh3DJhJSDqz6nB7SXAmKZ4Li7aDJCZrEpPl2UH1FacYTNCMrmjEmzWibZt5BMwOjmYvSzMpp6hM0lRqqmhVN9Y6mjklT0aWpbdNU+Rte76BY+fElkbQG9trucSGuChZBKfb7VyvWROvWRX8EGAA7qlH+F0prfAAAAABJRU5ErkJggg==) no-repeat center center;
+        background-size: contain;
+        z-index: 99999999999 !important;
+    }
+
+    .vr-enter {
+        position: absolute;
+        left: calc(50% - 50px);
+        bottom: 20px;
+        width: 100px;
+        padding: 12px 6px;
+        border: 1px solid #fff;
+        border-radius: 4px;
+        background: transparent;
+        color: #fff;
+        font-size: 13px;
+        text-align: center;
+        opacity: 0.6;
+        outline: none;
+        z-index: 10;
+    }
+
+    .vr-panel {
+        position: absolute;
+        width: 100px;
+        height: 50px;
+        background: rgba(0, 0, 0, .7);
+        z-index: 1000006 !important;
+    }
+
+    .vr-point {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        border: 1px solid #fff;
+        border-radius: 50%;
+    }
+}

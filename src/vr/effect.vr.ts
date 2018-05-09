@@ -1,4 +1,4 @@
-import {Vector3, Matrix4, PerspectiveCamera, Quaternion} from 'three';
+import { Vector3, Matrix4, PerspectiveCamera, Quaternion } from 'three';
 import Log from '../core/log';
 
 /**
@@ -11,7 +11,7 @@ import Log from '../core/log';
  * Chromium: https://webvr.info/get-chrome
  */
 
-export default function (renderer, onError?) {
+export default function (renderer, onError ? ) {
     var vrDisplay, vrDisplays;
     var eyeTranslationL = new Vector3();
     var eyeTranslationR = new Vector3();
@@ -167,15 +167,16 @@ export default function (renderer, onError?) {
 
     this.autoSubmitFrame = true;
     // render
-    var cameraL = new PerspectiveCamera();
+    var cameraL = this.cameraL = new PerspectiveCamera();
     cameraL.layers.enable(1);
 
-    var cameraR = new PerspectiveCamera();
+    var cameraR = this.cameraR = new PerspectiveCamera();
     cameraR.layers.enable(2);
 
     this.render = function (scene, camera, renderTarget, forceClear) {
         if (vrDisplay && scope.isPresenting) {
-            var autoUpdate = scene.autoUpdate;
+            const autoUpdate = scene.autoUpdate;
+
             if (autoUpdate) {
                 scene.updateMatrixWorld();
                 scene.autoUpdate = false;
@@ -194,7 +195,7 @@ export default function (renderer, onError?) {
             var rightBounds;
 
             if (layers.length) {
-                var layer = layers[0];
+                const layer = layers[0];
 
                 leftBounds = layer.leftBounds !== null && layer.leftBounds.length === 4 ? layer.leftBounds : defaultLeftBounds;
                 rightBounds = layer.rightBounds !== null && layer.rightBounds.length === 4 ? layer.rightBounds : defaultRightBounds;
@@ -219,24 +220,23 @@ export default function (renderer, onError?) {
             if (renderTarget) {
                 renderer.setRenderTarget(renderTarget);
                 renderTarget.scissorTest = true;
-
             } else {
                 renderer.setRenderTarget(null);
                 renderer.setScissorTest(true);
             }
 
-            if (renderer.autoClear || forceClear) renderer.clear();
+            if (renderer.autoClear || forceClear) {
+                renderer.clear();
+            }
 
-            if (camera.parent === null) camera.updateMatrixWorld();
+            if (camera.parent === null) {
+                camera.updateMatrixWorld();
+            }
 
-            camera.matrixWorld.decompose(cameraL.position, cameraL.quaternion, cameraL.scale);
-
-            cameraR.position.copy(cameraL.position);
-            cameraR.quaternion.copy(cameraL.quaternion);
-            cameraR.scale.copy(cameraL.scale);
+            cameraL.copy(camera);
+            cameraR.copy(camera);
 
             if (vrDisplay.getFrameData) {
-
                 vrDisplay.depthNear = camera.near;
                 vrDisplay.depthFar = camera.far;
 
@@ -272,11 +272,9 @@ export default function (renderer, onError?) {
             if (renderTarget) {
                 renderTarget.viewport.set(renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height);
                 renderTarget.scissor.set(renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height);
-
             } else {
                 renderer.setViewport(renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height);
                 renderer.setScissor(renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height);
-
             }
             renderer.render(scene, cameraL, renderTarget, forceClear);
 
@@ -295,7 +293,6 @@ export default function (renderer, onError?) {
                 renderTarget.scissor.set(0, 0, size.width, size.height);
                 renderTarget.scissorTest = false;
                 renderer.setRenderTarget(null);
-
             } else {
                 renderer.setViewport(0, 0, size.width, size.height);
                 renderer.setScissorTest(false);
@@ -313,7 +310,6 @@ export default function (renderer, onError?) {
         }
 
         // Regular render mode if not HMD
-
         renderer.render(scene, camera, renderTarget, forceClear);
     };
 

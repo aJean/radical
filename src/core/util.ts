@@ -116,6 +116,23 @@ export default {
     },
 
     /**
+     * 逆归一化
+     * @param {Object} location 屏幕坐标
+     * @param {Object} size 渲染器 size
+     */
+    inverseNdc(location, size) {
+        return {
+            x: Math.floor((location.x * size.width + size.width) / 2),
+            y: Math.floor((-location.y * size.height + size.height) / 2),
+            z: location.z
+        };
+    },
+
+    caleSphereToScreen(lng, lat, radius, camera, size) {
+        return this.inverseNdc(this.calcWorldToScreen(this.calcSphereToWorld(lng, lat, radius), camera), size);
+    },
+
+    /**
      * 屏幕坐标转为球面坐标
      */
     calcScreenToSphere(location, camera) {

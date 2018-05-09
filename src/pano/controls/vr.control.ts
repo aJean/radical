@@ -3,6 +3,7 @@ import Log from '../../core/log';
 
 /**
  * @file vr control
+ * use devicemotion by webvr.polyfill.js
  */
 
 const rotateMatrix = new Matrix4().makeRotationAxis(new Vector3(0, 1, 0).normalize(), Math.PI);
@@ -35,7 +36,6 @@ export default class VRControl {
             navigator.getVRDisplays().then(displays => this.gotVRDisplays(displays))
                 .catch(() => Log.output('Unable to get VR Displays'));
         }
-    
     }
 
 	gotVRDisplays(displays) {

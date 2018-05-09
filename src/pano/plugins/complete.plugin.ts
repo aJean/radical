@@ -7,7 +7,7 @@ import {WebGLRenderer, Scene, PerspectiveCamera, TextureLoader, PlaneGeometry, M
  */
 
 export default function (id) {
-    const webgl = new WebGLRenderer({alpha: true, antialias: true});
+    const webgl = new WebGLRenderer({alpha: true});
     const render = webgl.domElement;
 
     webgl.setPixelRatio(window.devicePixelRatio);
@@ -25,10 +25,9 @@ export default function (id) {
 
     const material = new MeshBasicMaterial({map: texture});
     const mesh = this.mesh = new Mesh(geometry, material);
+    const axesHelper = new AxesHelper(300);
 
-    const axesHelper = new AxesHelper( 300 );
-
-    scene.add( axesHelper );
+    scene.add(axesHelper);
     scene.add(mesh);
     webgl.render(scene, camera);
 

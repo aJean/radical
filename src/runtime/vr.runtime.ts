@@ -2,6 +2,7 @@ import {WebGLRenderer, PerspectiveCamera, Scene, CubeGeometry, MeshLambertMateri
 import ResourceLoader from '../pano/loaders/resource.loader';
 import Log from '../core/log';
 import VPano from '../vr/pano.vr';
+import Divider from '../vr/divider.vr';
 import Timeline from '../pano/animations/timeline.animation';
 
 /**
@@ -52,32 +53,28 @@ export default abstract class Runtime {
             return Log.output('load source error');
         }
 
-        if (window['WebVRPolyfill']) {
-            const polyfill = new window['WebVRPolyfill']({
-                BUFFER_SCALE: 0.75
-            });
-        }
-
         try {
             const ref = el.getAttribute('ref') || `vpano_${this.uid++}`;
-            const pano = this.instanceMap[ref] = new VPano(el, source);
+            const vpano = this.instanceMap[ref] = new VPano(el, source);
             el.setAttribute('ref', ref);            
             
             // 用户订阅事件
             if (events) {
                 for (let name in events) {
-                    pano.subscribe(name, events[name]);
+                    vpano.subscribe(name, events[name]);
                 }
             }
             // 动画
             if (source['animation']) {
-                Timeline.install(source['animation'], pano);
+                Timeline.install(source['animation'], vpano);
             } else {
-                pano.noTimeline();
+                vpano.noTimeline();
             }
+            // webvr divider
+            vpano.addPlugin(Divider);
 
-            EnvQueue.add(pano.onResize, pano);
-            pano.run();
+            EnvQueue.add(vpano.onResize, vpano);
+            vpano.run();
         } catch (e) {
             events && events.nosupport && events.nosupport();
             throw new Error(e);

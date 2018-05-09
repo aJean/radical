@@ -1,7 +1,6 @@
 import Pano from '../pano/pano';
 import VRControl from '../pano/controls/vr.control';
 import VREffect from './effect.vr';
-import Helper from '../vr/helper.vr';
 import Util from '../core/util';
 
 /**
@@ -11,15 +10,21 @@ import Util from '../core/util';
 export default class VPano extends Pano {
     type = 'vr-pano';
     effectRender: any;
+    display: any;
+    state = 0;
 
     constructor (el, source) {
         super(el, source);
 
-        this.effectRender = new VREffect(this.webgl);
-        // 使用 ui button
-        if (source.vr && source.vr.ui === true) {
-            this.getDisplay().then(display => Helper.createButton(this.webgl, display));
+        if (window['WebVRPolyfill']) {
+            const polyfill = new window['WebVRPolyfill']({
+                PROVIDE_MOBILE_VRDISPLAY: true,
+                CARDBOARD_UI_DISABLED: true
+            });
         }
+
+        this.effectRender = new VREffect(this.webgl);
+        this.getDisplay().then(display => this.display = display);
     }
 
     animate() {
@@ -42,5 +47,25 @@ export default class VPano extends Pano {
 
     getDisplay() {
         return navigator.getVRDisplays().then(displays => displays.length > 0 ? displays[0] : null);
+    }
+
+    getCameraL() {
+        return this.effectRender.cameraL;
+    }
+
+    getCameraR() {
+        return this.effectRender.cameraR;
+    }
+
+    enter() {
+        this.state = 1;
+        return this.display.requestPresent([{
+            source: this.webgl.domElement
+        }]);
+    }
+
+    exit() {
+        this.state = 0;
+        return this.display.exitPresent();
     }
 }
