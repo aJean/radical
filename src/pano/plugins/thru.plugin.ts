@@ -15,7 +15,8 @@ const defaultOpts = {
     lazy: 3000,
     limit: 3,
     server: null,
-    request: null
+    request: null,
+    setid: ''
 };
 export default class Thru {
     data: any;
@@ -58,23 +59,41 @@ export default class Thru {
         pano.webgl.render(this.scene, camera);       
     }
 
-    load(data) {
-        const server = this.data.server;
-        const list = [{id: '49776493052', sid: '10551446979534058343',
-            img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776493052_tinyearth.jpg'}, {id: '49776347175', sid: '14641098511916445626',
-            img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776347175_tinyearth.jpg'}, {id: '50141043497', sid:'11641757629491658054',
-            img:'https://img7.bdstatic.com/img/image/quanjing/tinyearth/50141043497_tinyearth.jpg'}];
+    load(scene) {
+        let bid: any = /BAIDUID=[^;]*/.exec(document.cookie) || '';
+        const data = this.data;
+        const server = data.server;
+        
+        if (bid) {
+            bid = bid[0].replace('BAIDUID=', '');
+        }
 
         if (!server) {
             return console.log('thru server missed!');
         }
-        
+
+        const url = server + '?baiduid=' + bid + '&panoid=' + data.setid + '&sceneid=' + scene.id
+            + '&timestamp=' + Date.now()
         this.cleanup();
-        this.loader.fetchUrl(server + data.id)
+        this.loader.fetchUrl(url)
             .then(res => {
-                this.create(list);
-                this.needToShow();
+                if (res.status == 0 && res.data.length) {
+                    this.create(this.transfer(res.data));
+                    this.needToShow();
+                }
             });
+    }
+
+    transfer(list) {
+        return list.map(data => {
+            const tokens = data.split('&');
+
+            return {
+                img: `https://img7.bdstatic.com/img/image/quanjing/tinyearth/${tokens[1]}_tinyearth.jpg`,
+                id: tokens[1],
+                sid: tokens[0]
+            };
+        });
     }
 
     create(list) {
@@ -108,11 +127,7 @@ export default class Thru {
     }
 
     getVector() {
-        const projectCamera = this.camera.clone();
-        projectCamera.far = 1000;
-        projectCamera.updateProjectionMatrix();
-
-        return new Vector3(0, 0, 1).unproject(projectCamera);
+        return Util.calcScreenToWorld({x: 0, y: 0}, this.camera);
     }
 
     needToHide() {
@@ -192,15 +207,19 @@ export default class Thru {
         if (group.length) {
             raycaster.setFromCamera(pos, pano.getCamera());
             const intersects = raycaster.intersectObjects(group, false);
-            // disbale dom event
+
             if (intersects.length) {
                 this.active = false;
+                // disbale dom event
                 evt.stopPropagation();
                 evt.preventDefault();
                 // find data by id
                 const id = intersects[0].object['data'].id;
                 const sid = intersects[0].object['data'].sid;
+
                 if (request && id && sid) {
+                    // set sid for recom request
+                    this.data.setid = sid;
                     this.loader.fetchUrl(request + '&setid=' + sid + '&sceneid=' + id)
                         .then(res => {
                             const data = res.data;

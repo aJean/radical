@@ -53285,6 +53285,17 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         return vector.project(camera);
     },
     /**
+     * 归一化
+     * @param {Object} location 屏幕坐标
+     * @param {Object} size 渲染器 size
+     */
+    transNdc: function (location, size) {
+        return {
+            x: (location.x / size.width) * 2 - 1,
+            y: -(location.y / size.height) * 2 + 1
+        };
+    },
+    /**
      * 逆归一化
      * @param {Object} location 屏幕坐标
      * @param {Object} size 渲染器 size
@@ -53296,20 +53307,42 @@ var composeKey = function (part) { return ('skt1wins' + part); };
             z: location.z
         };
     },
+    /**
+     * 球面坐标转化成屏幕坐标, 没什么卵用
+     * @param {number} lng 横向
+     * @param {number} lat 纵向
+     * @param {number} radius 半径
+     * @param {Object} camera 相机
+     * @param {Object} size 屏幕尺寸
+     */
     caleSphereToScreen: function (lng, lat, radius, camera, size) {
         return this.inverseNdc(this.calcWorldToScreen(this.calcSphereToWorld(lng, lat, radius), camera), size);
     },
     /**
      * 屏幕坐标转为球面坐标
+     * ndc first
      */
-    calcScreenToSphere: function (location, camera) {
-        var vector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](location.x, location.y, 0.99).unproject(camera);
+    calcScreenToSphere: function (location, camera, far) {
+        var projectCamera = camera.clone();
+        projectCamera.far = far || 1000;
+        projectCamera.updateProjectionMatrix();
+        var vector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](location.x, location.y, 1).unproject(projectCamera);
         var spherical = new three__WEBPACK_IMPORTED_MODULE_1__["Spherical"]();
         spherical.setFromVector3(vector);
         return {
             lng: spherical.theta * 180 / Math.PI,
             lat: 90 - spherical.phi * 180 / Math.PI
         };
+    },
+    /**
+     * 屏幕坐标转为世界坐标
+     * ndc first
+     */
+    calcScreenToWorld: function (location, camera, far) {
+        var projectCamera = camera.clone();
+        projectCamera.far = far || 1000;
+        projectCamera.updateProjectionMatrix();
+        return new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](location.x, location.y, 1).unproject(projectCamera);
     },
     /**
      * 计算画布大小
@@ -56610,7 +56643,8 @@ var defaultOpts = {
     lazy: 3000,
     limit: 3,
     server: null,
-    request: null
+    request: null,
+    setid: ''
 };
 var Thru = /** @class */ (function () {
     function Thru(pano, data) {
@@ -56642,21 +56676,36 @@ var Thru = /** @class */ (function () {
         camera.rotation.copy(pano.getCamera().rotation);
         pano.webgl.render(this.scene, camera);
     };
-    Thru.prototype.load = function (data) {
+    Thru.prototype.load = function (scene) {
         var _this = this;
-        var server = this.data.server;
-        var list = [{ id: '49776493052', sid: '10551446979534058343',
-                img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776493052_tinyearth.jpg' }, { id: '49776347175', sid: '14641098511916445626',
-                img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/49776347175_tinyearth.jpg' }, { id: '50141043497', sid: '11641757629491658054',
-                img: 'https://img7.bdstatic.com/img/image/quanjing/tinyearth/50141043497_tinyearth.jpg' }];
+        var bid = /BAIDUID=[^;]*/.exec(document.cookie) || '';
+        var data = this.data;
+        var server = data.server;
+        if (bid) {
+            bid = bid[0].replace('BAIDUID=', '');
+        }
         if (!server) {
             return console.log('thru server missed!');
         }
+        var url = server + '?baiduid=' + bid + '&panoid=' + data.setid + '&sceneid=' + scene.id
+            + '&timestamp=' + Date.now();
         this.cleanup();
-        this.loader.fetchUrl(server + data.id)
+        this.loader.fetchUrl(url)
             .then(function (res) {
-            _this.create(list);
-            _this.needToShow();
+            if (res.status == 0 && res.data.length) {
+                _this.create(_this.transfer(res.data));
+                _this.needToShow();
+            }
+        });
+    };
+    Thru.prototype.transfer = function (list) {
+        return list.map(function (data) {
+            var tokens = data.split('&');
+            return {
+                img: "https://img7.bdstatic.com/img/image/quanjing/tinyearth/" + tokens[1] + "_tinyearth.jpg",
+                id: tokens[1],
+                sid: tokens[0]
+            };
         });
     };
     Thru.prototype.create = function (list) {
@@ -56684,10 +56733,7 @@ var Thru = /** @class */ (function () {
         return (1 - Math.random() * 2) * this.data.factor;
     };
     Thru.prototype.getVector = function () {
-        var projectCamera = this.camera.clone();
-        projectCamera.far = 1000;
-        projectCamera.updateProjectionMatrix();
-        return new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](0, 0, 1).unproject(projectCamera);
+        return _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].calcScreenToWorld({ x: 0, y: 0 }, this.camera);
     };
     Thru.prototype.needToHide = function () {
         if (this.animating) {
@@ -56760,15 +56806,17 @@ var Thru = /** @class */ (function () {
         if (group.length) {
             raycaster.setFromCamera(pos, pano.getCamera());
             var intersects = raycaster.intersectObjects(group, false);
-            // disbale dom event
             if (intersects.length) {
                 this.active = false;
+                // disbale dom event
                 evt.stopPropagation();
                 evt.preventDefault();
                 // find data by id
                 var id_1 = intersects[0].object['data'].id;
                 var sid = intersects[0].object['data'].sid;
                 if (request && id_1 && sid) {
+                    // set sid for recom request
+                    this.data.setid = sid;
                     this.loader.fetchUrl(request + '&setid=' + sid + '&sceneid=' + id_1)
                         .then(function (res) {
                         var data = res.data;
@@ -57512,13 +57560,14 @@ window.addEventListener(eventType, onEnvResize);
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /**
- * @file vr panel assets
+ * @file webvr panel assets
  */
 /* harmony default export */ __webpack_exports__["default"] = ({
     setImg: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAFHElEQVR4nO2bf2hWVRjHP2/bHFvRRs5BKS3KGSZYQZ6FaNQkSM0y+qGtlIigHxCIYRYVBNUfJY2gIgMp0ugXSlpkQWhSQ9wpkASJdIGGliyVGTXZpqw/nnPHeZ/3+t53vvfe7a73C4Nznh/nPvf77p7z3OecCxVUUMH/Gbmg0d3drXUtwGPAIqAVqAN6AQt8CnwCnCnj2vcDb7r2k8DHZYyFMQZrbQ54C3gE+A241xizP8w+l5NbvyBEVwW8DBwAngFmIzcP0AzcDmwC9gHmPOOtATYAk93fBicrF7cATwCTgJnAq1EOmoAq5Nd9zg1SDDOBXcCto40SmArUe/16JysXl6v+tCgHTcCLwN2juGAdsBm4YhQ+4wo+AS3AGqUfBj4AFgNtyJxwQNlcjDwymYRPwKNArdcfBpYDDwHbkcnvXeB6YKcapwOZHzIHn4BFSrcR+CzEpx94EBjwZDngtnhDSwc+ATOU7qMifn8CPyjZ9FgiShk+AXVKdzLC9y/Vv7D8cNKHT0Cv0s2O8NV67Z8J+AT8pHSryZ8UfdwBzFKyH+MKKk34BGxWulnA50CTki9GMkEfvRTOCZlAtdfeBDyL5P0BFgKHkbW/CskOrw4Z5yVgKKEYE4VPwBngYWSN9/PyeuC6ImPsAt6JPbKUoFPhLiQV7i/R/3tgKXA2zqDSRNjb4JdItretiN9J4ClgAXAqgbhSQxgBIM/8UuQl56jSvQFcBnRSXj1gXOBcBAQ4DBxXsp/JT4MzjSgCJjzGioCw645JLGlftBEpU+0J0e1xusY0A0qTgAVAD/A0MCVEP8XpepxtKkiLgHbga6QAGoXJzrY90Ygc0iCgESl5h1V9TxGeR9Q4n8QfhzQIWENhuawLuBG5wUbX7lI2zRTWKGNH0gTkgJVKtht5xv2dmG4n261sV+Jt3iSBpAlopbA2vxoYDLEddDof08h/O40dSROgNyr+If+X1+h2NsXGiBWVTDDh8X9X/YuQDZZzoc3ZFBsjViRNwEHgiJJ1Er7vOMnpfBxxYySGpAkYRjZYfMwFdpD/n9DmZHOV7UY3RmKojjYpG+uQ/Xo/F5iH5P5BEtQQ4tfrfBNFGpNgH3IYIqxo2kD4zQ85n74E4wLSWwV2IhXmEyXYnnC2egM2EaS5DO5A9g9fA46F6I853XRnmwrSmAN89AFrgbeRcpuPNhJe8sJQqQiNxUXHEyYMAdbaWuBaJW6y1rYU85sIBFQjb5F/AKuUbipwyFq71VqrD4AA2SegAVkxXgcuKWJ3J7DXWrtEK7JMQBWwFbipRPt6YIu1dp4vTHsZjBOPAzeHyH9FiitnkXNP/oHMGuA9a+01uG29rBJQA7ygZH8DHcaYrwKBtbYJeaFa6Nm1AiuA9yG7j8B8CgutK/ybBzDGHAfuAvSB6XuCRlYJmKP6+40xX4QZGmMGKKwz3BA0skqA/vX3Rdhr/Yh/Vgn4V/XDttp86CXydNDIKgE9qj/fWntpEfsO1R858J1VAr4hv1RWC3xora3Xhtba+yjcnNkeNLK6DPYiZ5kf8GTtSLbXCexFzjcGN+/vLg0gp96B7BIA8DywBPleIcAMYH2E3zpjzEgtIquPAMAhZD0/HWHnYwvyVcwISiFA1/XjqNocJf8sYj+Fp9FKwbdIOvxLhN0g8AqwzBiTd6axlEdgLXAlcBXyddd3ow6zEENIqdz/bO58j9pa5OT6cmAZ8iVbM/KfcRCZ8Nb7//YVVFBBBQH+A0Ww9UPcErIoAAAAAElFTkSuQmCC',
-    bgImg: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABUklEQVR4nO3SsQ3CQBBFQR9y6Drovx7qID9KwBYcQnoz8Wr1g7dtAAAAACSMM0dzzvvqIXzfGOPx7ma/8O/5wRZ+7zhzdFu9gv8mgDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcTtF26PZSsAAAAAgLVeXREF7PDaKuIAAAAASUVORK5CYII=',
     arrow2: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABACAYAAAB7jnWuAAADKElEQVRoge3YS6hVVRzH8c/1cSMxjB6T0iiKgqKBUlRakhX0EIoiK6KcKD0G9phUEBaYQbO0BpUI0QPpaU0spSe97FLUQBIKo+g1ySRRvGQPG/zv4R7WXbdz9j57bQn8z85v7b3/37vPWd+71uJQHeQaGhkZORh978FKjE5rufEQ1uCOsc8z2wQYxtO4sTtsC2AGXsVl6UAbAEdhE85N8r+wrDTAbGzGGUk+iiXYVBLgVLyFE5J8NxbjY5hSqPlZYw3S5r/ggk7zUgAX410ck+Tf4nxs6w6bBrgWb+KIJP8S5+G79IYmAW7Bi5ie5O9jEX7N3dQUwEo8lXnea2Lu757sxkEBhrAWqzJj68VU++O/HjAIwDCeN+717npYfCV/93pIXQ/MwEZcmhm7W/zD6avqABwt1HpOkv+JZXiuysOqAszGFpye5KNiCr5R8XmVAE4Tap2T5L8LtX5StTn9/wjPxkeZ5j9jYd3m/QJcIq/WHTJqbRpgifheZyb5F5iP7wdp3gvgNrxgolrfw0UmUWtTAA/gicz4Rj3UWrXSWdBR64rMtevFW+lptyrV/RcOY8MkzftWa9XqvIHG1FoHoFG11gF4KdO8tlqr1hSxSEzrvjaadwA+zOSP4Iq2AK5DukU+HK/j5jYAfhNm25KMTcezuKs0AOzDlUK9aT2K1UJSxQBgv9g6P5657n6sw9SSAHBALDIfzFy7XEzZ4ZIAnVqF2/FPkl8jdruzSgPAk7hBGLG7FokFyrGlAeBl4YO9ST5PLMNOLA0Ab4tpujPJTxHrxDNLA8BnYv33Y5Ifjw/E8qwoAHw91mh7kh8p3lItdVfdG/4kluGNqbvO5rRRddfdHXfUvSEzVkndg2zP9+MmPJYZ61vdgx5QHMCdYhmf1nLhkcNKAnTqIdxqorqv1kPdTR5SrcP1Jqr7QrGbyqq76WO6V3A59iT5XGzFSaUB4B15dZ8so+5SR7WfYwF+SPLjxCJ4QWkA+Gas0VdJPkuctCwuDcC4uj9N8o66l5YGgF3iAHtzkk/DM20AEOq+SkbdbQEwibrbBGBc3feKZV4jxzyH6v9d/wJJd55yLoomyAAAAABJRU5ErkJggg==',
-    arrow1: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABACAYAAAB7jnWuAAADMUlEQVRoge3ZW4hVVRzH8c9YYyTGRDovZVEUBYUPhmKZRpqRGXSBlLC0lxQruj1EPaTRDbo8VFN0UV+smOxCN8iMNCVKGop6iIKiKNJ8yaJIippyevifg+Nqz5455+y1fZn/42/N3v8va6/9nb3WYbwOcXUNDAwsxRM4EvfioToBJuBJ9GIyHsRj6KoT4PAkuwnPY2JdALcV5MvwBibVAbAe1+CfZGwRtuGY3ADwLC7Dn8n4WXgf03IDwFu4AL8lf3MGPsSpuQE0Gs3DniQ/oTE2MzcAfI65+DbJp+I9nJ8bAL7D2fgsyY/C27giNwD8hPnYkeTdeBGrcgMQC3IRXiu47hmsyQ0Af2EJNhSM3aNDdY8FAP4VU35/wVhH6h4rAAzhTtxaMLYMb2pD3a0ANOtRrMBgkl8oXtMpuQHgOcXqnq1FdbcLAJuxEL8m+enYidNyA2g0Ohc/Jvnx+ACzcgNwQN3fJHlT3QtzA8D3mINPk3yyeFRLcgMQ6l6A7UnejU1YnRuAA+p+taDPU1ibGwD+xlLF6r4bfYapOwcA5eq+Ef0a6s4FQLm6r9RQd06AZpWquw4AStRdFwDhgzvSsE6AxXjgUAEsx+tiBz68BuoAuEXsvLqT/B0syAnQhfvwSMHYJlyCP9KteVV1GJ7GtQVjj+Nm4Yksa2AiXhqh+V3iI3aoGVQ9Az1iDzE/yffjBjErB1WVAL3YgjOTfBBX4eWii6oCOBHv4pQk34fLsXWkC6sAmC42rMcl+V4hn4/LLu4UYI442Dg6yXeJw46vRrtBJ2/BYjG1afMvG2CjNu8EYES1is/03WO9UTsApWrFz63crBWAMrX2a6i1leaMfRGWqbVPzMpQwVglAEfgBfE+p7VWHHC3XaMB9IjFdl6S78d1WNdJ89EAesXCmpHkg+JA4pVOm5cBnCTUenKS/y4exbYqmo8EMF38Uzk2yffiInxSVfMigHOEWnuS/Aeh1q+rbM7BHrhYTHva/IsGWOXNhwOsUKzWj7So1nYAVmKj/z+OLeJg+pdczZsADxfk/bhUG2ptByD9qaYPV4t9fvaagOvF8co+3G7YJ/N4jVcd9R8E9KDjWzEIIwAAAABJRU5ErkJggg=='
+    arrow1: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABACAYAAAB7jnWuAAADMUlEQVRoge3ZW4hVVRzH8c9YYyTGRDovZVEUBYUPhmKZRpqRGXSBlLC0lxQruj1EPaTRDbo8VFN0UV+smOxCN8iMNCVKGop6iIKiKNJ8yaJIippyevifg+Nqz5455+y1fZn/42/N3v8va6/9nb3WYbwOcXUNDAwsxRM4EvfioToBJuBJ9GIyHsRj6KoT4PAkuwnPY2JdALcV5MvwBibVAbAe1+CfZGwRtuGY3ADwLC7Dn8n4WXgf03IDwFu4AL8lf3MGPsSpuQE0Gs3DniQ/oTE2MzcAfI65+DbJp+I9nJ8bAL7D2fgsyY/C27giNwD8hPnYkeTdeBGrcgMQC3IRXiu47hmsyQ0Af2EJNhSM3aNDdY8FAP4VU35/wVhH6h4rAAzhTtxaMLYMb2pD3a0ANOtRrMBgkl8oXtMpuQHgOcXqnq1FdbcLAJuxEL8m+enYidNyA2g0Ohc/Jvnx+ACzcgNwQN3fJHlT3QtzA8D3mINPk3yyeFRLcgMQ6l6A7UnejU1YnRuAA+p+taDPU1ibGwD+xlLF6r4bfYapOwcA5eq+Ef0a6s4FQLm6r9RQd06AZpWquw4AStRdFwDhgzvSsE6AxXjgUAEsx+tiBz68BuoAuEXsvLqT/B0syAnQhfvwSMHYJlyCP9KteVV1GJ7GtQVjj+Nm4Yksa2AiXhqh+V3iI3aoGVQ9Az1iDzE/yffjBjErB1WVAL3YgjOTfBBX4eWii6oCOBHv4pQk34fLsXWkC6sAmC42rMcl+V4hn4/LLu4UYI442Dg6yXeJw46vRrtBJ2/BYjG1afMvG2CjNu8EYES1is/03WO9UTsApWrFz63crBWAMrX2a6i1leaMfRGWqbVPzMpQwVglAEfgBfE+p7VWHHC3XaMB9IjFdl6S78d1WNdJ89EAesXCmpHkg+JA4pVOm5cBnCTUenKS/y4exbYqmo8EMF38Uzk2yffiInxSVfMigHOEWnuS/Aeh1q+rbM7BHrhYTHva/IsGWOXNhwOsUKzWj7So1nYAVmKj/z+OLeJg+pdczZsADxfk/bhUG2ptByD9qaYPV4t9fvaagOvF8co+3G7YJ/N4jVcd9R8E9KDjWzEIIwAAAABJRU5ErkJggg==',
+    hover: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABUklEQVR4nO3SsQ3CQBBFQR9y6Drovx7qID9KwBYcQnoz8Wr1g7dtAAAAACSMM0dzzvvqIXzfGOPx7ma/8O/5wRZ+7zhzdFu9gv8mgDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcTtF26PZSsAAAAAgLVeXREF7PDaKuIAAAAASUVORK5CYII=',
+    anim: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABWWlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNS40LjAiPgogICA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczp0aWZmPSJodHRwOi8vbnMuYWRvYmUuY29tL3RpZmYvMS4wLyI+CiAgICAgICAgIDx0aWZmOk9yaWVudGF0aW9uPjE8L3RpZmY6T3JpZW50YXRpb24+CiAgICAgIDwvcmRmOkRlc2NyaXB0aW9uPgogICA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgpMwidZAAABgElEQVR4Ae2XsUoDQRRFs1qInZW9rU1Q8AMsrIwiWIqljZ/gB/gN/oHY2VgK2ttaWQiiBsVOVESy6xFSDEO2CEtmWHMGLrw3S/bdezITSKfjkoAEJCABCUhAAhKQgAQkIAEJSCAlgaqqeqiPPtE9ukBHaDmlj2yzCPqK6tYND3ZQkc3gpAcT7qUufbB/Rb00aS9Z3k+wTfQYhK0r33mwkcVkiqGEm0dddIiu0aj1zeZuCj/ZZxB0FZ2PoPDB3lp2g6kMEPYA/UQgHugXUnnIPoewe6iMIJxkN5bSAOGPIwAD+m5KD1lnEXYO3UYQTrOaSj2c8FsRgC/6qfotKAh8F0HYb/pFzDR9QarPF0VRMessmrce9WO3rQEwTHYZJVyJ+v/dcvwXoyvw1jRxq/5pEf7vxA6C0CVXYzboxy5bdQUIW5KwH6R8DurpKDkF2+hpqN50pDalBCQgAQlIQAISkIAEJCABCUhAAhKQgAQkIAEJSEACEpCABCQgAQlIoBGBX6DIlQ+TH16DAAAAAElFTkSuQmCC'
 });
 
 
@@ -57547,18 +57596,15 @@ var Divider = /** @class */ (function () {
     function Divider(vpano) {
         var _this = this;
         this.loader = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]();
+        this.ray = new three__WEBPACK_IMPORTED_MODULE_0__["Raycaster"]();
+        this.hoverMap = {};
         this.vpano = vpano;
         vpano.subscribe('scene-load', function () {
             _this.createPanel();
             _this.createBtn();
-            _this.initCalc();
         });
         vpano.subscribe('render-process', this.update, this);
     }
-    Divider.prototype.initCalc = function () {
-        var width = Math.max(window.innerWidth, window.innerHeight) / 2;
-        var height = Math.min(window.innerWidth, window.innerHeight);
-    };
     Divider.prototype.createBtn = function () {
         var vpano = this.vpano;
         var root = vpano.getRoot();
@@ -57578,58 +57624,131 @@ var Divider = /** @class */ (function () {
     Divider.prototype.createPanel = function () {
         var vpano = this.vpano;
         var camera = vpano.getCamera();
-        var group = new three__WEBPACK_IMPORTED_MODULE_0__["Group"]();
-        var panelMesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](775, 236), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
-            color: '#000',
-            transparent: true,
-            opacity: 0.8,
-            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
-        }));
-        panelMesh.name = 'vr-panel';
-        panelMesh.renderOrder = 1;
-        var arrowMesh1 = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](32, 64), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
-            map: this.loader.load(_assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].arrow1),
-            transparent: true,
-            depthTest: false,
-            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
-        }));
-        arrowMesh1.renderOrder = 2;
-        var arrowMesh2 = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](32, 64), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
-            map: this.loader.load(_assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].arrow2),
-            transparent: true,
-            depthTest: false,
-            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
-        }));
-        arrowMesh2.renderOrder = 2;
-        var setMesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](64, 64), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
-            map: this.loader.load(_assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].setImg),
-            transparent: true,
-            depthTest: false,
-            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
-        }));
-        setMesh.renderOrder = 2;
-        var obj = this.buildCanvasText('1 / 5');
-        var canvas = obj.canvas;
-        var spriteMesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](canvas.width, canvas.height), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
-            map: new three__WEBPACK_IMPORTED_MODULE_0__["CanvasTexture"](canvas),
-            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"],
-            transparent: true
-        }));
-        spriteMesh.rotation.y = Math.PI;
-        spriteMesh.renderOrder = 3;
-        panelMesh.position.set(0, -300, 1000);
-        arrowMesh1.position.set(230, -300, 1000);
-        arrowMesh2.position.set(-80, -300, 1000);
-        setMesh.position.set(-250, -300, 1000);
-        spriteMesh.position.set(70, -300, 1000);
-        group.add(panelMesh);
-        group.add(arrowMesh1);
-        group.add(arrowMesh2);
-        group.add(setMesh);
-        group.add(spriteMesh);
+        var group = this.group = new three__WEBPACK_IMPORTED_MODULE_0__["Group"]();
         vpano.addSceneObject(group);
+        var panelMesh = this.createMesh({
+            name: 'vr-panel', width: 775, height: 236,
+            color: '#000', opacity: 0.8, order: 1,
+            x: 0, y: -300, z: 1000,
+            parent: group
+        });
+        // left arrow
+        var arrowMesh1 = this.createMesh({
+            name: 'vr-panel-prev', width: 32, height: 64,
+            img: _assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].arrow1, order: 3,
+            x: 230, y: -300, z: 1000,
+            parent: group
+        });
+        var arrowText1 = this.createTextMesh({
+            text: '上一页', size: 36, color: '#c9c9c9',
+            x: 0, y: -80, z: 0, hide: true,
+            parent: arrowMesh1
+        });
+        var arrowHover1 = this.createHoverMesh({
+            hide: true,
+            parent: arrowMesh1
+        });
+        // right arrow
+        var arrowMesh2 = this.createMesh({
+            name: 'vr-panel-next', width: 32, height: 64,
+            img: _assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].arrow2, order: 3,
+            x: -80, y: -300, z: 1000,
+            parent: group
+        });
+        var arrowText2 = this.createTextMesh({
+            text: '下一页', size: 36, color: '#c9c9c9',
+            x: 0, y: -80, z: 0, hide: true,
+            parent: arrowMesh2
+        });
+        var arrowHover2 = this.createHoverMesh({
+            hide: true,
+            parent: arrowMesh2
+        });
+        // config
+        var setMesh = this.createMesh({
+            name: 'vr-panel-setting', width: 64, height: 64,
+            img: _assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].setImg, order: 3,
+            x: -250, y: -300, z: 1000,
+            parent: group
+        });
+        // page num
+        var spriteMesh = this.createTextMesh({
+            text: '1 / 5', size: 42, color: '#fff',
+            x: 70, y: -300, z: 1000,
+            parent: group
+        });
+        // setting panel
+        var setPanel = this.createMesh({
+            name: 'vr-setpanel', width: 775, height: 400,
+            color: '#000', opacity: 0.8, order: 3,
+            x: 0, y: 60, z: 1000,
+            parent: group
+        });
+        var geo = new three__WEBPACK_IMPORTED_MODULE_0__["Geometry"]();
+        geo.vertices.push(new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](387.5, -100, -2), new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](-387.5, -100, -2));
+        var setLine = new three__WEBPACK_IMPORTED_MODULE_0__["Line"](geo, new three__WEBPACK_IMPORTED_MODULE_0__["LineBasicMaterial"]({
+            color: '#fff',
+            linewidth: 1.5
+        }));
+        setLine.renderOrder = 3;
+        setPanel.add(setLine);
+        this.createTextMesh({
+            text: '完成', size: 32, color: '#c9c9c9',
+            x: 0, y: -150, z: 0, parent: setPanel
+        });
+        // viewpoint
+        var pointMesh = this.point = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["CircleGeometry"](5, 32), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            color: '#fff', depthTest: false, side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"], transparent: true
+        }));
+        pointMesh.renderOrder = 10;
+        vpano.addSceneObject(pointMesh);
     };
     Divider.prototype.update = function () {
+        var camera = this.vpano.getCamera();
+        var point = this.point;
+        var ray = this.ray;
+        var pos = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToWorld({ x: 0, y: 0 }, camera);
+        point.position.copy(pos);
+        point.rotation.copy(camera.rotation);
+        ray.setFromCamera({ x: 0, y: 0 }, camera);
+        var intersects = ray.intersectObjects(this.group.children);
+        if (intersects.length) {
+            this.detect(intersects.pop().object.name);
+        }
+    };
+    Divider.prototype.detect = function (signal) {
+        var obj = this.group.children.find(function (mesh) { return mesh.name == signal; });
+        if (obj) {
+            switch (signal) {
+                case 'vr-panel-prev':
+                    this.paging(0, obj);
+                    break;
+                case 'vr-panel-next':
+                    this.paging(1, obj);
+                    break;
+                case 'vr-panel-setting':
+                    break;
+                default:
+                    this.nothing();
+            }
+        }
+    };
+    Divider.prototype.paging = function (factor, obj) {
+        var hoverMap = this.hoverMap;
+        var id = obj.id;
+        hoverMap[id + 'text'].visible = true;
+        hoverMap[id + 'hover'].visible = true;
+        if (factor) {
+        }
+    };
+    /**
+     * 常规 hide
+     */
+    Divider.prototype.nothing = function () {
+        var hoverMap = this.hoverMap;
+        for (var key in hoverMap) {
+            hoverMap[key].visible = false;
+        }
     };
     Divider.prototype.dispose = function () {
         var vpano = this.vpano;
@@ -57638,9 +57757,28 @@ var Divider = /** @class */ (function () {
         root.removeChild(this.enterBtn);
         vpano.unSubscribe('render-process', this.update, this);
     };
-    Divider.prototype.buildCanvasText = function (text) {
+    Divider.prototype.createMesh = function (params) {
+        var mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](params.width, params.height), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: params.img && this.loader.load(params.img),
+            color: params.color || '#fff',
+            transparent: true,
+            opacity: params.opacity || 1,
+            depthTest: false,
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
+        }));
+        mesh.renderOrder = params.order;
+        mesh.position.set(params.x, params.y, params.z);
+        if (params.name) {
+            mesh.name = params.name;
+        }
+        if (params.parent) {
+            params.parent.add(mesh);
+        }
+        return mesh;
+    };
+    Divider.prototype.buildCanvasText = function (text, size, color) {
         var fontface = 'Arial';
-        var fontsize = 42;
+        var fontsize = size || 42;
         var canvas = document.createElement('canvas');
         canvas.width = 256;
         canvas.height = 128;
@@ -57649,11 +57787,50 @@ var Divider = /** @class */ (function () {
         var metrics = context.measureText(text);
         context.lineWidth = 4;
         context.textAlign = 'center';
-        context.fillStyle = '#fff';
+        context.fillStyle = color || '#fff';
         context.fillText(text, canvas.width / 2, canvas.height / 2 + 10);
         return { canvas: canvas, metrics: metrics };
     };
-    ;
+    Divider.prototype.createTextMesh = function (params) {
+        var parent = params.parent;
+        var obj = this.buildCanvasText(params.text, params.size, params.color);
+        var canvas = obj.canvas;
+        var mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](canvas.width, canvas.height), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: new three__WEBPACK_IMPORTED_MODULE_0__["CanvasTexture"](canvas),
+            depthTest: false,
+            transparent: true,
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
+        }));
+        mesh.position.set(params.x, params.y, params.z);
+        mesh.rotation.y = Math.PI;
+        mesh.renderOrder = 5;
+        if (params.hide) {
+            mesh.visible = false;
+            parent && (this.hoverMap[parent.id + 'text'] = mesh);
+        }
+        if (parent) {
+            parent.add(mesh);
+        }
+        return mesh;
+    };
+    Divider.prototype.createHoverMesh = function (params) {
+        var parent = params.parent;
+        var mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](90, 90), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: this.loader.load(_assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].hover),
+            depthTest: false,
+            transparent: true,
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
+        }));
+        mesh.renderOrder = 2;
+        if (params.hide) {
+            mesh.visible = false;
+        }
+        if (parent) {
+            parent.add(mesh);
+            this.hoverMap[parent.id + 'hover'] = mesh;
+        }
+        return mesh;
+    };
     return Divider;
 }());
 /* harmony default export */ __webpack_exports__["default"] = (Divider);

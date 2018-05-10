@@ -1,4 +1,5 @@
-import {Group, Vector3, CanvasTexture, DoubleSide, Mesh, PlaneGeometry, MeshBasicMaterial, TextureLoader} from 'three';
+import {Group, Vector3, Raycaster, CanvasTexture, DoubleSide, Mesh, PlaneGeometry, MeshBasicMaterial, 
+    TextureLoader, CircleGeometry, Geometry, Line, LineBasicMaterial} from 'three';
 import Util from '../core/util';
 import Assets from './assets.vr';
 
@@ -11,7 +12,11 @@ export default class Divider {
     vpano: any;
     backBtn: any;
     enterBtn: any;
+    group: any;
+    point: any;
     loader = new TextureLoader();
+    ray = new Raycaster();
+    hoverMap = {};
 
     constructor(vpano) {
         this.vpano = vpano;
@@ -19,15 +24,8 @@ export default class Divider {
         vpano.subscribe('scene-load', () => {
             this.createPanel();
             this.createBtn();
-            this.initCalc();
         });
         vpano.subscribe('render-process', this.update, this);
-    }
-
-    initCalc() {
-        const width = Math.max(window.innerWidth, window.innerHeight) / 2;
-        const height = Math.min(window.innerWidth, window.innerHeight);
-
     }
 
     createBtn() {
@@ -53,67 +51,151 @@ export default class Divider {
     createPanel() {
         const vpano = this.vpano;
         const camera = vpano.getCamera();
-        const group = new Group();
+        const group = this.group = new Group();
 
-        const panelMesh = new Mesh(new PlaneGeometry(775, 236), new MeshBasicMaterial({
-            color: '#000',
-            transparent: true,
-            opacity: 0.8,
-            side: DoubleSide
-        }));
-        panelMesh.name = 'vr-panel';
-        panelMesh.renderOrder = 1;
-
-        const arrowMesh1 = new Mesh(new PlaneGeometry(32, 64), new MeshBasicMaterial({
-            map: this.loader.load(Assets.arrow1),
-            transparent: true,
-            depthTest: false,
-            side: DoubleSide
-        }));
-        arrowMesh1.renderOrder = 2;
-
-        const arrowMesh2 = new Mesh(new PlaneGeometry(32, 64), new MeshBasicMaterial({
-            map: this.loader.load(Assets.arrow2),
-            transparent: true,
-            depthTest: false,
-            side: DoubleSide
-        }));
-        arrowMesh2.renderOrder = 2;
-
-        const setMesh = new Mesh(new PlaneGeometry(64, 64), new MeshBasicMaterial({
-            map: this.loader.load(Assets.setImg),
-            transparent: true,
-            depthTest: false,
-            side: DoubleSide
-        }));
-        setMesh.renderOrder = 2;
-
-        const obj = this.buildCanvasText('1 / 5');
-        const canvas = obj.canvas;
-        const spriteMesh = new Mesh(new PlaneGeometry(canvas.width, canvas.height), 
-            new MeshBasicMaterial({
-                map: new CanvasTexture(canvas), 
-                side: DoubleSide,
-                transparent: true
-            }));
-        spriteMesh.rotation.y = Math.PI;
-        spriteMesh.renderOrder = 3;
-
-        panelMesh.position.set(0, -300, 1000);
-        arrowMesh1.position.set(230, -300, 1000);
-        arrowMesh2.position.set(-80, -300, 1000);
-        setMesh.position.set(-250, -300, 1000);
-        spriteMesh.position.set(70, -300, 1000);
-        group.add(panelMesh);
-        group.add(arrowMesh1);
-        group.add(arrowMesh2);
-        group.add(setMesh);
-        group.add(spriteMesh);
         vpano.addSceneObject(group);
+        
+        const panelMesh = this.createMesh({
+            name: 'vr-panel', width: 775, height: 236,
+            color: '#000', opacity: 0.8, order: 1,
+            x: 0, y: -300, z: 1000,
+            parent: group
+        });
+        // left arrow
+        const arrowMesh1 = this.createMesh({
+            name: 'vr-panel-prev', width: 32, height: 64,
+            img: Assets.arrow1, order: 3,
+            x: 230, y: -300, z: 1000,
+            parent: group
+        });
+
+        const arrowText1 = this.createTextMesh({
+            text: '上一页', size: 36, color: '#c9c9c9',
+            x: 0, y: -80, z: 0, hide: true,
+            parent: arrowMesh1
+        });
+
+        const arrowHover1 = this.createHoverMesh({
+            hide: true,
+            parent: arrowMesh1
+        });
+        // right arrow
+        const arrowMesh2 = this.createMesh({
+            name: 'vr-panel-next', width: 32, height: 64,
+            img: Assets.arrow2, order: 3,
+            x: -80, y: -300, z: 1000,
+            parent: group
+        });
+
+        const arrowText2 = this.createTextMesh({
+            text: '下一页', size: 36, color: '#c9c9c9',
+            x: 0, y: -80, z: 0, hide: true,
+            parent: arrowMesh2
+        });
+        const arrowHover2 = this.createHoverMesh({
+            hide: true,
+            parent: arrowMesh2
+        });
+        // config
+        const setMesh = this.createMesh({
+            name: 'vr-panel-setting', width: 64, height: 64,
+            img: Assets.setImg, order: 3,
+            x: -250, y: -300, z: 1000,
+            parent: group
+        });
+        // page num
+        const spriteMesh = this.createTextMesh({
+            text: '1 / 5', size: 42, color: '#fff',
+            x: 70, y: -300, z: 1000,
+            parent: group
+        });
+        // setting panel
+        const setPanel = this.createMesh({
+            name: 'vr-setpanel', width: 775, height: 400,
+            color: '#000', opacity: 0.8, order: 3,
+            x: 0, y: 60, z: 1000,
+            parent: group
+        });
+
+        const geo = new Geometry();
+        geo.vertices.push(new Vector3(387.5, -100, -2), new Vector3(-387.5, -100, -2));
+        const setLine = new Line(geo, new LineBasicMaterial({
+            color: '#fff',
+            linewidth: 1.5
+        }));
+        setLine.renderOrder = 3;
+        setPanel.add(setLine);
+
+        this.createTextMesh({
+            text: '完成', size: 32, color: '#c9c9c9',
+            x: 0, y: -150, z: 0, parent: setPanel
+        });
+
+        // viewpoint
+        const pointMesh = this.point = new Mesh(new CircleGeometry(5, 32), new MeshBasicMaterial({
+            color: '#fff', depthTest: false, side: DoubleSide, transparent: true
+        }));
+        pointMesh.renderOrder = 10;
+        vpano.addSceneObject(pointMesh);
     }
 
     update() {
+        const camera = this.vpano.getCamera();
+        const point = this.point;
+        const ray = this.ray;
+        const pos = Util.calcScreenToWorld({x: 0, y: 0}, camera);
+
+        point.position.copy(pos);
+        point.rotation.copy(camera.rotation);
+
+        ray.setFromCamera({x: 0, y: 0}, camera);
+        const intersects = ray.intersectObjects(this.group.children);
+
+        if (intersects.length) {
+            this.detect(intersects.pop().object.name);
+        }
+    }
+
+    detect(signal) {
+        const obj = this.group.children.find(mesh => mesh.name == signal);
+
+        if (obj) {
+            switch(signal) {
+                case 'vr-panel-prev':
+                    this.paging(0, obj);
+                    break;
+                case 'vr-panel-next':
+                    this.paging(1, obj);
+                    break;
+                case 'vr-panel-setting':
+                    break;
+                default:
+                    this.nothing();
+            }
+        }
+    }
+
+    paging(factor, obj) {
+        const hoverMap = this.hoverMap;
+        const id = obj.id;
         
+        hoverMap[id + 'text'].visible = true;
+        hoverMap[id + 'hover'].visible = true;
+
+        if (factor) {
+            
+        }
+    }
+
+    /**
+     * 常规 hide
+     */
+    nothing() {
+        const hoverMap = this.hoverMap;
+        
+        for (let key in hoverMap) {
+            hoverMap[key].visible = false;
+        }
     }
 
     dispose() {
@@ -125,9 +207,32 @@ export default class Divider {
         vpano.unSubscribe('render-process', this.update, this);
     }
 
-    buildCanvasText(text) {
+    createMesh(params) {
+        const mesh = new Mesh(new PlaneGeometry(params.width, params.height), new MeshBasicMaterial({
+            map: params.img && this.loader.load(params.img),
+            color: params.color || '#fff',
+            transparent: true,
+            opacity: params.opacity || 1,
+            depthTest: false,
+            side: DoubleSide
+        }));
+        mesh.renderOrder = params.order;
+        mesh.position.set(params.x, params.y, params.z);
+
+        if (params.name) {
+            mesh.name = params.name;
+        }
+
+        if (params.parent) {
+            params.parent.add(mesh);
+        }
+
+        return mesh;
+    }
+
+    buildCanvasText(text, size?, color?) {
         const fontface = 'Arial';
-        const fontsize = 42;
+        const fontsize = size || 42;
 
         const canvas = document.createElement('canvas');
         canvas.width = 256;
@@ -139,9 +244,61 @@ export default class Divider {
 
         context.lineWidth = 4;
         context.textAlign = 'center';
-        context.fillStyle = '#fff';
+        context.fillStyle = color || '#fff';
         context.fillText(text, canvas.width / 2, canvas.height / 2 + 10);
 
         return {canvas, metrics};
-    };
+    }
+
+    createTextMesh(params?) {
+        const parent = params.parent;
+        const obj = this.buildCanvasText(params.text, params.size, params.color);
+        const canvas = obj.canvas;
+        const mesh = new Mesh(new PlaneGeometry(canvas.width, canvas.height), 
+            new MeshBasicMaterial({
+                map: new CanvasTexture(canvas), 
+                depthTest: false,
+                transparent: true,
+                side: DoubleSide
+            }));
+
+        mesh.position.set(params.x, params.y, params.z);
+        mesh.rotation.y = Math.PI;
+        mesh.renderOrder = 5;
+
+        if (params.hide) {
+            mesh.visible = false;
+            parent && (this.hoverMap[parent.id + 'text'] = mesh);
+        }
+
+        if (parent) {
+            parent.add(mesh);
+        }
+
+        return mesh;
+    }
+
+    createHoverMesh(params?) {
+        const parent = params.parent;
+        const mesh = new Mesh(new PlaneGeometry(90, 90),
+            new MeshBasicMaterial({
+                map: this.loader.load(Assets.hover),
+                depthTest: false,
+                transparent: true,
+                side: DoubleSide
+            }));
+
+        mesh.renderOrder = 2;
+
+        if (params.hide) {
+            mesh.visible = false;
+        }
+
+        if (parent) {
+            parent.add(mesh);
+            this.hoverMap[parent.id + 'hover'] = mesh;
+        }
+
+        return mesh;
+    }
 }

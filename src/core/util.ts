@@ -116,6 +116,18 @@ export default {
     },
 
     /**
+     * 归一化
+     * @param {Object} location 屏幕坐标
+     * @param {Object} size 渲染器 size
+     */
+    transNdc(location, size) {
+        return {
+            x: (location.x / size.width) * 2 - 1,
+            y: -(location.y / size.height) * 2 + 1
+        };
+    },
+
+    /**
      * 逆归一化
      * @param {Object} location 屏幕坐标
      * @param {Object} size 渲染器 size
@@ -128,15 +140,28 @@ export default {
         };
     },
 
+    /**
+     * 球面坐标转化成屏幕坐标, 没什么卵用
+     * @param {number} lng 横向
+     * @param {number} lat 纵向
+     * @param {number} radius 半径
+     * @param {Object} camera 相机
+     * @param {Object} size 屏幕尺寸
+     */
     caleSphereToScreen(lng, lat, radius, camera, size) {
         return this.inverseNdc(this.calcWorldToScreen(this.calcSphereToWorld(lng, lat, radius), camera), size);
     },
 
     /**
      * 屏幕坐标转为球面坐标
+     * ndc first
      */
-    calcScreenToSphere(location, camera) {
-        const vector = new Vector3(location.x, location.y, 0.99).unproject(camera);
+    calcScreenToSphere(location, camera, far?) {
+        const projectCamera = camera.clone();
+        projectCamera.far = far || 1000;
+        projectCamera.updateProjectionMatrix();
+
+        const vector = new Vector3(location.x, location.y, 1).unproject(projectCamera);
         const spherical = new Spherical();
         spherical.setFromVector3(vector);
 
@@ -144,6 +169,18 @@ export default {
             lng: spherical.theta * 180 / Math.PI,
             lat: 90 - spherical.phi * 180 / Math.PI
         };
+    },
+
+    /**
+     * 屏幕坐标转为世界坐标
+     * ndc first
+     */
+    calcScreenToWorld(location, camera, far?) {
+        const projectCamera = camera.clone();
+        projectCamera.far = far || 1000;
+        projectCamera.updateProjectionMatrix();
+
+        return new Vector3(location.x, location.y, 1).unproject(projectCamera);
     },
 
     /**
