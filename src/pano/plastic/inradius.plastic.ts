@@ -124,12 +124,4 @@ export default class Inradius extends Plastic {
         new Tween(material).to({opacity: 0}).effect('linear', 1000)
             .start(['opacity'], pano).complete(onComplete);
     }
-
-    dispose() {
-        const plastic = this.plastic;
-
-        plastic.material.envMap.dispose();
-        plastic.material.dispose();
-        plastic.parent.remove(plastic);
-    }
 }

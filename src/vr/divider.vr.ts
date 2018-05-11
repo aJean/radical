@@ -1,5 +1,7 @@
 import {Group, Vector3, Raycaster, CanvasTexture, DoubleSide, Mesh, PlaneGeometry, MeshBasicMaterial, 
     TextureLoader, CircleGeometry, Geometry, Line, LineBasicMaterial} from 'three';
+import Text from '../pano/plastic/text.plastic';
+import Point from '../pano/plastic/point.plastic';
 import Util from '../core/util';
 import Assets from './assets.vr';
 
@@ -22,7 +24,8 @@ export default class Divider {
         this.vpano = vpano;
 
         vpano.subscribe('scene-load', () => {
-            this.createPanel();
+            this.initPanel();
+            this.initSetPanel();
             this.createBtn();
         });
         vpano.subscribe('render-process', this.update, this);
@@ -48,7 +51,7 @@ export default class Divider {
         root.appendChild(enterBtn);
     }
 
-    createPanel() {
+    initPanel() {
         const vpano = this.vpano;
         const camera = vpano.getCamera();
         const group = this.group = new Group();
@@ -70,11 +73,10 @@ export default class Divider {
         });
 
         const arrowText1 = this.createTextMesh({
-            text: '上一页', size: 36, color: '#c9c9c9',
+            text: '上一页', fontsize: 36, color: '#c9c9c9',
             x: 0, y: -80, z: 0, hide: true,
             parent: arrowMesh1
         });
-
         const arrowHover1 = this.createHoverMesh({
             hide: true,
             parent: arrowMesh1
@@ -86,9 +88,8 @@ export default class Divider {
             x: -80, y: -300, z: 1000,
             parent: group
         });
-
         const arrowText2 = this.createTextMesh({
-            text: '下一页', size: 36, color: '#c9c9c9',
+            text: '下一页', fontSize: 36, color: '#c9c9c9',
             x: 0, y: -80, z: 0, hide: true,
             parent: arrowMesh2
         });
@@ -105,10 +106,26 @@ export default class Divider {
         });
         // page num
         const spriteMesh = this.createTextMesh({
-            text: '1 / 5', size: 42, color: '#fff',
+            text: '1 / 5', fontSize: 42,
             x: 70, y: -300, z: 1000,
             parent: group
         });
+        // viewpoint
+        const point = new Point({
+            anim: true,
+            animImg: Assets.anim,
+            parent: vpano.getScene()
+        }, vpano);
+        point.fade();
+
+        this.point = point.plastic;
+    }
+
+    initSetPanel() {
+        const vpano = this.vpano;
+        const camera = vpano.getCamera();
+        const group = this.group;
+
         // setting panel
         const setPanel = this.createMesh({
             name: 'vr-setpanel', width: 775, height: 400,
@@ -127,16 +144,52 @@ export default class Divider {
         setPanel.add(setLine);
 
         this.createTextMesh({
-            text: '完成', size: 32, color: '#c9c9c9',
-            x: 0, y: -150, z: 0, parent: setPanel
+            text: '完成', fontSize: 32,
+            x: 0, y: -155, z: 0, parent: setPanel
         });
 
-        // viewpoint
-        const pointMesh = this.point = new Mesh(new CircleGeometry(5, 32), new MeshBasicMaterial({
-            color: '#fff', depthTest: false, side: DoubleSide, transparent: true
-        }));
-        pointMesh.renderOrder = 10;
-        vpano.addSceneObject(pointMesh);
+        this.createTextMesh({
+            text: '每30s自动切换',
+            width: 290, height: 64,
+            x: 150, y: 100, z: 0,
+            parent: setPanel
+        });
+
+        const noauto = this.createTextMesh({
+            text: '不自动切换',
+            width: 256, height: 64,
+            x: -180, y: 100, z: 0,
+            parent: setPanel
+        });
+
+        const noautoHover = this.createMesh({
+            parent: noauto,
+            img: Assets.hover,
+            width: 300,
+            height: 100,
+            order: 6,
+            x: 0,
+            y: 5,
+            z: 0
+        });
+
+        const close = this.createTextMesh({
+            text: '切换设置',
+            width: 256, height: 64,
+            x: 0, y: -30, z: 0,
+            parent: setPanel
+        });
+
+        const closeHover = this.createMesh({
+            parent: close,
+            img: Assets.hover,
+            width: 256,
+            height: 100,
+            order: 6,
+            x: 0,
+            y: 5,
+            z: 0
+        });
     }
 
     update() {
@@ -178,7 +231,7 @@ export default class Divider {
     paging(factor, obj) {
         const hoverMap = this.hoverMap;
         const id = obj.id;
-        
+
         hoverMap[id + 'text'].visible = true;
         hoverMap[id + 'hover'].visible = true;
 
@@ -230,49 +283,12 @@ export default class Divider {
         return mesh;
     }
 
-    buildCanvasText(text, size?, color?) {
-        const fontface = 'Arial';
-        const fontsize = size || 42;
-
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 128;
-
-        const context = canvas.getContext('2d');
-        context.font = `Bold ${fontsize}px ${fontface}`;
-        const metrics = context.measureText(text);
-
-        context.lineWidth = 4;
-        context.textAlign = 'center';
-        context.fillStyle = color || '#fff';
-        context.fillText(text, canvas.width / 2, canvas.height / 2 + 10);
-
-        return {canvas, metrics};
-    }
-
-    createTextMesh(params?) {
+    createTextMesh(params) {
+        const mesh = new Text(params).plastic;
         const parent = params.parent;
-        const obj = this.buildCanvasText(params.text, params.size, params.color);
-        const canvas = obj.canvas;
-        const mesh = new Mesh(new PlaneGeometry(canvas.width, canvas.height), 
-            new MeshBasicMaterial({
-                map: new CanvasTexture(canvas), 
-                depthTest: false,
-                transparent: true,
-                side: DoubleSide
-            }));
 
-        mesh.position.set(params.x, params.y, params.z);
-        mesh.rotation.y = Math.PI;
-        mesh.renderOrder = 5;
-
-        if (params.hide) {
-            mesh.visible = false;
-            parent && (this.hoverMap[parent.id + 'text'] = mesh);
-        }
-
-        if (parent) {
-            parent.add(mesh);
+        if (parent && params.hide) {
+            this.hoverMap[parent.id + 'text'] = mesh;
         }
 
         return mesh;
@@ -292,11 +308,11 @@ export default class Divider {
 
         if (params.hide) {
             mesh.visible = false;
+            this.hoverMap[parent.id + 'hover'] = mesh;
         }
 
         if (parent) {
             parent.add(mesh);
-            this.hoverMap[parent.id + 'hover'] = mesh;
         }
 
         return mesh;
