@@ -7,6 +7,7 @@ import Tween from '../animations/tween.animation';
  */
 
 const defaultOpts = {
+    name: '',
     fontface: 'Arial',
     fontsize: 42,
     lineWidth: 4,
@@ -30,37 +31,23 @@ export default class Text extends Plastic {
         this.create();
     }
 
-    buildCanvasText() {
-        const data = this.data;
-        const canvas = this.canvas;
-        const width = canvas.width = data.width;
-        const height = canvas.height = data.height;
-
-        const context = canvas.getContext('2d');
-        context.font = `Bold ${data.fontsize}px ${data.fontface}`;
-        context.lineWidth = data.lineWidth;
-        context.textAlign = 'center';
-        context.fillStyle = data.color;
-        context.fillText(data.text, width / 2, height / 2 + 10);
-
-        const metrics = context.measureText(data.text);
-    }
-
     create() {
         this.buildCanvasText();
         
         const data = this.data;
-        const mesh = this.plastic = new Mesh(new PlaneGeometry(data.width, data.height), 
+        const mesh: any = this.plastic = new Mesh(new PlaneGeometry(data.width, data.height), 
             new MeshBasicMaterial({
                 map: new CanvasTexture(this.canvas), 
                 depthTest: false,
                 transparent: true,
                 side: DoubleSide
             }));
-
+        // delete before dispose
+        mesh.wrapper = this;
         mesh.position.set(data.x, data.y, data.z);
         mesh.rotation.y = Math.PI;
         mesh.renderOrder = data.order;
+        mesh.name = data.name;
 
         if (data.hide) {
             mesh.visible = false;
@@ -73,6 +60,22 @@ export default class Text extends Plastic {
         return mesh;
     }
 
+    buildCanvasText() {
+        const data = this.data;
+        const canvas = this.canvas;
+        const width = canvas.width = data.width;
+        const height = canvas.height = data.height;
+
+        const context = canvas.getContext('2d');
+        context.font = `normal ${data.fontsize}px ${data.fontface}`;
+        context.lineWidth = data.lineWidth;
+        context.textAlign = 'center';
+        context.fillStyle = data.color;
+        context.fillText(data.text, width / 2, height / 2 + 10);
+
+        const metrics = context.measureText(data.text);
+    }
+
     change(text) {
         const data = this.data;
         const context = this.canvas.getContext('2d');
@@ -80,5 +83,10 @@ export default class Text extends Plastic {
         data.text = text;
         context.clearRect(0, 0, data.width, data.height);
         context.fillText(data.text, data.width / 2, data.height / 2 + 10);
+    }
+
+    dispose() {
+        delete this.plastic['wrapper'];
+        super.dispose();
     }
 }

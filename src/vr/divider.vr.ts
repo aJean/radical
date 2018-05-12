@@ -1,6 +1,8 @@
 import {Group, Vector3, Raycaster, CanvasTexture, DoubleSide, Mesh, PlaneGeometry, MeshBasicMaterial, 
     TextureLoader, CircleGeometry, Geometry, Line, LineBasicMaterial} from 'three';
 import Text from '../pano/plastic/text.plastic';
+import Button from '../pano/plastic/button.plastic';
+import Icon from '../pano/plastic/icon.plastic';
 import Point from '../pano/plastic/point.plastic';
 import Util from '../core/util';
 import Assets from './assets.vr';
@@ -16,9 +18,10 @@ export default class Divider {
     enterBtn: any;
     group: any;
     point: any;
+    active: any;
+    timeid = 0;
     loader = new TextureLoader();
     ray = new Raycaster();
-    hoverMap = {};
 
     constructor(vpano) {
         this.vpano = vpano;
@@ -58,67 +61,44 @@ export default class Divider {
 
         vpano.addSceneObject(group);
         
-        const panelMesh = this.createMesh({
+        const panel = this.createMesh({
             name: 'vr-panel', width: 775, height: 236,
             color: '#000', opacity: 0.8, order: 1,
             x: 0, y: -300, z: 1000,
             parent: group
         });
         // left arrow
-        const arrowMesh1 = this.createMesh({
-            name: 'vr-panel-prev', width: 32, height: 64,
-            img: Assets.arrow1, order: 3,
-            x: 230, y: -300, z: 1000,
-            parent: group
+        const prevBtn = new Icon({
+            parent: group, name: 'vr-panel-prev', width: 32, height: 64,
+            text: '上一页', color: '#c9c9c9', icon: Assets.arrow1,
+            x: 230, y: -300, z: 1000
         });
 
-        const arrowText1 = this.createTextMesh({
-            text: '上一页', fontsize: 36, color: '#c9c9c9',
-            x: 0, y: -80, z: 0, hide: true,
-            parent: arrowMesh1
-        });
-        const arrowHover1 = this.createHoverMesh({
-            hide: true,
-            parent: arrowMesh1
-        });
         // right arrow
-        const arrowMesh2 = this.createMesh({
-            name: 'vr-panel-next', width: 32, height: 64,
-            img: Assets.arrow2, order: 3,
-            x: -80, y: -300, z: 1000,
-            parent: group
+        const nextBtn = new Icon({
+            parent: group, name: 'vr-panel-next', width: 32, height: 64,
+            text: '下一页', color: '#c9c9c9', icon: Assets.arrow2,
+            x: -80, y: -300, z: 1000
         });
-        const arrowText2 = this.createTextMesh({
-            text: '下一页', fontSize: 36, color: '#c9c9c9',
-            x: 0, y: -80, z: 0, hide: true,
-            parent: arrowMesh2
-        });
-        const arrowHover2 = this.createHoverMesh({
-            hide: true,
-            parent: arrowMesh2
-        });
-        // config
-        const setMesh = this.createMesh({
+
+        // open set btn
+        const setBtn = this.createMesh({
             name: 'vr-panel-setting', width: 64, height: 64,
             img: Assets.setImg, order: 3,
             x: -250, y: -300, z: 1000,
             parent: group
         });
         // page num
-        const spriteMesh = this.createTextMesh({
+        const pageNum = this.createTextMesh({
             text: '1 / 5', fontSize: 42,
             x: 70, y: -300, z: 1000,
             parent: group
         });
         // viewpoint
-        const point = new Point({
-            anim: true,
-            animImg: Assets.anim,
-            parent: vpano.getScene()
+        const point = this.point = new Point({
+            parent: vpano.getScene(), name: 'vr-panel-viewport',
+            anim: true, animImg: Assets.anim
         }, vpano);
-        point.fade();
-
-        this.point = point.plastic;
     }
 
     initSetPanel() {
@@ -143,66 +123,38 @@ export default class Divider {
         setLine.renderOrder = 3;
         setPanel.add(setLine);
 
-        this.createTextMesh({
-            text: '完成', fontSize: 32,
-            x: 0, y: -155, z: 0, parent: setPanel
+        const close = new Text({
+            parent: setPanel, name: 'vr-setpanel-close', text: '完成',
+            color: '#c9c9c9', x: 0, y: -155, z: 1
         });
 
-        this.createTextMesh({
-            text: '每30s自动切换',
-            width: 290, height: 64,
-            x: 150, y: 100, z: 0,
-            parent: setPanel
+        const auto = new Button({
+            parent: setPanel, name: 'vr-setpanel-auto', text: '每30s自动切换', color: '#c9c9c9',
+            width: 380, height: 100, x: 150, y: 100, z: 1
         });
 
-        const noauto = this.createTextMesh({
-            text: '不自动切换',
-            width: 256, height: 64,
-            x: -180, y: 100, z: 0,
-            parent: setPanel
+        const noauto = new Button({
+            parent: setPanel, name: 'vr-setpanel-noauto', text: '不自动切换', color: '#c9c9c9',
+            width: 300, height: 100, x: -190, y: 100, z: 2
         });
 
-        const noautoHover = this.createMesh({
-            parent: noauto,
-            img: Assets.hover,
-            width: 300,
-            height: 100,
-            order: 6,
-            x: 0,
-            y: 5,
-            z: 0
-        });
-
-        const close = this.createTextMesh({
-            text: '切换设置',
-            width: 256, height: 64,
-            x: 0, y: -30, z: 0,
-            parent: setPanel
-        });
-
-        const closeHover = this.createMesh({
-            parent: close,
-            img: Assets.hover,
-            width: 256,
-            height: 100,
-            order: 6,
-            x: 0,
-            y: 5,
-            z: 0
+        const changeBtn = new Button({
+            parent: setPanel, name: 'vr-setpanel-change', text: '切换设置',
+            color: '#c9c9c9', x: 0, y: -20, z: 0
         });
     }
 
     update() {
         const camera = this.vpano.getCamera();
-        const point = this.point;
+        const point3d = this.point.plastic;
         const ray = this.ray;
         const pos = Util.calcScreenToWorld({x: 0, y: 0}, camera);
 
-        point.position.copy(pos);
-        point.rotation.copy(camera.rotation);
+        point3d.position.copy(pos);
+        point3d.rotation.copy(camera.rotation);
 
         ray.setFromCamera({x: 0, y: 0}, camera);
-        const intersects = ray.intersectObjects(this.group.children);
+        const intersects = ray.intersectObjects(this.group.children, true);
 
         if (intersects.length) {
             this.detect(intersects.pop().object.name);
@@ -210,8 +162,8 @@ export default class Divider {
     }
 
     detect(signal) {
-        const obj = this.group.children.find(mesh => mesh.name == signal);
-
+        const obj = this.group.getObjectByName(signal);
+console.log(signal)
         if (obj) {
             switch(signal) {
                 case 'vr-panel-prev':
@@ -220,7 +172,14 @@ export default class Divider {
                 case 'vr-panel-next':
                     this.paging(1, obj);
                     break;
+                case 'vr-setpanel-btn':
+                    this.changeSet(obj);
+                    break;
+                case 'vr-setpanel-close':
+                    this.closeSetHandle();
+                    break;
                 case 'vr-panel-setting':
+                    this.openSetHandle();
                     break;
                 default:
                     this.nothing();
@@ -229,14 +188,42 @@ export default class Divider {
     }
 
     paging(factor, obj) {
-        const hoverMap = this.hoverMap;
         const id = obj.id;
 
-        hoverMap[id + 'text'].visible = true;
-        hoverMap[id + 'hover'].visible = true;
-
+        if (obj.wrapper) {
+            obj.wrapper.showHover();
+        }
+        // 翻页
         if (factor) {
             
+        }
+    }
+
+    changeSet(obj) {
+        if (!this.timeid) {
+            this.timeid = setTimeout(() => {
+                this.point.fade();
+            }, 1000);
+        }
+    }
+
+    openSetHandle() {
+        const setpanel = this.group.getObjectByName('vr-setpanel');
+
+        if (!this.timeid) {
+            this.timeid = setTimeout(() => {
+                this.point.fade((() => setpanel.visible = true));
+            }, 1000);
+        }
+    }
+
+    closeSetHandle() {
+        const setpanel = this.group.getObjectByName('vr-setpanel');
+
+        if (!this.timeid) {
+            this.timeid = setTimeout(() => {
+                this.point.fade((() => setpanel.visible = false));
+            }, 1000);
         }
     }
 
@@ -244,11 +231,23 @@ export default class Divider {
      * 常规 hide
      */
     nothing() {
-        const hoverMap = this.hoverMap;
+        clearTimeout(this.timeid);
+        this.timeid = 0;        
         
-        for (let key in hoverMap) {
-            hoverMap[key].visible = false;
+        const prevMesh = this.group.getObjectByName('vr-panel-prev');
+        const nextMesh = this.group.getObjectByName('vr-panel-next');
+
+        if (prevMesh) {
+            prevMesh.wrapper.hideHover();
         }
+
+        if (nextMesh) {
+            nextMesh.wrapper.hideHover();
+        }
+    }
+
+    lock() {
+        this.active = false;
     }
 
     dispose() {
@@ -284,14 +283,7 @@ export default class Divider {
     }
 
     createTextMesh(params) {
-        const mesh = new Text(params).plastic;
-        const parent = params.parent;
-
-        if (parent && params.hide) {
-            this.hoverMap[parent.id + 'text'] = mesh;
-        }
-
-        return mesh;
+        return new Text(params).plastic;
     }
 
     createHoverMesh(params?) {
@@ -308,7 +300,6 @@ export default class Divider {
 
         if (params.hide) {
             mesh.visible = false;
-            this.hoverMap[parent.id + 'hover'] = mesh;
         }
 
         if (parent) {

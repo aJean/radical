@@ -56063,6 +56063,268 @@ var Pano = /** @class */ (function () {
 
 /***/ }),
 
+/***/ "./src/pano/plastic/button.plastic.ts":
+/*!********************************************!*\
+  !*** ./src/pano/plastic/button.plastic.ts ***!
+  \********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _plastic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./plastic */ "./src/pano/plastic/plastic.ts");
+/* harmony import */ var _vr_assets_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../vr/assets.vr */ "./src/vr/assets.vr.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+
+
+/**
+ * @file webgl button
+ */
+var defaultOpts = {
+    name: '',
+    order: 6,
+    width: 256,
+    height: 100,
+    text: 'simple button',
+    twidth: 256,
+    theight: 128,
+    color: '#fff',
+    lineWidth: 4,
+    fontsize: 42,
+    fontface: 'Arial',
+    bg: _vr_assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].hover,
+    x: 0,
+    y: 0,
+    z: 0
+};
+var Button = /** @class */ (function (_super) {
+    __extends(Button, _super);
+    function Button(opts) {
+        var _this = _super.call(this) || this;
+        _this.loader = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]();
+        _this.canvas = document.createElement('canvas');
+        _this.data = Object.assign({}, defaultOpts, opts);
+        _this.create();
+        return _this;
+    }
+    Button.prototype.create = function () {
+        var data = this.data;
+        var btn = this.plastic = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](data.width, data.height), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: this.loader.load(data.bg),
+            transparent: true,
+            depthTest: false,
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
+        }));
+        btn.wrapper = this;
+        btn.renderOrder = data.order;
+        btn.position.set(data.x, data.y, data.z);
+        btn.name = data.name;
+        if (data.parent) {
+            data.parent.add(btn);
+        }
+        this.buildCanvasText();
+        var text = this.text = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](data.twidth, data.theight), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: new three__WEBPACK_IMPORTED_MODULE_0__["CanvasTexture"](this.canvas),
+            transparent: true,
+            depthTest: false,
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
+        }));
+        text.name = data.name;
+        text.renderOrder = data.order + 1;
+        text.rotation.y = Math.PI;
+        text.position.set(0, 0, 1);
+        btn.add(text);
+    };
+    Button.prototype.buildCanvasText = function () {
+        var data = this.data;
+        var canvas = this.canvas;
+        var width = canvas.width = data.twidth;
+        var height = canvas.height = data.theight;
+        var ctx = canvas.getContext('2d');
+        ctx.font = "normal " + data.fontsize + "px " + data.fontface;
+        var metrics = ctx.measureText(data.text);
+        if (metrics.width > width) {
+            width = data.twidth = canvas.width = width * 2;
+            ctx.font = "normal " + data.fontsize + "px " + data.fontface;
+        }
+        ctx.lineWidth = data.lineWidth;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = data.color;
+        ctx.fillText(data.text, width / 2, height / 2 + 15);
+    };
+    Button.prototype.dispose = function () {
+        var text = this.text;
+        text.material.map.dispose();
+        text.geometry.dispose();
+        delete this.plastic['wrapper'];
+        _super.prototype.dispose.call(this);
+    };
+    return Button;
+}(_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]));
+/* harmony default export */ __webpack_exports__["default"] = (Button);
+
+
+/***/ }),
+
+/***/ "./src/pano/plastic/icon.plastic.ts":
+/*!******************************************!*\
+  !*** ./src/pano/plastic/icon.plastic.ts ***!
+  \******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _plastic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./plastic */ "./src/pano/plastic/plastic.ts");
+/* harmony import */ var _vr_assets_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../vr/assets.vr */ "./src/vr/assets.vr.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+
+
+/**
+ * @file webgl icon button
+ */
+var defaultOpts = {
+    name: '',
+    order: 6,
+    width: 90,
+    height: 90,
+    bwidth: 90,
+    bheight: 90,
+    text: 'icon button',
+    twidth: 256,
+    theight: 128,
+    color: '#fff',
+    lineWidth: 4,
+    fontsize: 42,
+    fontface: 'Arial',
+    icon: _vr_assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].hover,
+    bg: _vr_assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].hover,
+    x: 0,
+    y: 0,
+    z: 0
+};
+var Icon = /** @class */ (function (_super) {
+    __extends(Icon, _super);
+    function Icon(opts) {
+        var _this = _super.call(this) || this;
+        _this.loader = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]();
+        _this.canvas = document.createElement('canvas');
+        _this.data = Object.assign({}, defaultOpts, opts);
+        _this.create();
+        _this.createBg();
+        _this.createText();
+        return _this;
+    }
+    Icon.prototype.create = function () {
+        var data = this.data;
+        var icon = this.plastic = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](data.width, data.height), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: this.loader.load(data.icon),
+            transparent: true,
+            depthTest: false,
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
+        }));
+        icon.wrapper = this;
+        icon.renderOrder = data.order;
+        icon.position.set(data.x, data.y, data.z);
+        icon.name = data.name;
+        if (data.parent) {
+            data.parent.add(icon);
+        }
+    };
+    Icon.prototype.createBg = function () {
+        var data = this.data;
+        var bg = this.bg = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](data.bwidth, data.bheight), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: this.loader.load(_vr_assets_vr__WEBPACK_IMPORTED_MODULE_2__["default"].hover),
+            depthTest: false,
+            transparent: true,
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
+        }));
+        bg.position.set(0, 0, 1);
+        bg.renderOrder = data.order + 1;
+        bg.name = data.name;
+        bg.visible = false;
+        this.plastic.add(bg);
+    };
+    Icon.prototype.createText = function () {
+        this.buildCanvasText();
+        var data = this.data;
+        var text = this.text = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](data.twidth, data.theight), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            map: new three__WEBPACK_IMPORTED_MODULE_0__["CanvasTexture"](this.canvas),
+            transparent: true,
+            depthTest: false,
+            side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
+        }));
+        text.name = data.name;
+        text.renderOrder = data.order + 1;
+        text.rotation.y = Math.PI;
+        text.position.set(0, -80, 1);
+        text.visible = false;
+        this.plastic.add(text);
+    };
+    Icon.prototype.buildCanvasText = function () {
+        var data = this.data;
+        var canvas = this.canvas;
+        var width = canvas.width = data.twidth;
+        var height = canvas.height = data.theight;
+        var ctx = canvas.getContext('2d');
+        ctx.font = "normal " + data.fontsize + "px " + data.fontface;
+        var metrics = ctx.measureText(data.text);
+        if (metrics.width > width) {
+            width = data.twidth = canvas.width = width * 2;
+            ctx.font = "normal " + data.fontsize + "px " + data.fontface;
+        }
+        ctx.lineWidth = data.lineWidth;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = data.color;
+        ctx.fillText(data.text, width / 2, height / 2 + 15);
+    };
+    Icon.prototype.showHover = function () {
+        this.bg.visible = true;
+        this.text.visible = true;
+    };
+    Icon.prototype.hideHover = function () {
+        this.bg.visible = false;
+        this.text.visible = false;
+    };
+    Icon.prototype.dispose = function () {
+        var bg = this.bg;
+        bg.material.map.dispose();
+        bg.geometry.dispose();
+        var text = this.text;
+        text.material.map.dispose();
+        text.geometry.dispose();
+        delete this.plastic['wrapper'];
+        _super.prototype.dispose.call(this);
+    };
+    return Icon;
+}(_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]));
+/* harmony default export */ __webpack_exports__["default"] = (Icon);
+
+
+/***/ }),
+
 /***/ "./src/pano/plastic/inradius.plastic.ts":
 /*!**********************************************!*\
   !*** ./src/pano/plastic/inradius.plastic.ts ***!
@@ -56356,6 +56618,10 @@ var Point = /** @class */ (function (_super) {
             transparent: true
         }));
         mesh.renderOrder = data.order;
+        mesh.wrapper = this;
+        if (data.name) {
+            mesh.name = name;
+        }
         if (data.parent) {
             data.parent.add(mesh);
         }
@@ -56374,23 +56640,63 @@ var Point = /** @class */ (function (_super) {
             mesh.add(frame);
         }
     };
-    Point.prototype.fade = function () {
+    Point.prototype.fade = function (cb) {
+        var _this = this;
+        var circle = this.plastic.material;
+        circle.visible = false;
+        this.tween = new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ rad: -Math.PI / 2 }).to({ rad: Math.PI * 2 }).effect('linear', 1500)
+            .start(['rad'], this.pano).process(function (old, val) {
+            _this.draw(val);
+        }).complete(function () {
+            _this.tween = new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ scale: 1 }).to({ scale: 0.2 }).effect('linear', 500)
+                .start(['scale'], _this.pano).process(function (old, val) {
+                _this.scale(val);
+            }).complete(function () {
+                circle.visible = true;
+                cb && cb();
+            });
+        });
+    };
+    Point.prototype.draw = function (rad) {
         var frame = this.frame;
         var ctx = this.ctx;
         ctx.lineWidth = 4;
         ctx.strokeStyle = '#fff';
-        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ rad: -Math.PI / 2 }).to({ rad: Math.PI * 2 }).effect('linear', 1500)
-            .start(['rad'], this.pano).process(function (old, val) {
-            ctx.clearRect(0, 0, 64, 64);
-            ctx.beginPath();
-            ctx.arc(32, 32, 10, -Math.PI / 2, val);
-            ctx.stroke();
-            ctx.closePath();
-            frame.material.map.needsUpdate = true;
-        });
+        ctx.clearRect(0, 0, 64, 64);
+        ctx.beginPath();
+        ctx.arc(32, 32, 10, -Math.PI / 2, rad);
+        ctx.stroke();
+        frame.material.map.needsUpdate = true;
+    };
+    Point.prototype.scale = function (n) {
+        var frame = this.frame;
+        var ctx = this.ctx;
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#fff';
+        ctx.clearRect(0, 0, 64, 64);
+        ctx.beginPath();
+        ctx.arc(32, 32, 10 * n, -Math.PI / 2, Math.PI * 2);
+        ctx.stroke();
+        frame.material.map.needsUpdate = true;
     };
     Point.prototype.fadeStop = function () {
-        this.anim.stop();
+        var frame = this.frame;
+        if (this.tween) {
+            this.tween.stop();
+            this.ctx.clearRect(0, 0, 1000, 1000);
+        }
+        this.plastic.material.visible = true;
+        frame.material.map.needsUpdate = true;
+    };
+    Point.prototype.show = function () {
+        this.plastic.visible = true;
+    };
+    Point.prototype.hide = function () {
+        this.plastic.visible = false;
+    };
+    Point.prototype.dispose = function () {
+        delete this.plastic['wrapper'];
+        _super.prototype.dispose.call(this);
     };
     return Point;
 }(_plastic_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]));
@@ -56426,6 +56732,7 @@ var __extends = (undefined && undefined.__extends) || (function () {
  * @file 文字形状
  */
 var defaultOpts = {
+    name: '',
     fontface: 'Arial',
     fontsize: 42,
     lineWidth: 4,
@@ -56448,19 +56755,6 @@ var Text = /** @class */ (function (_super) {
         _this.create();
         return _this;
     }
-    Text.prototype.buildCanvasText = function () {
-        var data = this.data;
-        var canvas = this.canvas;
-        var width = canvas.width = data.width;
-        var height = canvas.height = data.height;
-        var context = canvas.getContext('2d');
-        context.font = "Bold " + data.fontsize + "px " + data.fontface;
-        context.lineWidth = data.lineWidth;
-        context.textAlign = 'center';
-        context.fillStyle = data.color;
-        context.fillText(data.text, width / 2, height / 2 + 10);
-        var metrics = context.measureText(data.text);
-    };
     Text.prototype.create = function () {
         this.buildCanvasText();
         var data = this.data;
@@ -56470,9 +56764,12 @@ var Text = /** @class */ (function (_super) {
             transparent: true,
             side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
         }));
+        // delete before dispose
+        mesh.wrapper = this;
         mesh.position.set(data.x, data.y, data.z);
         mesh.rotation.y = Math.PI;
         mesh.renderOrder = data.order;
+        mesh.name = data.name;
         if (data.hide) {
             mesh.visible = false;
         }
@@ -56481,12 +56778,29 @@ var Text = /** @class */ (function (_super) {
         }
         return mesh;
     };
+    Text.prototype.buildCanvasText = function () {
+        var data = this.data;
+        var canvas = this.canvas;
+        var width = canvas.width = data.width;
+        var height = canvas.height = data.height;
+        var context = canvas.getContext('2d');
+        context.font = "normal " + data.fontsize + "px " + data.fontface;
+        context.lineWidth = data.lineWidth;
+        context.textAlign = 'center';
+        context.fillStyle = data.color;
+        context.fillText(data.text, width / 2, height / 2 + 10);
+        var metrics = context.measureText(data.text);
+    };
     Text.prototype.change = function (text) {
         var data = this.data;
         var context = this.canvas.getContext('2d');
         data.text = text;
         context.clearRect(0, 0, data.width, data.height);
         context.fillText(data.text, data.width / 2, data.height / 2 + 10);
+    };
+    Text.prototype.dispose = function () {
+        delete this.plastic['wrapper'];
+        _super.prototype.dispose.call(this);
     };
     return Text;
 }(_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]));
@@ -57773,9 +58087,13 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _pano_plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/plastic/text.plastic */ "./src/pano/plastic/text.plastic.ts");
-/* harmony import */ var _pano_plastic_point_plastic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../pano/plastic/point.plastic */ "./src/pano/plastic/point.plastic.ts");
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
-/* harmony import */ var _assets_vr__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./assets.vr */ "./src/vr/assets.vr.ts");
+/* harmony import */ var _pano_plastic_button_plastic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../pano/plastic/button.plastic */ "./src/pano/plastic/button.plastic.ts");
+/* harmony import */ var _pano_plastic_icon_plastic__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../pano/plastic/icon.plastic */ "./src/pano/plastic/icon.plastic.ts");
+/* harmony import */ var _pano_plastic_point_plastic__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/plastic/point.plastic */ "./src/pano/plastic/point.plastic.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+/* harmony import */ var _assets_vr__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./assets.vr */ "./src/vr/assets.vr.ts");
+
+
 
 
 
@@ -57788,9 +58106,9 @@ __webpack_require__.r(__webpack_exports__);
 var Divider = /** @class */ (function () {
     function Divider(vpano) {
         var _this = this;
+        this.timeid = 0;
         this.loader = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]();
         this.ray = new three__WEBPACK_IMPORTED_MODULE_0__["Raycaster"]();
-        this.hoverMap = {};
         this.vpano = vpano;
         vpano.subscribe('scene-load', function () {
             _this.initPanel();
@@ -57802,13 +58120,13 @@ var Divider = /** @class */ (function () {
     Divider.prototype.createBtn = function () {
         var vpano = this.vpano;
         var root = vpano.getRoot();
-        var backBtn = this.backBtn = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].createElement('<div class="vr-back"></div>');
+        var backBtn = this.backBtn = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].createElement('<div class="vr-back"></div>');
         backBtn.onclick = function () {
             root.removeChild(backBtn);
             enterBtn.style.display = 'block';
             vpano.exit();
         };
-        var enterBtn = this.backBtn = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].createElement('<div class="vr-enter">ENTER VR</div>');
+        var enterBtn = this.backBtn = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].createElement('<div class="vr-enter">ENTER VR</div>');
         enterBtn.onclick = function () {
             enterBtn.style.display = 'none';
             vpano.enter().then(function () { return root.appendChild(backBtn); });
@@ -57820,65 +58138,42 @@ var Divider = /** @class */ (function () {
         var camera = vpano.getCamera();
         var group = this.group = new three__WEBPACK_IMPORTED_MODULE_0__["Group"]();
         vpano.addSceneObject(group);
-        var panelMesh = this.createMesh({
+        var panel = this.createMesh({
             name: 'vr-panel', width: 775, height: 236,
             color: '#000', opacity: 0.8, order: 1,
             x: 0, y: -300, z: 1000,
             parent: group
         });
         // left arrow
-        var arrowMesh1 = this.createMesh({
-            name: 'vr-panel-prev', width: 32, height: 64,
-            img: _assets_vr__WEBPACK_IMPORTED_MODULE_4__["default"].arrow1, order: 3,
-            x: 230, y: -300, z: 1000,
-            parent: group
-        });
-        var arrowText1 = this.createTextMesh({
-            text: '上一页', fontsize: 36, color: '#c9c9c9',
-            x: 0, y: -80, z: 0, hide: true,
-            parent: arrowMesh1
-        });
-        var arrowHover1 = this.createHoverMesh({
-            hide: true,
-            parent: arrowMesh1
+        var prevBtn = new _pano_plastic_icon_plastic__WEBPACK_IMPORTED_MODULE_3__["default"]({
+            parent: group, name: 'vr-panel-prev', width: 32, height: 64,
+            text: '上一页', color: '#c9c9c9', icon: _assets_vr__WEBPACK_IMPORTED_MODULE_6__["default"].arrow1,
+            x: 230, y: -300, z: 1000
         });
         // right arrow
-        var arrowMesh2 = this.createMesh({
-            name: 'vr-panel-next', width: 32, height: 64,
-            img: _assets_vr__WEBPACK_IMPORTED_MODULE_4__["default"].arrow2, order: 3,
-            x: -80, y: -300, z: 1000,
-            parent: group
+        var nextBtn = new _pano_plastic_icon_plastic__WEBPACK_IMPORTED_MODULE_3__["default"]({
+            parent: group, name: 'vr-panel-next', width: 32, height: 64,
+            text: '下一页', color: '#c9c9c9', icon: _assets_vr__WEBPACK_IMPORTED_MODULE_6__["default"].arrow2,
+            x: -80, y: -300, z: 1000
         });
-        var arrowText2 = this.createTextMesh({
-            text: '下一页', fontSize: 36, color: '#c9c9c9',
-            x: 0, y: -80, z: 0, hide: true,
-            parent: arrowMesh2
-        });
-        var arrowHover2 = this.createHoverMesh({
-            hide: true,
-            parent: arrowMesh2
-        });
-        // config
-        var setMesh = this.createMesh({
+        // open set btn
+        var setBtn = this.createMesh({
             name: 'vr-panel-setting', width: 64, height: 64,
-            img: _assets_vr__WEBPACK_IMPORTED_MODULE_4__["default"].setImg, order: 3,
+            img: _assets_vr__WEBPACK_IMPORTED_MODULE_6__["default"].setImg, order: 3,
             x: -250, y: -300, z: 1000,
             parent: group
         });
         // page num
-        var spriteMesh = this.createTextMesh({
+        var pageNum = this.createTextMesh({
             text: '1 / 5', fontSize: 42,
             x: 70, y: -300, z: 1000,
             parent: group
         });
         // viewpoint
-        var point = new _pano_plastic_point_plastic__WEBPACK_IMPORTED_MODULE_2__["default"]({
-            anim: true,
-            animImg: _assets_vr__WEBPACK_IMPORTED_MODULE_4__["default"].anim,
-            parent: vpano.getScene()
+        var point = this.point = new _pano_plastic_point_plastic__WEBPACK_IMPORTED_MODULE_4__["default"]({
+            parent: vpano.getScene(), name: 'vr-panel-viewport',
+            anim: true, animImg: _assets_vr__WEBPACK_IMPORTED_MODULE_6__["default"].anim
         }, vpano);
-        point.fade();
-        this.point = point.plastic;
     };
     Divider.prototype.initSetPanel = function () {
         var vpano = this.vpano;
@@ -57899,64 +58194,39 @@ var Divider = /** @class */ (function () {
         }));
         setLine.renderOrder = 3;
         setPanel.add(setLine);
-        this.createTextMesh({
-            text: '完成', fontSize: 32,
-            x: 0, y: -155, z: 0, parent: setPanel
+        var close = new _pano_plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]({
+            parent: setPanel, name: 'vr-setpanel-close', text: '完成',
+            color: '#c9c9c9', x: 0, y: -155, z: 1
         });
-        this.createTextMesh({
-            text: '每30s自动切换',
-            width: 290, height: 64,
-            x: 150, y: 100, z: 0,
-            parent: setPanel
+        var auto = new _pano_plastic_button_plastic__WEBPACK_IMPORTED_MODULE_2__["default"]({
+            parent: setPanel, name: 'vr-setpanel-auto', text: '每30s自动切换', color: '#c9c9c9',
+            width: 380, height: 100, x: 150, y: 100, z: 1
         });
-        var noauto = this.createTextMesh({
-            text: '不自动切换',
-            width: 256, height: 64,
-            x: -180, y: 100, z: 0,
-            parent: setPanel
+        var noauto = new _pano_plastic_button_plastic__WEBPACK_IMPORTED_MODULE_2__["default"]({
+            parent: setPanel, name: 'vr-setpanel-noauto', text: '不自动切换', color: '#c9c9c9',
+            width: 300, height: 100, x: -190, y: 100, z: 2
         });
-        var noautoHover = this.createMesh({
-            parent: noauto,
-            img: _assets_vr__WEBPACK_IMPORTED_MODULE_4__["default"].hover,
-            width: 300,
-            height: 100,
-            order: 6,
-            x: 0,
-            y: 5,
-            z: 0
-        });
-        var close = this.createTextMesh({
-            text: '切换设置',
-            width: 256, height: 64,
-            x: 0, y: -30, z: 0,
-            parent: setPanel
-        });
-        var closeHover = this.createMesh({
-            parent: close,
-            img: _assets_vr__WEBPACK_IMPORTED_MODULE_4__["default"].hover,
-            width: 256,
-            height: 100,
-            order: 6,
-            x: 0,
-            y: 5,
-            z: 0
+        var changeBtn = new _pano_plastic_button_plastic__WEBPACK_IMPORTED_MODULE_2__["default"]({
+            parent: setPanel, name: 'vr-setpanel-change', text: '切换设置',
+            color: '#c9c9c9', x: 0, y: -20, z: 0
         });
     };
     Divider.prototype.update = function () {
         var camera = this.vpano.getCamera();
-        var point = this.point;
+        var point3d = this.point.plastic;
         var ray = this.ray;
-        var pos = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].calcScreenToWorld({ x: 0, y: 0 }, camera);
-        point.position.copy(pos);
-        point.rotation.copy(camera.rotation);
+        var pos = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].calcScreenToWorld({ x: 0, y: 0 }, camera);
+        point3d.position.copy(pos);
+        point3d.rotation.copy(camera.rotation);
         ray.setFromCamera({ x: 0, y: 0 }, camera);
-        var intersects = ray.intersectObjects(this.group.children);
+        var intersects = ray.intersectObjects(this.group.children, true);
         if (intersects.length) {
             this.detect(intersects.pop().object.name);
         }
     };
     Divider.prototype.detect = function (signal) {
-        var obj = this.group.children.find(function (mesh) { return mesh.name == signal; });
+        var obj = this.group.getObjectByName(signal);
+        console.log(signal);
         if (obj) {
             switch (signal) {
                 case 'vr-panel-prev':
@@ -57965,7 +58235,14 @@ var Divider = /** @class */ (function () {
                 case 'vr-panel-next':
                     this.paging(1, obj);
                     break;
+                case 'vr-setpanel-btn':
+                    this.changeSet(obj);
+                    break;
+                case 'vr-setpanel-close':
+                    this.closeSetHandle();
+                    break;
                 case 'vr-panel-setting':
+                    this.openSetHandle();
                     break;
                 default:
                     this.nothing();
@@ -57973,21 +58250,57 @@ var Divider = /** @class */ (function () {
         }
     };
     Divider.prototype.paging = function (factor, obj) {
-        var hoverMap = this.hoverMap;
         var id = obj.id;
-        hoverMap[id + 'text'].visible = true;
-        hoverMap[id + 'hover'].visible = true;
+        if (obj.wrapper) {
+            obj.wrapper.showHover();
+        }
+        // 翻页
         if (factor) {
+        }
+    };
+    Divider.prototype.changeSet = function (obj) {
+        var _this = this;
+        if (!this.timeid) {
+            this.timeid = setTimeout(function () {
+                _this.point.fade();
+            }, 1000);
+        }
+    };
+    Divider.prototype.openSetHandle = function () {
+        var _this = this;
+        var setpanel = this.group.getObjectByName('vr-setpanel');
+        if (!this.timeid) {
+            this.timeid = setTimeout(function () {
+                _this.point.fade((function () { return setpanel.visible = true; }));
+            }, 1000);
+        }
+    };
+    Divider.prototype.closeSetHandle = function () {
+        var _this = this;
+        var setpanel = this.group.getObjectByName('vr-setpanel');
+        if (!this.timeid) {
+            this.timeid = setTimeout(function () {
+                _this.point.fade((function () { return setpanel.visible = false; }));
+            }, 1000);
         }
     };
     /**
      * 常规 hide
      */
     Divider.prototype.nothing = function () {
-        var hoverMap = this.hoverMap;
-        for (var key in hoverMap) {
-            hoverMap[key].visible = false;
+        clearTimeout(this.timeid);
+        this.timeid = 0;
+        var prevMesh = this.group.getObjectByName('vr-panel-prev');
+        var nextMesh = this.group.getObjectByName('vr-panel-next');
+        if (prevMesh) {
+            prevMesh.wrapper.hideHover();
         }
+        if (nextMesh) {
+            nextMesh.wrapper.hideHover();
+        }
+    };
+    Divider.prototype.lock = function () {
+        this.active = false;
     };
     Divider.prototype.dispose = function () {
         var vpano = this.vpano;
@@ -58016,17 +58329,12 @@ var Divider = /** @class */ (function () {
         return mesh;
     };
     Divider.prototype.createTextMesh = function (params) {
-        var mesh = new _pano_plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__["default"](params).plastic;
-        var parent = params.parent;
-        if (parent && params.hide) {
-            this.hoverMap[parent.id + 'text'] = mesh;
-        }
-        return mesh;
+        return new _pano_plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__["default"](params).plastic;
     };
     Divider.prototype.createHoverMesh = function (params) {
         var parent = params.parent;
         var mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](90, 90), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
-            map: this.loader.load(_assets_vr__WEBPACK_IMPORTED_MODULE_4__["default"].hover),
+            map: this.loader.load(_assets_vr__WEBPACK_IMPORTED_MODULE_6__["default"].hover),
             depthTest: false,
             transparent: true,
             side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
@@ -58034,7 +58342,6 @@ var Divider = /** @class */ (function () {
         mesh.renderOrder = 2;
         if (params.hide) {
             mesh.visible = false;
-            this.hoverMap[parent.id + 'hover'] = mesh;
         }
         if (parent) {
             parent.add(mesh);
