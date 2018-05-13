@@ -19,6 +19,7 @@ const defaultOpts = {
     fontsize: 42,
     fontface: 'Arial',
     bg: Assets.hover,
+    active: true,
     x: 0,
     y: 0,
     z: 0
@@ -43,7 +44,7 @@ export default class Button extends Plastic {
             depthTest: false,
             side: DoubleSide
         }));
-        
+
         btn.wrapper = this;
         btn.renderOrder = data.order;
         btn.position.set(data.x, data.y, data.z);
@@ -51,6 +52,10 @@ export default class Button extends Plastic {
 
         if (data.parent) {
             data.parent.add(btn);
+        }
+
+        if (!data.active) {
+            btn.material.visible = false;
         }
 
         this.buildCanvasText();
@@ -87,6 +92,13 @@ export default class Button extends Plastic {
         ctx.textAlign = 'center';
         ctx.fillStyle = data.color;
         ctx.fillText(data.text, width / 2, height / 2 + 15);
+    }
+
+    setActive(flag) {
+        const data = this.data;
+        const btn = this.plastic;
+
+        btn.material.visible = data.active = flag;
     }
 
     dispose() {

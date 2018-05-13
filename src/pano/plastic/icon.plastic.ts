@@ -13,7 +13,7 @@ const defaultOpts = {
     height: 90,
     bwidth: 90,
     bheight: 90,
-    text: 'icon button',
+    text: null,
     twidth: 256,
     theight: 128,
     color: '#fff',
@@ -39,7 +39,7 @@ export default class Icon extends Plastic {
         
         this.create();
         this.createBg();
-        this.createText();
+        opts.text && this.createText();
     }
 
     create() {
@@ -122,12 +122,18 @@ export default class Icon extends Plastic {
 
     showHover() {
         this.bg.visible = true;
-        this.text.visible = true;
+
+        if (this.text) {
+            this.text.visible = true;
+        }
     }
 
     hideHover() {
         this.bg.visible = false;
-        this.text.visible = false;
+
+        if (this.text) {
+            this.text.visible = false;
+        }
     }
 
     dispose() {

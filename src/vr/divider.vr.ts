@@ -10,6 +10,7 @@ import Assets from './assets.vr';
 /**
  * @file UI Viewer, 拆分器
  * @TODO: move webvr.polyfill's html ui to here
+ * @TODO: time to set timeid ???
  */
 
 export default class Divider {
@@ -62,37 +63,29 @@ export default class Divider {
         vpano.addSceneObject(group);
         
         const panel = this.createMesh({
-            name: 'vr-panel', width: 775, height: 236,
-            color: '#000', opacity: 0.8, order: 1,
-            x: 0, y: -300, z: 1000,
-            parent: group
+            parent: group, name: 'vr-panel', width: 775, height: 236,
+            color: '#000', opacity: 0.8, order: 1, x: 0, y: -300, z: 1000,
         });
         // left arrow
         const prevBtn = new Icon({
             parent: group, name: 'vr-panel-prev', width: 32, height: 64,
-            text: '上一页', color: '#c9c9c9', icon: Assets.arrow1,
-            x: 230, y: -300, z: 1000
+            text: '上一页', color: '#c9c9c9', icon: Assets.arrow1, x: 230, y: -300, z: 1000
         });
 
         // right arrow
         const nextBtn = new Icon({
             parent: group, name: 'vr-panel-next', width: 32, height: 64,
-            text: '下一页', color: '#c9c9c9', icon: Assets.arrow2,
-            x: -80, y: -300, z: 1000
+            text: '下一页', color: '#c9c9c9', icon: Assets.arrow2, x: -80, y: -300, z: 1000
         });
 
         // open set btn
-        const setBtn = this.createMesh({
-            name: 'vr-panel-setting', width: 64, height: 64,
-            img: Assets.setImg, order: 3,
-            x: -250, y: -300, z: 1000,
-            parent: group
+        const setBtn = new Icon({
+            parent: group, name: 'vr-panel-setting', width: 64, height: 64,
+            icon: Assets.setImg, bwidth: 100, bheight: 100, x: -250, y: -300, z: 1000
         });
         // page num
-        const pageNum = this.createTextMesh({
-            text: '1 / 5', fontSize: 42,
-            x: 70, y: -300, z: 1000,
-            parent: group
+        const pageNum = new Text({
+            parent: group, text: '1 / 5', x: 70, y: -300, z: 1000,
         });
         // viewpoint
         const point = this.point = new Point({
@@ -108,10 +101,8 @@ export default class Divider {
 
         // setting panel
         const setPanel = this.createMesh({
-            name: 'vr-setpanel', width: 775, height: 400,
-            color: '#000', opacity: 0.8, order: 3,
-            x: 0, y: 60, z: 1000,
-            parent: group
+            parent: group, name: 'vr-setpanel', width: 775, height: 400,
+            color: '#000', opacity: 0.8, order: 3, x: 0, y: 60, z: 1000
         });
 
         const geo = new Geometry();
@@ -130,7 +121,7 @@ export default class Divider {
 
         const auto = new Button({
             parent: setPanel, name: 'vr-setpanel-auto', text: '每30s自动切换', color: '#c9c9c9',
-            width: 380, height: 100, x: 150, y: 100, z: 1
+            active: false, width: 380, height: 100, x: 150, y: 100, z: 1
         });
 
         const noauto = new Button({
@@ -179,7 +170,13 @@ console.log(signal)
                     this.closeSetHandle();
                     break;
                 case 'vr-panel-setting':
-                    this.openSetHandle();
+                    this.openSetHandle(obj);
+                    break;
+                case 'vr-setpanel-auto':
+                    this.autoHandle(true, obj);
+                    break;
+                case 'vr-setpanel-noauto':
+                    this.autoHandle(false, obj);
                     break;
                 default:
                     this.nothing();
@@ -203,17 +200,35 @@ console.log(signal)
         if (!this.timeid) {
             this.timeid = setTimeout(() => {
                 this.point.fade();
-            }, 1000);
+            }, 2000);
         }
     }
 
-    openSetHandle() {
+    autoHandle(flag, obj) {
+        const autoBtn = this.group.getObjectByName('vr-setpanel-auto').wrapper;
+        const noBtn = this.group.getObjectByName('vr-setpanel-noauto').wrapper;
+
+        if (!this.timeid) {
+            this.timeid = setTimeout(() => {
+                this.point.fade((() => {
+                    autoBtn.setActive(flag);
+                    noBtn.setActive(!flag);
+                }));
+            }, 2000);
+        }
+    }
+
+    openSetHandle(obj) {
         const setpanel = this.group.getObjectByName('vr-setpanel');
+
+        if (obj.wrapper) {
+            obj.wrapper.showHover();
+        }
 
         if (!this.timeid) {
             this.timeid = setTimeout(() => {
                 this.point.fade((() => setpanel.visible = true));
-            }, 1000);
+            }, 2000);
         }
     }
 
@@ -223,7 +238,7 @@ console.log(signal)
         if (!this.timeid) {
             this.timeid = setTimeout(() => {
                 this.point.fade((() => setpanel.visible = false));
-            }, 1000);
+            }, 2000);
         }
     }
 
@@ -232,10 +247,11 @@ console.log(signal)
      */
     nothing() {
         clearTimeout(this.timeid);
-        this.timeid = 0;        
+        this.timeid = 0; 
         
         const prevMesh = this.group.getObjectByName('vr-panel-prev');
         const nextMesh = this.group.getObjectByName('vr-panel-next');
+        const setMesh = this.group.getObjectByName('vr-panel-setting');
 
         if (prevMesh) {
             prevMesh.wrapper.hideHover();
@@ -243,6 +259,10 @@ console.log(signal)
 
         if (nextMesh) {
             nextMesh.wrapper.hideHover();
+        }
+
+        if (setMesh) {
+            setMesh.wrapper.hideHover();
         }
     }
 
@@ -277,33 +297,6 @@ console.log(signal)
 
         if (params.parent) {
             params.parent.add(mesh);
-        }
-
-        return mesh;
-    }
-
-    createTextMesh(params) {
-        return new Text(params).plastic;
-    }
-
-    createHoverMesh(params?) {
-        const parent = params.parent;
-        const mesh = new Mesh(new PlaneGeometry(90, 90),
-            new MeshBasicMaterial({
-                map: this.loader.load(Assets.hover),
-                depthTest: false,
-                transparent: true,
-                side: DoubleSide
-            }));
-
-        mesh.renderOrder = 2;
-
-        if (params.hide) {
-            mesh.visible = false;
-        }
-
-        if (parent) {
-            parent.add(mesh);
         }
 
         return mesh;
