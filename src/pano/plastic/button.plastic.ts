@@ -38,12 +38,13 @@ export default class Button extends Plastic {
 
     create() {
         const data = this.data;
-        const btn: any = this.plastic = new Mesh(new PlaneGeometry(data.width, data.height), new MeshBasicMaterial({
-            map: this.loader.load(data.bg),
-            transparent: true,
-            depthTest: false,
-            side: DoubleSide
-        }));
+        const btn: any = this.plastic = new Mesh(new PlaneGeometry(data.width, data.height),
+            new MeshBasicMaterial({
+                map: this.loader.load(data.bg),
+                transparent: true,
+                depthTest: false,
+                side: DoubleSide
+            }));
 
         btn.wrapper = this;
         btn.renderOrder = data.order;
@@ -59,12 +60,13 @@ export default class Button extends Plastic {
         }
 
         this.buildCanvasText();
-        const text = this.text = new Mesh(new PlaneGeometry(data.twidth, data.theight), new MeshBasicMaterial({
-            map: new CanvasTexture(this.canvas),
-            transparent: true,
-            depthTest: false,
-            side: DoubleSide
-        }));
+        const text = this.text = new Mesh(new PlaneGeometry(data.twidth, data.theight),
+            new MeshBasicMaterial({
+                map: new CanvasTexture(this.canvas),
+                transparent: true,
+                depthTest: false,
+                side: DoubleSide
+            }));
         text.name = data.name;
         text.renderOrder = data.order + 1;
         text.rotation.y = Math.PI;
@@ -92,6 +94,10 @@ export default class Button extends Plastic {
         ctx.textAlign = 'center';
         ctx.fillStyle = data.color;
         ctx.fillText(data.text, width / 2, height / 2 + 15);
+    }
+
+    getActive() {
+        return this.data.active;
     }
 
     setActive(flag) {

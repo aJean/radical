@@ -26,8 +26,8 @@ export default class Text extends Plastic {
 
     constructor(opts) {
         super();
+
         this.data = Object.assign({}, defaultOpts, opts);
-        
         this.create();
     }
 
@@ -63,26 +63,32 @@ export default class Text extends Plastic {
     buildCanvasText() {
         const data = this.data;
         const canvas = this.canvas;
-        const width = canvas.width = data.width;
-        const height = canvas.height = data.height;
+        let width = canvas.width = data.width;
+        let height = canvas.height = data.height;
 
-        const context = canvas.getContext('2d');
-        context.font = `normal ${data.fontsize}px ${data.fontface}`;
-        context.lineWidth = data.lineWidth;
-        context.textAlign = 'center';
-        context.fillStyle = data.color;
-        context.fillText(data.text, width / 2, height / 2 + 10);
+        const ctx = canvas.getContext('2d');
+        ctx.font = `normal ${data.fontsize}px ${data.fontface}`;
+        const metrics = ctx.measureText(data.text);
+        
+        if (metrics.width > width) {
+            width = data.twidth = canvas.width = width * 2;
+            ctx.font = `normal ${data.fontsize}px ${data.fontface}`;
+        }
 
-        const metrics = context.measureText(data.text);
+        ctx.lineWidth = data.lineWidth;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = data.color;
+        ctx.fillText(data.text, width / 2, height / 2 + 10);
     }
 
     change(text) {
         const data = this.data;
         const context = this.canvas.getContext('2d');
-        
         data.text = text;
+
+        this.plastic.material.map.needsUpdate = true;
         context.clearRect(0, 0, data.width, data.height);
-        context.fillText(data.text, data.width / 2, data.height / 2 + 10);
+        context.fillText(text, data.width / 2, data.height / 2 + 10);
     }
 
     dispose() {

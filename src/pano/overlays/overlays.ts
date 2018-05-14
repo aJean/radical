@@ -102,6 +102,13 @@ export default class Overlays {
         this.list = scenes.concat(this.list);
     }
 
+    /** 
+     * 获取场景列表
+     */
+    getScenes() {
+        return this.list;
+    }
+
     /**
      * 创建 dom 覆盖物并添加进 maps
      */

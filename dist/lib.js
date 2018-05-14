@@ -55155,6 +55155,12 @@ var Overlays = /** @class */ (function () {
         this.list = scenes.concat(this.list);
     };
     /**
+     * 获取场景列表
+     */
+    Overlays.prototype.getScenes = function () {
+        return this.list;
+    };
+    /**
      * 创建 dom 覆盖物并添加进 maps
      */
     Overlays.prototype.createDomOverlay = function (prop, cache) {
@@ -55685,6 +55691,7 @@ var Pano = /** @class */ (function () {
         var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(container, opts);
         var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].createElement("<div class=\"pano-root\"></div>");
         var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true });
+        // webgl
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(size.width, size.height);
@@ -56166,6 +56173,9 @@ var Button = /** @class */ (function (_super) {
         ctx.textAlign = 'center';
         ctx.fillStyle = data.color;
         ctx.fillText(data.text, width / 2, height / 2 + 15);
+    };
+    Button.prototype.getActive = function () {
+        return this.data.active;
     };
     Button.prototype.setActive = function (flag) {
         var data = this.data;
@@ -56656,50 +56666,47 @@ var Point = /** @class */ (function (_super) {
     Point.prototype.fade = function (cb) {
         var _this = this;
         var circle = this.plastic.material;
+        var frame = this.frame;
         circle.visible = false;
+        frame.visible = true;
         this.tween = new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ rad: -Math.PI / 2 }).to({ rad: Math.PI * 2 }).effect('linear', 1500)
             .start(['rad'], this.pano).process(function (old, val) {
             _this.draw(val);
         }).complete(function () {
-            _this.tween = new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ scale: 1 }).to({ scale: 0.2 }).effect('linear', 500)
-                .start(['scale'], _this.pano).process(function (old, val) {
-                _this.scale(val);
-            }).complete(function () {
-                circle.visible = true;
-                cb && cb();
-            });
+            circle.visible = true;
+            frame.visible = false;
+            cb && cb();
         });
     };
     Point.prototype.draw = function (rad) {
-        var frame = this.frame;
         var ctx = this.ctx;
+        this.frame.material.map.needsUpdate = true;
         ctx.lineWidth = 4;
         ctx.strokeStyle = '#fff';
         ctx.clearRect(0, 0, 64, 64);
         ctx.beginPath();
         ctx.arc(32, 32, 10, -Math.PI / 2, rad);
         ctx.stroke();
-        frame.material.map.needsUpdate = true;
     };
     Point.prototype.scale = function (n) {
-        var frame = this.frame;
         var ctx = this.ctx;
+        this.frame.material.map.needsUpdate = true;
         ctx.lineWidth = 4;
         ctx.strokeStyle = '#fff';
         ctx.clearRect(0, 0, 64, 64);
         ctx.beginPath();
         ctx.arc(32, 32, 10 * n, -Math.PI / 2, Math.PI * 2);
         ctx.stroke();
-        frame.material.map.needsUpdate = true;
     };
     Point.prototype.fadeStop = function () {
         var frame = this.frame;
+        var ctx = this.ctx;
         if (this.tween) {
             this.tween.stop();
-            this.ctx.clearRect(0, 0, 1000, 1000);
+            frame.visible = false;
+            delete this.tween;
+            this.plastic.material.visible = true;
         }
-        this.plastic.material.visible = true;
-        frame.material.map.needsUpdate = true;
     };
     Point.prototype.show = function () {
         this.plastic.visible = true;
@@ -56796,20 +56803,25 @@ var Text = /** @class */ (function (_super) {
         var canvas = this.canvas;
         var width = canvas.width = data.width;
         var height = canvas.height = data.height;
-        var context = canvas.getContext('2d');
-        context.font = "normal " + data.fontsize + "px " + data.fontface;
-        context.lineWidth = data.lineWidth;
-        context.textAlign = 'center';
-        context.fillStyle = data.color;
-        context.fillText(data.text, width / 2, height / 2 + 10);
-        var metrics = context.measureText(data.text);
+        var ctx = canvas.getContext('2d');
+        ctx.font = "normal " + data.fontsize + "px " + data.fontface;
+        var metrics = ctx.measureText(data.text);
+        if (metrics.width > width) {
+            width = data.twidth = canvas.width = width * 2;
+            ctx.font = "normal " + data.fontsize + "px " + data.fontface;
+        }
+        ctx.lineWidth = data.lineWidth;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = data.color;
+        ctx.fillText(data.text, width / 2, height / 2 + 10);
     };
     Text.prototype.change = function (text) {
         var data = this.data;
         var context = this.canvas.getContext('2d');
         data.text = text;
+        this.plastic.material.map.needsUpdate = true;
         context.clearRect(0, 0, data.width, data.height);
-        context.fillText(data.text, data.width / 2, data.height / 2 + 10);
+        context.fillText(text, data.width / 2, data.height / 2 + 10);
     };
     Text.prototype.dispose = function () {
         delete this.plastic['wrapper'];
@@ -58114,14 +58126,15 @@ __webpack_require__.r(__webpack_exports__);
 
 
 /**
- * @file UI Viewer, 拆分器
- * @TODO: move webvr.polyfill's html ui to here
- * @TODO: time to set timeid ???
+ * @file webvr 用户控制器
+ * @TODO: move webvr.polyfill.js html ui to here
  */
 var Divider = /** @class */ (function () {
     function Divider(vpano) {
         var _this = this;
         this.timeid = 0;
+        this.regularid = 0;
+        this.index = 1;
         this.loader = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]();
         this.ray = new three__WEBPACK_IMPORTED_MODULE_0__["Raycaster"]();
         this.vpano = vpano;
@@ -58152,6 +58165,7 @@ var Divider = /** @class */ (function () {
         var vpano = this.vpano;
         var camera = vpano.getCamera();
         var group = this.group = new three__WEBPACK_IMPORTED_MODULE_0__["Group"]();
+        var total = "1 / " + vpano.overlays.getScenes().length;
         vpano.addSceneObject(group);
         var panel = this.createMesh({
             parent: group, name: 'vr-panel', width: 775, height: 236,
@@ -58174,7 +58188,7 @@ var Divider = /** @class */ (function () {
         });
         // page num
         var pageNum = new _pano_plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]({
-            parent: group, text: '1 / 5', x: 70, y: -300, z: 1000,
+            parent: group, name: 'vr-panel-pagenum', text: total, x: 70, y: -300, z: 1000,
         });
         // viewpoint
         var point = this.point = new _pano_plastic_point_plastic__WEBPACK_IMPORTED_MODULE_4__["default"]({
@@ -58188,7 +58202,7 @@ var Divider = /** @class */ (function () {
         var group = this.group;
         // setting panel
         var setPanel = this.createMesh({
-            parent: group, name: 'vr-setpanel', width: 775, height: 400,
+            parent: group, name: 'vr-setpanel', hide: true, width: 775, height: 400,
             color: '#000', opacity: 0.8, order: 3, x: 0, y: 60, z: 1000
         });
         var geo = new three__WEBPACK_IMPORTED_MODULE_0__["Geometry"]();
@@ -58209,7 +58223,7 @@ var Divider = /** @class */ (function () {
         });
         var noauto = new _pano_plastic_button_plastic__WEBPACK_IMPORTED_MODULE_2__["default"]({
             parent: setPanel, name: 'vr-setpanel-noauto', text: '不自动切换', color: '#c9c9c9',
-            width: 300, height: 100, x: -190, y: 100, z: 2
+            width: 300, height: 100, x: -190, y: 100, z: 1
         });
         var changeBtn = new _pano_plastic_button_plastic__WEBPACK_IMPORTED_MODULE_2__["default"]({
             parent: setPanel, name: 'vr-setpanel-change', text: '切换设置',
@@ -58225,113 +58239,166 @@ var Divider = /** @class */ (function () {
         point3d.rotation.copy(camera.rotation);
         ray.setFromCamera({ x: 0, y: 0 }, camera);
         var intersects = ray.intersectObjects(this.group.children, true);
-        if (intersects.length) {
-            this.detect(intersects.pop().object.name);
-        }
+        intersects.length ? this.detect(intersects.pop().object.name) : this.stopOperate();
     };
+    /**
+     * 交互检测
+     * @param {string} signal 交互信号
+     */
     Divider.prototype.detect = function (signal) {
         var obj = this.group.getObjectByName(signal);
-        console.log(signal);
-        if (obj) {
-            switch (signal) {
-                case 'vr-panel-prev':
-                    this.paging(0, obj);
-                    break;
-                case 'vr-panel-next':
-                    this.paging(1, obj);
-                    break;
-                case 'vr-setpanel-btn':
-                    this.changeSet(obj);
-                    break;
-                case 'vr-setpanel-close':
-                    this.closeSetHandle();
-                    break;
-                case 'vr-panel-setting':
-                    this.openSetHandle(obj);
-                    break;
-                case 'vr-setpanel-auto':
-                    this.autoHandle(true, obj);
-                    break;
-                case 'vr-setpanel-noauto':
-                    this.autoHandle(false, obj);
-                    break;
-                default:
-                    this.nothing();
-            }
-        }
-    };
-    Divider.prototype.paging = function (factor, obj) {
-        var id = obj.id;
-        if (obj.wrapper) {
-            obj.wrapper.showHover();
-        }
-        // 翻页
-        if (factor) {
-        }
-    };
-    Divider.prototype.changeSet = function (obj) {
-        var _this = this;
-        if (!this.timeid) {
-            this.timeid = setTimeout(function () {
-                _this.point.fade();
-            }, 2000);
-        }
-    };
-    Divider.prototype.autoHandle = function (flag, obj) {
-        var _this = this;
-        var autoBtn = this.group.getObjectByName('vr-setpanel-auto').wrapper;
-        var noBtn = this.group.getObjectByName('vr-setpanel-noauto').wrapper;
-        if (!this.timeid) {
-            this.timeid = setTimeout(function () {
-                _this.point.fade((function () {
-                    autoBtn.setActive(flag);
-                    noBtn.setActive(!flag);
-                }));
-            }, 2000);
-        }
-    };
-    Divider.prototype.openSetHandle = function (obj) {
-        var _this = this;
-        var setpanel = this.group.getObjectByName('vr-setpanel');
-        if (obj.wrapper) {
-            obj.wrapper.showHover();
-        }
-        if (!this.timeid) {
-            this.timeid = setTimeout(function () {
-                _this.point.fade((function () { return setpanel.visible = true; }));
-            }, 2000);
-        }
-    };
-    Divider.prototype.closeSetHandle = function () {
-        var _this = this;
-        var setpanel = this.group.getObjectByName('vr-setpanel');
-        if (!this.timeid) {
-            this.timeid = setTimeout(function () {
-                _this.point.fade((function () { return setpanel.visible = false; }));
-            }, 2000);
+        switch (signal) {
+            case 'vr-panel-prev':
+                this.pagingHandle(-1, obj);
+                break;
+            case 'vr-panel-next':
+                this.pagingHandle(1, obj);
+                break;
+            case 'vr-setpanel-change':
+                break;
+            case 'vr-setpanel-close':
+                this.closeSetHandle();
+                break;
+            case 'vr-panel-setting':
+                this.openSetHandle(obj);
+                break;
+            case 'vr-setpanel-auto':
+                this.autoHandle(obj);
+                break;
+            case 'vr-setpanel-noauto':
+                this.noautoHandle(obj);
+                break;
+            default:
+                this.stopOperate();
+                this.stopHover();
         }
     };
     /**
-     * 常规 hide
+     * 翻页
      */
-    Divider.prototype.nothing = function () {
+    Divider.prototype.pagingHandle = function (num, obj) {
+        var _this = this;
+        var vpano = this.vpano;
+        var pagenum = this.group.getObjectByName('vr-panel-pagenum').wrapper;
+        obj.wrapper && obj.wrapper.showHover();
+        if (!this.timeid) {
+            var data_1 = this.calcPageData(num);
+            this.startOperate(function () {
+                pagenum.change(data_1.index + " / " + data_1.limit);
+                vpano.enterNext(data_1.scene);
+                _this.index = data_1.index;
+            });
+        }
+    };
+    /**
+     * 计算翻页数据
+     */
+    Divider.prototype.calcPageData = function (num) {
+        var scenes = this.vpano.overlays.getScenes();
+        var limit = scenes.length;
+        var index = this.index + num;
+        if (index <= 0) {
+            index = limit;
+        }
+        else if (index > limit) {
+            index = 1;
+        }
+        return { index: index, limit: limit, scene: scenes[index - 1] };
+    };
+    /**
+     * 自动切换
+     */
+    Divider.prototype.autoHandle = function (obj) {
+        var auto = this.group.getObjectByName('vr-setpanel-auto').wrapper;
+        var noauto = this.group.getObjectByName('vr-setpanel-noauto').wrapper;
+        if (auto.getActive() || this.timeid) {
+            return;
+        }
+        this.startOperate(function () {
+            auto.setActive(true);
+            noauto.setActive(false);
+        });
+    };
+    /**
+     * 不自动切换
+     */
+    Divider.prototype.noautoHandle = function (obj) {
+        var auto = this.group.getObjectByName('vr-setpanel-auto').wrapper;
+        var noauto = this.group.getObjectByName('vr-setpanel-noauto').wrapper;
+        if (noauto.getActive() || this.timeid) {
+            return;
+        }
+        this.startOperate(function () {
+            auto.setActive(false);
+            noauto.setActive(true);
+        });
+    };
+    /**
+     * 打开控制面板
+     */
+    Divider.prototype.openSetHandle = function (obj) {
+        var setpanel = this.group.getObjectByName('vr-setpanel');
+        obj.wrapper && obj.wrapper.showHover();
+        if (!setpanel.visible && !this.timeid) {
+            this.startOperate(function () { return setpanel.visible = true; });
+        }
+    };
+    /**
+     * 关闭控制面板
+     */
+    Divider.prototype.closeSetHandle = function () {
+        var _this = this;
+        var setpanel = this.group.getObjectByName('vr-setpanel');
+        var auto = this.group.getObjectByName('vr-setpanel-auto').wrapper;
+        if (!this.timeid) {
+            this.startOperate(function () {
+                auto.getActive() ? _this.regularChange() : clearTimeout(_this.regularid);
+                setpanel.visible = false;
+            });
+        }
+    };
+    /**
+     * 启动一个操作
+     */
+    Divider.prototype.startOperate = function (complete) {
+        var _this = this;
+        this.timeid = setTimeout(function () { return _this.point.fade((function () {
+            complete();
+            _this.timeid = 0;
+        })); }, 1500);
+    };
+    /**
+     * 终止操作
+     */
+    Divider.prototype.stopOperate = function () {
         clearTimeout(this.timeid);
         this.timeid = 0;
+        this.point.fadeStop();
+    };
+    /**
+     * 隐藏 hover
+     */
+    Divider.prototype.stopHover = function () {
         var prevMesh = this.group.getObjectByName('vr-panel-prev');
         var nextMesh = this.group.getObjectByName('vr-panel-next');
         var setMesh = this.group.getObjectByName('vr-panel-setting');
-        if (prevMesh) {
-            prevMesh.wrapper.hideHover();
-        }
-        if (nextMesh) {
-            nextMesh.wrapper.hideHover();
-        }
-        if (setMesh) {
-            setMesh.wrapper.hideHover();
-        }
+        prevMesh && prevMesh.wrapper.hideHover();
+        nextMesh && nextMesh.wrapper.hideHover();
+        setMesh && setMesh.wrapper.hideHover();
     };
-    Divider.prototype.lock = function () {
-        this.active = false;
+    /**
+     * 每 30s 切换一次场景
+     */
+    Divider.prototype.regularChange = function () {
+        var _this = this;
+        this.regularid = setTimeout(function () {
+            var pagenum = _this.group.getObjectByName('vr-panel-pagenum').wrapper;
+            var data = _this.calcPageData(1);
+            pagenum.change(data.index + " / " + data.limit);
+            _this.vpano.enterNext(data.scene);
+            _this.index = data.index;
+            _this.regularChange();
+        }, 30000);
     };
     Divider.prototype.dispose = function () {
         var vpano = this.vpano;
@@ -58341,14 +58408,17 @@ var Divider = /** @class */ (function () {
         vpano.unSubscribe('render-process', this.update, this);
     };
     Divider.prototype.createMesh = function (params) {
-        var mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](params.width, params.height), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
-            map: params.img && this.loader.load(params.img),
+        var opts = {
             color: params.color || '#fff',
             transparent: true,
             opacity: params.opacity || 1,
             depthTest: false,
             side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
-        }));
+        };
+        if (params.img) {
+            opts.map = this.loader.load(params.img);
+        }
+        var mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](params.width, params.height), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"](opts));
         mesh.renderOrder = params.order;
         mesh.position.set(params.x, params.y, params.z);
         if (params.name) {
@@ -58356,6 +58426,9 @@ var Divider = /** @class */ (function () {
         }
         if (params.parent) {
             params.parent.add(mesh);
+        }
+        if (params.hide) {
+            mesh.visible = false;
         }
         return mesh;
     };

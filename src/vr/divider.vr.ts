@@ -8,9 +8,8 @@ import Util from '../core/util';
 import Assets from './assets.vr';
 
 /**
- * @file UI Viewer, 拆分器
- * @TODO: move webvr.polyfill's html ui to here
- * @TODO: time to set timeid ???
+ * @file webvr 用户控制器
+ * @TODO: move webvr.polyfill.js html ui to here
  */
 
 export default class Divider {
@@ -19,8 +18,9 @@ export default class Divider {
     enterBtn: any;
     group: any;
     point: any;
-    active: any;
     timeid = 0;
+    regularid = 0;
+    index = 1;
     loader = new TextureLoader();
     ray = new Raycaster();
 
@@ -59,6 +59,7 @@ export default class Divider {
         const vpano = this.vpano;
         const camera = vpano.getCamera();
         const group = this.group = new Group();
+        const total = `1 / ${vpano.overlays.getScenes().length}`;
 
         vpano.addSceneObject(group);
         
@@ -85,7 +86,7 @@ export default class Divider {
         });
         // page num
         const pageNum = new Text({
-            parent: group, text: '1 / 5', x: 70, y: -300, z: 1000,
+            parent: group, name: 'vr-panel-pagenum', text: total, x: 70, y: -300, z: 1000,
         });
         // viewpoint
         const point = this.point = new Point({
@@ -101,7 +102,7 @@ export default class Divider {
 
         // setting panel
         const setPanel = this.createMesh({
-            parent: group, name: 'vr-setpanel', width: 775, height: 400,
+            parent: group, name: 'vr-setpanel', hide: true, width: 775, height: 400,
             color: '#000', opacity: 0.8, order: 3, x: 0, y: 60, z: 1000
         });
 
@@ -126,7 +127,7 @@ export default class Divider {
 
         const noauto = new Button({
             parent: setPanel, name: 'vr-setpanel-noauto', text: '不自动切换', color: '#c9c9c9',
-            width: 300, height: 100, x: -190, y: 100, z: 2
+            width: 300, height: 100, x: -190, y: 100, z: 1
         });
 
         const changeBtn = new Button({
@@ -147,127 +148,186 @@ export default class Divider {
         ray.setFromCamera({x: 0, y: 0}, camera);
         const intersects = ray.intersectObjects(this.group.children, true);
 
-        if (intersects.length) {
-            this.detect(intersects.pop().object.name);
-        }
+        intersects.length ? this.detect(intersects.pop().object.name) : this.stopOperate();
     }
 
+    /**
+     * 交互检测
+     * @param {string} signal 交互信号
+     */
     detect(signal) {
         const obj = this.group.getObjectByName(signal);
-console.log(signal)
-        if (obj) {
-            switch(signal) {
-                case 'vr-panel-prev':
-                    this.paging(0, obj);
-                    break;
-                case 'vr-panel-next':
-                    this.paging(1, obj);
-                    break;
-                case 'vr-setpanel-btn':
-                    this.changeSet(obj);
-                    break;
-                case 'vr-setpanel-close':
-                    this.closeSetHandle();
-                    break;
-                case 'vr-panel-setting':
-                    this.openSetHandle(obj);
-                    break;
-                case 'vr-setpanel-auto':
-                    this.autoHandle(true, obj);
-                    break;
-                case 'vr-setpanel-noauto':
-                    this.autoHandle(false, obj);
-                    break;
-                default:
-                    this.nothing();
-            }
+
+        switch(signal) {
+            case 'vr-panel-prev':
+                this.pagingHandle(-1, obj);
+                break;
+            case 'vr-panel-next':
+                this.pagingHandle(1, obj);
+                break;
+            case 'vr-setpanel-change':
+                break;
+            case 'vr-setpanel-close':
+                this.closeSetHandle();
+                break;
+            case 'vr-panel-setting':
+                this.openSetHandle(obj);
+                break;
+            case 'vr-setpanel-auto':
+                this.autoHandle(obj);
+                break;
+            case 'vr-setpanel-noauto':
+                this.noautoHandle(obj);
+                break;
+            default:
+                this.stopOperate();
+                this.stopHover();
         }
     }
 
-    paging(factor, obj) {
-        const id = obj.id;
+    /** 
+     * 翻页
+     */
+    pagingHandle(num, obj) {
+        const vpano = this.vpano;
+        const pagenum = this.group.getObjectByName('vr-panel-pagenum').wrapper;
 
-        if (obj.wrapper) {
-            obj.wrapper.showHover();
-        }
-        // 翻页
-        if (factor) {
+        obj.wrapper && obj.wrapper.showHover();
+        
+        if (!this.timeid) {
+            const data = this.calcPageData(num);
             
-        }
-    }
-
-    changeSet(obj) {
-        if (!this.timeid) {
-            this.timeid = setTimeout(() => {
-                this.point.fade();
-            }, 2000);
-        }
-    }
-
-    autoHandle(flag, obj) {
-        const autoBtn = this.group.getObjectByName('vr-setpanel-auto').wrapper;
-        const noBtn = this.group.getObjectByName('vr-setpanel-noauto').wrapper;
-
-        if (!this.timeid) {
-            this.timeid = setTimeout(() => {
-                this.point.fade((() => {
-                    autoBtn.setActive(flag);
-                    noBtn.setActive(!flag);
-                }));
-            }, 2000);
-        }
-    }
-
-    openSetHandle(obj) {
-        const setpanel = this.group.getObjectByName('vr-setpanel');
-
-        if (obj.wrapper) {
-            obj.wrapper.showHover();
-        }
-
-        if (!this.timeid) {
-            this.timeid = setTimeout(() => {
-                this.point.fade((() => setpanel.visible = true));
-            }, 2000);
-        }
-    }
-
-    closeSetHandle() {
-        const setpanel = this.group.getObjectByName('vr-setpanel');
-
-        if (!this.timeid) {
-            this.timeid = setTimeout(() => {
-                this.point.fade((() => setpanel.visible = false));
-            }, 2000);
+            this.startOperate(() => {
+                pagenum.change(`${data.index} / ${data.limit}`);
+                vpano.enterNext(data.scene);
+                this.index = data.index;
+            });
         }
     }
 
     /**
-     * 常规 hide
+     * 计算翻页数据
      */
-    nothing() {
+    calcPageData(num) {
+        const scenes = this.vpano.overlays.getScenes();
+        const limit = scenes.length;        
+        let index = this.index + num;
+            
+        if (index <= 0) {
+            index = limit;
+        } else if (index > limit) {
+            index = 1;
+        }
+
+        return {index, limit, scene: scenes[index - 1]};
+    }
+
+    /** 
+     * 自动切换
+     */
+    autoHandle(obj) {
+        const auto = this.group.getObjectByName('vr-setpanel-auto').wrapper;
+        const noauto = this.group.getObjectByName('vr-setpanel-noauto').wrapper;
+
+        if (auto.getActive() || this.timeid) {
+            return;
+        }
+
+        this.startOperate(() => {
+            auto.setActive(true);
+            noauto.setActive(false);
+        });
+    }
+
+    /** 
+     * 不自动切换
+     */
+    noautoHandle(obj) {
+        const auto = this.group.getObjectByName('vr-setpanel-auto').wrapper;
+        const noauto = this.group.getObjectByName('vr-setpanel-noauto').wrapper;
+
+        if (noauto.getActive() || this.timeid) {
+            return;
+        }
+
+        this.startOperate(() => {
+            auto.setActive(false);
+            noauto.setActive(true);
+        });
+    }
+
+    /** 
+     * 打开控制面板
+     */
+    openSetHandle(obj) {
+        const setpanel = this.group.getObjectByName('vr-setpanel');
+        obj.wrapper && obj.wrapper.showHover();
+
+        if (!setpanel.visible && !this.timeid) {
+            this.startOperate(() => setpanel.visible = true);
+        }
+    }
+
+     /** 
+      * 关闭控制面板
+      */
+    closeSetHandle() {
+        const setpanel = this.group.getObjectByName('vr-setpanel');
+        const auto = this.group.getObjectByName('vr-setpanel-auto').wrapper;
+
+        if (!this.timeid) {
+            this.startOperate(() => {
+                auto.getActive() ? this.regularChange() : clearTimeout(this.regularid);
+                setpanel.visible = false;
+            });
+        }
+    }
+
+    /**
+     * 启动一个操作
+     */
+    startOperate(complete) {
+        this.timeid = setTimeout(() => this.point.fade((() => {
+            complete();
+            this.timeid = 0;
+        })), 1500);
+    }
+
+    /**
+     * 终止操作
+     */
+    stopOperate() {
         clearTimeout(this.timeid);
-        this.timeid = 0; 
-        
+        this.timeid = 0;
+        this.point.fadeStop();
+    }
+
+    /** 
+     * 隐藏 hover
+     */
+    stopHover() {
         const prevMesh = this.group.getObjectByName('vr-panel-prev');
         const nextMesh = this.group.getObjectByName('vr-panel-next');
         const setMesh = this.group.getObjectByName('vr-panel-setting');
 
-        if (prevMesh) {
-            prevMesh.wrapper.hideHover();
-        }
-
-        if (nextMesh) {
-            nextMesh.wrapper.hideHover();
-        }
-
-        if (setMesh) {
-            setMesh.wrapper.hideHover();
-        }
+        prevMesh && prevMesh.wrapper.hideHover();
+        nextMesh && nextMesh.wrapper.hideHover();
+        setMesh && setMesh.wrapper.hideHover();
     }
 
-    lock() {
-        this.active = false;
+    /**
+     * 每 30s 切换一次场景
+     */
+    regularChange() {
+        this.regularid = setTimeout(() => {
+            const pagenum = this.group.getObjectByName('vr-panel-pagenum').wrapper;
+            const data = this.calcPageData(1);
+            
+            pagenum.change(`${data.index} / ${data.limit}`);
+            this.vpano.enterNext(data.scene);
+            this.index = data.index;
+            this.regularChange();
+        }, 30000);
     }
 
     dispose() {
@@ -280,14 +340,20 @@ console.log(signal)
     }
 
     createMesh(params) {
-        const mesh = new Mesh(new PlaneGeometry(params.width, params.height), new MeshBasicMaterial({
-            map: params.img && this.loader.load(params.img),
+        const opts: any = {
             color: params.color || '#fff',
             transparent: true,
             opacity: params.opacity || 1,
             depthTest: false,
             side: DoubleSide
-        }));
+        };
+
+        if (params.img) {
+            opts.map = this.loader.load(params.img);
+        }
+
+        const mesh = new Mesh(new PlaneGeometry(params.width, params.height),
+            new MeshBasicMaterial(opts));
         mesh.renderOrder = params.order;
         mesh.position.set(params.x, params.y, params.z);
 
@@ -297,6 +363,10 @@ console.log(signal)
 
         if (params.parent) {
             params.parent.add(mesh);
+        }
+
+        if (params.hide) {
+            mesh.visible = false;
         }
 
         return mesh;

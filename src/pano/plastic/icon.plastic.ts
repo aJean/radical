@@ -44,12 +44,13 @@ export default class Icon extends Plastic {
 
     create() {
         const data = this.data;
-        const icon: any = this.plastic = new Mesh(new PlaneGeometry(data.width, data.height), new MeshBasicMaterial({
-            map: this.loader.load(data.icon),
-            transparent: true,
-            depthTest: false,
-            side: DoubleSide
-        }));
+        const icon: any = this.plastic = new Mesh(new PlaneGeometry(data.width, data.height),
+            new MeshBasicMaterial({
+                map: this.loader.load(data.icon),
+                transparent: true,
+                depthTest: false,
+                side: DoubleSide
+            }));
 
         icon.wrapper = this;
         icon.renderOrder = data.order;

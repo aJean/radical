@@ -52,6 +52,7 @@ export default class Pano {
         const size = this.size = Util.calcRenderSize(container, opts);
         const root = this.root = Util.createElement(`<div class="pano-root"></div>`);
         const webgl = this.webgl = new WebGLRenderer({alpha: true});
+        // webgl
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(size.width, size.height);

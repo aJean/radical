@@ -68,26 +68,26 @@ export default class Point extends Plastic {
 
     fade(cb) {
         const circle = this.plastic.material;
+        const frame = this.frame;
         
         circle.visible = false;
+        frame.visible = true;
+
         this.tween = new Tween({rad: -Math.PI / 2}).to({rad: Math.PI * 2}).effect('linear', 1500)
             .start(['rad'], this.pano).process((old, val) => {
                 this.draw(val);
             }).complete(() => {
-                this.tween = new Tween({scale: 1}).to({scale: 0.2}).effect('linear', 500)
-                .start(['scale'], this.pano).process((old, val) => {
-                    this.scale(val);
-                }).complete(() => {
-                    circle.visible = true;
-                    cb && cb();
-                });
+                circle.visible = true;
+                frame.visible = false;
+                cb && cb();
             });
     }
 
     draw(rad) {
-        const frame = this.frame;
         const ctx = this.ctx;
 
+        this.frame.material.map.needsUpdate = true;
+        
         ctx.lineWidth = 4;
         ctx.strokeStyle = '#fff';
 
@@ -95,12 +95,12 @@ export default class Point extends Plastic {
         ctx.beginPath();
         ctx.arc(32, 32, 10, -Math.PI / 2, rad);
         ctx.stroke();
-        frame.material.map.needsUpdate = true;
     }
 
     scale(n) {
-        const frame = this.frame;
         const ctx = this.ctx;
+
+        this.frame.material.map.needsUpdate = true;
 
         ctx.lineWidth = 4;
         ctx.strokeStyle = '#fff';
@@ -109,19 +109,18 @@ export default class Point extends Plastic {
         ctx.beginPath();
         ctx.arc(32, 32, 10 * n, -Math.PI / 2, Math.PI * 2);
         ctx.stroke();
-        frame.material.map.needsUpdate = true;
     }
 
     fadeStop() {
         const frame = this.frame;
+        const ctx = this.ctx;
 
         if (this.tween) {
             this.tween.stop();
-            this.ctx.clearRect(0, 0, 1000, 1000);
+            frame.visible = false;
+            delete this.tween;
+            this.plastic.material.visible = true;
         }
-
-        this.plastic.material.visible = true;
-        frame.material.map.needsUpdate = true;
     }
 
     show() {
