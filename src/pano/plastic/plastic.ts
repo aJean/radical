@@ -21,11 +21,12 @@ export default abstract class Plastic {
 
     dispose() {
         const plastic = this.plastic;
+        const material = plastic.material;
 
         plastic.geometry.dispose();
-        plastic.material.map.dispose();
-        plastic.material.envMap.dispose();
-        plastic.material.dispose();
+        material.map && material.map.dispose();
+        material.envMap && material.envMap.dispose();
+        material.dispose();
         plastic.parent.remove(plastic);
     }
 }

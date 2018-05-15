@@ -9,14 +9,23 @@ import Assets from './assets.vr';
 
 /**
  * @file webvr 用户控制器
- * @TODO: move webvr.polyfill.js html ui to here
+ * @TODO: deal with page total when scene change 
  */
 
+const defaultOpts = {
+    ui: true,
+    x: 0,
+    y: -500,
+    z: 1000
+};
 export default class Divider {
+    data: any;
     vpano: any;
     backBtn: any;
     enterBtn: any;
     group: any;
+    panel: any;
+    setpanel: any;
     point: any;
     timeid = 0;
     regularid = 0;
@@ -24,38 +33,51 @@ export default class Divider {
     loader = new TextureLoader();
     ray = new Raycaster();
 
-    constructor(vpano) {
+    constructor(vpano, data) {
+        data = this.data = Object.assign({}, defaultOpts, data);
         this.vpano = vpano;
 
         vpano.subscribe('scene-load', () => {
             this.initPanel();
             this.initSetPanel();
-            this.createBtn();
+            this.createVrBtn(data.el);
+            this.hideAll();
         });
         vpano.subscribe('render-process', this.update, this);
     }
 
-    createBtn() {
+    createVrBtn(el) {
         const vpano = this.vpano;
         const root = vpano.getRoot();
 
         const backBtn: any = this.backBtn = Util.createElement('<div class="vr-back"></div>');
         backBtn.onclick = () => {
-            root.removeChild(backBtn);
             enterBtn.style.display = 'block';
+            root.removeChild(backBtn);
+            this.hideAll();
             vpano.exit();
         };
 
-        const enterBtn: any = this.backBtn = Util.createElement('<div class="vr-enter">ENTER VR</div>')
-        enterBtn.onclick = () => {
-            enterBtn.style.display = 'none';
-            vpano.enter().then(() => root.appendChild(backBtn));
+        let enterBtn: any;
+
+        if (el) {
+            enterBtn = this.enterBtn = document.querySelector(el);
+        } else {
+            enterBtn = this.enterBtn = Util.createElement('<div class="vr-enter">ENTER VR</div>');
+            root.appendChild(enterBtn);
         }
 
-        root.appendChild(enterBtn);
+        enterBtn.onclick = () => {
+            enterBtn.style.display = 'none';
+            vpano.enter().then(() => {
+                root.appendChild(backBtn);
+                this.showAll();
+            });
+        };
     }
 
     initPanel() {
+        const data = this.data;
         const vpano = this.vpano;
         const camera = vpano.getCamera();
         const group = this.group = new Group();
@@ -63,30 +85,30 @@ export default class Divider {
 
         vpano.addSceneObject(group);
         
-        const panel = this.createMesh({
+        const panel = this.panel = this.createMesh({
             parent: group, name: 'vr-panel', width: 775, height: 236,
-            color: '#000', opacity: 0.8, order: 1, x: 0, y: -300, z: 1000,
+            color: '#000', opacity: 0.8, order: 1, x: data.x, y: data.y, z: data.z,
         });
         // left arrow
         const prevBtn = new Icon({
-            parent: group, name: 'vr-panel-prev', width: 32, height: 64,
-            text: '上一页', color: '#c9c9c9', icon: Assets.arrow1, x: 230, y: -300, z: 1000
+            parent: panel, name: 'vr-panel-prev', width: 32, height: 64,
+            text: '上一页', color: '#c9c9c9', icon: Assets.arrow1, x: 230, y: 0, z: 1
         });
 
         // right arrow
         const nextBtn = new Icon({
-            parent: group, name: 'vr-panel-next', width: 32, height: 64,
-            text: '下一页', color: '#c9c9c9', icon: Assets.arrow2, x: -80, y: -300, z: 1000
+            parent: panel, name: 'vr-panel-next', width: 32, height: 64,
+            text: '下一页', color: '#c9c9c9', icon: Assets.arrow2, x: -80, y: 0, z: 1
         });
 
         // open set btn
         const setBtn = new Icon({
-            parent: group, name: 'vr-panel-setting', width: 64, height: 64,
-            icon: Assets.setImg, bwidth: 100, bheight: 100, x: -250, y: -300, z: 1000
+            parent: panel, name: 'vr-panel-setting', width: 64, height: 64,
+            icon: Assets.setImg, bwidth: 100, bheight: 100, x: -250, y: 0, z: 1
         });
         // page num
         const pageNum = new Text({
-            parent: group, name: 'vr-panel-pagenum', text: total, x: 70, y: -300, z: 1000,
+            parent: panel, name: 'vr-panel-pagenum', text: total, x: 70, y: 0, z: 1,
         });
         // viewpoint
         const point = this.point = new Point({
@@ -96,14 +118,15 @@ export default class Divider {
     }
 
     initSetPanel() {
+        const data = this.data;
         const vpano = this.vpano;
         const camera = vpano.getCamera();
         const group = this.group;
 
         // setting panel
-        const setPanel = this.createMesh({
+        const setPanel = this.setpanel = this.createMesh({
             parent: group, name: 'vr-setpanel', hide: true, width: 775, height: 400,
-            color: '#000', opacity: 0.8, order: 3, x: 0, y: 60, z: 1000
+            color: '#000', opacity: 0.8, order: 3, x: data.x, y: data.y + 348, z: data.z
         });
 
         const geo = new Geometry();
@@ -330,15 +353,6 @@ export default class Divider {
         }, 30000);
     }
 
-    dispose() {
-        const vpano = this.vpano;
-        const root = vpano.getRoot();
-
-        root.removeChild(this.backBtn);
-        root.removeChild(this.enterBtn);
-        vpano.unSubscribe('render-process', this.update, this);
-    }
-
     createMesh(params) {
         const opts: any = {
             color: params.color || '#fff',
@@ -371,4 +385,24 @@ export default class Divider {
 
         return mesh;
     }
-}
+
+    showAll() {
+        this.point.show();
+        this.panel.visible = true;
+    }
+
+    hideAll() {
+        this.point.hide();
+        this.panel.visible = false;
+        this.setpanel.visible = false;
+    }
+
+    dispose() {
+        const vpano = this.vpano;
+        const root = vpano.getRoot();
+
+        root.removeChild(this.backBtn);
+        root.removeChild(this.enterBtn);
+        vpano.unSubscribe('render-process', this.update, this);
+    }
+};

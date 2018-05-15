@@ -30,8 +30,8 @@ export default class VPano extends Pano {
     animate() {
         this.updateControl();
         this.dispatch('render-process', this.currentData, this);
-        this.effectRender.render(this.scene, this.camera);
 
+        this.effectRender.render(this.scene, this.camera);
         this.effectRender.requestAnimationFrame(this.animate.bind(this));
     }
 
@@ -59,13 +59,15 @@ export default class VPano extends Pano {
 
     enter() {
         this.state = 1;
-        return this.display.requestPresent([{
-            source: this.webgl.domElement
-        }]);
+        this.dispatch('vr-enter', this);
+
+        return this.display.requestPresent([{source: this.webgl.domElement}]);
     }
 
     exit() {
         this.state = 0;
+        this.dispatch('vr-exit', this);
+
         return this.display.exitPresent();
     }
 }

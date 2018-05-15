@@ -71,7 +71,7 @@ export default abstract class Runtime {
                 vpano.noTimeline();
             }
             // webvr divider
-            vpano.addPlugin(Divider);
+            vpano.addPlugin(Divider, source['vr']);
 
             EnvQueue.add(vpano.onResize, vpano);
             vpano.run();
