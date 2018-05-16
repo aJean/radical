@@ -111,7 +111,7 @@ export default class Divider {
         const setBtn = new Icon({
             parent: panel, name: 'vr-panel-setting', width: 64, height: 64,
             text: '设置',  color: '#c9c9c9', icon: Assets.setImg,
-            bwidth: 100, bheight: 100, x: -250, y: 0, z: 1
+            bwidth: 120, bheight: 120, x: -250, y: 0, z: 1
         });
         // page num
         const pageNum = new Text({

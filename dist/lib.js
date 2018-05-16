@@ -56229,8 +56229,8 @@ var defaultOpts = {
     order: 6,
     width: 90,
     height: 90,
-    bwidth: 90,
-    bheight: 90,
+    bwidth: 100,
+    bheight: 100,
     text: null,
     twidth: 256,
     theight: 128,
@@ -58209,7 +58209,7 @@ var Divider = /** @class */ (function () {
         var setBtn = new _pano_plastic_icon_plastic__WEBPACK_IMPORTED_MODULE_3__["default"]({
             parent: panel, name: 'vr-panel-setting', width: 64, height: 64,
             text: '设置', color: '#c9c9c9', icon: _assets_vr__WEBPACK_IMPORTED_MODULE_6__["default"].setImg,
-            bwidth: 100, bheight: 100, x: -250, y: 0, z: 1
+            bwidth: 120, bheight: 120, x: -250, y: 0, z: 1
         });
         // page num
         var pageNum = new _pano_plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]({
