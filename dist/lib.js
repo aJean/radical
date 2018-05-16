@@ -58158,7 +58158,9 @@ var Divider = /** @class */ (function () {
         var vpano = this.vpano;
         var root = vpano.getRoot();
         var backBtn = this.backBtn = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].createElement('<div class="vr-back"></div>');
-        backBtn.onclick = function () {
+        backBtn.onclick = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
             enterBtn.style.display = 'block';
             root.removeChild(backBtn);
             _this.hideAll();
@@ -58172,7 +58174,9 @@ var Divider = /** @class */ (function () {
             enterBtn = this.enterBtn = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].createElement('<div class="vr-enter">ENTER VR</div>');
             root.appendChild(enterBtn);
         }
-        enterBtn.onclick = function () {
+        enterBtn.onclick = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
             enterBtn.style.display = 'none';
             vpano.enter().then(function () {
                 root.appendChild(backBtn);
@@ -58204,7 +58208,8 @@ var Divider = /** @class */ (function () {
         // open set btn
         var setBtn = new _pano_plastic_icon_plastic__WEBPACK_IMPORTED_MODULE_3__["default"]({
             parent: panel, name: 'vr-panel-setting', width: 64, height: 64,
-            icon: _assets_vr__WEBPACK_IMPORTED_MODULE_6__["default"].setImg, bwidth: 100, bheight: 100, x: -250, y: 0, z: 1
+            text: '设置', color: '#c9c9c9', icon: _assets_vr__WEBPACK_IMPORTED_MODULE_6__["default"].setImg,
+            bwidth: 100, bheight: 100, x: -250, y: 0, z: 1
         });
         // page num
         var pageNum = new _pano_plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]({
@@ -58252,15 +58257,25 @@ var Divider = /** @class */ (function () {
         });
     };
     Divider.prototype.update = function () {
+        if (this.vpano.state !== 1) {
+            return;
+        }
         var camera = this.vpano.getCamera();
         var point3d = this.point.plastic;
         var ray = this.ray;
         var pos = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].calcScreenToWorld({ x: 0, y: 0 }, camera);
+        var intersects;
         point3d.position.copy(pos);
         point3d.rotation.copy(camera.rotation);
         ray.setFromCamera({ x: 0, y: 0 }, camera);
-        var intersects = ray.intersectObjects(this.group.children, true);
-        intersects.length ? this.detect(intersects.pop().object.name) : this.stopOperate();
+        intersects = ray.intersectObjects(this.group.children, true);
+        if (intersects.length) {
+            this.detect(intersects.pop().object.name);
+        }
+        else {
+            this.stopOperate();
+            this.stopHover();
+        }
     };
     /**
      * 交互检测
@@ -58435,6 +58450,7 @@ var Divider = /** @class */ (function () {
         var mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](params.width, params.height), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"](opts));
         mesh.renderOrder = params.order;
         mesh.position.set(params.x, params.y, params.z);
+        mesh.rotation.set(0, -0.2, 0);
         if (params.name) {
             mesh.name = params.name;
         }

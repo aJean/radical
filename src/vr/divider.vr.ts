@@ -51,7 +51,10 @@ export default class Divider {
         const root = vpano.getRoot();
 
         const backBtn: any = this.backBtn = Util.createElement('<div class="vr-back"></div>');
-        backBtn.onclick = () => {
+        backBtn.onclick = e => {
+            e.preventDefault();
+            e.stopPropagation();
+
             enterBtn.style.display = 'block';
             root.removeChild(backBtn);
             this.hideAll();
@@ -67,7 +70,10 @@ export default class Divider {
             root.appendChild(enterBtn);
         }
 
-        enterBtn.onclick = () => {
+        enterBtn.onclick = e => {
+            e.preventDefault();
+            e.stopPropagation();
+
             enterBtn.style.display = 'none';
             vpano.enter().then(() => {
                 root.appendChild(backBtn);
@@ -104,7 +110,8 @@ export default class Divider {
         // open set btn
         const setBtn = new Icon({
             parent: panel, name: 'vr-panel-setting', width: 64, height: 64,
-            icon: Assets.setImg, bwidth: 100, bheight: 100, x: -250, y: 0, z: 1
+            text: '设置',  color: '#c9c9c9', icon: Assets.setImg,
+            bwidth: 100, bheight: 100, x: -250, y: 0, z: 1
         });
         // page num
         const pageNum = new Text({
@@ -160,18 +167,28 @@ export default class Divider {
     }
 
     update() {
+        if (this.vpano.state !== 1) {
+            return;
+        }
+
         const camera = this.vpano.getCamera();
         const point3d = this.point.plastic;
         const ray = this.ray;
         const pos = Util.calcScreenToWorld({x: 0, y: 0}, camera);
+        let intersects;
 
         point3d.position.copy(pos);
         point3d.rotation.copy(camera.rotation);
 
         ray.setFromCamera({x: 0, y: 0}, camera);
-        const intersects = ray.intersectObjects(this.group.children, true);
+        intersects = ray.intersectObjects(this.group.children, true);
 
-        intersects.length ? this.detect(intersects.pop().object.name) : this.stopOperate();
+        if (intersects.length) {
+            this.detect(intersects.pop().object.name)
+        } else {
+            this.stopOperate();
+            this.stopHover();
+        }
     }
 
     /**
@@ -370,6 +387,7 @@ export default class Divider {
             new MeshBasicMaterial(opts));
         mesh.renderOrder = params.order;
         mesh.position.set(params.x, params.y, params.z);
+        mesh.rotation.set(0, -0.2, 0);
 
         if (params.name) {
             mesh.name = params.name;
