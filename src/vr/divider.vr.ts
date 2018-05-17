@@ -13,10 +13,9 @@ import Assets from './assets.vr';
  */
 
 const defaultOpts = {
-    ui: true,
-    x: 0,
-    y: -500,
-    z: 1000
+    el: null,
+    lng: 0,
+    lat: 0
 };
 export default class Divider {
     data: any;
@@ -77,7 +76,6 @@ export default class Divider {
             enterBtn.style.display = 'none';
             vpano.enter().then(() => {
                 root.appendChild(backBtn);
-                this.showAll();
             });
         };
     }
@@ -92,8 +90,8 @@ export default class Divider {
         vpano.addSceneObject(group);
         
         const panel = this.panel = this.createMesh({
-            parent: group, name: 'vr-panel', width: 775, height: 236,
-            color: '#000', opacity: 0.8, order: 1, x: data.x, y: data.y, z: data.z,
+            parent: group, name: 'vr-panel', width: 775, height: 236, hide: true,
+            color: '#000', opacity: 0.8, order: 1
         });
         // left arrow
         const prevBtn = new Icon({
@@ -132,8 +130,8 @@ export default class Divider {
 
         // setting panel
         const setPanel = this.setpanel = this.createMesh({
-            parent: group, name: 'vr-setpanel', hide: true, width: 775, height: 400,
-            color: '#000', opacity: 0.8, order: 3, x: data.x, y: data.y + 348, z: data.z
+            parent: this.panel, name: 'vr-setpanel', hide: true, width: 775, height: 400,
+            color: '#000', opacity: 0.8, order: 3, x: 0, y: 350, z: 0
         });
 
         const geo = new Geometry();
@@ -166,28 +164,51 @@ export default class Divider {
         });
     }
 
+    /**
+     * set panel position
+     */
     update() {
         if (this.vpano.state !== 1) {
             return;
         }
 
-        const camera = this.vpano.getCamera();
-        const point3d = this.point.plastic;
+        const vpano = this.vpano;
         const ray = this.ray;
-        const pos = Util.calcScreenToWorld({x: 0, y: 0}, camera);
-        let intersects;
+        const camera = vpano.getCamera();
+        const panel = this.panel;
+        const point3d = this.point.plastic;
+        const condition = vpano.getLook();
 
-        point3d.position.copy(pos);
-        point3d.rotation.copy(camera.rotation);
+        if (vpano.getLook().lat <= 80) {
+            if (!panel.visible) {
+                const v1 = Util.calcScreenToWorld({x: 0, y: -0.3}, camera);
+                panel.position.copy(v1);
+                panel.lookAt(camera.position);
+                panel.rotateX(0.5);
+                panel.rotateY(Math.PI);
+                panel.visible = true;
+                point3d.visible = true;
+            } else {
+                
+            }
 
-        ray.setFromCamera({x: 0, y: 0}, camera);
-        intersects = ray.intersectObjects(this.group.children, true);
+            ray.setFromCamera({x: 0, y: 0}, camera);
+            const intersects = ray.intersectObjects(this.group.children, true);
 
-        if (intersects.length) {
-            this.detect(intersects.pop().object.name)
-        } else {
-            this.stopOperate();
-            this.stopHover();
+            if (intersects.length) {
+                this.detect(intersects.pop().object.name)
+            } else {
+                this.stopOperate();
+                this.stopHover();
+            }
+        } else if (condition.lat > 110) {
+            this.hideAll();
+        }
+
+        if (point3d.visible) {
+            const v2 = Util.calcScreenToWorld({x: 0, y: 0}, camera);
+            point3d.position.copy(v2);
+            point3d.rotation.copy(camera.rotation);
         }
     }
 
@@ -383,11 +404,13 @@ export default class Divider {
             opts.map = this.loader.load(params.img);
         }
 
-        const mesh = new Mesh(new PlaneGeometry(params.width, params.height),
+        const mesh: any = new Mesh(new PlaneGeometry(params.width, params.height),
             new MeshBasicMaterial(opts));
         mesh.renderOrder = params.order;
-        mesh.position.set(params.x, params.y, params.z);
-        mesh.rotation.set(0, -0.2, 0);
+
+        if (params.x !== void 0) {
+            mesh.position.set(params.x, params.y, params.z);
+        }
 
         if (params.name) {
             mesh.name = params.name;

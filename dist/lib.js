@@ -58130,10 +58130,9 @@ __webpack_require__.r(__webpack_exports__);
  * @TODO: deal with page total when scene change
  */
 var defaultOpts = {
-    ui: true,
-    x: 0,
-    y: -500,
-    z: 1000
+    el: null,
+    lng: 0,
+    lat: 0
 };
 var Divider = /** @class */ (function () {
     function Divider(vpano, data) {
@@ -58180,7 +58179,6 @@ var Divider = /** @class */ (function () {
             enterBtn.style.display = 'none';
             vpano.enter().then(function () {
                 root.appendChild(backBtn);
-                _this.showAll();
             });
         };
     };
@@ -58192,8 +58190,8 @@ var Divider = /** @class */ (function () {
         var total = "1 / " + vpano.overlays.getScenes().length;
         vpano.addSceneObject(group);
         var panel = this.panel = this.createMesh({
-            parent: group, name: 'vr-panel', width: 775, height: 236,
-            color: '#000', opacity: 0.8, order: 1, x: data.x, y: data.y, z: data.z,
+            parent: group, name: 'vr-panel', width: 775, height: 236, hide: true,
+            color: '#000', opacity: 0.8, order: 1
         });
         // left arrow
         var prevBtn = new _pano_plastic_icon_plastic__WEBPACK_IMPORTED_MODULE_3__["default"]({
@@ -58228,8 +58226,8 @@ var Divider = /** @class */ (function () {
         var group = this.group;
         // setting panel
         var setPanel = this.setpanel = this.createMesh({
-            parent: group, name: 'vr-setpanel', hide: true, width: 775, height: 400,
-            color: '#000', opacity: 0.8, order: 3, x: data.x, y: data.y + 348, z: data.z
+            parent: this.panel, name: 'vr-setpanel', hide: true, width: 775, height: 400,
+            color: '#000', opacity: 0.8, order: 3, x: 0, y: 350, z: 0
         });
         var geo = new three__WEBPACK_IMPORTED_MODULE_0__["Geometry"]();
         geo.vertices.push(new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](387.5, -100, -2), new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](-387.5, -100, -2));
@@ -58256,25 +58254,48 @@ var Divider = /** @class */ (function () {
             color: '#c9c9c9', x: 0, y: -20, z: 0
         });
     };
+    /**
+     * set panel position
+     */
     Divider.prototype.update = function () {
         if (this.vpano.state !== 1) {
             return;
         }
-        var camera = this.vpano.getCamera();
-        var point3d = this.point.plastic;
+        var vpano = this.vpano;
         var ray = this.ray;
-        var pos = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].calcScreenToWorld({ x: 0, y: 0 }, camera);
-        var intersects;
-        point3d.position.copy(pos);
-        point3d.rotation.copy(camera.rotation);
-        ray.setFromCamera({ x: 0, y: 0 }, camera);
-        intersects = ray.intersectObjects(this.group.children, true);
-        if (intersects.length) {
-            this.detect(intersects.pop().object.name);
+        var camera = vpano.getCamera();
+        var panel = this.panel;
+        var point3d = this.point.plastic;
+        var condition = vpano.getLook();
+        if (vpano.getLook().lat <= 80) {
+            if (!panel.visible) {
+                var v1 = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].calcScreenToWorld({ x: 0, y: -0.3 }, camera);
+                panel.position.copy(v1);
+                panel.lookAt(camera.position);
+                panel.rotateX(0.5);
+                panel.rotateY(Math.PI);
+                panel.visible = true;
+                point3d.visible = true;
+            }
+            else {
+            }
+            ray.setFromCamera({ x: 0, y: 0 }, camera);
+            var intersects = ray.intersectObjects(this.group.children, true);
+            if (intersects.length) {
+                this.detect(intersects.pop().object.name);
+            }
+            else {
+                this.stopOperate();
+                this.stopHover();
+            }
         }
-        else {
-            this.stopOperate();
-            this.stopHover();
+        else if (condition.lat > 110) {
+            this.hideAll();
+        }
+        if (point3d.visible) {
+            var v2 = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].calcScreenToWorld({ x: 0, y: 0 }, camera);
+            point3d.position.copy(v2);
+            point3d.rotation.copy(camera.rotation);
         }
     };
     /**
@@ -58449,8 +58470,9 @@ var Divider = /** @class */ (function () {
         }
         var mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](params.width, params.height), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"](opts));
         mesh.renderOrder = params.order;
-        mesh.position.set(params.x, params.y, params.z);
-        mesh.rotation.set(0, -0.2, 0);
+        if (params.x !== void 0) {
+            mesh.position.set(params.x, params.y, params.z);
+        }
         if (params.name) {
             mesh.name = params.name;
         }
