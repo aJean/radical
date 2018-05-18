@@ -1,5 +1,5 @@
 import {Quaternion, Matrix4, Vector3} from 'three';
-import Log from '../../core/log';
+import Log from '../core/log';
 
 /**
  * @file vr control

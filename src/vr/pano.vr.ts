@@ -1,5 +1,6 @@
+import * as Three from 'three';
 import Pano from '../pano/pano';
-import VRControl from '../pano/controls/vr.control';
+import VRControl from './control.vr';
 import VREffect from './effect.vr';
 import Util from '../core/util';
 
@@ -49,14 +50,30 @@ export default class VPano extends Pano {
         return navigator.getVRDisplays().then(displays => displays.length > 0 ? displays[0] : null);
     }
 
+    /**
+     * 获取左相机
+     */
     getCameraL() {
         return this.effectRender.cameraL;
     }
 
+    /**
+     * 获取右相机
+     */
     getCameraR() {
         return this.effectRender.cameraR;
     }
 
+    /**
+     * for business use
+     */
+    getThree() {
+        return Three;
+    }
+
+    /**
+     * 进入 vr 模式
+     */
     enter() {
         this.state = 1;
         this.dispatch('vr-enter', this);
@@ -64,6 +81,9 @@ export default class VPano extends Pano {
         return this.display.requestPresent([{source: this.webgl.domElement}]);
     }
 
+    /**
+     * 退入 vr 模式
+     */
     exit() {
         this.state = 0;
         this.dispatch('vr-exit', this);

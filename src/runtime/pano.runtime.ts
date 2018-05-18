@@ -54,17 +54,18 @@ abstract class Runtime {
 
     /**
      * 释放一个全景对象
-     * @param {string} ref 
+     * @param {string} ref dom 引用标识
      */
     static releaseInstance(ref) {
         const pano = this.instanceMap[ref];
+        
         if (pano) {
             pano.dispose();
             EnvQueue.remove(pano);
         }
 
         if (!EnvQueue.len()) {
-            window.removeEventListener('resize', onEnvResize);
+            window.removeEventListener(eventType, onEnvResize);
         }
     }
 
@@ -156,13 +157,15 @@ window.onload = function() {
     }  
 };
 
+const eventType = /Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    ? 'orientationchange' : 'resize';
 const onEnvResize = event => {
     clearTimeout(Runtime.timeid);
     Runtime.timeid = setTimeout(function () {
         EnvQueue.excute();
     }, 200);
 };
-const eventType = /Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'orientationchange' : 'resize';
+
 window.addEventListener(eventType, onEnvResize);
 
 export default Runtime;

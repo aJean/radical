@@ -57785,7 +57785,7 @@ var Runtime = /** @class */ (function () {
     };
     /**
      * 释放一个全景对象
-     * @param {string} ref
+     * @param {string} ref dom 引用标识
      */
     Runtime.releaseInstance = function (ref) {
         var pano = this.instanceMap[ref];
@@ -57794,7 +57794,7 @@ var Runtime = /** @class */ (function () {
             EnvQueue.remove(pano);
         }
         if (!EnvQueue.len()) {
-            window.removeEventListener('resize', onEnvResize);
+            window.removeEventListener(eventType, onEnvResize);
         }
     };
     /**
@@ -57890,13 +57890,14 @@ window.onload = function () {
         }
     }
 };
+var eventType = /Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    ? 'orientationchange' : 'resize';
 var onEnvResize = function (event) {
     clearTimeout(Runtime.timeid);
     Runtime.timeid = setTimeout(function () {
         EnvQueue.excute();
     }, 200);
 };
-var eventType = /Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'orientationchange' : 'resize';
 window.addEventListener(eventType, onEnvResize);
 /* harmony default export */ __webpack_exports__["default"] = (Runtime);
 
@@ -57990,7 +57991,7 @@ var Runtime = /** @class */ (function () {
     }
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
-            var source, _a, ref, vpano, name_1;
+            var source, _a, ref, vpano_1, name_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -58013,25 +58014,31 @@ var Runtime = /** @class */ (function () {
                         }
                         try {
                             ref = el.getAttribute('ref') || "vpano_" + this.uid++;
-                            vpano = this.instanceMap[ref] = new _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__["default"](el, source);
+                            vpano_1 = this.instanceMap[ref] = new _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__["default"](el, source);
                             el.setAttribute('ref', ref);
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
-                                    vpano.subscribe(name_1, events[name_1]);
+                                    vpano_1.subscribe(name_1, events[name_1]);
                                 }
                             }
-                            // 动画
+                            // 开场动画
                             if (source['animation']) {
-                                _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_4__["default"].install(source['animation'], vpano);
+                                _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_4__["default"].install(source['animation'], vpano_1);
                             }
                             else {
-                                vpano.noTimeline();
+                                vpano_1.noTimeline();
                             }
-                            // webvr divider
-                            vpano.addPlugin(_vr_divider_vr__WEBPACK_IMPORTED_MODULE_3__["default"], source['vr']);
-                            EnvQueue.add(vpano.onResize, vpano);
-                            vpano.run();
+                            // webvr ui divider
+                            if (source['vr']) {
+                                vpano_1.addPlugin(_vr_divider_vr__WEBPACK_IMPORTED_MODULE_3__["default"], source['vr']);
+                            }
+                            // business plugins
+                            if (source['plugins']) {
+                                source['plugins'].forEach(function (plugin) { return vpano_1.addPlugin(plugin.class, plugin.opts); });
+                            }
+                            EnvQueue.add(vpano_1.onResize, vpano_1);
+                            vpano_1.run();
                         }
                         catch (e) {
                             events && events.nosupport && events.nosupport();
@@ -58047,8 +58054,13 @@ var Runtime = /** @class */ (function () {
     };
     Runtime.releaseInstance = function (ref) {
         var pano = this.instanceMap[ref];
-        pano && pano.dispose();
-        EnvQueue.remove(pano);
+        if (pano) {
+            pano.dispose();
+            EnvQueue.remove(pano);
+        }
+        if (!EnvQueue.len()) {
+            window.removeEventListener(eventType, onEnvResize);
+        }
     };
     Runtime.uid = 0;
     Runtime.instanceMap = {};
@@ -58067,13 +58079,14 @@ window.onload = function () {
         }
     }
 };
+var eventType = /Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    ? 'orientationchange' : 'resize';
 var onEnvResize = function (event) {
     clearTimeout(Runtime.timeid);
     Runtime.timeid = setTimeout(function () {
         EnvQueue.excute();
     }, 200);
 };
-var eventType = /Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'orientationchange' : 'resize';
 window.addEventListener(eventType, onEnvResize);
 
 
@@ -58885,9 +58898,10 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
-/* harmony import */ var _effect_vr__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./effect.vr */ "./src/vr/effect.vr.ts");
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
+/* harmony import */ var _effect_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./effect.vr */ "./src/vr/effect.vr.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -58898,6 +58912,7 @@ var __extends = (undefined && undefined.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+
 
 
 
@@ -58916,7 +58931,7 @@ var VPano = /** @class */ (function (_super) {
                 CARDBOARD_UI_DISABLED: true
             });
         }
-        _this.effectRender = new _effect_vr__WEBPACK_IMPORTED_MODULE_1__["default"](_this.webgl);
+        _this.effectRender = new _effect_vr__WEBPACK_IMPORTED_MODULE_2__["default"](_this.webgl);
         _this.getDisplay().then(function (display) { return _this.display = display; });
         return _this;
     }
@@ -58929,7 +58944,7 @@ var VPano = /** @class */ (function (_super) {
     VPano.prototype.onResize = function () {
         var camera = this.getCamera();
         var root = this.getRoot();
-        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].calcRenderSize(root);
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].calcRenderSize(root);
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.effectRender.setSize(size.width, size.height);
@@ -58937,24 +58952,42 @@ var VPano = /** @class */ (function (_super) {
     VPano.prototype.getDisplay = function () {
         return navigator.getVRDisplays().then(function (displays) { return displays.length > 0 ? displays[0] : null; });
     };
+    /**
+     * 获取左相机
+     */
     VPano.prototype.getCameraL = function () {
         return this.effectRender.cameraL;
     };
+    /**
+     * 获取右相机
+     */
     VPano.prototype.getCameraR = function () {
         return this.effectRender.cameraR;
     };
+    /**
+     * for business use
+     */
+    VPano.prototype.getThree = function () {
+        return three__WEBPACK_IMPORTED_MODULE_0__;
+    };
+    /**
+     * 进入 vr 模式
+     */
     VPano.prototype.enter = function () {
         this.state = 1;
         this.dispatch('vr-enter', this);
         return this.display.requestPresent([{ source: this.webgl.domElement }]);
     };
+    /**
+     * 退入 vr 模式
+     */
     VPano.prototype.exit = function () {
         this.state = 0;
         this.dispatch('vr-exit', this);
         return this.display.exitPresent();
     };
     return VPano;
-}(_pano_pano__WEBPACK_IMPORTED_MODULE_0__["default"]));
+}(_pano_pano__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (VPano);
 
 

@@ -1,4 +1,3 @@
-import {WebGLRenderer, PerspectiveCamera, Scene, CubeGeometry, MeshLambertMaterial, Mesh, SpotLight, PlaneGeometry, MeshPhongMaterial, DoubleSide, CameraHelper} from 'three';
 import ResourceLoader from '../pano/loaders/resource.loader';
 import Log from '../core/log';
 import VPano from '../vr/pano.vr';
@@ -64,14 +63,20 @@ export default abstract class Runtime {
                     vpano.subscribe(name, events[name]);
                 }
             }
-            // 动画
+            // 开场动画
             if (source['animation']) {
                 Timeline.install(source['animation'], vpano);
             } else {
                 vpano.noTimeline();
             }
-            // webvr divider
-            vpano.addPlugin(Divider, source['vr']);
+            // webvr ui divider
+            if (source['vr']) {
+                vpano.addPlugin(Divider, source['vr']);
+            }
+            // business plugins
+            if (source['plugins']) {
+                source['plugins'].forEach(plugin => vpano.addPlugin(plugin.class, plugin.opts));
+            }
 
             EnvQueue.add(vpano.onResize, vpano);
             vpano.run();
@@ -87,8 +92,15 @@ export default abstract class Runtime {
 
     static releaseInstance(ref) {
         const pano = this.instanceMap[ref];
-        pano && pano.dispose();
-        EnvQueue.remove(pano);
+
+        if (pano) {
+            pano.dispose();
+            EnvQueue.remove(pano);
+        }
+
+        if (!EnvQueue.len()) {
+            window.removeEventListener(eventType, onEnvResize);
+        }
     }
 }
 
@@ -108,11 +120,13 @@ window.onload = function() {
     }  
 };
 
+const eventType = /Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    ? 'orientationchange' : 'resize';
 const onEnvResize = event => {
     clearTimeout(Runtime.timeid);
     Runtime.timeid = setTimeout(function () {
         EnvQueue.excute();
     }, 200);
 };
-const eventType = /Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'orientationchange' : 'resize';
+
 window.addEventListener(eventType, onEnvResize);
