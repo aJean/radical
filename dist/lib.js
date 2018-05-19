@@ -58115,6 +58115,121 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/vr/control.vr.ts":
+/*!******************************!*\
+  !*** ./src/vr/control.vr.ts ***!
+  \******************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+
+
+/**
+ * @file vr control
+ * use devicemotion by webvr.polyfill.js
+ */
+var rotateMatrix = new three__WEBPACK_IMPORTED_MODULE_0__["Matrix4"]().makeRotationAxis(new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](0, 1, 0).normalize(), Math.PI);
+var VRControl = /** @class */ (function () {
+    function VRControl(camera, oribit) {
+        var _this = this;
+        // the Rift SDK returns the position in meters
+        // this scale factor allows the user to define how meters are converted to scene units.
+        this.scale = 1;
+        // If true will use "standing space" coordinate system where y=0 is the
+        // floor and x=0, z=0 is the center of the room.
+        this.standing = true;
+        // Distance from the users eyes to the floor in meters. Used when
+        // standing=true but the VRDisplay doesn't provide stageParameters.
+        this.userHeight = 1.6;
+        this.currentSpherical = new three__WEBPACK_IMPORTED_MODULE_0__["Spherical"]();
+        this.oribit = oribit;
+        this.camera = camera.clone();
+        this.standingMatrix = new three__WEBPACK_IMPORTED_MODULE_0__["Matrix4"]();
+        if ('VRFrameData' in window) {
+            this.frameData = new VRFrameData();
+        }
+        if (navigator.getVRDisplays) {
+            navigator.getVRDisplays().then(function (displays) { return _this.gotVRDisplays(displays); })
+                .catch(function () { return _core_log__WEBPACK_IMPORTED_MODULE_1__["default"].output('Unable to get VR Displays'); });
+        }
+    }
+    VRControl.prototype.gotVRDisplays = function (displays) {
+        this.vrDisplays = displays;
+        if (displays.length > 0) {
+            this.vrDisplay = displays[0];
+        }
+        else {
+            _core_log__WEBPACK_IMPORTED_MODULE_1__["default"].output('VR input not available');
+        }
+    };
+    VRControl.prototype.getVRDisplay = function () {
+        return this.vrDisplay;
+    };
+    VRControl.prototype.setVRDisplay = function (value) {
+        this.vrDisplay = value;
+    };
+    VRControl.prototype.getVRDisplays = function () {
+        _core_log__WEBPACK_IMPORTED_MODULE_1__["default"].output('getVRDisplays() is being deprecated');
+        return this.vrDisplays;
+    };
+    VRControl.prototype.getStandingMatrix = function () {
+        return this.standingMatrix;
+    };
+    VRControl.prototype.update = function () {
+        var vrDisplay = this.vrDisplay;
+        var frameData = this.frameData;
+        var standingMatrix = this.standingMatrix;
+        var camera = this.camera;
+        var lastSpherical = this.lastSpherical;
+        var currentSpherical = this.currentSpherical;
+        if (vrDisplay) {
+            var pose = void 0;
+            if (vrDisplay.getFrameData) {
+                vrDisplay.getFrameData(frameData);
+                pose = frameData.pose;
+            }
+            else if (vrDisplay.getPose) {
+                pose = vrDisplay.getPose();
+            }
+            if (pose.orientation !== null) {
+                camera.quaternion.fromArray(pose.orientation);
+            }
+            pose.position !== null ? camera.position.fromArray(pose.position) : camera.position.set(0, 0, 0);
+            if (this.standing) {
+                if (vrDisplay.stageParameters) {
+                    camera.updateMatrix();
+                    standingMatrix.fromArray(vrDisplay.stageParameters.sittingToStandingTransform);
+                    camera.applyMatrix(standingMatrix);
+                }
+                else {
+                    camera.position.setY(camera.position.y + this.userHeight);
+                }
+            }
+            // calc spherical diff
+            currentSpherical.setFromVector3(camera.getWorldDirection());
+            if (lastSpherical && currentSpherical.phi < 3) {
+                var theta = currentSpherical.theta - lastSpherical.theta;
+                var phi = lastSpherical.phi - currentSpherical.phi;
+                this.oribit.update(theta, phi);
+            }
+            this.lastSpherical = currentSpherical.clone();
+        }
+    };
+    VRControl.prototype.dispose = function () {
+        this.vrDisplay = null;
+    };
+    return VRControl;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (VRControl);
+;
+
+
+/***/ }),
+
 /***/ "./src/vr/divider.vr.ts":
 /*!******************************!*\
   !*** ./src/vr/divider.vr.ts ***!
@@ -58900,8 +59015,9 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
-/* harmony import */ var _effect_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./effect.vr */ "./src/vr/effect.vr.ts");
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+/* harmony import */ var _control_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./control.vr */ "./src/vr/control.vr.ts");
+/* harmony import */ var _effect_vr__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./effect.vr */ "./src/vr/effect.vr.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -58912,6 +59028,7 @@ var __extends = (undefined && undefined.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+
 
 
 
@@ -58931,10 +59048,19 @@ var VPano = /** @class */ (function (_super) {
                 CARDBOARD_UI_DISABLED: true
             });
         }
-        _this.effectRender = new _effect_vr__WEBPACK_IMPORTED_MODULE_2__["default"](_this.webgl);
+        _this.visual = new _control_vr__WEBPACK_IMPORTED_MODULE_2__["default"](_this.getCamera(), _this.orbit);
+        _this.effectRender = new _effect_vr__WEBPACK_IMPORTED_MODULE_3__["default"](_this.webgl);
         _this.getDisplay().then(function (display) { return _this.display = display; });
         return _this;
     }
+    VPano.prototype.updateControl = function () {
+        if (this.state) {
+            this.visual.update();
+        }
+        else if (!this.frozen) {
+            this.orbit.update();
+        }
+    };
     VPano.prototype.animate = function () {
         this.updateControl();
         this.dispatch('render-process', this.currentData, this);
@@ -58944,7 +59070,7 @@ var VPano = /** @class */ (function (_super) {
     VPano.prototype.onResize = function () {
         var camera = this.getCamera();
         var root = this.getRoot();
-        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].calcRenderSize(root);
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_4__["default"].calcRenderSize(root);
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.effectRender.setSize(size.width, size.height);

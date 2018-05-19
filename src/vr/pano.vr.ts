@@ -1,7 +1,7 @@
 import * as Three from 'three';
 import Pano from '../pano/pano';
-import VRControl from './control.vr';
-import VREffect from './effect.vr';
+import VrControl from './control.vr';
+import VrEffect from './effect.vr';
 import Util from '../core/util';
 
 /**
@@ -11,6 +11,7 @@ import Util from '../core/util';
 export default class VPano extends Pano {
     type = 'vr-pano';
     effectRender: any;
+    visual: any;
     display: any;
     state = 0;
 
@@ -24,8 +25,17 @@ export default class VPano extends Pano {
             });
         }
 
-        this.effectRender = new VREffect(this.webgl);
+        this.visual = new VrControl(this.getCamera(), this.orbit);
+        this.effectRender = new VrEffect(this.webgl);
         this.getDisplay().then(display => this.display = display);
+    }
+
+    updateControl() {
+        if (this.state) {
+            this.visual.update();
+        } else if (!this.frozen) {
+            this.orbit.update();
+        }
     }
 
     animate() {
