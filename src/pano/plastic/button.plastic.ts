@@ -1,4 +1,4 @@
-import {PlaneGeometry, MeshBasicMaterial, Mesh, CanvasTexture, DoubleSide, Texture, TextureLoader} from 'three';
+import { PlaneGeometry, MeshBasicMaterial, Mesh, CanvasTexture, DoubleSide, Texture, TextureLoader } from 'three';
 import Plastic from './plastic';
 import Assets from '../../vr/assets.vr';
 
@@ -28,11 +28,11 @@ export default class Button extends Plastic {
     text: any;
     loader = new TextureLoader();
     canvas = document.createElement('canvas');
-    
+
     constructor(opts) {
         super();
         this.data = Object.assign({}, defaultOpts, opts);
-        
+
         this.create();
     }
 
@@ -89,7 +89,7 @@ export default class Button extends Plastic {
             width = data.twidth = canvas.width = width * 2;
             ctx.font = `normal ${data.fontsize}px ${data.fontface}`;
         }
-        
+
         ctx.lineWidth = data.lineWidth;
         ctx.textAlign = 'center';
         ctx.fillStyle = data.color;

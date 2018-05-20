@@ -1,4 +1,4 @@
-import {PlaneGeometry, MeshBasicMaterial, Mesh, CanvasTexture, DoubleSide, Texture, TextureLoader} from 'three';
+import { PlaneGeometry, MeshBasicMaterial, Mesh, CanvasTexture, DoubleSide, Texture, TextureLoader } from 'three';
 import Plastic from './plastic';
 import Assets from '../../vr/assets.vr';
 
@@ -36,7 +36,7 @@ export default class Icon extends Plastic {
     constructor(opts) {
         super();
         this.data = Object.assign({}, defaultOpts, opts);
-        
+
         this.create();
         this.createBg();
         opts.text && this.createText();
@@ -71,7 +71,7 @@ export default class Icon extends Plastic {
                 transparent: true,
                 side: DoubleSide
             }));
-        
+
         bg.position.set(0, 0, 1);
         bg.renderOrder = data.order + 1;
         bg.name = data.name;
@@ -114,7 +114,7 @@ export default class Icon extends Plastic {
             width = data.twidth = canvas.width = width * 2;
             ctx.font = `normal ${data.fontsize}px ${data.fontface}`;
         }
-        
+
         ctx.lineWidth = data.lineWidth;
         ctx.textAlign = 'center';
         ctx.fillStyle = data.color;

@@ -15,15 +15,3 @@ export interface IPluggableUI {
 
     dispose(): void;
 }
-
-export interface IAssemblyUI {
-    container: HTMLElement;
-    
-    compose(): void;
-
-    add(): void;
-
-    remove(): void;
-
-    dispose(): void;
-}

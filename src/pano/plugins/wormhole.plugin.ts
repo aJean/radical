@@ -1,4 +1,4 @@
-import {Texture, Raycaster} from 'three';
+import { Texture, Raycaster } from 'three';
 import ResourceLoader from '../loaders/resource.loader';
 import Tween from '../animations/tween.animation';
 import Pano from '../pano';
@@ -39,7 +39,7 @@ export default class Wormhole {
 
     create() {
         const data = this.data;
-        const pano = this.pano;       
+        const pano = this.pano;
         const vector = this.vector = Util.calcSphereToWorld(data.lng, data.lat);
 
         myLoader.loadTexture(data.bxlPath || data.texPath).then((texture: Texture) => {
@@ -47,13 +47,13 @@ export default class Wormhole {
                 light: true,
                 cloud: true,
                 position: vector,
-                radius: 100, 
+                radius: 100,
                 envMap: this.texture = texture,
             });
             hole.addBy(pano);
-            
+
             const light = this.light = new Light();
-            light.setPosition(vector.x, vector.y, vector.z -200);
+            light.setPosition(vector.x, vector.y, vector.z - 200);
             light.setTarget(hole);
             light.addBy(pano);
 
@@ -87,7 +87,7 @@ export default class Wormhole {
             const target = this.vector.clone();
             // camera lookAt.z > camera position.z
             target.z += this.direction ? 100 : -100;
- 
+
             // camera lookAt
             new Tween(vector).to(target).effect('quintEaseIn', 1000)
                 .start(['x', 'y', 'z'], pano)

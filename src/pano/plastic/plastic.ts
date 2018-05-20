@@ -1,6 +1,5 @@
 /**
  * @file 内置物体材质抽象类
- * @TODO: 提取公共方法
  */
 
 export default abstract class Plastic {

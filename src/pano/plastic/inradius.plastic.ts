@@ -1,4 +1,4 @@
-import {BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader} from 'three';
+import { BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader } from 'three';
 import Tween from '../animations/tween.animation';
 import Plastic from './plastic';
 
@@ -18,24 +18,24 @@ const defaultOpts = {
 export default class Inradius extends Plastic {
     cloud: any;
 
-    constructor(data) {
+    constructor(opts) {
         super();
-        this.data = Object.assign({}, defaultOpts, data);
-        
-        this.setRefraction(data.envMap);
+        this.data = Object.assign({}, defaultOpts, opts);
+
+        this.setRefraction(opts.envMap);
         this.create();
     }
 
     create() {
         const data = this.data;
-        const material = data.light ? 
+        const material = data.light ?
             new MeshPhongMaterial({
                 envMap: data.envMap,
                 side: data.side,
                 refractionRatio: 0,
                 reflectivity: 1,
                 specular: 'grey'
-            }) : 
+            }) :
             new MeshBasicMaterial({
                 envMap: data.envMap,
                 side: data.side,
@@ -114,14 +114,14 @@ export default class Inradius extends Plastic {
     fadeIn(pano, onComplete) {
         const material = this.plastic.material;
 
-        new Tween(material).to({opacity: 1}).effect('linear', 1000)
+        new Tween(material).to({ opacity: 1 }).effect('linear', 1000)
             .start(['opacity'], pano).complete(onComplete);
     }
 
     fadeOut(pano, onComplete) {
         const material = this.plastic.material;
 
-        new Tween(material).to({opacity: 0}).effect('linear', 1000)
+        new Tween(material).to({ opacity: 0 }).effect('linear', 1000)
             .start(['opacity'], pano).complete(onComplete);
     }
 }

@@ -1,4 +1,4 @@
-import {Mesh, CircleGeometry, MeshBasicMaterial, DoubleSide, CanvasTexture} from 'three';
+import { Mesh, CircleGeometry, MeshBasicMaterial, DoubleSide, CanvasTexture } from 'three';
 import Plastic from '../plastic/plastic';
 import Tween from '../animations/tween.animation';
 
@@ -24,7 +24,7 @@ export default class Point extends Plastic {
         super();
         this.pano = pano;
         this.data = Object.assign({}, defaultOpts, opts);
-        
+
         this.create();
     }
 
@@ -32,8 +32,8 @@ export default class Point extends Plastic {
         const data = this.data;
         const mesh: any = this.plastic = new Mesh(new CircleGeometry(data.raidus, data.seagment),
             new MeshBasicMaterial({
-                color: data.color, 
-                depthTest: false, 
+                color: data.color,
+                depthTest: false,
                 side: DoubleSide,
                 transparent: true
             }));
@@ -56,8 +56,8 @@ export default class Point extends Plastic {
 
             const frame = this.frame = new Mesh(new CircleGeometry(32, data.seagment),
                 new MeshBasicMaterial({
-                    map: new CanvasTexture(canvas), 
-                    depthTest: false, 
+                    map: new CanvasTexture(canvas),
+                    depthTest: false,
                     side: DoubleSide,
                     transparent: true
                 }));
@@ -69,11 +69,11 @@ export default class Point extends Plastic {
     fade(cb) {
         const circle = this.plastic.material;
         const frame = this.frame;
-        
+
         circle.visible = false;
         frame.visible = true;
 
-        this.tween = new Tween({rad: -Math.PI / 2}).to({rad: Math.PI * 2}).effect('linear', 1500)
+        this.tween = new Tween({ rad: -Math.PI / 2 }).to({ rad: Math.PI * 2 }).effect('linear', 1500)
             .start(['rad'], this.pano).process((old, val) => {
                 this.draw(val);
             }).complete(() => {
@@ -87,7 +87,7 @@ export default class Point extends Plastic {
         const ctx = this.ctx;
 
         this.frame.material.map.needsUpdate = true;
-        
+
         ctx.lineWidth = 4;
         ctx.strokeStyle = '#fff';
 

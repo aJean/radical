@@ -104,10 +104,6 @@ abstract class Runtime {
                 }
             }
 
-            if (source['thru']) {
-                pano.addPlugin(Thru, source['thru']);
-            }
-
             if (source['animation']) {
                 Timeline.install(source['animation'], pano);
             } else {
@@ -128,6 +124,10 @@ abstract class Runtime {
     
             if (source['wormhole']) {
                 pano.addPlugin(Wormhole, source['wormhole']);
+            }
+
+            if (source['thru']) {
+                pano.addPlugin(Thru, source['thru']);
             }
     
             // add to env queue listeners

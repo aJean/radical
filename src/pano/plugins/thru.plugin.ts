@@ -1,4 +1,4 @@
-import {TextureLoader, MeshBasicMaterial, CircleGeometry, Mesh, Vector3, Scene, AdditiveBlending, Raycaster} from 'three';
+import { TextureLoader, MeshBasicMaterial, CircleGeometry, Mesh, Vector3, Scene, AdditiveBlending, Raycaster } from 'three';
 import Tween from '../animations/tween.animation';
 import Util from '../../core/util';
 import Loader from '../loaders/resource.loader';
@@ -32,7 +32,7 @@ export default class Thru {
     raycaster = new Raycaster();
     group = [];
 
-    constructor (pano, data) {
+    constructor(pano, data) {
         this.pano = pano;
         this.data = Util.assign({}, defaultOpts, data);
         this.onCanvasHandle = this.onCanvasHandle.bind(this);
@@ -56,14 +56,14 @@ export default class Thru {
         const camera = this.camera;
 
         camera.rotation.copy(pano.getCamera().rotation);
-        pano.webgl.render(this.scene, camera);       
+        pano.webgl.render(this.scene, camera);
     }
 
     load(scene) {
         let bid: any = /BAIDUID=[^;]*/.exec(document.cookie) || '';
         const data = this.data;
         const server = data.server;
-        
+
         if (bid) {
             bid = bid[0].replace('BAIDUID=', '');
         }
@@ -72,8 +72,8 @@ export default class Thru {
             return console.log('thru server missed!');
         }
 
-        const url = server + '?baiduid=' + bid + '&panoid=' + data.setid + '&sceneid=' + scene.id
-            + '&timestamp=' + Date.now()
+        const url = server + '?baiduid=' + bid + '&panoid=' + data.setid + '&sceneid=' + scene.id +
+            '&timestamp=' + Date.now()
         this.cleanup();
         this.loader.fetchUrl(url)
             .then(res => {
@@ -127,7 +127,7 @@ export default class Thru {
     }
 
     getVector() {
-        return Util.calcScreenToWorld({x: 0, y: 0}, this.camera);
+        return Util.calcScreenToWorld({ x: 0, y: 0 }, this.camera);
     }
 
     needToHide() {
@@ -136,14 +136,14 @@ export default class Thru {
         }
 
         clearTimeout(this.timeid);
-        this.hide();        
+        this.hide();
     }
 
     needToShow() {
         clearTimeout(this.timeid);
         this.timeid = setTimeout(() => {
             this.show();
-            this.active = true;            
+            this.active = true;
         }, this.data.lazy);
     }
 
@@ -162,25 +162,25 @@ export default class Thru {
             item.lookAt(camera.position);
             item.visible = true;
 
-            effect === 'scale'
-                ? new Tween({scale: 0}).to({scale: 1}).effect('backOut', 1000)
-                    .start(['scale'], pano).process(val => item.scale.set(val, val, 1)) 
-                : new Tween(item.material).to({opacity: 1}).effect('quintEaseIn', 1000)
-                    .start(['opacity'], pano);
+            effect === 'scale' ?
+                new Tween({ scale: 0 }).to({ scale: 1 }).effect('backOut', 1000)
+                .start(['scale'], pano).process(val => item.scale.set(val, val, 1)) :
+                new Tween(item.material).to({ opacity: 1 }).effect('quintEaseIn', 1000)
+                .start(['opacity'], pano);
         });
     }
 
     hide() {
-        this.animating = true;        
+        this.animating = true;
         this.group.forEach(item => {
-            this.data.effect == 'scale'
-                ? new Tween({scale: 1}).to({scale: 0}).effect('backOut', 1000)
-                    .start(['scale'], this.pano).process(val => item.scale.set(val, val, 1))
-                    .complete(() => {
-                        this.animating = false;
-                        item.visible = false;
-                    })
-                : new Tween(item.material).to({opacity: 0}).effect('quintEaseIn', 1000)
+            this.data.effect == 'scale' ?
+                new Tween({ scale: 1 }).to({ scale: 0 }).effect('backOut', 1000)
+                .start(['scale'], this.pano).process(val => item.scale.set(val, val, 1))
+                .complete(() => {
+                    this.animating = false;
+                    item.visible = false;
+                }) :
+                new Tween(item.material).to({ opacity: 0 }).effect('quintEaseIn', 1000)
                 .start(['opacity'], this.pano).complete(() => {
                     this.animating = false;
                     item.visible = false;

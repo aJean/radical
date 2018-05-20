@@ -1,4 +1,4 @@
-import {SpotLight, CameraHelper} from 'three';
+import { SpotLight, CameraHelper } from 'three';
 import Plastic from './plastic';
 
 const defaultOpts = {
@@ -10,7 +10,7 @@ const defaultOpts = {
 export default class Light extends Plastic {
     helper: any;
 
-    constructor(opts?) {
+    constructor(opts ? ) {
         super();
         this.data = Object.assign({}, defaultOpts, opts);
         this.create();

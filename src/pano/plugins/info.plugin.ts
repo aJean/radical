@@ -1,41 +1,64 @@
+import {IPluggableUI} from '../interface/ui.interface';
 import Util from '../../core/util';
 
 /**
  * @file 版权遮罩层
  */
 
-export default class Info {
+export default class Info implements IPluggableUI {
     element: any;
     pano: any;
+    container: any;
     
     constructor(pano) {
         this.pano = pano;
         
-        this.createDom(pano.currentData.info);
-        pano.subscribe('scene-attach', data => {
-            this.renderDom(data.info);
-        });
+        this.createDom(pano.currentData);
+        pano.subscribe('scene-attach', this.renderDom, this);
     }
 
     createDom(data) {
+        const info = data.info;        
         const element = this.element = Util.createElement('<div class="pano-info"></div>');
 
-        if (data.logo) {
-            element.innerHTML =  `<img src="${data.logo}" width="70">`;
+        if (info) {
+            element.innerHTML = info.logo ? `<img src="${info.logo}" width="70">` : '';
+            element.innerHTML += `<div class="pano-info-name">${info.author}</div>`;
         }
-        element.innerHTML += `<div class="pano-info-name">${data.author}</div>`;
 
-        this.pano.getRoot().appendChild(element);
+        this.setContainer();
     }
 
     renderDom(data) {
+        const info = data.info;
         const element = this.element;
 
-        if (data.logo) {
-            element.innerHTML = `<img src="${data.logo}" width="70">`;
+        if (info) {
+            element.innerHTML = info.logo ? `<img src="${info.logo}" width="70">` : '';
+            element.innerHTML += `<div class="pano-info-name">${info.author}</div>`;
+            this.show();
         } else {
-            element.innerHTML = '';
+            this.hide();
         }
-        element.innerHTML += `<div class="pano-info-name">${data.author}</div>`;
+    }
+
+    setContainer() {
+        this.pano.getRoot().appendChild(this.element);
+    }
+
+    getElement() {
+        return this.element;
+    }
+
+    show() {
+        this.element.style.display = 'block';
+    }
+
+    hide() {
+        this.element.style.display = 'none';
+    }
+
+    dispose() {
+        this.pano.unSubscribe('scene-attach', this.renderDom, this);
     }
 }

@@ -7,7 +7,7 @@ import polyfill from './core/polyfill';
 import PRuntime from './runtime/pano.runtime';
 import VRuntime from './runtime/vr.runtime';
 // TODO: delete after testing
-import testMapping from './pano/plugins/complete.plugin';
+import testMapping from './pano/plugins/test.plugin';
 
 /**
  * @file bxl lib

@@ -53431,7 +53431,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_polyfill__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./core/polyfill */ "./src/core/polyfill.ts");
 /* harmony import */ var _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./runtime/pano.runtime */ "./src/runtime/pano.runtime.ts");
 /* harmony import */ var _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
-/* harmony import */ var _pano_plugins_complete_plugin__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./pano/plugins/complete.plugin */ "./src/pano/plugins/complete.plugin.ts");
+/* harmony import */ var _pano_plugins_test_plugin__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./pano/plugins/test.plugin */ "./src/pano/plugins/test.plugin.ts");
 
 
 
@@ -53459,7 +53459,7 @@ Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_5__["default"])();
     startVR: function (url, el, events) {
         _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_7__["default"].start(url, el, events);
     },
-    testMapping: _pano_plugins_complete_plugin__WEBPACK_IMPORTED_MODULE_8__["default"]
+    testMapping: _pano_plugins_test_plugin__WEBPACK_IMPORTED_MODULE_8__["default"]
 });
 
 
@@ -56387,10 +56387,10 @@ var defaultOpts = {
 };
 var Inradius = /** @class */ (function (_super) {
     __extends(Inradius, _super);
-    function Inradius(data) {
+    function Inradius(opts) {
         var _this = _super.call(this) || this;
-        _this.data = Object.assign({}, defaultOpts, data);
-        _this.setRefraction(data.envMap);
+        _this.data = Object.assign({}, defaultOpts, opts);
+        _this.setRefraction(opts.envMap);
         _this.create();
         return _this;
     }
@@ -56558,7 +56558,6 @@ var Light = /** @class */ (function (_super) {
 __webpack_require__.r(__webpack_exports__);
 /**
  * @file 内置物体材质抽象类
- * @TODO: 提取公共方法
  */
 var Plastic = /** @class */ (function () {
     function Plastic() {
@@ -56835,51 +56834,6 @@ var Text = /** @class */ (function (_super) {
 
 /***/ }),
 
-/***/ "./src/pano/plugins/complete.plugin.ts":
-/*!*********************************************!*\
-  !*** ./src/pano/plugins/complete.plugin.ts ***!
-  \*********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-
-/**
- * @file uv mapping
- * 每一个面由两个三角形组成, 底部对应 uv 顶点 0, 1, 3 顶部对应 1, 2, 3
- * 顶点从低端开始逆时针
- */
-/* harmony default export */ __webpack_exports__["default"] = (function (id) {
-    var webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true });
-    var render = webgl.domElement;
-    webgl.setPixelRatio(window.devicePixelRatio);
-    webgl.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById(id).appendChild(render);
-    var scene = this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
-    var camera = this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](80, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.set(0, 0, 600);
-    var texture = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load('../../../bxl-ar/examples/assets/material.gif');
-    var geometry = new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](300, 300, 1, 1);
-    geometry.faceVertexUvs[0][0] = [new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](0, 0), new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](1, 0), new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](0, 1)];
-    geometry.faceVertexUvs[0][1] = [new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](1, 0), new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](1, 1), new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](0, 1)];
-    var material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({ map: texture });
-    var mesh = this.mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, material);
-    var axesHelper = new three__WEBPACK_IMPORTED_MODULE_0__["AxesHelper"](300);
-    scene.add(axesHelper);
-    scene.add(mesh);
-    webgl.render(scene, camera);
-    function tick() {
-        webgl.render(scene, camera);
-        requestAnimationFrame(tick);
-    }
-    tick();
-});
-
-
-/***/ }),
-
 /***/ "./src/pano/plugins/info.plugin.ts":
 /*!*****************************************!*\
   !*** ./src/pano/plugins/info.plugin.ts ***!
@@ -56896,30 +56850,45 @@ __webpack_require__.r(__webpack_exports__);
  */
 var Info = /** @class */ (function () {
     function Info(pano) {
-        var _this = this;
         this.pano = pano;
-        this.createDom(pano.currentData.info);
-        pano.subscribe('scene-attach', function (data) {
-            _this.renderDom(data.info);
-        });
+        this.createDom(pano.currentData);
+        pano.subscribe('scene-attach', this.renderDom, this);
     }
     Info.prototype.createDom = function (data) {
+        var info = data.info;
         var element = this.element = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-info"></div>');
-        if (data.logo) {
-            element.innerHTML = "<img src=\"" + data.logo + "\" width=\"70\">";
+        if (info) {
+            element.innerHTML = info.logo ? "<img src=\"" + info.logo + "\" width=\"70\">" : '';
+            element.innerHTML += "<div class=\"pano-info-name\">" + info.author + "</div>";
         }
-        element.innerHTML += "<div class=\"pano-info-name\">" + data.author + "</div>";
-        this.pano.getRoot().appendChild(element);
+        this.setContainer();
     };
     Info.prototype.renderDom = function (data) {
+        var info = data.info;
         var element = this.element;
-        if (data.logo) {
-            element.innerHTML = "<img src=\"" + data.logo + "\" width=\"70\">";
+        if (info) {
+            element.innerHTML = info.logo ? "<img src=\"" + info.logo + "\" width=\"70\">" : '';
+            element.innerHTML += "<div class=\"pano-info-name\">" + info.author + "</div>";
+            this.show();
         }
         else {
-            element.innerHTML = '';
+            this.hide();
         }
-        element.innerHTML += "<div class=\"pano-info-name\">" + data.author + "</div>";
+    };
+    Info.prototype.setContainer = function () {
+        this.pano.getRoot().appendChild(this.element);
+    };
+    Info.prototype.getElement = function () {
+        return this.element;
+    };
+    Info.prototype.show = function () {
+        this.element.style.display = 'block';
+    };
+    Info.prototype.hide = function () {
+        this.element.style.display = 'none';
+    };
+    Info.prototype.dispose = function () {
+        this.pano.unSubscribe('scene-attach', this.renderDom, this);
     };
     return Info;
 }());
@@ -56940,7 +56909,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 
 /**
- * 多场景切换插件
+ * @file 多场景切换插件
  */
 var Multiple = /** @class */ (function () {
     function Multiple(pano, data) {
@@ -57144,6 +57113,51 @@ var Rotate = /** @class */ (function () {
 
 /***/ }),
 
+/***/ "./src/pano/plugins/test.plugin.ts":
+/*!*****************************************!*\
+  !*** ./src/pano/plugins/test.plugin.ts ***!
+  \*****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+
+/**
+ * @file uv mapping
+ * 每一个面由两个三角形组成, 底部对应 uv 顶点 0, 1, 3 顶部对应 1, 2, 3
+ * 顶点从低端开始逆时针
+ */
+/* harmony default export */ __webpack_exports__["default"] = (function (id) {
+    var webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true });
+    var render = webgl.domElement;
+    webgl.setPixelRatio(window.devicePixelRatio);
+    webgl.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById(id).appendChild(render);
+    var scene = this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
+    var camera = this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](80, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.set(0, 0, 600);
+    var texture = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load('../../../bxl-ar/examples/assets/material.gif');
+    var geometry = new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](300, 300, 1, 1);
+    geometry.faceVertexUvs[0][0] = [new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](0, 0), new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](1, 0), new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](0, 1)];
+    geometry.faceVertexUvs[0][1] = [new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](1, 0), new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](1, 1), new three__WEBPACK_IMPORTED_MODULE_0__["Vector2"](0, 1)];
+    var material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({ map: texture });
+    var mesh = this.mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, material);
+    var axesHelper = new three__WEBPACK_IMPORTED_MODULE_0__["AxesHelper"](300);
+    scene.add(axesHelper);
+    scene.add(mesh);
+    webgl.render(scene, camera);
+    function tick() {
+        webgl.render(scene, camera);
+        requestAnimationFrame(tick);
+    }
+    tick();
+});
+
+
+/***/ }),
+
 /***/ "./src/pano/plugins/thru.plugin.ts":
 /*!*****************************************!*\
   !*** ./src/pano/plugins/thru.plugin.ts ***!
@@ -57216,8 +57230,8 @@ var Thru = /** @class */ (function () {
         if (!server) {
             return console.log('thru server missed!');
         }
-        var url = server + '?baiduid=' + bid + '&panoid=' + data.setid + '&sceneid=' + scene.id
-            + '&timestamp=' + Date.now();
+        var url = server + '?baiduid=' + bid + '&panoid=' + data.setid + '&sceneid=' + scene.id +
+            '&timestamp=' + Date.now();
         this.cleanup();
         this.loader.fetchUrl(url)
             .then(function (res) {
@@ -57292,10 +57306,10 @@ var Thru = /** @class */ (function () {
             item.position.set(vector.x + _this.getIncrement(), vector.y + _this.getIncrement(), vector.z);
             item.lookAt(camera.position);
             item.visible = true;
-            effect === 'scale'
-                ? new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"]({ scale: 0 }).to({ scale: 1 }).effect('backOut', 1000)
-                    .start(['scale'], pano).process(function (val) { return item.scale.set(val, val, 1); })
-                : new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](item.material).to({ opacity: 1 }).effect('quintEaseIn', 1000)
+            effect === 'scale' ?
+                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"]({ scale: 0 }).to({ scale: 1 }).effect('backOut', 1000)
+                    .start(['scale'], pano).process(function (val) { return item.scale.set(val, val, 1); }) :
+                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](item.material).to({ opacity: 1 }).effect('quintEaseIn', 1000)
                     .start(['opacity'], pano);
         });
     };
@@ -57303,14 +57317,14 @@ var Thru = /** @class */ (function () {
         var _this = this;
         this.animating = true;
         this.group.forEach(function (item) {
-            _this.data.effect == 'scale'
-                ? new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"]({ scale: 1 }).to({ scale: 0 }).effect('backOut', 1000)
+            _this.data.effect == 'scale' ?
+                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"]({ scale: 1 }).to({ scale: 0 }).effect('backOut', 1000)
                     .start(['scale'], _this.pano).process(function (val) { return item.scale.set(val, val, 1); })
                     .complete(function () {
                     _this.animating = false;
                     item.visible = false;
-                })
-                : new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](item.material).to({ opacity: 0 }).effect('quintEaseIn', 1000)
+                }) :
+                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](item.material).to({ opacity: 0 }).effect('quintEaseIn', 1000)
                     .start(['opacity'], _this.pano).complete(function () {
                     _this.animating = false;
                     item.visible = false;
@@ -57838,9 +57852,6 @@ var Runtime = /** @class */ (function () {
                                     pano.subscribe(name_1, events[name_1]);
                                 }
                             }
-                            if (source['thru']) {
-                                pano.addPlugin(_pano_plugins_thru_plugin__WEBPACK_IMPORTED_MODULE_5__["default"], source['thru']);
-                            }
                             if (source['animation']) {
                                 _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_6__["default"].install(source['animation'], pano);
                             }
@@ -57858,6 +57869,9 @@ var Runtime = /** @class */ (function () {
                             }
                             if (source['wormhole']) {
                                 pano.addPlugin(_pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_4__["default"], source['wormhole']);
+                            }
+                            if (source['thru']) {
+                                pano.addPlugin(_pano_plugins_thru_plugin__WEBPACK_IMPORTED_MODULE_5__["default"], source['thru']);
                             }
                             // add to env queue listeners
                             EnvQueue.add(pano.onResize, pano);

@@ -1,4 +1,4 @@
-import {PlaneGeometry, MeshBasicMaterial, Mesh, CanvasTexture, DoubleSide} from 'three';
+import { PlaneGeometry, MeshBasicMaterial, Mesh, CanvasTexture, DoubleSide } from 'three';
 import Plastic from './plastic';
 import Tween from '../animations/tween.animation';
 
@@ -33,11 +33,11 @@ export default class Text extends Plastic {
 
     create() {
         this.buildCanvasText();
-        
+
         const data = this.data;
-        const mesh: any = this.plastic = new Mesh(new PlaneGeometry(data.width, data.height), 
+        const mesh: any = this.plastic = new Mesh(new PlaneGeometry(data.width, data.height),
             new MeshBasicMaterial({
-                map: new CanvasTexture(this.canvas), 
+                map: new CanvasTexture(this.canvas),
                 depthTest: false,
                 transparent: true,
                 side: DoubleSide
@@ -69,7 +69,7 @@ export default class Text extends Plastic {
         const ctx = canvas.getContext('2d');
         ctx.font = `normal ${data.fontsize}px ${data.fontface}`;
         const metrics = ctx.measureText(data.text);
-        
+
         if (metrics.width > width) {
             width = data.twidth = canvas.width = width * 2;
             ctx.font = `normal ${data.fontsize}px ${data.fontface}`;

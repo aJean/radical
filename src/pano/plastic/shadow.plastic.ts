@@ -1,4 +1,4 @@
-import {PlaneGeometry, ShadowMaterial, Mesh, DoubleSide} from 'three';
+import { PlaneGeometry, ShadowMaterial, Mesh, DoubleSide } from 'three';
 import Plastic from './plastic';
 
 /**
@@ -15,7 +15,7 @@ const defaultOpts = {
     z: 0
 };
 export default class Shadow extends Plastic {
-    constructor(opts?) {
+    constructor(opts ? ) {
         super();
         this.data = Object.assign({}, defaultOpts, opts);
         this.create();
@@ -24,11 +24,11 @@ export default class Shadow extends Plastic {
     create() {
         const data = this.data;
         const geometry = new PlaneGeometry(data.width, data.height, 32);
-        const material = new ShadowMaterial({side: DoubleSide});
+        const material = new ShadowMaterial({ side: DoubleSide });
         material.opacity = data.opacity;
 
         const plane = this.plastic = new Mesh(geometry, material);
-        plane.rotateX(data.rad);        
+        plane.rotateX(data.rad);
         plane.position.set(data.x, data.y, data.z);
         plane.receiveShadow = true;
     }
