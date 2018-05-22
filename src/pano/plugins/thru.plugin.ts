@@ -43,7 +43,7 @@ export default class Thru {
 
         webgl.autoClear = false;
         pano.subscribe('render-process', this.render, this);
-        pano.subscribe('scene-ready', this.load, this);
+        pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', this.load, this);
         pano.subscribe('scene-drag', this.needToShow, this);
         pano.subscribe('scene-attachstart', this.needToHide, this);
         pano.subscribe('scene-attach', this.load, this);
