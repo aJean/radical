@@ -57215,7 +57215,7 @@ var Thru = /** @class */ (function () {
         this.onCanvasHandle = this.onCanvasHandle.bind(this);
         var webgl = pano.webgl;
         pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', this.load, this);
-        // pano.subscribe('scene-drag', this.needToShow, this);
+        pano.subscribe('scene-drag', this.everyToShow, this);
         pano.subscribe('scene-attachstart', this.needToHide, this);
         pano.subscribe('scene-attach', this.load, this);
         webgl.domElement.addEventListener('click', this.onCanvasHandle);
@@ -57314,7 +57314,19 @@ var Thru = /** @class */ (function () {
         this.timeid = setTimeout(function () {
             _this.show();
             _this.active = true;
+            _this.timeid = 0;
         }, this.data.lazy);
+    };
+    Thru.prototype.everyToShow = function () {
+        var _this = this;
+        clearTimeout(this.timeid);
+        if (!this.active) {
+            this.timeid = setTimeout(function () {
+                _this.show();
+                _this.active = true;
+                _this.timeid = 0;
+            }, this.data.lazy);
+        }
     };
     Thru.prototype.show = function () {
         var _this = this;
@@ -57436,7 +57448,7 @@ var Thru = /** @class */ (function () {
         this.cleanup();
         pano.unsubscribe('scene-ready', this.load, this);
         pano.unsubscribe('scene-init', this.load, this);
-        pano.unsubscribe('scene-drag', this.needToShow, this);
+        pano.unsubscribe('scene-drag', this.everyToShow, this);
         pano.unsubscribe('scene-attachstart', this.needToHide, this);
         pano.unsubscribe('scene-attach', this.needToShow, this);
         webgl.domElement.removeEventListener('click', this.onCanvasHandle);
