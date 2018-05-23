@@ -1,4 +1,4 @@
-import { TextureLoader, MeshBasicMaterial, CircleGeometry, Mesh, Vector3, Scene, AdditiveBlending, Raycaster } from 'three';
+import { TextureLoader, MeshBasicMaterial, CircleGeometry, CanvasTexture, Mesh, Vector3, Raycaster } from 'three';
 import Tween from '../animations/tween.animation';
 import Util from '../../core/util';
 import Loader from '../loaders/resource.loader';
@@ -9,18 +9,17 @@ import Loader from '../loaders/resource.loader';
  */
 
 const defaultOpts = {
-    radius: 50,
+    radius: 72,
     factor: 500,
     effect: 'scale',
+    bg: '',
+    setid: '',
     lazy: 3000,
-    limit: 3,
-    server: null,
-    request: null,
-    setid: ''
+    rurl: null,
+    surl: null
 };
 export default class Thru {
     data: any;
-    scene: any;
     camera: any;
     pano: any;
     // prevent excessive click
@@ -34,47 +33,35 @@ export default class Thru {
 
     constructor(pano, data) {
         this.pano = pano;
+        this.camera = pano.getCamera();
         this.data = Util.assign({}, defaultOpts, data);
         this.onCanvasHandle = this.onCanvasHandle.bind(this);
-
-        const scene = this.scene = new Scene();
-        const camera = this.camera = pano.getCamera().clone();
+        
         const webgl = pano.webgl;
-
-        webgl.autoClear = false;
-        pano.subscribe('render-process', this.render, this);
         pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', this.load, this);
-        pano.subscribe('scene-drag', this.needToShow, this);
+        // pano.subscribe('scene-drag', this.needToShow, this);
         pano.subscribe('scene-attachstart', this.needToHide, this);
         pano.subscribe('scene-attach', this.load, this);
 
         webgl.domElement.addEventListener('click', this.onCanvasHandle);
     }
 
-    render() {
-        const pano = this.pano;
-        const camera = this.camera;
-
-        camera.rotation.copy(pano.getCamera().rotation);
-        pano.webgl.render(this.scene, camera);
-    }
-
     load(scene) {
         let bid: any = /BAIDUID=[^;]*/.exec(document.cookie) || '';
         const data = this.data;
-        const server = data.server;
+        const rurl = data.rurl;
 
         if (bid) {
             bid = bid[0].replace('BAIDUID=', '');
         }
 
-        if (!server) {
-            return console.log('thru server missed!');
+        if (!rurl) {
+            return console.log('thru rurl missed!');
         }
 
-        const url = server + '?baiduid=' + bid + '&panoid=' + data.setid + '&sceneid=' + scene.id +
-            '&timestamp=' + Date.now()
-        this.cleanup();
+        const url = rurl + '?baiduid=' + bid + '&panoid=' + data.setid + '&sceneid=' + scene.id +
+            '&timestamp=' + Date.now();
+
         this.loader.fetchUrl(url)
             .then(res => {
                 if (res.status == 0 && res.data.length) {
@@ -89,7 +76,7 @@ export default class Thru {
             const tokens = data.split('&');
 
             return {
-                img: `https://img7.bdstatic.com/img/image/quanjing/tinyearth/${tokens[1]}_tinyearth.jpg`,
+                img: `https://mms-xr.cdn.bcebos.com/panorama/${tokens[2]}/mobile_f.jpg`,
                 id: tokens[1],
                 sid: tokens[0]
             };
@@ -97,7 +84,7 @@ export default class Thru {
     }
 
     create(list) {
-        const scene = this.scene;
+        const pano = this.pano;
         const data = this.data;
         const radius = data.radius;
         const group = this.group;
@@ -106,19 +93,48 @@ export default class Thru {
         this.cleanup();
 
         list.forEach(item => {
-            const material = new MeshBasicMaterial({
-                map: new TextureLoader().load(item.img),
-                blending: AdditiveBlending,
-                opacity: data.effect == 'scale' ? 1 : 0,
-                transparent: true
-            });
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 128;
+            canvas.height = 128;
 
-            const circle = new CircleGeometry(radius, 30, 30);
-            const mesh = new Mesh(circle, material);
+            ctx.beginPath();
+            ctx.font = 'normal 16px Arial';
+            ctx.lineWidth = 2;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#fff';
+            ctx.fillText('中国云南', 64, 64 - 5);
+            ctx.fillText('香格里拉公园', 64, 64 + 15);
 
-            mesh['data'] = item;
-            group.push(mesh);
-            scene.add(mesh);
+            const text  = new Mesh(new CircleGeometry(radius, 40, 40),
+                new MeshBasicMaterial({
+                    map: new CanvasTexture(canvas),
+                    depthTest: false,
+                    transparent: true
+                }));
+            text.position.set(0, 0, 0);
+            const img = new Mesh(new CircleGeometry(radius, 40, 40),
+                new MeshBasicMaterial({
+                    map: new TextureLoader().load(item.img),
+                    depthTest: false
+                }));
+            const circle: any = new Mesh(new CircleGeometry(radius + 28, 40, 40),
+                new MeshBasicMaterial({
+                    map: new TextureLoader().load(data.bg),
+                    opacity: data.effect == 'scale' ? 1 : 0,
+                    transparent: true
+                }));
+                
+            
+            text.renderOrder = 2;
+            img.renderOrder = 1;
+            circle.visible = false;
+            circle.data = item;
+            
+            circle.add(text);
+            circle.add(img);
+            group.push(circle);
+            pano.addSceneObject(circle);
         });
     }
 
@@ -170,17 +186,20 @@ export default class Thru {
         });
     }
 
+    /**
+     * 隐藏穿越点
+     */
     hide() {
         this.animating = true;
         this.group.forEach(item => {
             this.data.effect == 'scale' ?
-                new Tween({ scale: 1 }).to({ scale: 0 }).effect('backOut', 1000)
+                new Tween({ scale: 1 }).to({ scale: 0 }).effect('backOut', 500)
                 .start(['scale'], this.pano).process(val => item.scale.set(val, val, 1))
                 .complete(() => {
                     this.animating = false;
                     item.visible = false;
                 }) :
-                new Tween(item.material).to({ opacity: 0 }).effect('quintEaseIn', 1000)
+                new Tween(item.material).to({ opacity: 0 }).effect('quintEaseIn', 500)
                 .start(['opacity'], this.pano).complete(() => {
                     this.animating = false;
                     item.visible = false;
@@ -188,6 +207,9 @@ export default class Thru {
         });
     }
 
+    /**
+     * 判断是否点击穿越点
+     */
     onCanvasHandle(evt) {
         if (!this.active) {
             return;
@@ -201,7 +223,7 @@ export default class Thru {
             y: -(evt.clientY / size.height) * 2 + 1
         };
         const group = this.group;
-        const request = this.data.request;
+        const surl = this.data.surl;
         const list = this.data.list;
 
         if (group.length) {
@@ -217,10 +239,10 @@ export default class Thru {
                 const id = intersects[0].object['data'].id;
                 const sid = intersects[0].object['data'].sid;
 
-                if (request && id && sid) {
-                    // set sid for recom request
+                if (surl && id && sid) {
+                    // set sid for bxl surl
                     this.data.setid = sid;
-                    this.loader.fetchUrl(request + '&setid=' + sid + '&sceneid=' + id)
+                    this.loader.fetchUrl(`${surl}&setid=${sid}&sceneid=${id}`)
                         .then(res => {
                             const data = res.data;
                             const sceneGroup = res.data.sceneGroup;
@@ -238,31 +260,41 @@ export default class Thru {
             }
         }
     }
-
+    
+    /**
+     * 删除穿越点
+     */
     cleanup() {
         const group = this.group;
-        const scene = this.scene;
+        const scene = this.pano.getScene();
 
         group.forEach(child => {
             delete child['data'];
-            child.visible = false;
-            child.material.map.dispose();
-            child.material.dispose();
-            child.geometry.dispose();
+            this.deleteobj(child, true);
             scene.remove(child);
         });
         group.length = 0;
     }
 
+    deleteobj(item, deep?) {
+        item.visible = false;
+        item.material.map.dispose();
+        item.material.dispose();
+        item.geometry.dispose();
+
+        if (deep && item.children.length) {
+            item.children.forEach(child => this.deleteobj(child));
+        }
+    }
+
     dispose() {
         const pano = this.pano;
         const webgl = pano.webgl;
-        webgl.autoClear = true;
 
         this.cleanup();
-        pano.unsubscribe('render-process', this.render, this);
+        pano.unsubscribe('scene-ready', this.load, this);
+        pano.unsubscribe('scene-init', this.load, this);
         pano.unsubscribe('scene-drag', this.needToShow, this);
-        pano.unsubscribe('scene-ready', this.needToShow, this);
         pano.unsubscribe('scene-attachstart', this.needToHide, this);
         pano.unsubscribe('scene-attach', this.needToShow, this);
 

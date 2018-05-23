@@ -57190,14 +57190,14 @@ __webpack_require__.r(__webpack_exports__);
  * 管理穿越点个数, 数据拉取, 展示策略
  */
 var defaultOpts = {
-    radius: 50,
+    radius: 72,
     factor: 500,
     effect: 'scale',
+    bg: '',
+    setid: '',
     lazy: 3000,
-    limit: 3,
-    server: null,
-    request: null,
-    setid: ''
+    rurl: null,
+    surl: null
 };
 var Thru = /** @class */ (function () {
     function Thru(pano, data) {
@@ -57210,39 +57210,29 @@ var Thru = /** @class */ (function () {
         this.raycaster = new three__WEBPACK_IMPORTED_MODULE_0__["Raycaster"]();
         this.group = [];
         this.pano = pano;
+        this.camera = pano.getCamera();
         this.data = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].assign({}, defaultOpts, data);
         this.onCanvasHandle = this.onCanvasHandle.bind(this);
-        var scene = this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
-        var camera = this.camera = pano.getCamera().clone();
         var webgl = pano.webgl;
-        webgl.autoClear = false;
-        pano.subscribe('render-process', this.render, this);
         pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', this.load, this);
-        pano.subscribe('scene-drag', this.needToShow, this);
+        // pano.subscribe('scene-drag', this.needToShow, this);
         pano.subscribe('scene-attachstart', this.needToHide, this);
         pano.subscribe('scene-attach', this.load, this);
         webgl.domElement.addEventListener('click', this.onCanvasHandle);
     }
-    Thru.prototype.render = function () {
-        var pano = this.pano;
-        var camera = this.camera;
-        camera.rotation.copy(pano.getCamera().rotation);
-        pano.webgl.render(this.scene, camera);
-    };
     Thru.prototype.load = function (scene) {
         var _this = this;
         var bid = /BAIDUID=[^;]*/.exec(document.cookie) || '';
         var data = this.data;
-        var server = data.server;
+        var rurl = data.rurl;
         if (bid) {
             bid = bid[0].replace('BAIDUID=', '');
         }
-        if (!server) {
-            return console.log('thru server missed!');
+        if (!rurl) {
+            return console.log('thru rurl missed!');
         }
-        var url = server + '?baiduid=' + bid + '&panoid=' + data.setid + '&sceneid=' + scene.id +
+        var url = rurl + '?baiduid=' + bid + '&panoid=' + data.setid + '&sceneid=' + scene.id +
             '&timestamp=' + Date.now();
-        this.cleanup();
         this.loader.fetchUrl(url)
             .then(function (res) {
             if (res.status == 0 && res.data.length) {
@@ -57255,31 +57245,54 @@ var Thru = /** @class */ (function () {
         return list.map(function (data) {
             var tokens = data.split('&');
             return {
-                img: "https://img7.bdstatic.com/img/image/quanjing/tinyearth/" + tokens[1] + "_tinyearth.jpg",
+                img: "https://mms-xr.cdn.bcebos.com/panorama/" + tokens[2] + "/mobile_f.jpg",
                 id: tokens[1],
                 sid: tokens[0]
             };
         });
     };
     Thru.prototype.create = function (list) {
-        var scene = this.scene;
+        var pano = this.pano;
         var data = this.data;
         var radius = data.radius;
         var group = this.group;
         data.list = list;
         this.cleanup();
         list.forEach(function (item) {
-            var material = new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            canvas.width = 128;
+            canvas.height = 128;
+            ctx.beginPath();
+            ctx.font = 'normal 16px Arial';
+            ctx.lineWidth = 2;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#fff';
+            ctx.fillText('中国云南', 64, 64 - 5);
+            ctx.fillText('香格里拉公园', 64, 64 + 15);
+            var text = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["CircleGeometry"](radius, 40, 40), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+                map: new three__WEBPACK_IMPORTED_MODULE_0__["CanvasTexture"](canvas),
+                depthTest: false,
+                transparent: true
+            }));
+            text.position.set(0, 0, 0);
+            var img = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["CircleGeometry"](radius, 40, 40), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
                 map: new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load(item.img),
-                blending: three__WEBPACK_IMPORTED_MODULE_0__["AdditiveBlending"],
+                depthTest: false
+            }));
+            var circle = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["CircleGeometry"](radius + 28, 40, 40), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
+                map: new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load(data.bg),
                 opacity: data.effect == 'scale' ? 1 : 0,
                 transparent: true
-            });
-            var circle = new three__WEBPACK_IMPORTED_MODULE_0__["CircleGeometry"](radius, 30, 30);
-            var mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](circle, material);
-            mesh['data'] = item;
-            group.push(mesh);
-            scene.add(mesh);
+            }));
+            text.renderOrder = 2;
+            img.renderOrder = 1;
+            circle.visible = false;
+            circle.data = item;
+            circle.add(text);
+            circle.add(img);
+            group.push(circle);
+            pano.addSceneObject(circle);
         });
     };
     Thru.prototype.getIncrement = function () {
@@ -57323,24 +57336,30 @@ var Thru = /** @class */ (function () {
                     .start(['opacity'], pano);
         });
     };
+    /**
+     * 隐藏穿越点
+     */
     Thru.prototype.hide = function () {
         var _this = this;
         this.animating = true;
         this.group.forEach(function (item) {
             _this.data.effect == 'scale' ?
-                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"]({ scale: 1 }).to({ scale: 0 }).effect('backOut', 1000)
+                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"]({ scale: 1 }).to({ scale: 0 }).effect('backOut', 500)
                     .start(['scale'], _this.pano).process(function (val) { return item.scale.set(val, val, 1); })
                     .complete(function () {
                     _this.animating = false;
                     item.visible = false;
                 }) :
-                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](item.material).to({ opacity: 0 }).effect('quintEaseIn', 1000)
+                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](item.material).to({ opacity: 0 }).effect('quintEaseIn', 500)
                     .start(['opacity'], _this.pano).complete(function () {
                     _this.animating = false;
                     item.visible = false;
                 });
         });
     };
+    /**
+     * 判断是否点击穿越点
+     */
     Thru.prototype.onCanvasHandle = function (evt) {
         var _this = this;
         if (!this.active) {
@@ -57354,7 +57373,7 @@ var Thru = /** @class */ (function () {
             y: -(evt.clientY / size.height) * 2 + 1
         };
         var group = this.group;
-        var request = this.data.request;
+        var surl = this.data.surl;
         var list = this.data.list;
         if (group.length) {
             raycaster.setFromCamera(pos, pano.getCamera());
@@ -57367,10 +57386,10 @@ var Thru = /** @class */ (function () {
                 // find data by id
                 var id_1 = intersects[0].object['data'].id;
                 var sid = intersects[0].object['data'].sid;
-                if (request && id_1 && sid) {
-                    // set sid for recom request
+                if (surl && id_1 && sid) {
+                    // set sid for bxl surl
                     this.data.setid = sid;
-                    this.loader.fetchUrl(request + '&setid=' + sid + '&sceneid=' + id_1)
+                    this.loader.fetchUrl(surl + "&setid=" + sid + "&sceneid=" + id_1)
                         .then(function (res) {
                         var data = res.data;
                         var sceneGroup = res.data.sceneGroup;
@@ -57387,27 +57406,37 @@ var Thru = /** @class */ (function () {
             }
         }
     };
+    /**
+     * 删除穿越点
+     */
     Thru.prototype.cleanup = function () {
+        var _this = this;
         var group = this.group;
-        var scene = this.scene;
+        var scene = this.pano.getScene();
         group.forEach(function (child) {
             delete child['data'];
-            child.visible = false;
-            child.material.map.dispose();
-            child.material.dispose();
-            child.geometry.dispose();
+            _this.deleteobj(child, true);
             scene.remove(child);
         });
         group.length = 0;
     };
+    Thru.prototype.deleteobj = function (item, deep) {
+        var _this = this;
+        item.visible = false;
+        item.material.map.dispose();
+        item.material.dispose();
+        item.geometry.dispose();
+        if (deep && item.children.length) {
+            item.children.forEach(function (child) { return _this.deleteobj(child); });
+        }
+    };
     Thru.prototype.dispose = function () {
         var pano = this.pano;
         var webgl = pano.webgl;
-        webgl.autoClear = true;
         this.cleanup();
-        pano.unsubscribe('render-process', this.render, this);
+        pano.unsubscribe('scene-ready', this.load, this);
+        pano.unsubscribe('scene-init', this.load, this);
         pano.unsubscribe('scene-drag', this.needToShow, this);
-        pano.unsubscribe('scene-ready', this.needToShow, this);
         pano.unsubscribe('scene-attachstart', this.needToHide, this);
         pano.unsubscribe('scene-attach', this.needToShow, this);
         webgl.domElement.removeEventListener('click', this.onCanvasHandle);
