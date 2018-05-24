@@ -46,7 +46,7 @@ class ResourceLoader extends BaseLoader {
      */
     loadImage(url) {
         url = url.replace(/\/$/, '');
-        const urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(name => `${url}/mobile_${name}.jpg`);
+        const urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(name => this.crosUrl(`${url}/mobile_${name}.jpg`));
 
         return new Promise((resolve, reject) => {
             cubeLoader.load(urls, tex => resolve(tex), null, e => reject(e));
@@ -60,17 +60,19 @@ class ResourceLoader extends BaseLoader {
      */
     loadTexture(url, type?) {
         if (type == 'canvas') {
-            return loadCanvas(url); 
+            return cutCanvas(this.crosUrl(url)); 
         } else if (type == 'bxl' || /\.bxl$/.test(url)) {
-            return this.loadBxl(url);
+            return this.loadBxl(this.crosUrl(url));
         } else {
             return this.loadImage(url);
         }
     }
 }
 
-// 加载预览图, 使用 canvas 切分成 6 张
-function loadCanvas(url, timeout?) {
+/**
+ * 加载预览图, canvas cut
+ */
+function cutCanvas(url, timeout?) {
     timeout = timeout || 100000;
 
     return new Promise((resolve, reject) => {

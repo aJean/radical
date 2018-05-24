@@ -23,6 +23,18 @@ export default abstract class BaseLoader {
     getSafeUrl(url) {
         return `${this.opts.proxy}${decodeURIComponent(url)}`;
     }
+    
+    /**
+     * 跨域 cdn 请求 bug
+     * @param url 
+     */
+    crosUrl(url) {
+        if (/\.cdn\./.test(url)) {
+            url += `?_=${Date.now()}`;
+        }
+        
+        return url;
+    }
 
     loadCret(url) {
         cret = this.cret;

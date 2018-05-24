@@ -10,7 +10,7 @@ import Loader from '../loaders/resource.loader';
 
 const defaultOpts = {
     radius: 72,
-    factor: 500,
+    factor: 300,
     effect: 'scale',
     bg: '',
     setid: '',
@@ -18,16 +18,14 @@ const defaultOpts = {
     rurl: null,
     surl: null
 };
+const loader = new Loader();
 export default class Thru {
     data: any;
     camera: any;
     pano: any;
-    // prevent excessive click
-    active = true;
-    // lock when animating
-    animating = false;
+    active = false; // prevent excessive click
+    animating = false; // lock when animating
     timeid = 0;
-    loader = new Loader();
     raycaster = new Raycaster();
     group = [];
 
@@ -59,10 +57,9 @@ export default class Thru {
             return console.log('thru rurl missed!');
         }
 
-        const url = rurl + '?baiduid=' + bid + '&panoid=' + data.setid + '&sceneid=' + scene.id +
-            '&timestamp=' + Date.now();
-
-        this.loader.fetchUrl(url)
+        const url = `${rurl}?baiduid=${bid}&panoid=${data.setid}&sceneid=${scene.id}&timestamp=${Date.now()}`;
+        this.cleanup();      
+        loader.fetchUrl(url)
             .then(res => {
                 if (res.status == 0 && res.data.length) {
                     this.create(this.transfer(res.data));
@@ -71,6 +68,9 @@ export default class Thru {
             });
     }
 
+    /**
+     * 转换数据
+     */
     transfer(list) {
         return list.map(data => {
             const tokens = data.split('&');
@@ -83,6 +83,9 @@ export default class Thru {
         });
     }
 
+    /**
+     * 创建穿越点
+     */
     create(list) {
         const pano = this.pano;
         const data = this.data;
@@ -90,7 +93,6 @@ export default class Thru {
         const group = this.group;
 
         data.list = list;
-        this.cleanup();
 
         list.forEach(item => {
             const canvas = document.createElement('canvas');
@@ -115,12 +117,12 @@ export default class Thru {
             text.position.set(0, 0, 0);
             const img = new Mesh(new CircleGeometry(radius, 40, 40),
                 new MeshBasicMaterial({
-                    map: new TextureLoader().load(item.img),
+                    map: new TextureLoader().load(loader.crosUrl(item.img)),
                     depthTest: false
                 }));
             const circle: any = new Mesh(new CircleGeometry(radius + 28, 40, 40),
                 new MeshBasicMaterial({
-                    map: new TextureLoader().load(data.bg),
+                    map: new TextureLoader().load(loader.crosUrl(data.bg)),
                     opacity: data.effect == 'scale' ? 1 : 0,
                     transparent: true
                 }));
@@ -137,14 +139,30 @@ export default class Thru {
         });
     }
 
-    getIncrement() {
-        return (1 - Math.random() * 2) * this.data.factor;
+    /**
+     * 获取屏幕中心点的世界坐标
+     */
+    getVector(i) {
+        let x = 0;
+        let y = 0;
+
+        if (i == 0) {
+            x = Math.random() - 0.5;
+            y = Math.random() / 2 + 0.2;
+        } else if (i == 1) {
+            x = Math.random() / -2 - 0.2;
+            y = Math.random() / -2;
+        } else {
+            x = Math.random() / 2 + 0.2;
+            y = Math.random() / -2;
+        }
+
+        return Util.calcScreenToWorld({x, y}, this.camera);
     }
 
-    getVector() {
-        return Util.calcScreenToWorld({ x: 0, y: 0 }, this.camera);
-    }
-
+    /**
+     * lazy 隐藏穿越点
+     */
     needToHide() {
         if (this.animating) {
             return;
@@ -154,40 +172,40 @@ export default class Thru {
         this.hide();
     }
 
+    /**
+     * lazy 显示穿越点
+     */
     needToShow() {
         clearTimeout(this.timeid);
-
-        this.timeid = setTimeout(() => {
-            this.show();
-            this.active = true;
-            this.timeid = 0;
-        }, this.data.lazy);
+        this.timeid = setTimeout(() => this.show(), this.data.lazy);
     }
 
+    /**
+     * 每次拖动重新展示 ?
+     */
     everyToShow() {
         clearTimeout(this.timeid);
 
         if (!this.active) {
-            this.timeid = setTimeout(() => {
-                this.show();
-                this.active = true;
-                this.timeid = 0;
-            }, this.data.lazy);
+            this.timeid = setTimeout(() => this.show(), this.data.lazy);
         }
     }
 
+    /**
+     * 显示穿越点
+     */
     show() {
         const pano = this.pano;
-        const vector = this.getVector();
         const camera = this.camera;
         const effect = this.data.effect;
 
-        this.group.forEach(item => {
+        this.active = true;        
+        this.group.forEach((item, i) => {
             if (effect === 'scale') {
                 item.scale.set(0.1, 0.1, 0.1);
             }
 
-            item.position.set(vector.x + this.getIncrement(), vector.y + this.getIncrement(), vector.z);
+            item.position.copy(this.getVector(i));
             item.lookAt(camera.position);
             item.visible = true;
 
@@ -203,21 +221,26 @@ export default class Thru {
      * 隐藏穿越点
      */
     hide() {
-        this.animating = true;
-        this.group.forEach(item => {
-            this.data.effect == 'scale' ?
-                new Tween({ scale: 1 }).to({ scale: 0 }).effect('backOut', 500)
-                .start(['scale'], this.pano).process(val => item.scale.set(val, val, 1))
-                .complete(() => {
-                    this.animating = false;
-                    item.visible = false;
-                }) :
-                new Tween(item.material).to({ opacity: 0 }).effect('quintEaseIn', 500)
-                .start(['opacity'], this.pano).complete(() => {
-                    this.animating = false;
-                    item.visible = false;
-                });
-        });
+        this.active = false;
+
+        if (this.group.length) {
+            this.animating = true;
+
+            this.group.forEach(item => {
+                this.data.effect == 'scale' ?
+                    new Tween({ scale: 1 }).to({ scale: 0 }).effect('backOut', 500)
+                    .start(['scale'], this.pano).process(val => item.scale.set(val, val, 1))
+                    .complete(() => {
+                        this.animating = false;
+                        item.visible = false;
+                    }) :
+                    new Tween(item.material).to({ opacity: 0 }).effect('quintEaseIn', 500)
+                    .start(['opacity'], this.pano).complete(() => {
+                        this.animating = false;
+                        item.visible = false;
+                    });
+            });
+        }
     }
 
     /**
@@ -255,13 +278,14 @@ export default class Thru {
                 if (surl && id && sid) {
                     // set sid for bxl surl
                     this.data.setid = sid;
-                    this.loader.fetchUrl(`${surl}&setid=${sid}&sceneid=${id}`)
+                    loader.fetchUrl(`${surl}&setid=${sid}&sceneid=${id}`)
                         .then(res => {
                             const data = res.data;
-                            const sceneGroup = res.data.sceneGroup;
+                            const sceneGroup = data.sceneGroup;
                             data.defaultSceneId = id;
 
                             if (sceneGroup) {
+                                pano.supplyOverlayScenes(sceneGroup);
                                 pano.enterNext(sceneGroup.find(item => item.id == id));
                                 pano.dispatch('thru-change', data, pano);
                             }

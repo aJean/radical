@@ -2812,7 +2812,7 @@
                                                     window.location.href = '/';
                                                     window.setTimeout(window.stop, 0);
                                                 }, 15000);
-                                            } else {
+                                            } else if (!/UCBrowser/.test(navigator.userAgent)) {
                                                 this.noSleepVideo.play();
                                             }
                                         }

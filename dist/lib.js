@@ -54638,6 +54638,16 @@ var BaseLoader = /** @class */ (function () {
     BaseLoader.prototype.getSafeUrl = function (url) {
         return "" + this.opts.proxy + decodeURIComponent(url);
     };
+    /**
+     * 跨域 cdn 请求 bug
+     * @param url
+     */
+    BaseLoader.prototype.crosUrl = function (url) {
+        if (/\.cdn\./.test(url)) {
+            url += "?_=" + Date.now();
+        }
+        return url;
+    };
     BaseLoader.prototype.loadCret = function (url) {
         cret = this.cret;
         return cret ? cret : (cret = this.fetchUrl(url, 'text')
@@ -54743,8 +54753,9 @@ var ResourceLoader = /** @class */ (function (_super) {
      * @param {string} url
      */
     ResourceLoader.prototype.loadImage = function (url) {
+        var _this = this;
         url = url.replace(/\/$/, '');
-        var urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(function (name) { return url + "/mobile_" + name + ".jpg"; });
+        var urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(function (name) { return _this.crosUrl(url + "/mobile_" + name + ".jpg"); });
         return new Promise(function (resolve, reject) {
             cubeLoader.load(urls, function (tex) { return resolve(tex); }, null, function (e) { return reject(e); });
         }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_3__["default"].output(e); });
@@ -54756,10 +54767,10 @@ var ResourceLoader = /** @class */ (function (_super) {
      */
     ResourceLoader.prototype.loadTexture = function (url, type) {
         if (type == 'canvas') {
-            return loadCanvas(url);
+            return cutCanvas(this.crosUrl(url));
         }
         else if (type == 'bxl' || /\.bxl$/.test(url)) {
-            return this.loadBxl(url);
+            return this.loadBxl(this.crosUrl(url));
         }
         else {
             return this.loadImage(url);
@@ -54767,8 +54778,10 @@ var ResourceLoader = /** @class */ (function (_super) {
     };
     return ResourceLoader;
 }(_base_loader__WEBPACK_IMPORTED_MODULE_1__["default"]));
-// 加载预览图, 使用 canvas 切分成 6 张
-function loadCanvas(url, timeout) {
+/**
+ * 加载预览图, canvas cut
+ */
+function cutCanvas(url, timeout) {
     timeout = timeout || 100000;
     return new Promise(function (resolve, reject) {
         var texture = new three__WEBPACK_IMPORTED_MODULE_0__["CubeTexture"]();
@@ -57191,7 +57204,7 @@ __webpack_require__.r(__webpack_exports__);
  */
 var defaultOpts = {
     radius: 72,
-    factor: 500,
+    factor: 300,
     effect: 'scale',
     bg: '',
     setid: '',
@@ -57199,14 +57212,12 @@ var defaultOpts = {
     rurl: null,
     surl: null
 };
+var loader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_3__["default"]();
 var Thru = /** @class */ (function () {
     function Thru(pano, data) {
-        // prevent excessive click
-        this.active = true;
-        // lock when animating
-        this.animating = false;
+        this.active = false; // prevent excessive click
+        this.animating = false; // lock when animating
         this.timeid = 0;
-        this.loader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_3__["default"]();
         this.raycaster = new three__WEBPACK_IMPORTED_MODULE_0__["Raycaster"]();
         this.group = [];
         this.pano = pano;
@@ -57231,9 +57242,9 @@ var Thru = /** @class */ (function () {
         if (!rurl) {
             return console.log('thru rurl missed!');
         }
-        var url = rurl + '?baiduid=' + bid + '&panoid=' + data.setid + '&sceneid=' + scene.id +
-            '&timestamp=' + Date.now();
-        this.loader.fetchUrl(url)
+        var url = rurl + "?baiduid=" + bid + "&panoid=" + data.setid + "&sceneid=" + scene.id + "&timestamp=" + Date.now();
+        this.cleanup();
+        loader.fetchUrl(url)
             .then(function (res) {
             if (res.status == 0 && res.data.length) {
                 _this.create(_this.transfer(res.data));
@@ -57241,6 +57252,9 @@ var Thru = /** @class */ (function () {
             }
         });
     };
+    /**
+     * 转换数据
+     */
     Thru.prototype.transfer = function (list) {
         return list.map(function (data) {
             var tokens = data.split('&');
@@ -57251,13 +57265,15 @@ var Thru = /** @class */ (function () {
             };
         });
     };
+    /**
+     * 创建穿越点
+     */
     Thru.prototype.create = function (list) {
         var pano = this.pano;
         var data = this.data;
         var radius = data.radius;
         var group = this.group;
         data.list = list;
-        this.cleanup();
         list.forEach(function (item) {
             var canvas = document.createElement('canvas');
             var ctx = canvas.getContext('2d');
@@ -57277,11 +57293,11 @@ var Thru = /** @class */ (function () {
             }));
             text.position.set(0, 0, 0);
             var img = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["CircleGeometry"](radius, 40, 40), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
-                map: new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load(item.img),
+                map: new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load(loader.crosUrl(item.img)),
                 depthTest: false
             }));
             var circle = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["CircleGeometry"](radius + 28, 40, 40), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
-                map: new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load(data.bg),
+                map: new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load(loader.crosUrl(data.bg)),
                 opacity: data.effect == 'scale' ? 1 : 0,
                 transparent: true
             }));
@@ -57295,12 +57311,29 @@ var Thru = /** @class */ (function () {
             pano.addSceneObject(circle);
         });
     };
-    Thru.prototype.getIncrement = function () {
-        return (1 - Math.random() * 2) * this.data.factor;
+    /**
+     * 获取屏幕中心点的世界坐标
+     */
+    Thru.prototype.getVector = function (i) {
+        var x = 0;
+        var y = 0;
+        if (i == 0) {
+            x = Math.random() - 0.5;
+            y = Math.random() / 2 + 0.2;
+        }
+        else if (i == 1) {
+            x = Math.random() / -2 - 0.2;
+            y = Math.random() / -2;
+        }
+        else {
+            x = Math.random() / 2 + 0.2;
+            y = Math.random() / -2;
+        }
+        return _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].calcScreenToWorld({ x: x, y: y }, this.camera);
     };
-    Thru.prototype.getVector = function () {
-        return _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].calcScreenToWorld({ x: 0, y: 0 }, this.camera);
-    };
+    /**
+     * lazy 隐藏穿越点
+     */
     Thru.prototype.needToHide = function () {
         if (this.animating) {
             return;
@@ -57308,37 +57341,38 @@ var Thru = /** @class */ (function () {
         clearTimeout(this.timeid);
         this.hide();
     };
+    /**
+     * lazy 显示穿越点
+     */
     Thru.prototype.needToShow = function () {
         var _this = this;
         clearTimeout(this.timeid);
-        this.timeid = setTimeout(function () {
-            _this.show();
-            _this.active = true;
-            _this.timeid = 0;
-        }, this.data.lazy);
+        this.timeid = setTimeout(function () { return _this.show(); }, this.data.lazy);
     };
+    /**
+     * 每次拖动重新展示 ?
+     */
     Thru.prototype.everyToShow = function () {
         var _this = this;
         clearTimeout(this.timeid);
         if (!this.active) {
-            this.timeid = setTimeout(function () {
-                _this.show();
-                _this.active = true;
-                _this.timeid = 0;
-            }, this.data.lazy);
+            this.timeid = setTimeout(function () { return _this.show(); }, this.data.lazy);
         }
     };
+    /**
+     * 显示穿越点
+     */
     Thru.prototype.show = function () {
         var _this = this;
         var pano = this.pano;
-        var vector = this.getVector();
         var camera = this.camera;
         var effect = this.data.effect;
-        this.group.forEach(function (item) {
+        this.active = true;
+        this.group.forEach(function (item, i) {
             if (effect === 'scale') {
                 item.scale.set(0.1, 0.1, 0.1);
             }
-            item.position.set(vector.x + _this.getIncrement(), vector.y + _this.getIncrement(), vector.z);
+            item.position.copy(_this.getVector(i));
             item.lookAt(camera.position);
             item.visible = true;
             effect === 'scale' ?
@@ -57353,21 +57387,24 @@ var Thru = /** @class */ (function () {
      */
     Thru.prototype.hide = function () {
         var _this = this;
-        this.animating = true;
-        this.group.forEach(function (item) {
-            _this.data.effect == 'scale' ?
-                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"]({ scale: 1 }).to({ scale: 0 }).effect('backOut', 500)
-                    .start(['scale'], _this.pano).process(function (val) { return item.scale.set(val, val, 1); })
-                    .complete(function () {
-                    _this.animating = false;
-                    item.visible = false;
-                }) :
-                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](item.material).to({ opacity: 0 }).effect('quintEaseIn', 500)
-                    .start(['opacity'], _this.pano).complete(function () {
-                    _this.animating = false;
-                    item.visible = false;
-                });
-        });
+        this.active = false;
+        if (this.group.length) {
+            this.animating = true;
+            this.group.forEach(function (item) {
+                _this.data.effect == 'scale' ?
+                    new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"]({ scale: 1 }).to({ scale: 0 }).effect('backOut', 500)
+                        .start(['scale'], _this.pano).process(function (val) { return item.scale.set(val, val, 1); })
+                        .complete(function () {
+                        _this.animating = false;
+                        item.visible = false;
+                    }) :
+                    new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](item.material).to({ opacity: 0 }).effect('quintEaseIn', 500)
+                        .start(['opacity'], _this.pano).complete(function () {
+                        _this.animating = false;
+                        item.visible = false;
+                    });
+            });
+        }
     };
     /**
      * 判断是否点击穿越点
@@ -57401,12 +57438,13 @@ var Thru = /** @class */ (function () {
                 if (surl && id_1 && sid) {
                     // set sid for bxl surl
                     this.data.setid = sid;
-                    this.loader.fetchUrl(surl + "&setid=" + sid + "&sceneid=" + id_1)
+                    loader.fetchUrl(surl + "&setid=" + sid + "&sceneid=" + id_1)
                         .then(function (res) {
                         var data = res.data;
-                        var sceneGroup = res.data.sceneGroup;
+                        var sceneGroup = data.sceneGroup;
                         data.defaultSceneId = id_1;
                         if (sceneGroup) {
+                            pano.supplyOverlayScenes(sceneGroup);
                             pano.enterNext(sceneGroup.find(function (item) { return item.id == id_1; }));
                             pano.dispatch('thru-change', data, pano);
                         }
