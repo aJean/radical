@@ -56735,6 +56735,58 @@ var Point = /** @class */ (function (_super) {
 
 /***/ }),
 
+/***/ "./src/pano/plastic/suspend.plastic.ts":
+/*!*********************************************!*\
+  !*** ./src/pano/plastic/suspend.plastic.ts ***!
+  \*********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
+
+
+
+/**
+ * @file 悬浮
+ */
+var myLoader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_1__["default"]();
+var Suspend = /** @class */ (function () {
+    function Suspend(opts, pano) {
+        var _this = this;
+        var webgl = pano.webgl;
+        var scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
+        var camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](100, window.innerWidth / window.innerHeight, 1, 100000);
+        camera.position.set(0, 0, 1000);
+        webgl.autoClear = false;
+        myLoader.loadTexture(opts.bxlPath || opts.texPath).then(function (texture) {
+            texture.mapping = three__WEBPACK_IMPORTED_MODULE_0__["CubeReflectionMapping"];
+            var sphere = _this.sphere = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["SphereGeometry"](200, 48, 24), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({ envMap: texture }));
+            scene.add(sphere);
+        }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_2__["default"].errorLog(e); });
+        this.oldLook = pano.getLook();
+        pano.subscribe('render-process', function () {
+            if (_this.sphere) {
+                var vector = pano.getCamera().getWorldDirection();
+                vector.x *= 1000;
+                vector.y *= 1000;
+                vector.z *= 1000;
+                camera.position.copy(vector);
+                camera.lookAt(_this.sphere.position);
+            }
+            webgl.render(scene, camera);
+        });
+    }
+    return Suspend;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (Suspend);
+
+
+/***/ }),
+
 /***/ "./src/pano/plastic/text.plastic.ts":
 /*!******************************************!*\
   !*** ./src/pano/plastic/text.plastic.ts ***!
@@ -57498,9 +57550,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 /* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
-/* harmony import */ var _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../plastic/light.plastic */ "./src/pano/plastic/light.plastic.ts");
-/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/* harmony import */ var _plastic_suspend_plastic__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../plastic/suspend.plastic */ "./src/pano/plastic/suspend.plastic.ts");
+/* harmony import */ var _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../plastic/light.plastic */ "./src/pano/plastic/light.plastic.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+
 
 
 
@@ -57529,7 +57583,8 @@ var Wormhole = /** @class */ (function () {
         var _this = this;
         var data = this.data;
         var pano = this.pano;
-        var vector = this.vector = _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].calcSphereToWorld(data.lng, data.lat);
+        var vector = this.vector = _core_util__WEBPACK_IMPORTED_MODULE_7__["default"].calcSphereToWorld(data.lng, data.lat);
+        var suspend = new _plastic_suspend_plastic__WEBPACK_IMPORTED_MODULE_4__["default"](data, pano);
         myLoader.loadTexture(data.bxlPath || data.texPath).then(function (texture) {
             var hole = _this.hole = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_3__["default"]({
                 light: true,
@@ -57539,13 +57594,13 @@ var Wormhole = /** @class */ (function () {
                 envMap: _this.texture = texture,
             });
             hole.addBy(pano);
-            var light = _this.light = new _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_4__["default"]();
+            var light = _this.light = new _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_5__["default"]();
             light.setPosition(vector.x, vector.y, vector.z - 200);
             light.setTarget(hole);
             light.addBy(pano);
             // pano.enableShadow();
             _this.bindEvents();
-        }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_5__["default"].errorLog(e); });
+        }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_6__["default"].errorLog(e); });
     };
     Wormhole.prototype.bindEvents = function () {
         var pano = this.pano;
@@ -57600,7 +57655,7 @@ var Wormhole = /** @class */ (function () {
     };
     Wormhole.prototype.addBackDoor = function () {
         var hole = this.hole;
-        var vector = this.vector = _core_util__WEBPACK_IMPORTED_MODULE_6__["default"].calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
+        var vector = this.vector = _core_util__WEBPACK_IMPORTED_MODULE_7__["default"].calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
         var z = this.direction ? vector.z + 200 : vector.z - 200;
         hole.setMap(this.texture = this.backTexture);
         hole.setPosition(vector.x, vector.y, vector.z);

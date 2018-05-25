@@ -3,6 +3,7 @@ import ResourceLoader from '../loaders/resource.loader';
 import Tween from '../animations/tween.animation';
 import Pano from '../pano';
 import Inradius from '../plastic/inradius.plastic';
+import Suspend from '../plastic/suspend.plastic';
 // 聚光灯
 import Light from '../plastic/light.plastic';
 import Shadow from '../plastic/shadow.plastic';
@@ -42,6 +43,7 @@ export default class Wormhole {
         const pano = this.pano;
         const vector = this.vector = Util.calcSphereToWorld(data.lng, data.lat);
 
+        const suspend = new Suspend(data, pano);
         myLoader.loadTexture(data.bxlPath || data.texPath).then((texture: Texture) => {
             const hole = this.hole = new Inradius({
                 light: true,
