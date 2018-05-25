@@ -58990,10 +58990,11 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
-/* harmony import */ var _effect_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./effect.vr */ "./src/vr/effect.vr.ts");
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+/* harmony import */ var _pano_animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
+/* harmony import */ var _effect_vr__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./effect.vr */ "./src/vr/effect.vr.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -59004,6 +59005,7 @@ var __extends = (undefined && undefined.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+
 
 
 
@@ -59023,7 +59025,7 @@ var VPano = /** @class */ (function (_super) {
                 CARDBOARD_UI_DISABLED: true
             });
         }
-        _this.effectRender = new _effect_vr__WEBPACK_IMPORTED_MODULE_2__["default"](_this.webgl);
+        _this.effectRender = new _effect_vr__WEBPACK_IMPORTED_MODULE_3__["default"](_this.webgl);
         _this.getDisplay().then(function (display) { return _this.display = display; });
         return _this;
     }
@@ -59036,7 +59038,7 @@ var VPano = /** @class */ (function (_super) {
     VPano.prototype.onResize = function () {
         var camera = this.getCamera();
         var root = this.getRoot();
-        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].calcRenderSize(root);
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_4__["default"].calcRenderSize(root);
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.effectRender.setSize(size.width, size.height);
@@ -59057,10 +59059,16 @@ var VPano = /** @class */ (function (_super) {
         return this.effectRender.cameraR;
     };
     /**
-     * for business use
+     * Three lib - for business use
      */
     VPano.prototype.getThree = function () {
-        return three__WEBPACK_IMPORTED_MODULE_0__;
+        return three__WEBPACK_IMPORTED_MODULE_1__;
+    };
+    /**
+     * Tween lib - for business use
+     */
+    VPano.prototype.getTween = function () {
+        return _pano_animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"];
     };
     /**
      * 进入 vr 模式
@@ -59079,7 +59087,7 @@ var VPano = /** @class */ (function (_super) {
         return this.display.exitPresent();
     };
     return VPano;
-}(_pano_pano__WEBPACK_IMPORTED_MODULE_1__["default"]));
+}(_pano_pano__WEBPACK_IMPORTED_MODULE_2__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (VPano);
 
 

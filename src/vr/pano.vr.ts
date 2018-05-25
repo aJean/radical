@@ -1,3 +1,4 @@
+import Tween from '../pano/animations/tween.animation';
 import * as Three from 'three';
 import Pano from '../pano/pano';
 import VrControl from './control.vr';
@@ -65,10 +66,17 @@ export default class VPano extends Pano {
     }
 
     /**
-     * for business use
+     * Three lib - for business use
      */
     getThree() {
         return Three;
+    }
+
+    /**
+     * Tween lib - for business use
+     */
+    getTween() {
+        return Tween;
     }
 
     /**
