@@ -18,8 +18,7 @@ export default class GyroControl {
     q0 = new Quaternion();
     // - PI/2 around the x-axis
     q1 = new Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
-    lastBeta = 0;
-    lastSpherical = new Spherical();
+    lastSpherical;
     spherical = new Spherical();
 
     constructor(camera, control) {
@@ -51,26 +50,14 @@ export default class GyroControl {
         // 获取球面坐标
         spherical.setFromVector3(camera.getWorldDirection());
 
-        if (this.lastBeta) {
-            let theta = spherical.theta - this.lastSpherical.theta;
-            let phi = this.lastSpherical.phi - spherical.phi;
-
-            if (orient == 0) {
-                if (beta < 0.2) {
-                    theta = 0;
-                    phi = beta - this.lastBeta;
-                }
-                
-                if (Math.abs(beta) > 2.8) {
-                    theta = phi = 0;
-                }
-            }
+        if (this.lastSpherical && spherical.phi < 3) {
+            const theta = spherical.theta - this.lastSpherical.theta;
+            const phi = this.lastSpherical.phi - spherical.phi;
 
             this.control.update(theta, phi);
         }
 
-        this.lastBeta = beta;
-        this.lastSpherical.setFromVector3(camera.getWorldDirection());
+        this.lastSpherical = spherical.clone();
     }
 
     connect() {
@@ -88,7 +75,6 @@ export default class GyroControl {
         this.enabled = false;
         this.deviceOrien = {};
         this.screenOrien = 0;
-        this.lastBeta = 0;
     }
 
     update() {

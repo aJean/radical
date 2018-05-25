@@ -51,7 +51,8 @@ export default abstract class Runtime {
         if (!(source && source['sceneGroup'])) {
             return Log.output('load source error');
         }
-
+        // enable gyro instead of vrcontrol ?
+        source.pano ? (source.pano.gyro = true) : (source.pano = {gyro: true});
         try {
             const ref = el.getAttribute('ref') || `vpano_${this.uid++}`;
             const vpano = this.instanceMap[ref] = new VPano(el, source);

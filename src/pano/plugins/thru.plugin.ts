@@ -9,7 +9,7 @@ import Loader from '../loaders/resource.loader';
  */
 
 const defaultOpts = {
-    radius: 72,
+    radius: 80,
     factor: 300,
     effect: 'scale',
     bg: '',
@@ -37,7 +37,7 @@ export default class Thru {
         
         const webgl = pano.webgl;
         pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', this.load, this);
-        pano.subscribe('scene-drag', this.everyToShow, this);
+        // pano.subscribe('scene-drag', this.everyToShow, this);
         pano.subscribe('scene-attachstart', this.needToHide, this);
         pano.subscribe('scene-attach', this.load, this);
 

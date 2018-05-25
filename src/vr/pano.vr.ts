@@ -11,7 +11,6 @@ import Util from '../core/util';
 export default class VPano extends Pano {
     type = 'vr-pano';
     effectRender: any;
-    visual: any;
     display: any;
     state = 0;
 
@@ -25,17 +24,8 @@ export default class VPano extends Pano {
             });
         }
 
-        this.visual = new VrControl(this.getCamera(), this.orbit);
         this.effectRender = new VrEffect(this.webgl);
         this.getDisplay().then(display => this.display = display);
-    }
-
-    updateControl() {
-        if (this.state) {
-            this.visual.update();
-        } else if (!this.frozen) {
-            this.orbit.update();
-        }
     }
 
     animate() {
