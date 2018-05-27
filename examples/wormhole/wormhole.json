@@ -1,8 +1,12 @@
 {
     "title": "test bxl transfer",
     "cretPath": "../assets/cret.txt",
+    "pano": {
+        "fovTrans": true,
+        "sceneTrans": true
+    },
     "wormhole": {
-        "lng": 15,
+        "lng": 25,
         "lat": 10,
         "bxlPath": "../assets/scene1/scene1.bxl"
     },

@@ -56757,8 +56757,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
-/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
-
 
 
 
@@ -56769,8 +56767,6 @@ __webpack_require__.r(__webpack_exports__);
 var myLoader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_1__["default"]();
 var Suspend = /** @class */ (function () {
     function Suspend(opts, pano) {
-        this.throughing = false;
-        this.raycaster = new three__WEBPACK_IMPORTED_MODULE_0__["Raycaster"]();
         this.pano = pano;
         this.opts = Object.assign({}, opts);
         this.onThrough = this.onThrough.bind(this);
@@ -56782,36 +56778,35 @@ var Suspend = /** @class */ (function () {
         var _this = this;
         var opts = this.opts;
         var scene = this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
-        var camera = this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](1, window.innerWidth / window.innerHeight, 1, 10000);
+        var camera = this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](110, window.innerWidth / window.innerHeight, 1, 10000);
         camera.position.set(0, 0, 1000);
         var pos = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].calcSphereToWorld(opts.lng, opts.lat);
         myLoader.loadTexture(opts.bxlPath || opts.texPath).then(function (texture) {
-            // texture.mapping = CubeReflectionMapping;
+            texture.mapping = three__WEBPACK_IMPORTED_MODULE_0__["CubeReflectionMapping"];
             var sphere = _this.sphere = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["SphereGeometry"](200, 48, 24), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({ envMap: texture }));
             scene.add(sphere);
             _this.pano.webgl.autoClear = false;
         }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_2__["default"].errorLog(e); });
+        this.toScene = { bxlPath: opts.bxlPath };
     };
     Suspend.prototype.update = function () {
         var webgl = this.pano.webgl;
         var camera = this.camera;
-        if (this.sphere && !this.throughing) {
+        if (this.sphere) {
             var pcamera = this.pano.getCamera();
             var vector = pcamera.getWorldDirection();
             vector.x *= 1000;
             vector.y *= 1000;
             vector.z *= 1000;
             camera.position.copy(vector);
-            camera.fov = pcamera.fov;
-            camera.updateProjectionMatrix();
             camera.lookAt(this.sphere.position);
         }
         webgl.render(this.scene, camera);
     };
     Suspend.prototype.onThrough = function (e) {
+        var sphere = this.sphere;
         var pano = this.pano;
         var camera = this.camera;
-        var raycaster = this.raycaster;
         var size = pano.getSize();
         var pos = {
             x: (e.clientX / size.width) * 2 - 1,
@@ -56819,13 +56814,10 @@ var Suspend = /** @class */ (function () {
         };
         var ret = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].intersect(pos, [this.sphere], this.camera);
         if (ret) {
-            this.throughing = true;
-            console.log(camera.position);
-            new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__["default"](camera.position).to(this.sphere.position).effect('quintEaseIn', 1000)
-                .start(['x', 'y', 'z'], this.pano).process(function (val) {
-                // pano.getCamera().position.z = -val;
-                // camera.lookAt(this.sphere.position);
-            });
+            var data = this.toScene;
+            this.toScene = pano.currentData;
+            pano.enterNext(data);
+            sphere.material.envMap = pano.skyBox.getMap();
         }
     };
     Suspend.prototype.dispose = function () {
