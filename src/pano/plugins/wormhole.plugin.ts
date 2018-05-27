@@ -46,7 +46,7 @@ export default class Wormhole {
         const suspend = new Suspend(data, pano);
         myLoader.loadTexture(data.bxlPath || data.texPath).then((texture: Texture) => {
             const hole = this.hole = new Inradius({
-                light: true,
+                shadow: true,
                 cloud: true,
                 position: vector,
                 radius: 100,

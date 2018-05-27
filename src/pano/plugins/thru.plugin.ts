@@ -1,4 +1,4 @@
-import { TextureLoader, MeshBasicMaterial, CircleGeometry, CanvasTexture, Mesh, Vector3, Raycaster } from 'three';
+import { TextureLoader, MeshBasicMaterial, CircleGeometry, CanvasTexture, Mesh, Vector3 } from 'three';
 import Tween from '../animations/tween.animation';
 import Util from '../../core/util';
 import Loader from '../loaders/resource.loader';
@@ -26,7 +26,6 @@ export default class Thru {
     active = false; // prevent excessive click
     animating = false; // lock when animating
     timeid = 0;
-    raycaster = new Raycaster();
     group = [];
 
     constructor(pano, data) {
@@ -252,7 +251,6 @@ export default class Thru {
         }
 
         const pano = this.pano;
-        const raycaster = this.raycaster;
         const size = pano.getSize();
         const pos = {
             x: (evt.clientX / size.width) * 2 - 1,
@@ -263,8 +261,7 @@ export default class Thru {
         const list = this.data.list;
 
         if (group.length) {
-            raycaster.setFromCamera(pos, pano.getCamera());
-            const intersects = raycaster.intersectObjects(group, false);
+            const intersects = Util.intersect(pos, group, pano.getCamera());
 
             if (intersects.length) {
                 this.active = false;

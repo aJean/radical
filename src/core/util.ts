@@ -1,5 +1,5 @@
 import {AES, enc, lib, mode} from 'crypto-js';
-import {Spherical, Vector3} from 'three';
+import {Spherical, Vector3, Raycaster} from 'three';
 
 /**
  * @file util tools
@@ -246,6 +246,17 @@ export default {
         });
 
         return obj;
+    },
+
+    /**
+     * 检测点击穿透
+     */
+    intersect(pos, group, camera) {
+        const raycaster = new Raycaster();
+        raycaster.setFromCamera(pos, camera);
+        const intersects = raycaster.intersectObjects(group);
+
+        return intersects.length ? intersects : null;
     },
 
     testWebgl() {

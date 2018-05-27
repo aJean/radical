@@ -53404,6 +53404,15 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         });
         return obj;
     },
+    /**
+     * 检测点击穿透
+     */
+    intersect: function (pos, group, camera) {
+        var raycaster = new three__WEBPACK_IMPORTED_MODULE_1__["Raycaster"]();
+        raycaster.setFromCamera(pos, camera);
+        var intersects = raycaster.intersectObjects(group);
+        return intersects.length ? intersects : null;
+    },
     testWebgl: function () {
         try {
             var canvas = document.createElement('canvas');
@@ -56393,7 +56402,7 @@ var defaultOpts = {
     heightSegments: 16,
     transparent: false,
     opacity: 1,
-    light: false
+    shadow: false
 };
 var Inradius = /** @class */ (function (_super) {
     __extends(Inradius, _super);
@@ -56406,7 +56415,7 @@ var Inradius = /** @class */ (function (_super) {
     }
     Inradius.prototype.create = function () {
         var data = this.data;
-        var material = data.light ?
+        var material = data.shadow ?
             new three__WEBPACK_IMPORTED_MODULE_0__["MeshPhongMaterial"]({
                 envMap: data.envMap,
                 side: data.side,
@@ -56424,7 +56433,7 @@ var Inradius = /** @class */ (function (_super) {
             });
         var geometry = new three__WEBPACK_IMPORTED_MODULE_0__["SphereGeometry"](data.radius, data.widthSegments, data.heightSegments);
         var mesh = this.plastic = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](geometry, material);
-        if (data.light) {
+        if (data.shadow) {
             mesh.castShadow = true;
         }
         if (data.cloud) {
@@ -56747,6 +56756,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
+
+
 
 
 
@@ -56756,30 +56769,71 @@ __webpack_require__.r(__webpack_exports__);
 var myLoader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_1__["default"]();
 var Suspend = /** @class */ (function () {
     function Suspend(opts, pano) {
+        this.throughing = false;
+        this.raycaster = new three__WEBPACK_IMPORTED_MODULE_0__["Raycaster"]();
+        this.pano = pano;
+        this.opts = Object.assign({}, opts);
+        this.onThrough = this.onThrough.bind(this);
+        this.create();
+        pano.subscribe('render-process', this.update, this);
+        pano.getCanvas().addEventListener('click', this.onThrough);
+    }
+    Suspend.prototype.create = function () {
         var _this = this;
-        var webgl = pano.webgl;
-        var scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
-        var camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](100, window.innerWidth / window.innerHeight, 1, 100000);
+        var opts = this.opts;
+        var scene = this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
+        var camera = this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](1, window.innerWidth / window.innerHeight, 1, 10000);
         camera.position.set(0, 0, 1000);
-        webgl.autoClear = false;
+        var pos = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].calcSphereToWorld(opts.lng, opts.lat);
         myLoader.loadTexture(opts.bxlPath || opts.texPath).then(function (texture) {
-            texture.mapping = three__WEBPACK_IMPORTED_MODULE_0__["CubeReflectionMapping"];
+            // texture.mapping = CubeReflectionMapping;
             var sphere = _this.sphere = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["SphereGeometry"](200, 48, 24), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({ envMap: texture }));
             scene.add(sphere);
+            _this.pano.webgl.autoClear = false;
         }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_2__["default"].errorLog(e); });
-        this.oldLook = pano.getLook();
-        pano.subscribe('render-process', function () {
-            if (_this.sphere) {
-                var vector = pano.getCamera().getWorldDirection();
-                vector.x *= 1000;
-                vector.y *= 1000;
-                vector.z *= 1000;
-                camera.position.copy(vector);
-                camera.lookAt(_this.sphere.position);
-            }
-            webgl.render(scene, camera);
-        });
-    }
+    };
+    Suspend.prototype.update = function () {
+        var webgl = this.pano.webgl;
+        var camera = this.camera;
+        if (this.sphere && !this.throughing) {
+            var pcamera = this.pano.getCamera();
+            var vector = pcamera.getWorldDirection();
+            vector.x *= 1000;
+            vector.y *= 1000;
+            vector.z *= 1000;
+            camera.position.copy(vector);
+            camera.fov = pcamera.fov;
+            camera.updateProjectionMatrix();
+            camera.lookAt(this.sphere.position);
+        }
+        webgl.render(this.scene, camera);
+    };
+    Suspend.prototype.onThrough = function (e) {
+        var pano = this.pano;
+        var camera = this.camera;
+        var raycaster = this.raycaster;
+        var size = pano.getSize();
+        var pos = {
+            x: (e.clientX / size.width) * 2 - 1,
+            y: -(e.clientY / size.height) * 2 + 1
+        };
+        var ret = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].intersect(pos, [this.sphere], this.camera);
+        if (ret) {
+            this.throughing = true;
+            console.log(camera.position);
+            new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__["default"](camera.position).to(this.sphere.position).effect('quintEaseIn', 1000)
+                .start(['x', 'y', 'z'], this.pano).process(function (val) {
+                // pano.getCamera().position.z = -val;
+                // camera.lookAt(this.sphere.position);
+            });
+        }
+    };
+    Suspend.prototype.dispose = function () {
+        var pano = this.pano;
+        pano.webgl.autoClear = true;
+        pano.subscribe('render-process', this.update, this);
+        pano.getCanvas().removeEventListener('click', this.onThrough);
+    };
     return Suspend;
 }());
 /* harmony default export */ __webpack_exports__["default"] = (Suspend);
@@ -57257,7 +57311,6 @@ var Thru = /** @class */ (function () {
         this.active = false; // prevent excessive click
         this.animating = false; // lock when animating
         this.timeid = 0;
-        this.raycaster = new three__WEBPACK_IMPORTED_MODULE_0__["Raycaster"]();
         this.group = [];
         this.pano = pano;
         this.camera = pano.getCamera();
@@ -57454,7 +57507,6 @@ var Thru = /** @class */ (function () {
             return;
         }
         var pano = this.pano;
-        var raycaster = this.raycaster;
         var size = pano.getSize();
         var pos = {
             x: (evt.clientX / size.width) * 2 - 1,
@@ -57464,8 +57516,7 @@ var Thru = /** @class */ (function () {
         var surl = this.data.surl;
         var list = this.data.list;
         if (group.length) {
-            raycaster.setFromCamera(pos, pano.getCamera());
-            var intersects = raycaster.intersectObjects(group, false);
+            var intersects = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].intersect(pos, group, pano.getCamera());
             if (intersects.length) {
                 this.active = false;
                 // disbale dom event
@@ -57587,7 +57638,7 @@ var Wormhole = /** @class */ (function () {
         var suspend = new _plastic_suspend_plastic__WEBPACK_IMPORTED_MODULE_4__["default"](data, pano);
         myLoader.loadTexture(data.bxlPath || data.texPath).then(function (texture) {
             var hole = _this.hole = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_3__["default"]({
-                light: true,
+                shadow: true,
                 cloud: true,
                 position: vector,
                 radius: 100,

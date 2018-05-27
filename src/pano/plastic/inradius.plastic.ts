@@ -13,7 +13,7 @@ const defaultOpts = {
     heightSegments: 16,
     transparent: false,
     opacity: 1,
-    light: false
+    shadow: false
 };
 export default class Inradius extends Plastic {
     cloud: any;
@@ -28,7 +28,7 @@ export default class Inradius extends Plastic {
 
     create() {
         const data = this.data;
-        const material = data.light ?
+        const material = data.shadow ?
             new MeshPhongMaterial({
                 envMap: data.envMap,
                 side: data.side,
@@ -47,7 +47,7 @@ export default class Inradius extends Plastic {
         const geometry = new SphereGeometry(data.radius, data.widthSegments, data.heightSegments);
         const mesh = this.plastic = new Mesh(geometry, material);
 
-        if (data.light) {
+        if (data.shadow) {
             mesh.castShadow = true;
         }
 
