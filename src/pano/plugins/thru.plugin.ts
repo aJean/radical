@@ -263,7 +263,7 @@ export default class Thru {
         if (group.length) {
             const intersects = Util.intersect(pos, group, pano.getCamera());
 
-            if (intersects.length) {
+            if (intersects) {
                 this.active = false;
                 // disbale dom event
                 evt.stopPropagation();

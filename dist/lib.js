@@ -57509,7 +57509,7 @@ var Thru = /** @class */ (function () {
         var list = this.data.list;
         if (group.length) {
             var intersects = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].intersect(pos, group, pano.getCamera());
-            if (intersects.length) {
+            if (intersects) {
                 this.active = false;
                 // disbale dom event
                 evt.stopPropagation();
