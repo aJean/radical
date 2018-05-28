@@ -30,6 +30,10 @@ export default {
         }
     },
 
+    findElement(sel) {
+        return document.querySelector(sel);
+    },
+
     /**
      * 解密
      * @param {string} ciphertext 密文

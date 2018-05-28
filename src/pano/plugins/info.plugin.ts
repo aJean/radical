@@ -7,8 +7,8 @@ import Util from '../../core/util';
 
 export default class Info implements IPluggableUI {
     element: any;
-    pano: any;
     container: any;
+    pano: any;
     
     constructor(pano) {
         this.pano = pano;

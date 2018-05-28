@@ -5,7 +5,7 @@ import Util from '../../core/util';
 import Tween from '../animations/tween.animation';
 
 /**
- * @file 悬浮
+ * @file 悬浮球
  */
 
 const myLoader = new ResourceLoader();

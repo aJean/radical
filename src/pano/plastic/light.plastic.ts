@@ -1,12 +1,15 @@
 import { SpotLight, CameraHelper } from 'three';
 import Plastic from './plastic';
 
+/**
+ * @file 聚光灯
+ */
+
 const defaultOpts = {
     color: 0xffffff,
     intensity: 1,
     debug: false
 };
-
 export default class Light extends Plastic {
     helper: any;
 

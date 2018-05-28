@@ -26,7 +26,6 @@ const defaultOpts = {
     y: 0,
     z: 0
 };
-
 export default class Icon extends Plastic {
     bg: any;
     text: any;

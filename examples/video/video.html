@@ -4,7 +4,7 @@
         <title></title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>视频播放</title>
+        <title>多媒体控件</title>
         <link rel="stylesheet" href="../../dist/lib.css">
         <link rel="stylesheet" href="../assets/example.css">
     </head>
@@ -15,6 +15,12 @@
             const json = {
                 title: 'test bxl transfer',
                 cretPath: '../assets/cret.txt',
+                media: {
+                    asrc: '../assets/video/astar.mp3',
+                    vsrc: '../assets/video/sintel.mp4',
+                    vloop: true,
+                    aauto: false
+                },
                 sceneGroup: [{
                     info: {
                         author: '视频播放 - 点击播放'
@@ -23,18 +29,7 @@
                     name: '罗浮宫',
                     bxlPath: '../assets/scene6/scene6.bxl',
                     imgPath: '../assets/scene6/scene6.jpg',
-                    thumbPath: '../assets/scene6/thumb6.jpg',
-                    overlays: [{
-                        id: 'sintel',
-                        type: 'video',
-                        actionType: 'video',
-                        src: '../assets/video/sintel.mp4',
-                        img: '../assets/video/sign.png',
-                        location: {
-                            lng: 0,
-                            lat: 0
-                        }
-                    }]
+                    thumbPath: '../assets/scene6/thumb6.jpg'
                 }]
             };
 
