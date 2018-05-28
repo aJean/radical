@@ -56787,7 +56787,7 @@ var Suspend = /** @class */ (function () {
             scene.add(sphere);
             _this.pano.webgl.autoClear = false;
         }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_2__["default"].errorLog(e); });
-        this.toScene = { bxlPath: opts.bxlPath };
+        this.toScene = { bxlPath: opts.bxlPath, texPath: opts.texPath };
     };
     Suspend.prototype.update = function () {
         var webgl = this.pano.webgl;

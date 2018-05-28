@@ -43,7 +43,7 @@ export default class Suspend {
             this.pano.webgl.autoClear = false;
         }).catch(e => Log.errorLog(e));
 
-        this.toScene = {bxlPath: opts.bxlPath};
+        this.toScene = {bxlPath: opts.bxlPath, texPath: opts.texPath};
     }
 
     update() {

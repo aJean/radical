@@ -8,7 +8,7 @@
     "wormhole": {
         "lng": 25,
         "lat": 10,
-        "bxlPath": "../assets/scene1/scene1.bxl"
+        "texPath": "../assets/scene7"
     },
     "sceneGroup": [{
         "info": {
