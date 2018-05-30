@@ -1,4 +1,4 @@
-import {Mesh, LinearFilter, RGBFormat, BoxBufferGeometry, MeshBasicMaterial, VideoTexture} from 'three';
+import {Scene, PerspectiveCamera, Vector3, Mesh, LinearFilter, RGBFormat, BoxBufferGeometry, MeshBasicMaterial, VideoTexture} from 'three';
 import {IPluggableUI} from '../interface/ui.interface';
 import Util from '../../core/util';
 
@@ -18,6 +18,8 @@ export default class Media implements IPluggableUI {
     container: any;
     element: any;
     pano: any;
+    scene: any;
+    camera: any;
     opts: any;
     video: any;
     box: any;
@@ -27,8 +29,10 @@ export default class Media implements IPluggableUI {
         this.pano = pano;
         this.opts = Object.assign({}, defaultOpts, opts);
 
+        pano.webgl.autoClear = false;
         this.create();
         this.setContainer();
+        this.bindEvent();
     }
 
     create() {
@@ -46,10 +50,13 @@ export default class Media implements IPluggableUI {
         texture.format = RGBFormat;
         const box = this.box =  new Mesh(new BoxBufferGeometry(300, 300, 300),
             new MeshBasicMaterial({map: texture}));
-        box.position.set(0, 0, 800);
-        box.rotation.set(0, 2, 0);
+        box.rotation.set(0, -2, 0);
         box.visible = false;
-        this.pano.addSceneObject(box);
+
+        const scene = this.scene = new Scene();
+        const camera = this.camera = new PerspectiveCamera(80, window.innerWidth / window.innerHeight, 1, 10000);
+        camera.position.set(0, 0, 600);
+        scene.add(box);
 
         // music
         this.audio = Util.createElement(`<audio src="${opts.asrc}"${opts.aauto ? ' autoplay' : ''}${opts.aloop ? ' loop' : ''}></audio>`);
@@ -72,8 +79,35 @@ export default class Media implements IPluggableUI {
         this.pano.getRoot().appendChild(this.element);
     }
 
+    detachContainer() {
+        this.pano.getRoot().removeChild(this.element);
+    }
+
+    bindEvent() {
+        this.pano.subscribe('render-process', this.update, this);
+    }
+
     getElement() {
         return this.element;
+    }
+
+    update() {
+        const webgl = this.pano.webgl;
+        const camera = this.camera;        
+        
+        if (this.box.visible) {
+            const pcamera = this.pano.getCamera();
+            const vector = new Vector3();
+            pcamera.getWorldDirection(vector);
+            vector.x *= 600;
+            vector.y *= 600;
+            vector.z *= 600;
+
+            camera.position.copy(vector);
+            camera.lookAt(this.box.position);
+        }
+
+        webgl.render(this.scene, camera);
     }
 
     handleFull(e) {
@@ -132,12 +166,14 @@ export default class Media implements IPluggableUI {
         const pano = this.pano;
         const box = this.box;
 
-        this.container.removeChild(this.element);
+        this.detachContainer();
 
         box.material.map.dispose();
         box.material.dispose();
         box.geometry.dispose();
 
         pano.removeSceneObject(box);
+        pano.unSubscribe('render-process', this.update, this);
+        pano.webgl.autoClear = true;
     }
 }

@@ -263,9 +263,10 @@ export default class Thru {
                             data.defaultSceneId = id;
 
                             if (sceneGroup) {
+                                const scene = sceneGroup.find(item => item.id == id);
                                 pano.supplyOverlayScenes(sceneGroup);
-                                pano.enterNext(sceneGroup.find(item => item.id == id));
-                                pano.dispatch('thru-change', data, pano);
+                                pano.enterNext(scene);
+                                pano.dispatch('thru-change', data, scene, pano);
                             }
                         }).catch(e => {
                             this.active = true;

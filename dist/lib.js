@@ -57407,8 +57407,10 @@ var Media = /** @class */ (function () {
     function Media(pano, opts) {
         this.pano = pano;
         this.opts = Object.assign({}, defaultOpts, opts);
+        pano.webgl.autoClear = false;
         this.create();
         this.setContainer();
+        this.bindEvent();
     }
     Media.prototype.create = function () {
         var _this = this;
@@ -57424,10 +57426,12 @@ var Media = /** @class */ (function () {
         texture.magFilter = three__WEBPACK_IMPORTED_MODULE_0__["LinearFilter"];
         texture.format = three__WEBPACK_IMPORTED_MODULE_0__["RGBFormat"];
         var box = this.box = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["BoxBufferGeometry"](300, 300, 300), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({ map: texture }));
-        box.position.set(0, 0, 800);
-        box.rotation.set(0, 2, 0);
+        box.rotation.set(0, -2, 0);
         box.visible = false;
-        this.pano.addSceneObject(box);
+        var scene = this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
+        var camera = this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](80, window.innerWidth / window.innerHeight, 1, 10000);
+        camera.position.set(0, 0, 600);
+        scene.add(box);
         // music
         this.audio = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement("<audio src=\"" + opts.asrc + "\"" + (opts.aauto ? ' autoplay' : '') + (opts.aloop ? ' loop' : '') + "></audio>");
         var felem = element.querySelector('.pano-media-full');
@@ -57443,8 +57447,29 @@ var Media = /** @class */ (function () {
     Media.prototype.setContainer = function () {
         this.pano.getRoot().appendChild(this.element);
     };
+    Media.prototype.detachContainer = function () {
+        this.pano.getRoot().removeChild(this.element);
+    };
+    Media.prototype.bindEvent = function () {
+        this.pano.subscribe('render-process', this.update, this);
+    };
     Media.prototype.getElement = function () {
         return this.element;
+    };
+    Media.prototype.update = function () {
+        var webgl = this.pano.webgl;
+        var camera = this.camera;
+        if (this.box.visible) {
+            var pcamera = this.pano.getCamera();
+            var vector = new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"]();
+            pcamera.getWorldDirection(vector);
+            vector.x *= 600;
+            vector.y *= 600;
+            vector.z *= 600;
+            camera.position.copy(vector);
+            camera.lookAt(this.box.position);
+        }
+        webgl.render(this.scene, camera);
     };
     Media.prototype.handleFull = function (e) {
         var root = this.pano.getRoot();
@@ -57496,11 +57521,13 @@ var Media = /** @class */ (function () {
     Media.prototype.dispose = function () {
         var pano = this.pano;
         var box = this.box;
-        this.container.removeChild(this.element);
+        this.detachContainer();
         box.material.map.dispose();
         box.material.dispose();
         box.geometry.dispose();
         pano.removeSceneObject(box);
+        pano.unSubscribe('render-process', this.update, this);
+        pano.webgl.autoClear = true;
     };
     return Media;
 }());
@@ -58028,9 +58055,10 @@ var Thru = /** @class */ (function () {
                         var sceneGroup = data.sceneGroup;
                         data.defaultSceneId = id_1;
                         if (sceneGroup) {
+                            var scene_1 = sceneGroup.find(function (item) { return item.id == id_1; });
                             pano.supplyOverlayScenes(sceneGroup);
-                            pano.enterNext(sceneGroup.find(function (item) { return item.id == id_1; }));
-                            pano.dispatch('thru-change', data, pano);
+                            pano.enterNext(scene_1);
+                            pano.dispatch('thru-change', data, scene_1, pano);
                         }
                     }).catch(function (e) {
                         _this.active = true;
