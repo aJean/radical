@@ -79,8 +79,8 @@ export default class Thru {
             ctx.lineWidth = 3;
             ctx.textAlign = 'center';
             ctx.fillStyle = '#fff';
-            ctx.fillText(name.substring(0, 4), 64, 64 - 5);
-            ctx.fillText(name.substring(4), 64, 64 + 15);
+            ctx.fillText(name.substring(0, 4), 64, 64);
+            ctx.fillText(name.substring(4), 64, 64 + 20);
 
             const text  = new Mesh(new CircleGeometry(radius, 40, 40),
                 new MeshBasicMaterial({

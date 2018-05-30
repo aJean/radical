@@ -187,9 +187,10 @@ export default class Pano {
      * 安装插件并注入属性
      * @param {Object} Plugin 插件 class
      * @param {Object} data 插件数据
+     * @param {Object} external 对外 api
      */
-    addPlugin(Plugin, data?) {
-        const plugin = new Plugin(this, data);
+    addPlugin(Plugin, data?, external?) {
+        const plugin = new Plugin(this, data, external);
         this.pluginList.push(plugin);
     }
 

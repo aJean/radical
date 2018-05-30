@@ -3,6 +3,7 @@ import Log from '../core/log';
 import VPano from '../vr/pano.vr';
 import Divider from '../vr/divider.vr';
 import Timeline from '../pano/animations/timeline.animation';
+import External from '../core/external';
 
 /**
  * @file wev vr runtime
@@ -76,7 +77,7 @@ export default abstract class Runtime {
             }
             // business plugins
             if (source['plugins']) {
-                source['plugins'].forEach(plugin => vpano.addPlugin(plugin.class, plugin.opts));
+                source['plugins'].forEach(plugin => vpano.addPlugin(plugin.class, plugin.opts, External));
             }
 
             EnvQueue.add(vpano.onResize, vpano);

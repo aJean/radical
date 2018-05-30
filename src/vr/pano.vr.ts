@@ -1,5 +1,3 @@
-import Tween from '../pano/animations/tween.animation';
-import * as Three from 'three';
 import Pano from '../pano/pano';
 import VrControl from './control.vr';
 import VrEffect from './effect.vr';
@@ -63,20 +61,6 @@ export default class VPano extends Pano {
      */
     getCameraR() {
         return this.effectRender.cameraR;
-    }
-
-    /**
-     * Three lib - for business use
-     */
-    getThree() {
-        return Three;
-    }
-
-    /**
-     * Tween lib - for business use
-     */
-    getTween() {
-        return Tween;
     }
 
     /**

@@ -18,24 +18,24 @@
   },
   "homepage": "https://github.com/aJean/bxl#readme",
   "dependencies": {
-    "@types/crypto-js": "^3.1.38",
-    "@types/es6-shim": "^0.31.35",
-    "@types/three": "^0.91.10",
+    "@types/crypto-js": "^3.1.40",
+    "@types/es6-shim": "^0.31.37",
+    "@types/three": "^0.91.14",
     "@types/webvr-api": "0.0.33",
     "crypto-js": "^3.1.9-1",
     "three": "^0.91.0"
   },
   "devDependencies": {
-    "ajv": "^6.2.1",
-    "css-loader": "^0.28.7",
+    "ajv": "^6.5.0",
+    "css-loader": "^0.28.11",
     "extract-text-webpack-plugin": "^4.0.0-beta.0",
     "file-loader": "^1.1.11",
-    "less": "^3.0.1",
+    "less": "^3.0.4",
     "less-loader": "^4.1.0",
     "style-loader": "^0.20.3",
-    "ts-loader": "^4.0.1",
-    "typescript": "^2.6.2",
+    "ts-loader": "^4.3.0",
+    "typescript": "^2.8.3",
     "url-loader": "^1.0.1",
-    "webpack": "^4.1.1"
+    "webpack": "^4.10.1"
   }
 }
