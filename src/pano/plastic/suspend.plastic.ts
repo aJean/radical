@@ -1,4 +1,4 @@
-import { Scene, Mesh, SphereGeometry, MeshBasicMaterial, CubeReflectionMapping, PerspectiveCamera } from 'three';
+import { Scene, Mesh, SphereGeometry, MeshBasicMaterial, CubeReflectionMapping, PerspectiveCamera, Vector3 } from 'three';
 import ResourceLoader from '../loaders/resource.loader';
 import Log from '../../core/log';
 import Util from '../../core/util';
@@ -52,7 +52,8 @@ export default class Suspend {
         
         if (this.sphere) {
             const pcamera = this.pano.getCamera();
-            const vector = pcamera.getWorldDirection();
+            const vector = new Vector3();
+            pcamera.getWorldDirection(vector);
             vector.x *= 1000;
             vector.y *= 1000;
             vector.z *= 1000;

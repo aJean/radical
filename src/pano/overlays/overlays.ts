@@ -1,4 +1,4 @@
-import {Vector3, Raycaster, Group} from 'three';
+import {Vector3, Group} from 'three';
 import DomOverlay from './dom.overlay';
 import MeshOverlay from './mesh.overlay';
 import SpriteOverlay from './sprite.overlay';
@@ -10,8 +10,7 @@ import Log from '../../core/log';
 
 /**
  * @file 管理所有场景下的覆盖物
- * list 保存点击覆盖物时进入场景数据
- * overlays 由 pano scene-attach 事件管理
+ * @TODO: 归拢所有 canvas click event listen
  * @TODO: cid 缓存当前场景 overlays, 但是切换场景时还是 remove - create 机制
  */
 
@@ -33,13 +32,12 @@ const AnimationOpts = {
         colorB: 1
     }
 };
-
 export default class Overlays {
     cid: number;
     pano: Pano;
     list: any;
     maps = {};
-    raycaster = new Raycaster();
+    pluginFuncs = [];
 
     constructor(pano: Pano, list) {
         this.pano = pano;
@@ -222,30 +220,33 @@ export default class Overlays {
     onCanvasHandle(evt) {
         const pano = this.pano;
         const camera = pano.getCamera();
-        const raycaster = this.raycaster;
         const size = pano.getSize();
         const pos = {
             x: (evt.clientX / size.width) * 2 - 1,
             y: -(evt.clientY / size.height) * 2 + 1
         };
         const vector = Util.calcScreenToSphere(pos, camera);
-        
+
         try {
             const group = this.getCurrent(this.cid).detects;
-
-            if (group.children) {
-                raycaster.setFromCamera(pos, camera);
-                const intersects = raycaster.intersectObjects(group.children, false);
+            // self judgement
+            if (group.children.length) {
+                const intersects = Util.intersect(pos, group.children, camera);
                 // disbale dom event
-                if (intersects.length) {
+                if (intersects) {
                     evt.stopPropagation();
                     evt.preventDefault();
 
-                    this.onOverlayHandle(intersects[0].object['instance']);
-                } else {
-                    pano.dispatch('pano-click', vector, pano);
-                }
-            } else {
+                    return this.onOverlayHandle(intersects[0].object['instance']);
+                } 
+            } 
+            // other plugins judgement
+            if (this.pluginJudge(pos)) {
+                evt.stopPropagation();
+                evt.preventDefault();
+
+                return true;
+            } else if (evt.target == pano.getCanvas()) {
                 pano.dispatch('pano-click', vector, pano);
             }
         } catch(e) {
@@ -357,9 +358,27 @@ export default class Overlays {
         }
     }
 
+    /**
+     * 为其他插件提供判断机会
+     */
+    pluginJudge(pos) {
+        const res = [];
+
+        this.pluginFuncs.forEach(fn => res.push(fn(pos)));
+        return res.indexOf(true) !== -1;
+    }
+
+    /**
+     * 添加判断函数
+     */
+    addJudgeFunc(fn) {
+        this.pluginFuncs.push(fn);
+    }
+
     dispose() {
         const pano = this.pano;
 
+        this.pluginFuncs = [];
         pano.unsubscribe('scene-ready', this.init, this);
         pano.unsubscribe('scene-attachstart', this.removeOverlays, this);
         pano.unsubscribe('scene-attach', this.init, this);

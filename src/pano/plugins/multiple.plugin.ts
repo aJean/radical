@@ -55,6 +55,8 @@ export default class Multiple implements IPluggableUI {
         // 管理激活状态
         pano.subscribe('scene-attachstart', this.onDisable, this);
         pano.subscribe('scene-attach', this.onEnable, this);
+        // 重新渲染场景列表
+        pano.subscribe('scene-reset', this.onReset, this);
     }
 
     getElement() {
@@ -105,6 +107,22 @@ export default class Multiple implements IPluggableUI {
         this.isActive = true;
     }
 
+    onReset(data, pano) {
+        const inner = this.inner;
+        const outer = this.outer;
+        this.data = data;
+
+        inner.innerHTML = data.map((item, i) => {
+            return `<div class="pano-multiplescene-item" data-id="${i}">
+                <img src="${item.thumbPath}" class="pano-multiplescene-img">
+                <span class="pano-multiplescene-name">${item.name}</span>
+            </div>`;
+        }).join('');
+
+        outer.scrollLeft = 0;
+        this.setActive(inner.childNodes[0]);
+    }
+
     findParent(node, cls) {
         while (node != null) {
             if (node.className == cls) {
@@ -115,6 +133,9 @@ export default class Multiple implements IPluggableUI {
         }
     }
 
+    /**
+     * 设置选中场景
+     */
     setActive(node) {
         if (this.activeItem) {
             const cls = this.activeItem.className;

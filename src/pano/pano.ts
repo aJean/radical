@@ -372,6 +372,7 @@ export default class Pano {
      * 为 overlays 补充场景数据
      */
     supplyOverlayScenes(scenes) {
+        this.dispatch('scene-reset', scenes, this);
         this.overlays.addScenes(scenes);
     }
 

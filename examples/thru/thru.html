@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>星际穿越推荐</title>
+        <link rel="stylesheet" href="../../dist/lib.css">
+        <link rel="stylesheet" href="../assets/example.css">
+    </head>
+    <body>
+        <div id="test"></div>
+        <script src="../assets/zepto.js"></script>
+        <script src="../../dist/lib.js"></script>
+        <script>
+            $.ajax({
+                url: 'http://bjyz-newmedia07.epc.baidu.com:8080/img/image/quanjing/bxlpanoinfo?setid=17373537212767040097',
+                success: function(res) {
+                    const data = res.data;
+                    data.multiScene = true;
+                    data.pano = {
+                        fovTrans: true,
+                        sceneTrans: true
+                    };
+                    data.thru = {
+                        lazy: 2000,
+                        bg: '../assets/thru/thru-border.png',
+                        surl: 'http://bjyz-newmedia07.epc.baidu.com:8080/img/image/quanjing/bxlpanoinfo?sf=1'
+                    };
+
+                    bxl.startPano(data, '#test', {
+                        'overlay-click': function (data) {
+                            console.log(data);
+                        }
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>

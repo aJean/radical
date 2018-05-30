@@ -39,47 +39,21 @@ export default class Thru {
         // pano.subscribe('scene-drag', this.everyToShow, this);
         pano.subscribe('scene-attachstart', this.needToHide, this);
         pano.subscribe('scene-attach', this.load, this);
+        pano.subscribe('pano-click', this.toggle, this);
 
-        webgl.domElement.addEventListener('click', this.onCanvasHandle);
+        pano.overlays.addJudgeFunc(this.onCanvasHandle.bind(this));
     }
 
     load(scene) {
-        let bid: any = /BAIDUID=[^;]*/.exec(document.cookie) || '';
-        const data = this.data;
-        const rurl = data.rurl;
+        const list = scene.recomList;
 
-        if (bid) {
-            bid = bid[0].replace('BAIDUID=', '');
+        if (!list || !list.length) {
+            return;
         }
-
-        if (!rurl) {
-            return console.log('thru rurl missed!');
-        }
-
-        const url = `${rurl}?baiduid=${bid}&panoid=${data.setid}&sceneid=${scene.id}&timestamp=${Date.now()}`;
-        this.cleanup();      
-        loader.fetchUrl(url)
-            .then(res => {
-                if (res.status == 0 && res.data.length) {
-                    this.create(this.transfer(res.data));
-                    this.needToShow();
-                }
-            });
-    }
-
-    /**
-     * 转换数据
-     */
-    transfer(list) {
-        return list.map(data => {
-            const tokens = data.split('&');
-
-            return {
-                img: `https://mms-xr.cdn.bcebos.com/panorama/${tokens[2]}/mobile_f.jpg`,
-                id: tokens[1],
-                sid: tokens[0]
-            };
-        });
+        // clean current thru list
+        this.cleanup(); 
+        this.create(list);
+        this.needToShow();
     }
 
     /**
@@ -96,16 +70,17 @@ export default class Thru {
         list.forEach(item => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
+            const name = item.sceneName;
             canvas.width = 128;
             canvas.height = 128;
 
             ctx.beginPath();
-            ctx.font = 'normal 16px Arial';
-            ctx.lineWidth = 2;
+            ctx.font = 'normal 18px Arial';
+            ctx.lineWidth = 3;
             ctx.textAlign = 'center';
             ctx.fillStyle = '#fff';
-            ctx.fillText('中国云南', 64, 64 - 5);
-            ctx.fillText('香格里拉公园', 64, 64 + 15);
+            ctx.fillText(name.substring(0, 4), 64, 64 - 5);
+            ctx.fillText(name.substring(4), 64, 64 + 15);
 
             const text  = new Mesh(new CircleGeometry(radius, 40, 40),
                 new MeshBasicMaterial({
@@ -116,10 +91,10 @@ export default class Thru {
             text.position.set(0, 0, 0);
             const img = new Mesh(new CircleGeometry(radius, 40, 40),
                 new MeshBasicMaterial({
-                    map: new TextureLoader().load(loader.crosUrl(item.img)),
+                    map: new TextureLoader().load(loader.crosUrl(item.image)),
                     depthTest: false
                 }));
-            const circle: any = new Mesh(new CircleGeometry(radius + 28, 40, 40),
+            const circle: any = new Mesh(new CircleGeometry(radius + 32, 40, 40),
                 new MeshBasicMaterial({
                     map: new TextureLoader().load(loader.crosUrl(data.bg)),
                     opacity: data.effect == 'scale' ? 1 : 0,
@@ -175,6 +150,10 @@ export default class Thru {
      * lazy 显示穿越点
      */
     needToShow() {
+        if (this.animating) {
+            return;
+        }
+
         clearTimeout(this.timeid);
         this.timeid = setTimeout(() => this.show(), this.data.lazy);
     }
@@ -183,8 +162,11 @@ export default class Thru {
      * 每次拖动重新展示 ?
      */
     everyToShow() {
-        clearTimeout(this.timeid);
+        if (this.animating) {
+            return;
+        }
 
+        clearTimeout(this.timeid);
         if (!this.active) {
             this.timeid = setTimeout(() => this.show(), this.data.lazy);
         }
@@ -242,20 +224,24 @@ export default class Thru {
         }
     }
 
+    toggle() {
+        if (this.group.length) {
+            this.group.forEach(item => {
+                this.active ? item.visible = false : item.visible = true;
+            });
+            this.active = !this.active;            
+        }
+    }
+
     /**
      * 判断是否点击穿越点
      */
-    onCanvasHandle(evt) {
+    onCanvasHandle(pos) {
         if (!this.active) {
             return;
         }
 
         const pano = this.pano;
-        const size = pano.getSize();
-        const pos = {
-            x: (evt.clientX / size.width) * 2 - 1,
-            y: -(evt.clientY / size.height) * 2 + 1
-        };
         const group = this.group;
         const surl = this.data.surl;
         const list = this.data.list;
@@ -265,16 +251,11 @@ export default class Thru {
 
             if (intersects) {
                 this.active = false;
-                // disbale dom event
-                evt.stopPropagation();
-                evt.preventDefault();
                 // find data by id
-                const id = intersects[0].object['data'].id;
-                const sid = intersects[0].object['data'].sid;
+                const id = intersects[0].object['data'].sceneId;
+                const sid = intersects[0].object['data'].setId;
 
                 if (surl && id && sid) {
-                    // set sid for bxl surl
-                    this.data.setid = sid;
                     loader.fetchUrl(`${surl}&setid=${sid}&sceneid=${id}`)
                         .then(res => {
                             const data = res.data;
@@ -291,6 +272,7 @@ export default class Thru {
                             console.log(e);
                         });
                 }
+                return true;
             }
         }
     }
@@ -331,7 +313,5 @@ export default class Thru {
         pano.unsubscribe('scene-drag', this.everyToShow, this);
         pano.unsubscribe('scene-attachstart', this.needToHide, this);
         pano.unsubscribe('scene-attach', this.needToShow, this);
-
-        webgl.domElement.removeEventListener('click', this.onCanvasHandle);
     }
 }

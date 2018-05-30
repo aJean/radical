@@ -263,6 +263,9 @@ export default {
         return intersects.length ? intersects : null;
     },
 
+    /**
+     * 测试是否支持 webgl
+     */
     testWebgl() {
 		try {
 			var canvas = document.createElement('canvas');

@@ -6,13 +6,6 @@
         "fovTrans": true,
         "sceneTrans": true
     },
-    "thru": {
-        "lazy": 1000,
-        "bg": "../assets/thru/thru-border.png",
-        "setid": "16853589887317519300",
-        "rurl": "http://bjyz-newmedia05.epc.baidu.com:8080/panors",
-        "surl": "http://bjyz-newmedia07.epc.baidu.com:8080/img/image/quanjing/bxlpanoinfo?sf=1"
-    },
     "sceneGroup": [{
         "info": {
             "author": "覆盖物 + 帧动画 (scene1)"
