@@ -11,7 +11,7 @@ const defaultOpts = {
     radius: 2000,
     color: '#fff',
     widthSegments: 30,
-    heightSegments: 16,
+    heightSegments: 30,
     opacity: 1,
     shadow: false,
     visible: true
@@ -57,19 +57,20 @@ export default class Inradius extends Plastic {
             mesh.castShadow = true;
         }
 
-        if (opts.position) {
-            this.setPosition(opts.position.x, opts.position.y, opts.position.z);
-        }
-
         if (opts.cloud) {
-            this.cloud = new Mesh(
+            const cloud = this.cloud = new Mesh(
                 new SphereGeometry(opts.radius + 1, 40, 40),
-                new MeshPhongMaterial({
+                new MeshBasicMaterial({
                     map: new TextureLoader().load('../assets/cloud.png'),
                     transparent: true,
-                    opacity: 1
+                    depthTest: false
                 })
             );
+            cloud.add(mesh);
+        }
+
+        if (opts.position) {
+            this.setPosition(opts.position.x, opts.position.y, opts.position.z);
         }
     }
 
@@ -91,8 +92,8 @@ export default class Inradius extends Plastic {
     }
 
     setPosition(x, y, z) {
-        this.plastic.position.set(x, y, z);
-        this.cloud && this.cloud.position.set(x, y, z);
+        const target = this.cloud || this.plastic;
+        target.position.set(x, y, z);
     }
 
     getPlastic() {
@@ -101,20 +102,17 @@ export default class Inradius extends Plastic {
 
     addRotate(num) {
         const target = this.cloud || this.plastic;
-
         target.rotation.x += num;
         target.rotation.y += num;
         target.rotation.z += num;
     }
 
     addTo(scene) {
-        scene.add(this.plastic);
-        this.cloud && scene.add(this.cloud);
+        scene.add(this.cloud || this.plastic);
     }
 
     addBy(pano) {
-        pano.addSceneObject(this.plastic);
-        this.cloud && pano.addSceneObject(this.cloud);
+        pano.addSceneObject(this.cloud || this.plastic);
     }
 
     fadeIn(pano, onComplete) {

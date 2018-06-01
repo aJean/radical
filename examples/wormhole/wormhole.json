@@ -6,7 +6,7 @@
         "sceneTrans": true
     },
     "wormhole": {
-        "lng": 25,
+        "lng": 10,
         "lat": 10,
         "texPath": "../assets/scene7"
     },
