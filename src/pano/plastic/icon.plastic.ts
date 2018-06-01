@@ -34,7 +34,7 @@ export default class Icon extends Plastic {
 
     constructor(opts) {
         super();
-        this.data = Object.assign({}, defaultOpts, opts);
+        this.opts = Object.assign({}, defaultOpts, opts);
 
         this.create();
         this.createBg();
@@ -42,28 +42,28 @@ export default class Icon extends Plastic {
     }
 
     create() {
-        const data = this.data;
-        const icon: any = this.plastic = new Mesh(new PlaneGeometry(data.width, data.height),
+        const opts = this.opts;
+        const icon: any = this.plastic = new Mesh(new PlaneGeometry(opts.width, opts.height),
             new MeshBasicMaterial({
-                map: this.loader.load(data.icon),
+                map: this.loader.load(opts.icon),
                 transparent: true,
                 depthTest: false,
                 side: DoubleSide
             }));
 
         icon.wrapper = this;
-        icon.renderOrder = data.order;
-        icon.position.set(data.x, data.y, data.z);
-        icon.name = data.name;
+        icon.renderOrder = opts.order;
+        icon.position.set(opts.x, opts.y, opts.z);
+        icon.name = opts.name;
 
-        if (data.parent) {
-            data.parent.add(icon);
+        if (opts.parent) {
+            opts.parent.add(icon);
         }
     }
 
     createBg() {
-        const data = this.data;
-        const bg = this.bg = new Mesh(new PlaneGeometry(data.bwidth, data.bheight),
+        const opts = this.opts;
+        const bg = this.bg = new Mesh(new PlaneGeometry(opts.bwidth, opts.bheight),
             new MeshBasicMaterial({
                 map: this.loader.load(Assets.hover),
                 depthTest: false,
@@ -72,8 +72,8 @@ export default class Icon extends Plastic {
             }));
 
         bg.position.set(0, 0, 1);
-        bg.renderOrder = data.order + 1;
-        bg.name = data.name;
+        bg.renderOrder = opts.order + 1;
+        bg.name = opts.name;
         bg.visible = false;
 
         this.plastic.add(bg);
@@ -82,15 +82,15 @@ export default class Icon extends Plastic {
     createText() {
         this.buildCanvasText();
 
-        const data = this.data;
-        const text = this.text = new Mesh(new PlaneGeometry(data.twidth, data.theight), new MeshBasicMaterial({
+        const opts = this.opts;
+        const text = this.text = new Mesh(new PlaneGeometry(opts.twidth, opts.theight), new MeshBasicMaterial({
             map: new CanvasTexture(this.canvas),
             transparent: true,
             depthTest: false,
             side: DoubleSide
         }));
-        text.name = data.name;
-        text.renderOrder = data.order + 1;
+        text.name = opts.name;
+        text.renderOrder = opts.order + 1;
         text.rotation.y = Math.PI;
         text.position.set(0, -80, 1);
         text.visible = false;
@@ -100,24 +100,24 @@ export default class Icon extends Plastic {
 
 
     buildCanvasText() {
-        const data = this.data;
+        const opts = this.opts;
         const canvas = this.canvas;
-        let width = canvas.width = data.twidth;
-        let height = canvas.height = data.theight;
+        let width = canvas.width = opts.twidth;
+        let height = canvas.height = opts.theight;
 
         const ctx = canvas.getContext('2d');
-        ctx.font = `normal ${data.fontsize}px ${data.fontface}`;
-        const metrics = ctx.measureText(data.text);
+        ctx.font = `normal ${opts.fontsize}px ${opts.fontface}`;
+        const metrics = ctx.measureText(opts.text);
 
         if (metrics.width > width) {
-            width = data.twidth = canvas.width = width * 2;
-            ctx.font = `normal ${data.fontsize}px ${data.fontface}`;
+            width = opts.twidth = canvas.width = width * 2;
+            ctx.font = `normal ${opts.fontsize}px ${opts.fontface}`;
         }
 
-        ctx.lineWidth = data.lineWidth;
+        ctx.lineWidth = opts.lineWidth;
         ctx.textAlign = 'center';
-        ctx.fillStyle = data.color;
-        ctx.fillText(data.text, width / 2, height / 2 + 15);
+        ctx.fillStyle = opts.color;
+        ctx.fillText(opts.text, width / 2, height / 2 + 15);
     }
 
     showHover() {

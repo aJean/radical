@@ -9,61 +9,67 @@ import Plastic from './plastic';
 const defaultOpts = {
     side: BackSide,
     radius: 2000,
+    color: '#fff',
     widthSegments: 30,
     heightSegments: 16,
-    transparent: false,
     opacity: 1,
-    shadow: false
+    shadow: false,
+    visible: true
 };
 export default class Inradius extends Plastic {
     cloud: any;
 
     constructor(opts) {
         super();
-        this.data = Object.assign({}, defaultOpts, opts);
 
-        this.setRefraction(opts.envMap);
+        this.opts = Object.assign({}, defaultOpts, opts);
         this.create();
     }
 
     create() {
-        const data = this.data;
-        const material = data.shadow ?
-            new MeshPhongMaterial({
-                envMap: data.envMap,
-                side: data.side,
+        const opts = this.opts;
+        const params: any = opts.shadow ? {
+                color: opts.color,
+                side: opts.side,
                 refractionRatio: 0,
                 reflectivity: 1,
                 specular: 'grey'
-            }) :
-            new MeshBasicMaterial({
-                envMap: data.envMap,
-                side: data.side,
+            } : {
+                color: opts.color,                
+                side: opts.side,
                 refractionRatio: 0,
                 reflectivity: 1,
-                transparent: data.transparent,
-                opacity: data.opacity
-            });
-        const geometry = new SphereGeometry(data.radius, data.widthSegments, data.heightSegments);
-        const mesh = this.plastic = new Mesh(geometry, material);
+                transparent: true,
+                opacity: opts.opacity
+            };
 
-        if (data.shadow) {
+        if (opts.envMap) {
+            this.setRefraction(opts.envMap);
+            params.envMap = opts.envMap;
+        }
+
+        const material = opts.shadow ? new MeshPhongMaterial(params) : new MeshBasicMaterial(params);
+        const mesh = this.plastic = new Mesh(new SphereGeometry(opts.radius, opts.widthSegments, 
+            opts.heightSegments), material);
+        mesh.visible = opts.visible;
+        
+        if (opts.shadow) {
             mesh.castShadow = true;
         }
 
-        if (data.cloud) {
+        if (opts.position) {
+            this.setPosition(opts.position.x, opts.position.y, opts.position.z);
+        }
+
+        if (opts.cloud) {
             this.cloud = new Mesh(
-                new SphereGeometry(data.radius + 1, 40, 40),
+                new SphereGeometry(opts.radius + 1, 40, 40),
                 new MeshPhongMaterial({
                     map: new TextureLoader().load('../assets/cloud.png'),
                     transparent: true,
                     opacity: 1
                 })
             );
-        }
-
-        if (data.position) {
-            this.setPosition(data.position.x, data.position.y, data.position.z);
         }
     }
 

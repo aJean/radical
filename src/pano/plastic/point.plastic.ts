@@ -23,45 +23,45 @@ export default class Point extends Plastic {
     constructor(opts, pano) {
         super();
         this.pano = pano;
-        this.data = Object.assign({}, defaultOpts, opts);
+        this.opts = Object.assign({}, defaultOpts, opts);
 
         this.create();
     }
 
     create() {
-        const data = this.data;
-        const mesh: any = this.plastic = new Mesh(new CircleGeometry(data.raidus, data.seagment),
+        const opts = this.opts;
+        const mesh: any = this.plastic = new Mesh(new CircleGeometry(opts.raidus, opts.seagment),
             new MeshBasicMaterial({
-                color: data.color,
+                color: opts.color,
                 depthTest: false,
                 side: DoubleSide,
                 transparent: true
             }));
-        mesh.renderOrder = data.order;
+        mesh.renderOrder = opts.order;
         mesh.wrapper = this;
 
-        if (data.name) {
+        if (opts.name) {
             mesh.name = name;
         }
 
-        if (data.parent) {
-            data.parent.add(mesh);
+        if (opts.parent) {
+            opts.parent.add(mesh);
         }
 
-        if (data.anim) {
+        if (opts.anim) {
             const canvas = document.createElement('canvas');
             const ctx = this.ctx = canvas.getContext('2d');
             canvas.width = 64;
             canvas.height = 64;
 
-            const frame = this.frame = new Mesh(new CircleGeometry(32, data.seagment),
+            const frame = this.frame = new Mesh(new CircleGeometry(32, opts.seagment),
                 new MeshBasicMaterial({
                     map: new CanvasTexture(canvas),
                     depthTest: false,
                     side: DoubleSide,
                     transparent: true
                 }));
-            frame.renderOrder = data.order + 1;
+            frame.renderOrder = opts.order + 1;
             mesh.add(frame);
         }
     }

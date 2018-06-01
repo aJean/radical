@@ -1,6 +1,7 @@
 import {Scene, PerspectiveCamera, Vector3, Mesh, LinearFilter, RGBFormat, BoxBufferGeometry, MeshBasicMaterial, VideoTexture} from 'three';
 import {IPluggableUI} from '../interface/ui.interface';
 import Util from '../../core/util';
+import Inradius from '../plastic/inradius.plastic';
 
 /**
  * @file 多媒体面板
@@ -23,13 +24,13 @@ export default class Media implements IPluggableUI {
     opts: any;
     video: any;
     box: any;
+    inradius: any;
     audio: any;
 
     constructor(pano, opts) {
         this.pano = pano;
         this.opts = Object.assign({}, defaultOpts, opts);
 
-        pano.webgl.autoClear = false;
         this.create();
         this.setContainer();
         this.bindEvent();
@@ -75,6 +76,18 @@ export default class Media implements IPluggableUI {
         }
     }
 
+    /**
+     * 播放环境创建
+     */
+    createInradius() {
+        const inradius = this.inradius = new Inradius({
+            color: '#000',
+            opacity: 0,
+            visible: false,
+            radius: 1900});
+        inradius.addBy(this.pano);
+    }
+
     setContainer() {
         this.pano.getRoot().appendChild(this.element);
     }
@@ -84,7 +97,11 @@ export default class Media implements IPluggableUI {
     }
 
     bindEvent() {
-        this.pano.subscribe('render-process', this.update, this);
+        const pano = this.pano;
+
+        pano.webgl.autoClear = false;
+        pano.subscribe('render-process', this.update, this);
+        pano.subscribe('scene-load', this.createInradius, this);
     }
 
     getElement() {
@@ -127,15 +144,21 @@ export default class Media implements IPluggableUI {
      * webgl play
      */
     handleVideo(e) {
+        const pano = this.pano;
         const video = this.video;
         const elem = e.target;
+        const inradius = this.inradius;
 
         if (video.paused) {
             elem.className = 'pano-media-pause';
+            inradius.show();
+            inradius.setOpacity(.5, pano);
             this.box.visible = true;
             video.play();
         } else {
             elem.className = 'pano-media-video';
+            inradius.hide();
+            inradius.setOpacity(0);
             this.box.visible = false;
             video.pause();
         }
@@ -174,6 +197,7 @@ export default class Media implements IPluggableUI {
 
         pano.removeSceneObject(box);
         pano.unSubscribe('render-process', this.update, this);
+        pano.unSubscribe('scene-load', this.createInradius, this);
         pano.webgl.autoClear = true;
     }
 }

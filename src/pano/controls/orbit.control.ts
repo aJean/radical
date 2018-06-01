@@ -356,6 +356,10 @@ function OrbitControl(camera, domElement, pano) {
         rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight * scope.rotateSpeed);
         rotateStart.copy(rotateEnd);
         scope.update();
+
+        if (!_rotatestart) {
+            _rotatestart = Util.calcScreenToSphere({x: 0, y: 0}, scope.camera);
+        }
     }
 
     function handleMouseMoveDolly(event) {
@@ -378,7 +382,14 @@ function OrbitControl(camera, domElement, pano) {
         scope.update();
     }
 
-    function handleMouseUp(event) {}
+    function handleMouseUp(event) {
+        if (_rotatestart) {
+            //TODO: prevent to dispatch click
+            const pano = scope.pano;
+            pano.dispatch('scene-drag', _rotatestart, Util.calcScreenToSphere({x: 0, y: 0}, scope.camera), pano);
+        }
+        _rotatestart = null;
+    }
 
     function handleMouseWheel(event) {
         if (event.deltaY < 0) {
@@ -444,9 +455,6 @@ function OrbitControl(camera, domElement, pano) {
         rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight * scope.rotateSpeed);
         rotateStart.copy(rotateEnd);
         scope.update();
-
-        const pano = scope.pano;
-        const size = pano.getSize();
 
         if (!_rotatestart) {
             _rotatestart = Util.calcScreenToSphere({x: 0, y: 0}, scope.camera);
@@ -631,6 +639,7 @@ function OrbitControl(camera, domElement, pano) {
         }
         event.preventDefault();
         event.stopPropagation();
+
         switch (event.touches.length) {
             case 1:
                 // one-fingered touch: rotate

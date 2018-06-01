@@ -3,21 +3,22 @@ import ResourceLoader from '../loaders/resource.loader';
 import Log from '../../core/log';
 import Util from '../../core/util';
 import Tween from '../animations/tween.animation';
+import Plastic from './plastic';
 
 /**
  * @file 悬浮球
  */
 
 const myLoader = new ResourceLoader();
-export default class Suspend {
-    opts: any;
-    pano: any;
+export default class Suspend extends Plastic{
     scene: any;
     camera: any;
     sphere: any;
     toScene: any;
 
     constructor(opts, pano) {
+        super();
+        
         this.pano = pano;
         this.opts = Object.assign({}, opts);
         this.onThrough = this.onThrough.bind(this);

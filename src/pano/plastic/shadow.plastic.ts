@@ -17,19 +17,17 @@ const defaultOpts = {
 export default class Shadow extends Plastic {
     constructor(opts ? ) {
         super();
-        this.data = Object.assign({}, defaultOpts, opts);
+        this.opts = Object.assign({}, defaultOpts, opts);
         this.create();
     }
 
     create() {
-        const data = this.data;
-        const geometry = new PlaneGeometry(data.width, data.height, 32);
-        const material = new ShadowMaterial({ side: DoubleSide });
-        material.opacity = data.opacity;
+        const opts = this.opts;
+        const plane = this.plastic = new Mesh(new PlaneGeometry(opts.width, opts.height, 32),
+            new ShadowMaterial({side: DoubleSide, opacity: opts.opacity}));
 
-        const plane = this.plastic = new Mesh(geometry, material);
-        plane.rotateX(data.rad);
-        plane.position.set(data.x, data.y, data.z);
+        plane.rotateX(opts.rad);
+        plane.position.set(opts.x, opts.y, opts.z);
         plane.receiveShadow = true;
     }
 }

@@ -48,12 +48,14 @@ export default class FrameOverlay implements IPluggableOverlay {
         const location = data.location;      
         const material = new MeshBasicMaterial({
             map: this.textures[0],
-            transparent: true
+            transparent: true,
+            depthTest: false
         });
         const plane = new PlaneGeometry(data.width, data.height);
         const mesh = new Mesh(plane, material);
         
         mesh.position.set(location.x, location.y, location.z);
+        mesh.renderOrder = 100;
 
         if (data.rx) {
             mesh.rotation.set(data.rx, data.ry, data.rz);

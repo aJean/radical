@@ -1,9 +1,12 @@
+import Tween from '../animations/tween.animation';
+
 /**
  * @file 内置物体材质抽象类
  */
 
 export default abstract class Plastic {
-    data: any;
+    pano: any;
+    opts: any;
     plastic: any;
 
     setPosition(x, y, z) {
@@ -16,6 +19,22 @@ export default abstract class Plastic {
 
     addBy(pano) {
         pano.addSceneObject(this.plastic);
+    }
+
+    setOpacity(num, pano) {
+        const material = this.plastic.material;
+       
+        pano ? new Tween(material).to({opacity: num}).effect('backOut', 500)
+            .start(['opacity'], pano)
+            : (material.opacity = num);
+    }
+
+    show() {
+        this.plastic.visible = true;
+    }
+
+    hide() {
+        this.plastic.visible = false;
     }
 
     dispose() {

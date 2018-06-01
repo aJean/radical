@@ -3,7 +3,6 @@ import DomOverlay from './dom.overlay';
 import MeshOverlay from './mesh.overlay';
 import SpriteOverlay from './sprite.overlay';
 import FrameOverlay from './frame.overlay';
-import VideoOverlay from './video.overlay';
 import Pano from '../pano';
 import Util from '../../core/util';
 import Log from '../../core/log';
@@ -78,9 +77,6 @@ export default class Overlays {
                     break;
                 case 'animation':
                     this.createAnimationOverlay(data, cache);
-                    break;
-                case 'video':
-                    this.createVideoOverlay(data, cache);
                     break;
             }
         });
@@ -177,19 +173,6 @@ export default class Overlays {
         }
 
         pano.addSceneObject(item.particle);
-        cache.meshGroup.push(item);
-    }
-
-    /**
-     * 创建视频覆盖物
-     */
-    createVideoOverlay(prop, cache) {
-        const pano = this.pano;
-
-        Util.parseLocation(prop, pano.getCamera());
-        const item = new VideoOverlay(prop, pano);
-
-        cache.detects.add(item.particle);
         cache.meshGroup.push(item);
     }
 

@@ -31,44 +31,44 @@ export default class Button extends Plastic {
 
     constructor(opts) {
         super();
-        this.data = Object.assign({}, defaultOpts, opts);
+        this.opts = Object.assign({}, defaultOpts, opts);
 
         this.create();
     }
 
     create() {
-        const data = this.data;
-        const btn: any = this.plastic = new Mesh(new PlaneGeometry(data.width, data.height),
+        const opts = this.opts;
+        const btn: any = this.plastic = new Mesh(new PlaneGeometry(opts.width, opts.height),
             new MeshBasicMaterial({
-                map: this.loader.load(data.bg),
+                map: this.loader.load(opts.bg),
                 transparent: true,
                 depthTest: false,
                 side: DoubleSide
             }));
 
         btn.wrapper = this;
-        btn.renderOrder = data.order;
-        btn.position.set(data.x, data.y, data.z);
-        btn.name = data.name;
+        btn.renderOrder = opts.order;
+        btn.position.set(opts.x, opts.y, opts.z);
+        btn.name = opts.name;
 
-        if (data.parent) {
-            data.parent.add(btn);
+        if (opts.parent) {
+            opts.parent.add(btn);
         }
 
-        if (!data.active) {
+        if (!opts.active) {
             btn.material.visible = false;
         }
 
         this.buildCanvasText();
-        const text = this.text = new Mesh(new PlaneGeometry(data.twidth, data.theight),
+        const text = this.text = new Mesh(new PlaneGeometry(opts.twidth, opts.theight),
             new MeshBasicMaterial({
                 map: new CanvasTexture(this.canvas),
                 transparent: true,
                 depthTest: false,
                 side: DoubleSide
             }));
-        text.name = data.name;
-        text.renderOrder = data.order + 1;
+        text.name = opts.name;
+        text.renderOrder = opts.order + 1;
         text.rotation.y = Math.PI;
         text.position.set(0, 0, 1);
 
@@ -76,35 +76,35 @@ export default class Button extends Plastic {
     }
 
     buildCanvasText() {
-        const data = this.data;
+        const opts = this.opts;
         const canvas = this.canvas;
-        let width = canvas.width = data.twidth;
-        let height = canvas.height = data.theight;
+        let width = canvas.width = opts.twidth;
+        let height = canvas.height = opts.theight;
 
         const ctx = canvas.getContext('2d');
-        ctx.font = `normal ${data.fontsize}px ${data.fontface}`;
-        const metrics = ctx.measureText(data.text);
+        ctx.font = `normal ${opts.fontsize}px ${opts.fontface}`;
+        const metrics = ctx.measureText(opts.text);
 
         if (metrics.width > width) {
-            width = data.twidth = canvas.width = width * 2;
-            ctx.font = `normal ${data.fontsize}px ${data.fontface}`;
+            width = opts.twidth = canvas.width = width * 2;
+            ctx.font = `normal ${opts.fontsize}px ${opts.fontface}`;
         }
 
-        ctx.lineWidth = data.lineWidth;
+        ctx.lineWidth = opts.lineWidth;
         ctx.textAlign = 'center';
-        ctx.fillStyle = data.color;
-        ctx.fillText(data.text, width / 2, height / 2 + 15);
+        ctx.fillStyle = opts.color;
+        ctx.fillText(opts.text, width / 2, height / 2 + 15);
     }
 
     getActive() {
-        return this.data.active;
+        return this.opts.active;
     }
 
     setActive(flag) {
-        const data = this.data;
+        const opts = this.opts;
         const btn = this.plastic;
 
-        btn.material.visible = data.active = flag;
+        btn.material.visible = opts.active = flag;
     }
 
     dispose() {

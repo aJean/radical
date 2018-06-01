@@ -15,19 +15,19 @@ export default class Light extends Plastic {
 
     constructor(opts ? ) {
         super();
-        this.data = Object.assign({}, defaultOpts, opts);
+        this.opts = Object.assign({}, defaultOpts, opts);
         this.create();
     }
 
     create() {
-        const data = this.data;
-        const light = this.plastic = new SpotLight(data.color, data.intensity);
+        const opts = this.opts;
+        const light = this.plastic = new SpotLight(opts.color, opts.intensity);
 
-        if (data.position) {
-            this.setPosition(data.position.x, data.position.y, data.position.z);
+        if (opts.position) {
+            this.setPosition(opts.position.x, opts.position.y, opts.position.z);
         }
 
-        if (data.debug) {
+        if (opts.debug) {
             light.castShadow = true;
             this.helper = new CameraHelper(light.shadow.camera);
         }

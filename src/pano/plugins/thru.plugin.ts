@@ -20,7 +20,8 @@ const defaultOpts = {
 };
 const loader = new Loader();
 export default class Thru {
-    data: any;
+    opts: any;
+    list: any;
     camera: any;
     pano: any;
     active = false; // prevent excessive click
@@ -28,10 +29,10 @@ export default class Thru {
     timeid = 0;
     group = [];
 
-    constructor(pano, data) {
+    constructor(pano, opts) {
         this.pano = pano;
         this.camera = pano.getCamera();
-        this.data = Util.assign({}, defaultOpts, data);
+        this.opts = Util.assign({}, defaultOpts, opts);
         this.onCanvasHandle = this.onCanvasHandle.bind(this);
         
         const webgl = pano.webgl;
@@ -45,7 +46,7 @@ export default class Thru {
     }
 
     load(scene) {
-        const list = scene.recomList;
+        const list = this.list = scene.recomList;
 
         if (!list || !list.length) {
             return;
@@ -61,26 +62,24 @@ export default class Thru {
      */
     create(list) {
         const pano = this.pano;
-        const data = this.data;
-        const radius = data.radius;
+        const opts = this.opts;
+        const radius = opts.radius;
         const group = this.group;
-
-        data.list = list;
 
         list.forEach(item => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const name = item.sceneName;
-            canvas.width = 128;
-            canvas.height = 128;
+            canvas.width = 256;
+            canvas.height = 256;
 
             ctx.beginPath();
-            ctx.font = 'normal 18px Arial';
-            ctx.lineWidth = 3;
+            ctx.font = 'normal 36px Arial';
+            ctx.lineWidth = 4;
             ctx.textAlign = 'center';
             ctx.fillStyle = '#fff';
-            ctx.fillText(name.substring(0, 4), 64, 64);
-            ctx.fillText(name.substring(4), 64, 64 + 20);
+            ctx.fillText(name.substring(0, 4), 128, 128);
+            ctx.fillText(name.substring(4), 128, 128 + 40);
 
             const text  = new Mesh(new CircleGeometry(radius, 40, 40),
                 new MeshBasicMaterial({
@@ -92,17 +91,18 @@ export default class Thru {
             const img = new Mesh(new CircleGeometry(radius, 40, 40),
                 new MeshBasicMaterial({
                     map: new TextureLoader().load(loader.crosUrl(item.image)),
-                    depthTest: false
                 }));
             const circle: any = new Mesh(new CircleGeometry(radius + 32, 40, 40),
                 new MeshBasicMaterial({
-                    map: new TextureLoader().load(loader.crosUrl(data.bg)),
-                    opacity: data.effect == 'scale' ? 1 : 0,
+                    map: new TextureLoader().load(loader.crosUrl(opts.bg)),
+                    opacity: opts.effect == 'scale' ? 1 : 0,
+                    depthTest: false,
                     transparent: true
                 }));
             
-            text.renderOrder = 2;
-            img.renderOrder = 1;
+            text.renderOrder = 3;
+            img.renderOrder = 2;
+            circle.renderOrder = 1;
             circle.visible = false;
             circle.data = item;
 
@@ -155,7 +155,11 @@ export default class Thru {
         }
 
         clearTimeout(this.timeid);
-        this.timeid = setTimeout(() => this.show(), this.data.lazy);
+        this.timeid = setTimeout(() => {
+            const pano = this.pano;
+            pano.dispatch('thru-show', this.list, pano);
+            this.show();
+        }, this.opts.lazy);
     }
 
     /**
@@ -168,7 +172,7 @@ export default class Thru {
 
         clearTimeout(this.timeid);
         if (!this.active) {
-            this.timeid = setTimeout(() => this.show(), this.data.lazy);
+            this.timeid = setTimeout(() => this.show(), this.opts.lazy);
         }
     }
 
@@ -178,7 +182,7 @@ export default class Thru {
     show() {
         const pano = this.pano;
         const camera = this.camera;
-        const effect = this.data.effect;
+        const effect = this.opts.effect;
 
         this.active = true;        
         this.group.forEach((item, i) => {
@@ -208,7 +212,7 @@ export default class Thru {
             this.animating = true;
 
             this.group.forEach(item => {
-                this.data.effect == 'scale' ?
+                this.opts.effect == 'scale' ?
                     new Tween({ scale: 1 }).to({ scale: 0 }).effect('backOut', 500)
                     .start(['scale'], this.pano).process(val => item.scale.set(val, val, 1))
                     .complete(() => {
@@ -243,8 +247,7 @@ export default class Thru {
 
         const pano = this.pano;
         const group = this.group;
-        const surl = this.data.surl;
-        const list = this.data.list;
+        const surl = this.opts.surl;
 
         if (group.length) {
             const intersects = Util.intersect(pos, group, pano.getCamera());

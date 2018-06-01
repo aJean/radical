@@ -227,11 +227,7 @@ export default class Pano {
         
         const skyBox = this.skyBox;
         const oldMap = skyBox.getMap();
-        const newBox = new Inradius({
-            envMap: texture,
-            transparent: true,
-            opacity: 0
-        });
+        const newBox = new Inradius({envMap: texture, opacity: 0});
 
         newBox.addTo(this.scene);
         newBox.fadeIn(this, () => {

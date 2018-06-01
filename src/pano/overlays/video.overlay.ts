@@ -5,7 +5,7 @@ import Util from '../../core/util';
 
 /**
  * @file 视频播放
- * TODO: transform-origin
+ * @deprecated see plugins/media
  */
 
 const defaultOpts = {

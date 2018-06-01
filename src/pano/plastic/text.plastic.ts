@@ -27,15 +27,15 @@ export default class Text extends Plastic {
     constructor(opts) {
         super();
 
-        this.data = Object.assign({}, defaultOpts, opts);
+        this.opts = Object.assign({}, defaultOpts, opts);
         this.create();
     }
 
     create() {
         this.buildCanvasText();
 
-        const data = this.data;
-        const mesh: any = this.plastic = new Mesh(new PlaneGeometry(data.width, data.height),
+        const opts = this.opts;
+        const mesh: any = this.plastic = new Mesh(new PlaneGeometry(opts.width, opts.height),
             new MeshBasicMaterial({
                 map: new CanvasTexture(this.canvas),
                 depthTest: false,
@@ -44,51 +44,51 @@ export default class Text extends Plastic {
             }));
         // delete before dispose
         mesh.wrapper = this;
-        mesh.position.set(data.x, data.y, data.z);
+        mesh.position.set(opts.x, opts.y, opts.z);
         mesh.rotation.y = Math.PI;
-        mesh.renderOrder = data.order;
-        mesh.name = data.name;
+        mesh.renderOrder = opts.order;
+        mesh.name = opts.name;
 
-        if (data.hide) {
+        if (opts.hide) {
             mesh.visible = false;
         }
 
-        if (data.parent) {
-            data.parent.add(mesh);
+        if (opts.parent) {
+            opts.parent.add(mesh);
         }
 
         return mesh;
     }
 
     buildCanvasText() {
-        const data = this.data;
+        const opts = this.opts;
         const canvas = this.canvas;
-        let width = canvas.width = data.width;
-        let height = canvas.height = data.height;
+        let width = canvas.width = opts.width;
+        let height = canvas.height = opts.height;
 
         const ctx = canvas.getContext('2d');
-        ctx.font = `normal ${data.fontsize}px ${data.fontface}`;
-        const metrics = ctx.measureText(data.text);
+        ctx.font = `normal ${opts.fontsize}px ${opts.fontface}`;
+        const metrics = ctx.measureText(opts.text);
 
         if (metrics.width > width) {
-            width = data.twidth = canvas.width = width * 2;
-            ctx.font = `normal ${data.fontsize}px ${data.fontface}`;
+            width = opts.twidth = canvas.width = width * 2;
+            ctx.font = `normal ${opts.fontsize}px ${opts.fontface}`;
         }
 
-        ctx.lineWidth = data.lineWidth;
+        ctx.lineWidth = opts.lineWidth;
         ctx.textAlign = 'center';
-        ctx.fillStyle = data.color;
-        ctx.fillText(data.text, width / 2, height / 2 + 10);
+        ctx.fillStyle = opts.color;
+        ctx.fillText(opts.text, width / 2, height / 2 + 10);
     }
 
     change(text) {
-        const data = this.data;
+        const opts = this.opts;
         const context = this.canvas.getContext('2d');
-        data.text = text;
+        opts.text = text;
 
         this.plastic.material.map.needsUpdate = true;
-        context.clearRect(0, 0, data.width, data.height);
-        context.fillText(text, data.width / 2, data.height / 2 + 10);
+        context.clearRect(0, 0, opts.width, opts.height);
+        context.fillText(text, opts.width / 2, opts.height / 2 + 10);
     }
 
     dispose() {
