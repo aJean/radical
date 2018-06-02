@@ -54346,6 +54346,7 @@ function OrbitControl(camera, domElement, pano) {
         scope.zoom0 = scope.camera.zoom;
     };
     this.reset = function (flag) {
+        if (flag === void 0) { flag = true; }
         scope.target.copy(flag ? scope.target0 : new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](0, 0, -1));
         scope.camera.position.copy(scope.position0);
         scope.camera.zoom = scope.zoom0;

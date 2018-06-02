@@ -123,7 +123,7 @@ function OrbitControl(camera, domElement, pano) {
         scope.zoom0 = scope.camera.zoom;
     };
 
-    this.reset = function (flag) {
+    this.reset = function (flag = true) {
         scope.target.copy(flag ? scope.target0 : new Vector3(0, 0, -1));
         scope.camera.position.copy(scope.position0);
         scope.camera.zoom = scope.zoom0;
