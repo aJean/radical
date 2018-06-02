@@ -13,8 +13,12 @@ export default abstract class Plastic {
         this.plastic.position.set(x, y, z);
     }
 
-    addTo(scene) {
-        scene.add(this.plastic);
+    addTo(obj) {
+        if (obj instanceof Plastic) {
+            obj = obj.plastic;
+        }
+
+        obj.add(this.plastic);
     }
 
     addBy(pano) {
@@ -41,6 +45,7 @@ export default abstract class Plastic {
         const plastic = this.plastic;
         const material = plastic.material;
 
+        delete plastic.data;
         plastic.geometry.dispose();
         material.map && material.map.dispose();
         material.envMap && material.envMap.dispose();

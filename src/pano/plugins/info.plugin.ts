@@ -59,6 +59,6 @@ export default class Info implements IPluggableUI {
     }
 
     dispose() {
-        this.pano.unSubscribe('scene-attach', this.renderDom, this);
+        this.pano.unsubscribe('scene-attach', this.renderDom, this);
     }
 }

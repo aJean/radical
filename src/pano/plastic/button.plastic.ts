@@ -52,7 +52,7 @@ export default class Button extends Plastic {
         btn.name = opts.name;
 
         if (opts.parent) {
-            opts.parent.add(btn);
+            this.addTo(opts.parent);
         }
 
         if (!opts.active) {

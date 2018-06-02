@@ -408,6 +408,16 @@ export default class Pano {
             }).catch(e => Log.output(e));
     }
 
+    /**
+     * enter with thru
+     * @param {Object} data scene data
+     */
+    enterThru(data, texture) {
+        this.currentData = data;
+        this.resetEnv(data);
+        this.replaceTexture(texture);
+    }
+
     /** 
      * 启动控制器
      */

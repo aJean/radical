@@ -37,15 +37,13 @@ export default class Point extends Plastic {
                 side: DoubleSide,
                 transparent: true
             }));
+            
         mesh.renderOrder = opts.order;
         mesh.wrapper = this;
-
-        if (opts.name) {
-            mesh.name = name;
-        }
+        mesh.name = name;
 
         if (opts.parent) {
-            opts.parent.add(mesh);
+            this.addTo(opts.parent);
         }
 
         if (opts.anim) {

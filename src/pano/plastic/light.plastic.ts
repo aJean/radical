@@ -8,6 +8,7 @@ import Plastic from './plastic';
 const defaultOpts = {
     color: 0xffffff,
     intensity: 1,
+    angle: 90,
     debug: false
 };
 export default class Light extends Plastic {
@@ -21,7 +22,11 @@ export default class Light extends Plastic {
 
     create() {
         const opts = this.opts;
-        const light = this.plastic = new SpotLight(opts.color, opts.intensity);
+        const light = this.plastic = new SpotLight(opts.color, opts.intensity, 0, opts.angle);
+
+        if (opts.target) {
+            this.setTarget(opts.target);
+        }
 
         if (opts.position) {
             this.setPosition(opts.position.x, opts.position.y, opts.position.z);

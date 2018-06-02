@@ -2,6 +2,9 @@ import { TextureLoader, MeshBasicMaterial, CircleGeometry, CanvasTexture, Mesh, 
 import Tween from '../animations/tween.animation';
 import Util from '../../core/util';
 import Loader from '../loaders/resource.loader';
+import Inradius from '../plastic/inradius.plastic';
+import Text from '../plastic/text.plastic';
+import Light from '../plastic/light.plastic';
 
 /**
  * @file 星际穿越 plugin
@@ -9,7 +12,7 @@ import Loader from '../loaders/resource.loader';
  */
 
 const defaultOpts = {
-    radius: 80,
+    radius: 100,
     factor: 300,
     effect: 'scale',
     bg: '',
@@ -28,6 +31,8 @@ export default class Thru {
     animating = false; // lock when animating
     timeid = 0;
     group = [];
+    objs = [];
+    lights = [];
 
     constructor(pano, opts) {
         this.pano = pano;
@@ -41,8 +46,9 @@ export default class Thru {
         pano.subscribe('scene-attachstart', this.needToHide, this);
         pano.subscribe('scene-attach', this.load, this);
         pano.subscribe('pano-click', this.toggle, this);
-
         pano.overlays.addJudgeFunc(this.onCanvasHandle.bind(this));
+        // common lights
+        this.createLights();
     }
 
     load(scene) {
@@ -57,59 +63,48 @@ export default class Thru {
         this.needToShow();
     }
 
+    createLights() {
+        for (let i = 0;i < 3; i++) {
+            const light = new Light({angle: 30});
+            light.addBy(this.pano);
+            this.lights.push(light);
+        }
+    }
+
     /**
      * 创建穿越点
      */
     create(list) {
         const pano = this.pano;
         const opts = this.opts;
-        const radius = opts.radius;
         const group = this.group;
+        const objs = this.objs;
+        const lights = this.lights;
+        const radius = opts.radius;
 
-        list.forEach(item => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const name = item.sceneName;
-            canvas.width = 256;
-            canvas.height = 256;
+        list.forEach((item, i) => {
+            const texPath = 'https://mms-xr.cdn.bcebos.com/panorama/0be77ed5-8c6d-47a9-aab8-6ad15929a151/';
+            loader.loadTexture(texPath).then(texture => {
+                const pos = this.getVector(i);              
+                const text = new Text({fontsize: 30, inverse: false, text: item.setName});
+                const hole = new Inradius({
+                    name: i,
+                    shadow: true,
+                    position: pos,
+                    radius: radius,
+                    envMap: texture,
+                    visible: false,
+                    data: item
+                }, pano);
+                hole.addBy(pano);
+                text.addTo(hole);
 
-            ctx.beginPath();
-            ctx.font = 'normal 36px Arial';
-            ctx.lineWidth = 4;
-            ctx.textAlign = 'center';
-            ctx.fillStyle = '#fff';
-            ctx.fillText(name.substring(0, 4), 128, 128);
-            ctx.fillText(name.substring(4), 128, 128 + 40);
+                lights[i].setPosition(pos.x, pos.y, 0);
+                lights[i].setTarget(hole);
 
-            const text  = new Mesh(new CircleGeometry(radius, 40, 40),
-                new MeshBasicMaterial({
-                    map: new CanvasTexture(canvas),
-                    depthTest: false,
-                    transparent: true
-                }));
-            text.position.set(0, 0, 0);
-            const img = new Mesh(new CircleGeometry(radius, 40, 40),
-                new MeshBasicMaterial({
-                    map: new TextureLoader().load(loader.crosUrl(item.image)),
-                }));
-            const circle: any = new Mesh(new CircleGeometry(radius + 32, 40, 40),
-                new MeshBasicMaterial({
-                    map: new TextureLoader().load(loader.crosUrl(opts.bg)),
-                    opacity: opts.effect == 'scale' ? 1 : 0,
-                    depthTest: false,
-                    transparent: true
-                }));
-            
-            text.renderOrder = 3;
-            img.renderOrder = 2;
-            circle.renderOrder = 1;
-            circle.visible = false;
-            circle.data = item;
-
-            circle.add(text);
-            circle.add(img);
-            group.push(circle);
-            pano.addSceneObject(circle);
+                group.push(hole.plastic);
+                objs.push(hole);
+            });
         });
     }
 
@@ -117,21 +112,11 @@ export default class Thru {
      * 获取屏幕中心点的世界坐标
      */
     getVector(i) {
-        let x = 0;
-        let y = 0;
+        let lng = Math.random() * 60 - 30;
+        let lat = Math.random() * 60 - 30;
 
-        if (i == 0) {
-            x = Math.random() - 0.5;
-            y = Math.random() / 2 + 0.2;
-        } else if (i == 1) {
-            x = Math.random() / -2 - 0.2;
-            y = Math.random() / -2;
-        } else {
-            x = Math.random() / 2 + 0.2;
-            y = Math.random() / -2;
-        }
-
-        return Util.calcScreenToWorld({x, y}, this.camera);
+        lng += i * 90;
+        return Util.calcSphereToWorld(lng, lat);
     }
 
     /**
@@ -182,23 +167,11 @@ export default class Thru {
     show() {
         const pano = this.pano;
         const camera = this.camera;
-        const effect = this.opts.effect;
 
         this.active = true;        
         this.group.forEach((item, i) => {
-            if (effect === 'scale') {
-                item.scale.set(0.1, 0.1, 0.1);
-            }
-
-            item.position.copy(this.getVector(i));
             item.lookAt(camera.position);
             item.visible = true;
-
-            effect === 'scale' ?
-                new Tween({ scale: 0 }).to({ scale: 1 }).effect('backOut', 1000)
-                .start(['scale'], pano).process(val => item.scale.set(val, val, 1)) :
-                new Tween(item.material).to({ opacity: 1 }).effect('quintEaseIn', 1000)
-                .start(['opacity'], pano);
         });
     }
 
@@ -212,18 +185,8 @@ export default class Thru {
             this.animating = true;
 
             this.group.forEach(item => {
-                this.opts.effect == 'scale' ?
-                    new Tween({ scale: 1 }).to({ scale: 0 }).effect('backOut', 500)
-                    .start(['scale'], this.pano).process(val => item.scale.set(val, val, 1))
-                    .complete(() => {
-                        this.animating = false;
-                        item.visible = false;
-                    }) :
-                    new Tween(item.material).to({ opacity: 0 }).effect('quintEaseIn', 500)
-                    .start(['opacity'], this.pano).complete(() => {
-                        this.animating = false;
-                        item.visible = false;
-                    });
+                this.animating = false;
+                item.visible = false;
             });
         }
     }
@@ -246,6 +209,7 @@ export default class Thru {
         }
 
         const pano = this.pano;
+        const camera = this.camera;
         const group = this.group;
         const surl = this.opts.surl;
 
@@ -254,11 +218,12 @@ export default class Thru {
 
             if (intersects) {
                 this.active = false;
-                // find data by id
-                const id = intersects[0].object['data'].sceneId;
-                const sid = intersects[0].object['data'].setId;
 
-                if (surl && id && sid) {
+                const obj: any = intersects[0].object;
+                const data = obj.data;
+                if (data) {
+                    const id = data.sceneId;
+                    const sid = data.setId;
                     loader.fetchUrl(`${surl}&setid=${sid}&sceneid=${id}`)
                         .then(res => {
                             const data = res.data;
@@ -267,9 +232,24 @@ export default class Thru {
 
                             if (sceneGroup) {
                                 const scene = sceneGroup.find(item => item.id == id);
-                                pano.supplyOverlayScenes(sceneGroup);
-                                pano.enterNext(scene);
-                                pano.dispatch('thru-change', data, scene, pano);
+                                const lookTarget = pano.getLookAtTarget();
+                                const pos = obj.position.clone();
+                                pos.z += pos.z > 0 ? 100 : -100;
+
+                                new Tween(lookTarget).to(pos).effect('quintEaseIn', 1000)
+                                    .start(['x', 'y', 'z'], pano)
+                                    .complete(() => {
+                                        // camera position
+                                        new Tween(camera.position).to(obj.position).effect('quadEaseOut', 1000)
+                                            .start(['x', 'y', 'z'], pano)
+                                            .complete(() => {
+                                                this.active = true;
+                                                pano.supplyOverlayScenes(sceneGroup);
+                                                pano.enterThru(scene, obj.material.envMap);
+                                                pano.dispatch('thru-change', data, scene, pano);
+                                                pano.getControl().reset(pos.z > 0);
+                                            });
+                                    });
                             }
                         }).catch(e => {
                             this.active = true;
@@ -285,26 +265,15 @@ export default class Thru {
      * 删除穿越点
      */
     cleanup() {
-        const group = this.group;
+        const objs = this.objs;
         const scene = this.pano.getScene();
 
-        group.forEach(child => {
-            delete child['data'];
-            this.deleteobj(child, true);
-            scene.remove(child);
+        objs.forEach(obj => {
+            obj.dispose();
+            scene.remove(obj.getPlastic());
         });
-        group.length = 0;
-    }
-
-    deleteobj(item, deep?) {
-        item.visible = false;
-        item.material.map.dispose();
-        item.material.dispose();
-        item.geometry.dispose();
-
-        if (deep && item.children.length) {
-            item.children.forEach(child => this.deleteobj(child));
-        }
+        objs.length = 0;
+        this.group.length = 0;
     }
 
     dispose() {
@@ -317,5 +286,10 @@ export default class Thru {
         pano.unsubscribe('scene-drag', this.everyToShow, this);
         pano.unsubscribe('scene-attachstart', this.needToHide, this);
         pano.unsubscribe('scene-attach', this.needToShow, this);
+
+        this.lights.forEach(light => {
+            light.dispose();
+            pano.removeSceneObject(light.plastic);
+        });
     }
 }

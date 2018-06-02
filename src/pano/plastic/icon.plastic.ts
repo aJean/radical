@@ -55,9 +55,9 @@ export default class Icon extends Plastic {
         icon.renderOrder = opts.order;
         icon.position.set(opts.x, opts.y, opts.z);
         icon.name = opts.name;
-
+        
         if (opts.parent) {
-            opts.parent.add(icon);
+            this.addTo(opts.parent);
         }
     }
 

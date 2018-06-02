@@ -160,9 +160,9 @@ export default class Multiple implements IPluggableUI {
 
         inner.removeEventListener('click', this.onClickHandle);
         inner.removeEventListener('mousewheel', this.onWheelHandle);
-        pano.unSubscribe('multiple-active', this.onMultipleActive, this);
-        pano.unSubscribe('scene-attachStart', this.onDisable, this);
-        pano.unSubscribe('scene-attach', this.onEnable, this);
+        pano.unsubscribe('multiple-active', this.onMultipleActive, this);
+        pano.unsubscribe('scene-attachStart', this.onDisable, this);
+        pano.unsubscribe('scene-attach', this.onEnable, this);
 
         this.root.innerHTML = '';
         this.container.removeChild(this.root);

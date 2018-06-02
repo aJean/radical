@@ -17,6 +17,7 @@ const defaultOpts = {
     height: 128,
     hide: false,
     order: 5,
+    inverse: true,
     x: 0,
     y: 0,
     z: 0
@@ -45,7 +46,7 @@ export default class Text extends Plastic {
         // delete before dispose
         mesh.wrapper = this;
         mesh.position.set(opts.x, opts.y, opts.z);
-        mesh.rotation.y = Math.PI;
+        mesh.rotation.y = opts.inverse ? Math.PI : 0;
         mesh.renderOrder = opts.order;
         mesh.name = opts.name;
 
@@ -54,7 +55,7 @@ export default class Text extends Plastic {
         }
 
         if (opts.parent) {
-            opts.parent.add(mesh);
+            this.addTo(opts.parent);
         }
 
         return mesh;
@@ -79,6 +80,10 @@ export default class Text extends Plastic {
         ctx.textAlign = 'center';
         ctx.fillStyle = opts.color;
         ctx.fillText(opts.text, width / 2, height / 2 + 10);
+    }
+    
+    rotate(rad) {
+        this.plastic.rotateY(rad);
     }
 
     change(text) {

@@ -196,8 +196,8 @@ export default class Media implements IPluggableUI {
         box.geometry.dispose();
 
         pano.removeSceneObject(box);
-        pano.unSubscribe('render-process', this.update, this);
-        pano.unSubscribe('scene-load', this.createInradius, this);
+        pano.unsubscribe('render-process', this.update, this);
+        pano.unsubscribe('scene-load', this.createInradius, this);
         pano.webgl.autoClear = true;
     }
 }

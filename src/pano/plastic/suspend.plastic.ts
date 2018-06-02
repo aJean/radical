@@ -90,7 +90,7 @@ export default class Suspend extends Plastic{
         const pano = this.pano;
         pano.webgl.autoClear = true;
 
-        pano.subscribe('render-process', this.update, this);
+        pano.unsubscribe('render-process', this.update, this);
         pano.getCanvas().removeEventListener('click', this.onThrough);
     }
 }

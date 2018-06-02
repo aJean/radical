@@ -1,4 +1,4 @@
-import { BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader } from 'three';
+import { BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending } from 'three';
 import Tween from '../animations/tween.animation';
 import Plastic from './plastic';
 
@@ -17,13 +17,18 @@ const defaultOpts = {
     visible: true
 };
 export default class Inradius extends Plastic {
-    cloud: any;
+    wrap: any;
 
-    constructor(opts) {
+    constructor(opts, pano?) {
         super();
 
+        this.pano = pano;
         this.opts = Object.assign({}, defaultOpts, opts);
         this.create();
+
+        if (opts.rotate) {
+            pano.subscribe('render-process', this.addRotate, this);
+        }
     }
 
     create() {
@@ -49,24 +54,60 @@ export default class Inradius extends Plastic {
         }
 
         const material = opts.shadow ? new MeshPhongMaterial(params) : new MeshBasicMaterial(params);
-        const mesh = this.plastic = new Mesh(new SphereGeometry(opts.radius, opts.widthSegments, 
+        const sphere: any = this.plastic = new Mesh(new SphereGeometry(opts.radius, opts.widthSegments, 
             opts.heightSegments), material);
-        mesh.visible = opts.visible;
+
+        sphere.visible = opts.visible;
+        sphere.name = opts.name;
+        sphere.data = opts.data;
         
-        if (opts.shadow) {
-            mesh.castShadow = true;
-        }
+        // if (opts.shadow) {
+        //     sphere.castShadow = true;
+        // }
 
         if (opts.cloud) {
-            const cloud = this.cloud = new Mesh(
-                new SphereGeometry(opts.radius + 1, 40, 40),
+            const cloud = this.wrap = new Mesh(
+                new SphereGeometry(opts.radius, 40, 40),
                 new MeshBasicMaterial({
                     map: new TextureLoader().load('../assets/cloud.png'),
                     transparent: true,
                     depthTest: false
                 })
             );
-            cloud.add(mesh);
+            cloud.add(sphere);
+        // 辉光
+        } else if (opts.glow) {
+            const glowMaterial = new ShaderMaterial({
+                uniforms: { 
+                    c: {type: 'f', value: 0.1},
+                    p: {type: 'f', value: 1.4},
+                    glowColor: {type: 'c', value: new Color('#999')},
+                    viewVector: {type: 'v3', value: opts.position}
+                },
+                vertexShader: `
+                    uniform vec3 viewVector;
+                    uniform float c;
+                    uniform float p;
+                    varying float intensity;
+                    void main() {
+                        vec3 vNormal = normalize( normalMatrix * normal );
+                        vec3 vNormel = normalize( normalMatrix * viewVector );
+                        intensity = pow( c - dot(vNormal, vNormel), p );
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+                    }`,
+                fragmentShader: `
+                    uniform vec3 glowColor;
+                    varying float intensity;
+                    void main() {
+                        vec3 glow = glowColor * intensity;
+                        gl_FragColor = vec4( glow, 1.0 );
+                    }`,
+                blending: AdditiveBlending,
+                transparent: true
+            });
+
+            const glow = this.wrap = new Mesh(new SphereGeometry(opts.radius, 40, 40), glowMaterial);
+            glow.add(sphere);
         }
 
         if (opts.position) {
@@ -92,27 +133,27 @@ export default class Inradius extends Plastic {
     }
 
     setPosition(x, y, z) {
-        const target = this.cloud || this.plastic;
+        const target = this.wrap || this.plastic;
         target.position.set(x, y, z);
     }
 
     getPlastic() {
-        return this.plastic;
+        return this.wrap || this.plastic;
     }
 
-    addRotate(num) {
-        const target = this.cloud || this.plastic;
-        target.rotation.x += num;
-        target.rotation.y += num;
-        target.rotation.z += num;
+    addRotate() {
+        const target = this.wrap || this.plastic;
+        target.rotation.x += 0.01;
+        target.rotation.y += 0.01;
+        target.rotation.z += 0.01;
     }
 
     addTo(scene) {
-        scene.add(this.cloud || this.plastic);
+        scene.add(this.wrap || this.plastic);
     }
 
     addBy(pano) {
-        pano.addSceneObject(this.cloud || this.plastic);
+        pano.addSceneObject(this.wrap || this.plastic);
     }
 
     fadeIn(pano, onComplete) {
@@ -127,5 +168,20 @@ export default class Inradius extends Plastic {
 
         new Tween(material).to({ opacity: 0 }).effect('linear', 1000)
             .start(['opacity'], pano).complete(onComplete);
+    }
+
+    dispose() {
+        super.dispose();
+
+        const wrap = this.wrap;
+        if (wrap) {
+            wrap.geometry.dispose();
+            wrap.material.map.dispose();
+            wrap.material.dispose();
+        }
+
+        if (this.pano) {
+            this.pano.unsubscribe('render-process', this.addRotate, this);
+        }
     }
 }
