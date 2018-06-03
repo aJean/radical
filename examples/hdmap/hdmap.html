@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>高清图加载</title>
+        <link rel="stylesheet" href="../../dist/lib.css">
+        <link rel="stylesheet" href="../assets/example.css">
+    </head>
+    <body>
+        <div id="test"></div>
+        <script src="../../dist/lib.js"></script>
+        <script>
+            const json = {
+                title: 'test bxl transfer',
+                cretPath: '../assets/cret.txt',
+                helper: true,
+                sceneGroup: [{
+                    info: {
+                        author: '高清图加载测试'
+                    },
+                    id: '49775931288',
+                    name: '罗浮宫',
+                    bxlPath: '../assets/scene6/scene6.bxl',
+                    imgPath: '../assets/scene6/scene6.jpg',
+                    thumbPath: '../assets/scene6/thumb6.jpg'
+                }]
+            };
+
+            bxl.startPano(json, '#test', {
+                'overlay-click': function (data) {
+                    console.log(data);
+                }
+            });
+        </script>
+    </body>
+</html>

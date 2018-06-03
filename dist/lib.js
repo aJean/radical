@@ -53532,6 +53532,9 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         elem.innerHTML = domstring;
         return elem.firstElementChild;
     },
+    /**
+     * 设置元素样式
+     */
     styleElement: function (elem, data) {
         for (var prop in data) {
             var val = data[prop];
@@ -53541,6 +53544,9 @@ var composeKey = function (part) { return ('skt1wins' + part); };
             elem.style[prop] = val;
         }
     },
+    /**
+     * 查找元素
+     */
     findElement: function (sel) {
         return document.querySelector(sel);
     },
@@ -53577,8 +53583,7 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         };
     },
     /**
-     * 解析数据地理位置
-     * location.lng [-180, 180] location.lat [0, 180]
+     * 解析热点地理位置 location.lng [-180, 180] location.lat [-90, 90]
      * @param {Object} data
      * @param {Object} camera
      */
@@ -53596,30 +53601,32 @@ var composeKey = function (part) { return ('skt1wins' + part); };
     },
     /**
      * 球面坐标转化成世界坐标, theta ~ x, phi ~ y
-     * @param {number} lng 经度
-     * @param {number} lat 纬度
+     * @param {number} lng 横向
+     * @param {number} lat 纵向
      * @param {number} radius 半径
      */
     calcSphereToWorld: function (lng, lat, radius) {
+        if (radius === void 0) { radius = 1000; }
         var spherical = new three__WEBPACK_IMPORTED_MODULE_1__["Spherical"]();
-        var vector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"]();
+        var pos = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"]();
         spherical.theta = lng * (Math.PI / 180);
         spherical.phi = (90 - lat) * (Math.PI / 180);
-        spherical.radius = radius !== undefined ? radius : 1000;
-        vector.setFromSpherical(spherical);
-        return vector;
+        spherical.radius = radius;
+        pos.setFromSpherical(spherical);
+        return pos;
     },
     /**
      * 世界坐标转为屏幕坐标
      * @param {Object} location 世界坐标系
      * @param {Object} camera 场景相机
+     * @return screen ndc pos
      */
     calcWorldToScreen: function (location, camera) {
         var vector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](location.x, location.y, location.z);
         return vector.project(camera);
     },
     /**
-     * 归一化
+     * 屏幕坐标归一化
      * @param {Object} location 屏幕坐标
      * @param {Object} size 渲染器 size
      */
@@ -53630,7 +53637,7 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         };
     },
     /**
-     * 逆归一化
+     * 屏幕坐标逆归一化
      * @param {Object} location 屏幕坐标
      * @param {Object} size 渲染器 size
      */
@@ -53645,22 +53652,26 @@ var composeKey = function (part) { return ('skt1wins' + part); };
      * 球面坐标转化成屏幕坐标, 没什么卵用
      * @param {number} lng 横向
      * @param {number} lat 纵向
-     * @param {number} radius 半径
      * @param {Object} camera 相机
      * @param {Object} size 屏幕尺寸
+     * @param {number} radius 半径
      */
-    caleSphereToScreen: function (lng, lat, radius, camera, size) {
+    caleSphereToScreen: function (lng, lat, camera, size, radius) {
+        if (radius === void 0) { radius = 1000; }
         return this.inverseNdc(this.calcWorldToScreen(this.calcSphereToWorld(lng, lat, radius), camera), size);
     },
     /**
      * 屏幕坐标转为球面坐标
-     * ndc first
+     * @param {Object} ndc 归一化的屏幕坐标
+     * @param {Object} camera 当前场景相机
+     * @param {num} far 远平面，pano 半径默认 2000
      */
-    calcScreenToSphere: function (location, camera, far) {
+    calcScreenToSphere: function (ndc, camera, far) {
+        if (far === void 0) { far = 1000; }
         var projectCamera = camera.clone();
-        projectCamera.far = far || 1000;
+        projectCamera.far = far;
         projectCamera.updateProjectionMatrix();
-        var vector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](location.x, location.y, 1).unproject(projectCamera);
+        var vector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](ndc.x, ndc.y, 1).unproject(projectCamera);
         var spherical = new three__WEBPACK_IMPORTED_MODULE_1__["Spherical"]();
         spherical.setFromVector3(vector);
         return {
@@ -53670,13 +53681,16 @@ var composeKey = function (part) { return ('skt1wins' + part); };
     },
     /**
      * 屏幕坐标转为世界坐标
-     * ndc first
+     * @param {Object} ndc 归一化的屏幕坐标
+     * @param {Object} camera 当前场景相机
+     * @param {num} far 远平面, vector.z = 1 表示投影在远平面, 不能大于 2000
      */
-    calcScreenToWorld: function (location, camera, far) {
+    calcScreenToWorld: function (ndc, camera, far) {
+        if (far === void 0) { far = 1000; }
         var projectCamera = camera.clone();
-        projectCamera.far = far || 1000;
+        projectCamera.far = far;
         projectCamera.updateProjectionMatrix();
-        return new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](location.x, location.y, 1).unproject(projectCamera);
+        return new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](ndc.x, ndc.y, 1).unproject(projectCamera);
     },
     /**
      * 计算画布大小
@@ -54892,6 +54906,42 @@ OrbitControl.prototype.constructor = OrbitControl;
 
 /***/ }),
 
+/***/ "./src/pano/interface/ui.class.ts":
+/*!****************************************!*\
+  !*** ./src/pano/interface/ui.class.ts ***!
+  \****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+var PluggableUI = /** @class */ (function () {
+    function PluggableUI() {
+    }
+    PluggableUI.prototype.getElement = function () {
+        return this.element;
+    };
+    PluggableUI.prototype.setContainer = function (container) {
+    };
+    PluggableUI.prototype.detachContainer = function () {
+        this.container.removeChild(this.element);
+    };
+    PluggableUI.prototype.show = function () {
+        this.element.style.display = 'block';
+    };
+    PluggableUI.prototype.hide = function () {
+        this.element.style.display = 'none';
+    };
+    PluggableUI.prototype.dispose = function () {
+        this.detachContainer();
+    };
+    return PluggableUI;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (PluggableUI);
+
+
+/***/ }),
+
 /***/ "./src/pano/loaders/base.loader.ts":
 /*!*****************************************!*\
   !*** ./src/pano/loaders/base.loader.ts ***!
@@ -55549,11 +55599,7 @@ var Overlays = /** @class */ (function () {
     Overlays.prototype.onCanvasHandle = function (evt) {
         var pano = this.pano;
         var camera = pano.getCamera();
-        var size = pano.getSize();
-        var pos = {
-            x: (evt.clientX / size.width) * 2 - 1,
-            y: -(evt.clientY / size.height) * 2 + 1
-        };
+        var pos = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].transNdc({ x: evt.clientX, y: evt.clientY }, pano.getSize());
         var vector = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].calcScreenToSphere(pos, camera);
         try {
             var group = this.getCurrent(this.cid).detects;
@@ -57124,6 +57170,68 @@ var Text = /** @class */ (function (_super) {
 
 /***/ }),
 
+/***/ "./src/pano/plugins/helper.plugin.ts":
+/*!*******************************************!*\
+  !*** ./src/pano/plugins/helper.plugin.ts ***!
+  \*******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/* harmony import */ var _interface_ui_class__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../interface/ui.class */ "./src/pano/interface/ui.class.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+
+/**
+ * @file 辅助工具
+ */
+var Helper = /** @class */ (function (_super) {
+    __extends(Helper, _super);
+    function Helper(pano) {
+        var _this = _super.call(this) || this;
+        _this.pano = pano;
+        pano.subscribe('render-process', _this.update, _this);
+        var circle = _this.element = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div style="position:absolute;width:10px;height:10px;background:#fff;border-radius:10px;z-index:99;border:2px solid red;"></div>');
+        _this.setContainer();
+        return _this;
+    }
+    Helper.prototype.setContainer = function () {
+        var container = this.container = this.pano.getRoot();
+        container.appendChild(this.element);
+    };
+    Helper.prototype.update = function () {
+        var pano = this.pano;
+        var pos = this.pano.getLook();
+        pos.lng -= 180;
+        pos.lat -= 90;
+        pos = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].caleSphereToScreen(pos.lng, pos.lat, pano.getCamera(), pano.getSize());
+        _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].styleElement(this.element, {
+            left: pos.x,
+            top: pos.y
+        });
+    };
+    Helper.prototype.dispose = function () {
+        this.detachContainer();
+        this.pano.unsubscribe('render-process', this.update, this);
+    };
+    return Helper;
+}(_interface_ui_class__WEBPACK_IMPORTED_MODULE_1__["default"]));
+/* harmony default export */ __webpack_exports__["default"] = (Helper);
+
+
+/***/ }),
+
 /***/ "./src/pano/plugins/info.plugin.ts":
 /*!*****************************************!*\
   !*** ./src/pano/plugins/info.plugin.ts ***!
@@ -57390,7 +57498,7 @@ var Multiple = /** @class */ (function () {
         this.bindEvent();
     }
     Multiple.prototype.create = function () {
-        var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-multiplescene"></div>');
+        var root = this.element = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-multiplescene"></div>');
         var outer = this.outer = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-multiplescene-outer"></div>');
         var inner = this.inner = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div class="pano-multiplescene-inner"></div>');
         inner.innerHTML = this.data.map(function (item, i) {
@@ -57418,11 +57526,11 @@ var Multiple = /** @class */ (function () {
         pano.subscribe('scene-reset', this.onReset, this);
     };
     Multiple.prototype.getElement = function () {
-        return this.root;
+        return this.element;
     };
     Multiple.prototype.setContainer = function (container) {
         this.container = container;
-        container.appendChild(this.root);
+        container.appendChild(this.element);
     };
     Multiple.prototype.onClickHandle = function (e) {
         e.preventDefault();
@@ -57485,10 +57593,10 @@ var Multiple = /** @class */ (function () {
         this.activeItem = node;
     };
     Multiple.prototype.show = function () {
-        this.root.style.display = 'block';
+        this.element.style.display = 'block';
     };
     Multiple.prototype.hide = function () {
-        this.root.style.display = 'none';
+        this.element.style.display = 'none';
     };
     Multiple.prototype.dispose = function () {
         var pano = this.pano;
@@ -57498,8 +57606,8 @@ var Multiple = /** @class */ (function () {
         pano.unsubscribe('multiple-active', this.onMultipleActive, this);
         pano.unsubscribe('scene-attachStart', this.onDisable, this);
         pano.unsubscribe('scene-attach', this.onEnable, this);
-        this.root.innerHTML = '';
-        this.container.removeChild(this.root);
+        this.element.innerHTML = '';
+        this.container.removeChild(this.element);
     };
     return Multiple;
 }());
@@ -58058,15 +58166,16 @@ var Wormhole = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
-/* harmony import */ var _pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/plugins/info.plugin */ "./src/pano/plugins/info.plugin.ts");
-/* harmony import */ var _pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../pano/plugins/rotate.plugin */ "./src/pano/plugins/rotate.plugin.ts");
-/* harmony import */ var _pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../pano/plugins/multiple.plugin */ "./src/pano/plugins/multiple.plugin.ts");
-/* harmony import */ var _pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/plugins/wormhole.plugin */ "./src/pano/plugins/wormhole.plugin.ts");
-/* harmony import */ var _pano_plugins_thru_plugin__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../pano/plugins/thru.plugin */ "./src/pano/plugins/thru.plugin.ts");
-/* harmony import */ var _pano_plugins_media_plugin__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../pano/plugins/media.plugin */ "./src/pano/plugins/media.plugin.ts");
-/* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
-/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
-/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+/* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
+/* harmony import */ var _pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../pano/plugins/info.plugin */ "./src/pano/plugins/info.plugin.ts");
+/* harmony import */ var _pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../pano/plugins/rotate.plugin */ "./src/pano/plugins/rotate.plugin.ts");
+/* harmony import */ var _pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/plugins/multiple.plugin */ "./src/pano/plugins/multiple.plugin.ts");
+/* harmony import */ var _pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../pano/plugins/wormhole.plugin */ "./src/pano/plugins/wormhole.plugin.ts");
+/* harmony import */ var _pano_plugins_thru_plugin__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../pano/plugins/thru.plugin */ "./src/pano/plugins/thru.plugin.ts");
+/* harmony import */ var _pano_plugins_media_plugin__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../pano/plugins/media.plugin */ "./src/pano/plugins/media.plugin.ts");
+/* harmony import */ var _pano_plugins_helper_plugin__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../pano/plugins/helper.plugin */ "./src/pano/plugins/helper.plugin.ts");
+/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -58102,6 +58211,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+
 
 
 
@@ -58176,7 +58286,7 @@ var Runtime = /** @class */ (function () {
         }
         var ref = el.getAttribute('ref') || "pano_" + this.uid++;
         el.setAttribute('ref', ref);
-        return this.instanceMap[ref] = new _pano_pano__WEBPACK_IMPORTED_MODULE_8__["default"](el, source);
+        return this.instanceMap[ref] = new _pano_pano__WEBPACK_IMPORTED_MODULE_9__["default"](el, source);
     };
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
@@ -58195,7 +58305,7 @@ var Runtime = /** @class */ (function () {
                     case 3:
                         source = _a;
                         if (!(source && source['sceneGroup'])) {
-                            return [2 /*return*/, _core_log__WEBPACK_IMPORTED_MODULE_9__["default"].output('load source error')];
+                            return [2 /*return*/, _core_log__WEBPACK_IMPORTED_MODULE_10__["default"].output('load source error')];
                         }
                         try {
                             pano = this.createRef(el, source);
@@ -58206,28 +58316,31 @@ var Runtime = /** @class */ (function () {
                                 }
                             }
                             if (source['animation']) {
-                                _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_7__["default"].install(source['animation'], pano);
+                                _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_1__["default"].install(source['animation'], pano);
                             }
                             else {
                                 pano.noTimeline();
                             }
                             if (source['rotate']) {
-                                pano.addPlugin(_pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_2__["default"], source['rotate']);
+                                pano.addPlugin(_pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_3__["default"], source['rotate']);
                             }
                             if (source['multiScene']) {
-                                pano.addPlugin(_pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_3__["default"], source['sceneGroup']);
+                                pano.addPlugin(_pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_4__["default"], source['sceneGroup']);
                             }
                             if (source['info'] !== false) {
-                                pano.addPlugin(_pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_1__["default"]);
+                                pano.addPlugin(_pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_2__["default"]);
                             }
                             if (source['wormhole']) {
-                                pano.addPlugin(_pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_4__["default"], source['wormhole']);
+                                pano.addPlugin(_pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_5__["default"], source['wormhole']);
                             }
                             if (source['thru']) {
-                                pano.addPlugin(_pano_plugins_thru_plugin__WEBPACK_IMPORTED_MODULE_5__["default"], source['thru']);
+                                pano.addPlugin(_pano_plugins_thru_plugin__WEBPACK_IMPORTED_MODULE_6__["default"], source['thru']);
                             }
                             if (source['media']) {
-                                pano.addPlugin(_pano_plugins_media_plugin__WEBPACK_IMPORTED_MODULE_6__["default"], source['media']);
+                                pano.addPlugin(_pano_plugins_media_plugin__WEBPACK_IMPORTED_MODULE_7__["default"], source['media']);
+                            }
+                            if (source['helper']) {
+                                pano.addPlugin(_pano_plugins_helper_plugin__WEBPACK_IMPORTED_MODULE_8__["default"], source['helper']);
                             }
                             // add to env queue listeners
                             EnvQueue.add(pano.onResize, pano);

@@ -3,7 +3,8 @@
  */
 
 export interface IPluggableUI {
-    container: HTMLElement;
+    container: any;
+    element: any;
 
     getElement(): HTMLElement;
 

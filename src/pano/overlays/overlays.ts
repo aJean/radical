@@ -203,11 +203,7 @@ export default class Overlays {
     onCanvasHandle(evt) {
         const pano = this.pano;
         const camera = pano.getCamera();
-        const size = pano.getSize();
-        const pos = {
-            x: (evt.clientX / size.width) * 2 - 1,
-            y: -(evt.clientY / size.height) * 2 + 1
-        };
+        const pos = Util.transNdc({x: evt.clientX, y: evt.clientY}, pano.getSize());
         const vector = Util.calcScreenToSphere(pos, camera);
 
         try {

@@ -18,6 +18,9 @@ export default {
         return elem.firstElementChild;
     },
 
+    /**
+     * 设置元素样式
+     */
     styleElement(elem, data) {
         for (let prop in data) {
             let val = data[prop];
@@ -30,6 +33,9 @@ export default {
         }
     },
 
+    /**
+     * 查找元素
+     */
     findElement(sel) {
         return document.querySelector(sel);
     },
@@ -72,8 +78,7 @@ export default {
     },
 
     /**
-     * 解析数据地理位置
-     * location.lng [-180, 180] location.lat [0, 180]
+     * 解析热点地理位置 location.lng [-180, 180] location.lat [-90, 90]
      * @param {Object} data
      * @param {Object} camera 
      */
@@ -93,26 +98,27 @@ export default {
 
     /**
      * 球面坐标转化成世界坐标, theta ~ x, phi ~ y
-     * @param {number} lng 经度
-     * @param {number} lat 纬度
+     * @param {number} lng 横向
+     * @param {number} lat 纵向
      * @param {number} radius 半径
      */
-    calcSphereToWorld(lng, lat, radius?) {
+    calcSphereToWorld(lng, lat, radius = 1000) {
         const spherical = new Spherical();
-        const vector = new Vector3();
+        const pos = new Vector3();
 
         spherical.theta = lng * (Math.PI / 180);
         spherical.phi = (90 - lat) * (Math.PI / 180);
-        spherical.radius = radius !== undefined ? radius : 1000;
+        spherical.radius = radius;
 
-        vector.setFromSpherical(spherical);
-        return vector;
+        pos.setFromSpherical(spherical);
+        return pos;
     },
 
     /**
      * 世界坐标转为屏幕坐标
      * @param {Object} location 世界坐标系
      * @param {Object} camera 场景相机
+     * @return screen ndc pos
      */
     calcWorldToScreen(location, camera) {
         const vector = new Vector3(location.x, location.y, location.z);
@@ -120,7 +126,7 @@ export default {
     },
 
     /**
-     * 归一化
+     * 屏幕坐标归一化
      * @param {Object} location 屏幕坐标
      * @param {Object} size 渲染器 size
      */
@@ -132,7 +138,7 @@ export default {
     },
 
     /**
-     * 逆归一化
+     * 屏幕坐标逆归一化
      * @param {Object} location 屏幕坐标
      * @param {Object} size 渲染器 size
      */
@@ -148,24 +154,26 @@ export default {
      * 球面坐标转化成屏幕坐标, 没什么卵用
      * @param {number} lng 横向
      * @param {number} lat 纵向
-     * @param {number} radius 半径
      * @param {Object} camera 相机
      * @param {Object} size 屏幕尺寸
+     * @param {number} radius 半径
      */
-    caleSphereToScreen(lng, lat, radius, camera, size) {
+    caleSphereToScreen(lng, lat, camera, size, radius = 1000) {
         return this.inverseNdc(this.calcWorldToScreen(this.calcSphereToWorld(lng, lat, radius), camera), size);
     },
 
     /**
      * 屏幕坐标转为球面坐标
-     * ndc first
+     * @param {Object} ndc 归一化的屏幕坐标
+     * @param {Object} camera 当前场景相机
+     * @param {num} far 远平面，pano 半径默认 2000
      */
-    calcScreenToSphere(location, camera, far?) {
+    calcScreenToSphere(ndc, camera, far = 1000) {
         const projectCamera = camera.clone();
-        projectCamera.far = far || 1000;
+        projectCamera.far = far;
         projectCamera.updateProjectionMatrix();
 
-        const vector = new Vector3(location.x, location.y, 1).unproject(projectCamera);
+        const vector = new Vector3(ndc.x, ndc.y, 1).unproject(projectCamera);
         const spherical = new Spherical();
         spherical.setFromVector3(vector);
 
@@ -177,14 +185,16 @@ export default {
 
     /**
      * 屏幕坐标转为世界坐标
-     * ndc first
+     * @param {Object} ndc 归一化的屏幕坐标
+     * @param {Object} camera 当前场景相机
+     * @param {num} far 远平面, vector.z = 1 表示投影在远平面, 不能大于 2000
      */
-    calcScreenToWorld(location, camera, far?) {
+    calcScreenToWorld(ndc, camera, far = 1000) {
         const projectCamera = camera.clone();
-        projectCamera.far = far || 1000;
+        projectCamera.far = far;
         projectCamera.updateProjectionMatrix();
 
-        return new Vector3(location.x, location.y, 1).unproject(projectCamera);
+        return new Vector3(ndc.x, ndc.y, 1).unproject(projectCamera);
     },
 
     /**

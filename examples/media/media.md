@@ -7,6 +7,7 @@
         media: {
             asrc: '../assets/video/astar.mp3',
             vsrc: '../assets/video/sintel.mp4',
+            vloop: true,
             aauto: false
         },
         sceneGroup: [{

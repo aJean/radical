@@ -8,11 +8,11 @@ import Util from '../../core/util';
 export default class Multiple implements IPluggableUI {
     pano: any;
     data: any;
-    root: any;
+    element: any;
+    container: any;
     outer: any;
     inner: any;
     activeItem: any;
-    container: HTMLElement;
     isActive = true;
 
     constructor(pano, data) {
@@ -23,7 +23,7 @@ export default class Multiple implements IPluggableUI {
     }
 
     create() {
-        const root = this.root = Util.createElement('<div class="pano-multiplescene"></div>');
+        const root = this.element = Util.createElement('<div class="pano-multiplescene"></div>');
         const outer = this.outer = Util.createElement('<div class="pano-multiplescene-outer"></div>');
         const inner = this.inner = Util.createElement('<div class="pano-multiplescene-inner"></div>');
         
@@ -60,12 +60,12 @@ export default class Multiple implements IPluggableUI {
     }
 
     getElement() {
-        return this.root;
+        return this.element;
     }
 
     setContainer(container) {
         this.container = container;
-        container.appendChild(this.root);
+        container.appendChild(this.element);
     }
 
     onClickHandle(e) {
@@ -147,11 +147,11 @@ export default class Multiple implements IPluggableUI {
     }
 
     show() {
-        this.root.style.display = 'block';
+        this.element.style.display = 'block';
     }
 
     hide() {
-        this.root.style.display = 'none';
+        this.element.style.display = 'none';
     }
 
     dispose() {
@@ -164,7 +164,7 @@ export default class Multiple implements IPluggableUI {
         pano.unsubscribe('scene-attachStart', this.onDisable, this);
         pano.unsubscribe('scene-attach', this.onEnable, this);
 
-        this.root.innerHTML = '';
-        this.container.removeChild(this.root);
+        this.element.innerHTML = '';
+        this.container.removeChild(this.element);
     }
 }

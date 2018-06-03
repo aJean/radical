@@ -1,11 +1,12 @@
 import ResourceLoader from '../pano/loaders/resource.loader';
+import Timeline from '../pano/animations/timeline.animation';
 import Info from '../pano/plugins/info.plugin';
 import Rotate from '../pano/plugins/rotate.plugin';
 import Multiple from '../pano/plugins/multiple.plugin';
 import Wormhole from '../pano/plugins/wormhole.plugin';
 import Thru from '../pano/plugins/thru.plugin';
 import Media from '../pano/plugins/media.plugin';
-import Timeline from '../pano/animations/timeline.animation';
+import Helper from '../pano/plugins/helper.plugin';
 import Pano from '../pano/pano';
 import Log from '../core/log';
 
@@ -133,6 +134,10 @@ abstract class Runtime {
 
             if (source['media']) {
                 pano.addPlugin(Media, source['media']);
+            }
+
+            if (source['helper']) {
+                pano.addPlugin(Helper, source['helper']);
             }
     
             // add to env queue listeners
