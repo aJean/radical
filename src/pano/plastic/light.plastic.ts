@@ -1,4 +1,4 @@
-import { SpotLight, CameraHelper } from 'three';
+import { SpotLight, DirectionalLight, PointLight, CameraHelper } from 'three';
 import Plastic from './plastic';
 
 /**
@@ -6,6 +6,7 @@ import Plastic from './plastic';
  */
 
 const defaultOpts = {
+    type: 1,
     color: 0xffffff,
     intensity: 1,
     angle: 90,
@@ -22,7 +23,8 @@ export default class Light extends Plastic {
 
     create() {
         const opts = this.opts;
-        const light = this.plastic = new SpotLight(opts.color, opts.intensity, 0, opts.angle);
+        const light = this.plastic = opts.type == 1 ? new SpotLight(opts.color, opts.intensity, 0, opts.angle)
+            : new PointLight(opts.color, opts.intensity);
 
         if (opts.target) {
             this.setTarget(opts.target);

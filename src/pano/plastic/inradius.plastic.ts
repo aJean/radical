@@ -38,7 +38,9 @@ export default class Inradius extends Plastic {
                 side: opts.side,
                 refractionRatio: 0,
                 reflectivity: 1,
-                specular: 'grey'
+                specular: 'grey',
+                transparent: true,
+                opacity: opts.opacity                
             } : {
                 color: opts.color,                
                 side: opts.side,

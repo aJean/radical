@@ -63,9 +63,12 @@ export default class Thru {
         this.needToShow();
     }
 
+    /**
+     * 使用唯一点光源避免互相干扰
+     */
     createLights() {
-        for (let i = 0;i < 3; i++) {
-            const light = new Light({angle: 30});
+        for (let i = 0;i < 1; i++) {
+            const light = new Light({type: 2});
             light.addBy(this.pano);
             this.lights.push(light);
         }
@@ -98,9 +101,6 @@ export default class Thru {
                 }, pano);
                 hole.addBy(pano);
                 text.addTo(hole);
-
-                lights[i].setPosition(pos.x, pos.y, 0);
-                lights[i].setTarget(hole);
 
                 group.push(hole.plastic);
                 objs.push(hole);

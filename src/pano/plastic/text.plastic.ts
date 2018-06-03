@@ -9,12 +9,11 @@ import Tween from '../animations/tween.animation';
 const defaultOpts = {
     name: '',
     fontface: 'Arial',
-    fontsize: 42,
-    lineWidth: 4,
-    color: '#fff',
-    text: 'hello bxl',
     width: 256,
     height: 128,
+    fontsize: 42,
+    linewidth: 4,
+    color: '#fff',
     hide: false,
     order: 5,
     inverse: true,
@@ -76,10 +75,16 @@ export default class Text extends Plastic {
             ctx.font = `normal ${opts.fontsize}px ${opts.fontface}`;
         }
 
-        ctx.lineWidth = opts.lineWidth;
+        ctx.lineWidth = opts.linewidth;
         ctx.textAlign = 'center';
         ctx.fillStyle = opts.color;
         ctx.fillText(opts.text, width / 2, height / 2 + 10);
+
+        if (opts.strokecolor) {
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = opts.strokecolor;
+            ctx.strokeText(opts.text, width / 2, height / 2 + 10);
+        }
     }
     
     rotate(rad) {
