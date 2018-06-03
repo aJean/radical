@@ -54,8 +54,7 @@ export default class Wormhole {
             hole.addBy(pano);
 
             const light = this.light = new Light({
-                target: hole,
-                position: {x: pos.x, y: pos.y, z: pos.z - 200}
+                target: hole, x: pos.x, y: pos.y, z: pos.z - 200
             });
             light.addBy(pano);
         }).catch(e => Log.errorLog(e));

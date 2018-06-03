@@ -10,7 +10,10 @@ const defaultOpts = {
     color: 0xffffff,
     intensity: 1,
     angle: 90,
-    debug: false
+    debug: false,
+    x: 0,
+    y: 0,
+    z: 0
 };
 export default class Light extends Plastic {
     helper: any;
@@ -26,12 +29,10 @@ export default class Light extends Plastic {
         const light = this.plastic = opts.type == 1 ? new SpotLight(opts.color, opts.intensity, 0, opts.angle)
             : new PointLight(opts.color, opts.intensity);
 
+        this.setPosition(opts.x, opts.y, opts.z);
+        
         if (opts.target) {
             this.setTarget(opts.target);
-        }
-
-        if (opts.position) {
-            this.setPosition(opts.position.x, opts.position.y, opts.position.z);
         }
 
         if (opts.debug) {

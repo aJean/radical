@@ -56766,7 +56766,10 @@ var defaultOpts = {
     color: 0xffffff,
     intensity: 1,
     angle: 90,
-    debug: false
+    debug: false,
+    x: 0,
+    y: 0,
+    z: 0
 };
 var Light = /** @class */ (function (_super) {
     __extends(Light, _super);
@@ -56780,11 +56783,9 @@ var Light = /** @class */ (function (_super) {
         var opts = this.opts;
         var light = this.plastic = opts.type == 1 ? new three__WEBPACK_IMPORTED_MODULE_0__["SpotLight"](opts.color, opts.intensity, 0, opts.angle)
             : new three__WEBPACK_IMPORTED_MODULE_0__["PointLight"](opts.color, opts.intensity);
+        this.setPosition(opts.x, opts.y, opts.z);
         if (opts.target) {
             this.setTarget(opts.target);
-        }
-        if (opts.position) {
-            this.setPosition(opts.position.x, opts.position.y, opts.position.z);
         }
         if (opts.debug) {
             light.castShadow = true;
@@ -57977,8 +57978,7 @@ var Wormhole = /** @class */ (function () {
             }, pano);
             hole.addBy(pano);
             var light = _this.light = new _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_3__["default"]({
-                target: hole,
-                position: { x: pos.x, y: pos.y, z: pos.z - 200 }
+                target: hole, x: pos.x, y: pos.y, z: pos.z - 200
             });
             light.addBy(pano);
         }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_4__["default"].errorLog(e); });
