@@ -57865,7 +57865,7 @@ var Thru = /** @class */ (function () {
         list.forEach(function (item, i) {
             loader.loadTexture(item.image).then(function (texture) {
                 var pos = _this.getVector(i);
-                var text = new _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_4__["default"]({ fontsize: 30, inverse: false, text: item.setName });
+                var text = new _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_4__["default"]({ fontsize: 36, inverse: false, text: item.setName });
                 var hole = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_3__["default"]({
                     name: i, shadow: true, position: pos, radius: radius,
                     envMap: texture, visible: false, data: item

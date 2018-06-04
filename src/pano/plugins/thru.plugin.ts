@@ -83,7 +83,7 @@ export default class Thru {
         list.forEach((item, i) => {
             loader.loadTexture(item.image).then(texture => {
                 const pos = this.getVector(i);              
-                const text = new Text({fontsize: 30, inverse: false, text: item.setName});
+                const text = new Text({fontsize: 36, inverse: false, text: item.setName});
                 const hole = new Inradius({
                     name: i, shadow: true, position: pos, radius: radius,
                     envMap: texture, visible: false, data: item
