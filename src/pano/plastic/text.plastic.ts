@@ -8,11 +8,11 @@ import Tween from '../animations/tween.animation';
 
 const defaultOpts = {
     name: '',
-    fontface: 'Arial',
+    fontface: 'serif',
     width: 256,
     height: 128,
     fontsize: 42,
-    linewidth: 4,
+    linewidth: window.devicePixelRatio > 2 ? 6 : 4,
     color: '#fff',
     hide: false,
     order: 5,
@@ -81,7 +81,7 @@ export default class Text extends Plastic {
         ctx.fillText(opts.text, width / 2, height / 2 + 10);
 
         if (opts.strokecolor) {
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1;
             ctx.strokeStyle = opts.strokecolor;
             ctx.strokeText(opts.text, width / 2, height / 2 + 10);
         }

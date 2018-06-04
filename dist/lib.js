@@ -54159,7 +54159,7 @@ __webpack_require__.r(__webpack_exports__);
  * @file gyro control
  */
 var GyroControl = /** @class */ (function () {
-    function GyroControl(camera, control) {
+    function GyroControl(camera, orbit) {
         var _this = this;
         this.enabled = false;
         this.deviceOrien = {};
@@ -54173,7 +54173,7 @@ var GyroControl = /** @class */ (function () {
         this.spherical = new three__WEBPACK_IMPORTED_MODULE_0__["Spherical"]();
         camera.rotation.reorder('YXZ');
         this.camera = camera.clone();
-        this.control = control;
+        this.orbit = orbit;
         this.onDeviceOrientationChange = function (event) { return _this.deviceOrien = event; };
         this.onScreenOrientationChange = function (event) { return _this.screenOrien = Number(window.orientation) || 0; };
     }
@@ -54199,7 +54199,7 @@ var GyroControl = /** @class */ (function () {
         if (this.lastSpherical && spherical.phi < 3) {
             var theta = spherical.theta - this.lastSpherical.theta;
             var phi = this.lastSpherical.phi - spherical.phi;
-            this.control.update(theta, phi);
+            this.orbit.update(theta, phi);
         }
         this.lastSpherical = spherical.clone();
     };
@@ -54218,6 +54218,10 @@ var GyroControl = /** @class */ (function () {
         this.screenOrien = 0;
     };
     GyroControl.prototype.update = function () {
+        // give back to orbit
+        if (!this.enabled) {
+            return this.orbit.update();
+        }
         // z axis 0 ~ 360
         var alpha = this.deviceOrien.alpha ? three__WEBPACK_IMPORTED_MODULE_0__["Math"].degToRad(this.deviceOrien.alpha) : 0;
         // x axis -180 ~ 180
@@ -54239,6 +54243,9 @@ var GyroControl = /** @class */ (function () {
     GyroControl.prototype.updateAlphaOffset = function (angle) {
         this.alphaOffset = angle;
         this.update();
+    };
+    GyroControl.prototype.makeEnable = function (single) {
+        this.enabled = single;
     };
     return GyroControl;
 }());
@@ -57101,11 +57108,11 @@ var __extends = (undefined && undefined.__extends) || (function () {
  */
 var defaultOpts = {
     name: '',
-    fontface: 'Arial',
+    fontface: 'serif',
     width: 256,
     height: 128,
     fontsize: 42,
-    linewidth: 4,
+    linewidth: window.devicePixelRatio > 2 ? 6 : 4,
     color: '#fff',
     hide: false,
     order: 5,
@@ -57163,7 +57170,7 @@ var Text = /** @class */ (function (_super) {
         ctx.fillStyle = opts.color;
         ctx.fillText(opts.text, width / 2, height / 2 + 10);
         if (opts.strokecolor) {
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1;
             ctx.strokeStyle = opts.strokecolor;
             ctx.strokeText(opts.text, width / 2, height / 2 + 10);
         }
@@ -57861,18 +57868,12 @@ var Thru = /** @class */ (function () {
         var lights = this.lights;
         var radius = opts.radius;
         list.forEach(function (item, i) {
-            var texPath = 'https://mms-xr.cdn.bcebos.com/panorama/0be77ed5-8c6d-47a9-aab8-6ad15929a151/';
-            loader.loadTexture(texPath).then(function (texture) {
+            loader.loadTexture(item.image).then(function (texture) {
                 var pos = _this.getVector(i);
                 var text = new _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_4__["default"]({ fontsize: 30, inverse: false, text: item.setName });
                 var hole = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_3__["default"]({
-                    name: i,
-                    shadow: true,
-                    position: pos,
-                    radius: radius,
-                    envMap: texture,
-                    visible: false,
-                    data: item
+                    name: i, shadow: true, position: pos, radius: radius,
+                    envMap: texture, visible: false, data: item
                 }, pano);
                 hole.addBy(pano);
                 text.addTo(hole);
@@ -57994,10 +57995,10 @@ var Thru = /** @class */ (function () {
                             var lookTarget = pano.getLookAtTarget();
                             var pos_1 = obj_1.position.clone();
                             pos_1.z += pos_1.z > 0 ? 100 : -100;
+                            pano.gyro && pano.gyro.makeEnable(false);
                             new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"](lookTarget).to(pos_1).effect('quintEaseIn', 1000)
                                 .start(['x', 'y', 'z'], pano)
                                 .complete(function () {
-                                // camera position
                                 new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"](camera.position).to(obj_1.position).effect('quadEaseOut', 1000)
                                     .start(['x', 'y', 'z'], pano)
                                     .complete(function () {
@@ -58006,12 +58007,13 @@ var Thru = /** @class */ (function () {
                                     pano.enterThru(scene_1, obj_1.material.envMap);
                                     pano.dispatch('thru-change', data, scene_1, pano);
                                     pano.getControl().reset(pos_1.z > 0);
+                                    pano.gyro && pano.gyro.makeEnable(true);
                                 });
                             });
                         }
                     }).catch(function (e) {
                         _this.active = true;
-                        console.log(e);
+                        pano.gyro && pano.gyro.makeEnable(true);
                     });
                 }
                 return true;

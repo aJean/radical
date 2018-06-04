@@ -14,13 +14,14 @@
         <script src="../../dist/lib.js"></script>
         <script>
             $.ajax({
-                url: 'http://bjyz-newmedia07.epc.baidu.com:8080/img/image/quanjing/bxlpanoinfo?setid=17373537212767040097',
+                url: 'http://bjyz-newmedia07.epc.baidu.com:8080/img/image/quanjing/bxlpanoinfo?setid=805629688603157861&sf=1',
                 success: function(res) {
                     const data = res.data;
                     data.multiScene = true;
                     data.pano = {
                         fovTrans: true,
-                        sceneTrans: true
+                        sceneTrans: true,
+                        gyro: true
                     };
                     data.thru = {
                         lazy: 2000,

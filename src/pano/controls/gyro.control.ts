@@ -5,7 +5,7 @@ import {PerspectiveCamera, Vector3, Euler, Quaternion, Spherical, Math as TMath,
  */
 
 export default class GyroControl {
-    control: any;
+    orbit: any;
     onDeviceOrientationChange: any;
     onScreenOrientationChange: any;
     camera: any;
@@ -21,11 +21,11 @@ export default class GyroControl {
     lastSpherical;
     spherical = new Spherical();
 
-    constructor(camera, control) {
+    constructor(camera, orbit) {
         camera.rotation.reorder('YXZ');
 
         this.camera = camera.clone();
-        this.control = control;
+        this.orbit = orbit;
         this.onDeviceOrientationChange = event => this.deviceOrien = event;
         this.onScreenOrientationChange = event => this.screenOrien = Number(window.orientation) || 0;
     }
@@ -55,8 +55,7 @@ export default class GyroControl {
         if (this.lastSpherical && spherical.phi < 3) {
             const theta = spherical.theta - this.lastSpherical.theta;
             const phi = this.lastSpherical.phi - spherical.phi;
-
-            this.control.update(theta, phi);
+            this.orbit.update(theta, phi);
         }
 
         this.lastSpherical = spherical.clone();
@@ -80,6 +79,11 @@ export default class GyroControl {
     }
 
     update() {
+        // give back to orbit
+        if (!this.enabled) {
+            return this.orbit.update();
+        }
+
         // z axis 0 ~ 360
         const alpha = this.deviceOrien.alpha ? TMath.degToRad(this.deviceOrien.alpha) : 0;
         // x axis -180 ~ 180
@@ -104,5 +108,9 @@ export default class GyroControl {
     updateAlphaOffset(angle) {
         this.alphaOffset = angle;
         this.update();
+    }
+
+    makeEnable(single) {
+        this.enabled = single;
     }
 }

@@ -86,18 +86,12 @@ export default class Thru {
         const radius = opts.radius;
 
         list.forEach((item, i) => {
-            const texPath = 'https://mms-xr.cdn.bcebos.com/panorama/0be77ed5-8c6d-47a9-aab8-6ad15929a151/';
-            loader.loadTexture(texPath).then(texture => {
+            loader.loadTexture(item.image).then(texture => {
                 const pos = this.getVector(i);              
                 const text = new Text({fontsize: 30, inverse: false, text: item.setName});
                 const hole = new Inradius({
-                    name: i,
-                    shadow: true,
-                    position: pos,
-                    radius: radius,
-                    envMap: texture,
-                    visible: false,
-                    data: item
+                    name: i, shadow: true, position: pos, radius: radius,
+                    envMap: texture, visible: false, data: item
                 }, pano);
                 hole.addBy(pano);
                 text.addTo(hole);
@@ -236,10 +230,10 @@ export default class Thru {
                                 const pos = obj.position.clone();
                                 pos.z += pos.z > 0 ? 100 : -100;
 
+                                pano.gyro && pano.gyro.makeEnable(false);
                                 new Tween(lookTarget).to(pos).effect('quintEaseIn', 1000)
                                     .start(['x', 'y', 'z'], pano)
                                     .complete(() => {
-                                        // camera position
                                         new Tween(camera.position).to(obj.position).effect('quadEaseOut', 1000)
                                             .start(['x', 'y', 'z'], pano)
                                             .complete(() => {
@@ -248,12 +242,13 @@ export default class Thru {
                                                 pano.enterThru(scene, obj.material.envMap);
                                                 pano.dispatch('thru-change', data, scene, pano);
                                                 pano.getControl().reset(pos.z > 0);
+                                                pano.gyro && pano.gyro.makeEnable(true);
                                             });
                                     });
                             }
                         }).catch(e => {
                             this.active = true;
-                            console.log(e);
+                            pano.gyro && pano.gyro.makeEnable(true);
                         });
                 }
                 return true;
