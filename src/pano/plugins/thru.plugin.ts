@@ -13,12 +13,7 @@ import Light from '../plastic/light.plastic';
 
 const defaultOpts = {
     radius: 100,
-    factor: 300,
-    effect: 'scale',
-    bg: '',
-    setid: '',
     lazy: 3000,
-    rurl: null,
     surl: null
 };
 const loader = new Loader();

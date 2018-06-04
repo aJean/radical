@@ -57805,12 +57805,7 @@ __webpack_require__.r(__webpack_exports__);
  */
 var defaultOpts = {
     radius: 100,
-    factor: 300,
-    effect: 'scale',
-    bg: '',
-    setid: '',
     lazy: 3000,
-    rurl: null,
     surl: null
 };
 var loader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_2__["default"]();
