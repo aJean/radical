@@ -148,7 +148,7 @@ function OrbitControl(camera, domElement, pano) {
             offset.applyQuaternion(quat);
             /* angle from z-axis around y-axi */
             spherical.setFromVector3(offset);
-            
+
             if (scope.autoRotate && state === STATE.NONE) {
                 rotateLeft(getAutoRotationAngle());
             } else if (state === STATE.SLIDER) {
@@ -576,7 +576,7 @@ function OrbitControl(camera, domElement, pano) {
     function onMouseWheel(event) {
         if (scope.enabled === false
             || scope.enableZoom === false
-            || (state !== STATE.NONE && state !== STATE.ROTATE)) {
+            || (!pano.gyro && state !== STATE.NONE && state !== STATE.ROTATE)) {
             return;
         }
 
@@ -651,7 +651,7 @@ function OrbitControl(camera, domElement, pano) {
                 }
                 handleTouchMoveRotate(event);
                 break;
-            case 2:
+            case 2:            
                 // two-fingered touch: dolly
                 if (scope.enableZoom === false) {
                     return;

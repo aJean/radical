@@ -300,6 +300,18 @@
                     return isWebViewAndroid;
                 };
             }();
+            var isHP10 = function () {
+                var isHP10 = navigator.userAgent.indexOf('HUAWEIVTR-AL00') !== -1;
+                return function () {
+                    return isHP10;
+                }
+            }();
+            var isUC = function () {
+                var isUC = navigator.userAgent.indexOf('UCBrowser') !== -1;
+                return function () {
+                    return isUC;
+                }
+            }();
             var isSafari = function () {
                 var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
                 return function () {
@@ -833,6 +845,11 @@
                 if (!isIOS()) {
                     this.realCanvasWidth = Object.getOwnPropertyDescriptor(gl.canvas.__proto__, 'width');
                     this.realCanvasHeight = Object.getOwnPropertyDescriptor(gl.canvas.__proto__, 'height');
+                    // huawei p10 bug
+                    if (this.realCanvasWidth === undefined) {
+                        this.realCanvasWidth = Object.getOwnPropertyDescriptor(gl.canvas, 'width');
+                        this.realCanvasHeight = Object.getOwnPropertyDescriptor(gl.canvas, 'height');
+                    }
                 }
                 this.isPatched = false;
                 this.lastBoundFramebuffer = null;
@@ -1062,10 +1079,12 @@
                 }
                 var gl = this.gl;
                 var canvas = this.gl.canvas;
+                
                 if (!isIOS()) {
                     Object.defineProperty(canvas, 'width', this.realCanvasWidth);
                     Object.defineProperty(canvas, 'height', this.realCanvasHeight);
                 }
+
                 canvas.width = this.bufferWidth;
                 canvas.height = this.bufferHeight;
                 gl.bindFramebuffer = this.realBindFramebuffer;
@@ -1074,6 +1093,7 @@
                 gl.colorMask = this.realColorMask;
                 gl.clearColor = this.realClearColor;
                 gl.viewport = this.realViewport;
+
                 if (this.lastBoundFramebuffer == this.framebuffer) {
                     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
                 }
@@ -2812,7 +2832,7 @@
                                                     window.location.href = '/';
                                                     window.setTimeout(window.stop, 0);
                                                 }, 15000);
-                                            } else if (!/UCBrowser/.test(navigator.userAgent)) {
+                                            } else if (!isHP10() && !isUC()) {
                                                 this.noSleepVideo.play();
                                             }
                                         }
@@ -3062,7 +3082,8 @@
                             self.endPresent_();
                             self.fireVRDisplayPresentChange_();
                         }
-                        if (isWebViewAndroid()) {
+
+                        if (isWebViewAndroid() || isHP10()) {
                             self.removeFullscreenWrapper();
                             self.removeFullscreenListeners_();
                             self.endPresent_();

@@ -32,7 +32,7 @@ export default class VPano extends Pano {
         this.dispatch('render-process', this.currentData, this);
 
         this.effectRender.render(this.scene, this.camera);
-        this.effectRender.requestAnimationFrame(this.animate.bind(this));
+        this.reqid = this.effectRender.requestAnimationFrame(this.animate.bind(this));
     }
 
     onResize() {
@@ -61,6 +61,11 @@ export default class VPano extends Pano {
      */
     getCameraR() {
         return this.effectRender.cameraR;
+    }
+
+    dispose() {
+        super.dispose();
+        this.effectRender.cancelAnimationFrame(this.reqid);
     }
 
     /**

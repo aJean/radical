@@ -13,7 +13,7 @@ const defaultOpts = {
 };
 export default class Layer implements IPluggableUI {
     data: any;
-    root: HTMLElement;
+    element: HTMLElement;
     content: HTMLElement;
     container: HTMLElement;
 
@@ -24,22 +24,22 @@ export default class Layer implements IPluggableUI {
 
     create() {
         const data = this.data;
-        const root = this.root = document.createElement('div');
+        const element = this.element = document.createElement('div');
         const content = this.content = document.createElement('div');
-        root.className = 'pano-layer';
+        element.className = 'pano-layer';
         content.className = 'pano-layer-content';
 
         if (data.hide) {
-            root.style.display = 'none';
+            element.style.display = 'none';
         }
 
-        root.appendChild(content);
+        element.appendChild(content);
         this.setSize(data);
         this.setPostion(data);
     }
 
     getElement() {
-        return this.root;
+        return this.element;
     }
 
     setSize(data) {
@@ -48,8 +48,8 @@ export default class Layer implements IPluggableUI {
     }
 
     setPostion(pos) {
-        this.root.style.left = pos.x + 'px';
-        this.root.style.top = pos.y + 'px';
+        this.element.style.left = pos.x + 'px';
+        this.element.style.top = pos.y + 'px';
     }
 
     setContent(child) {
@@ -58,22 +58,22 @@ export default class Layer implements IPluggableUI {
 
     setContainer(container) {
         this.container = container;
-        container.appendChild(this.root);
+        container.appendChild(this.element);
     }
 
     show() {
-        this.root.style.display = 'block';
+        this.element.style.display = 'block';
     }
 
     hide() {
-        this.root.style.display = 'none';
+        this.element.style.display = 'none';
     }
 
     dispose() {
-        const root = this.root;
+        const element = this.element;
 
-        root.style.display = 'none'
-        root.innerHTML = '';
-        this.container.removeChild(this.root);
+        element.style.display = 'none'
+        element.innerHTML = '';
+        this.container.removeChild(this.element);
     }
 }

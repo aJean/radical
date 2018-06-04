@@ -33,6 +33,7 @@ export default class Pano {
     skyBox = null;
     orbit = null;
     gyro = null;
+    reqid = 0;
     currentData = null;
     frozen = true;
     event = new EventEmitter();
@@ -246,7 +247,7 @@ export default class Pano {
         this.dispatch('render-process', this.currentData, this);
         this.render();
 
-        requestAnimationFrame(this.animate.bind(this));
+        this.reqid = requestAnimationFrame(this.animate.bind(this));
     }
 
     render() {
@@ -457,12 +458,14 @@ export default class Pano {
      * 释放资源
      */
     dispose() {
-        Util.cleanup(null, this.scene);
-
+        this.skyBox.dispose();
         this.stopControl();
         this.dispatch('render-dispose', this);
         this.event.removeAllListeners();
         this.webgl.dispose();
         this.root.innerHTML = '';
+        
+        cancelAnimationFrame(this.reqid);
+        Util.cleanup(null, this.scene);
     }
 }

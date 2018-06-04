@@ -40,6 +40,7 @@ export default class GyroControl {
         const camera = this.camera;
         const quaternion = camera.quaternion;
         const spherical = this.spherical;
+        const vector = new Vector3();
         
         // orient the device
         quaternion.setFromEuler(this.euler);
@@ -48,7 +49,8 @@ export default class GyroControl {
         // 竖屏 or 横屏
         quaternion.multiply(this.q0.setFromAxisAngle(this.zee, -orient));
         // 获取球面坐标
-        spherical.setFromVector3(camera.getWorldDirection());
+        camera.getWorldDirection(vector);
+        spherical.setFromVector3(vector);
 
         if (this.lastSpherical && spherical.phi < 3) {
             const theta = spherical.theta - this.lastSpherical.theta;

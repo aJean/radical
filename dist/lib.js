@@ -46,17 +46,32 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
 /******/ 		}
 /******/ 	};
 /******/
 /******/ 	// define __esModule on exports
 /******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
 /******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -54171,6 +54186,7 @@ var GyroControl = /** @class */ (function () {
         var camera = this.camera;
         var quaternion = camera.quaternion;
         var spherical = this.spherical;
+        var vector = new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"]();
         // orient the device
         quaternion.setFromEuler(this.euler);
         // 设备初始为平放状态，这里将手机竖起来符合用户习惯
@@ -54178,7 +54194,8 @@ var GyroControl = /** @class */ (function () {
         // 竖屏 or 横屏
         quaternion.multiply(this.q0.setFromAxisAngle(this.zee, -orient));
         // 获取球面坐标
-        spherical.setFromVector3(camera.getWorldDirection());
+        camera.getWorldDirection(vector);
+        spherical.setFromVector3(vector);
         if (this.lastSpherical && spherical.phi < 3) {
             var theta = spherical.theta - this.lastSpherical.theta;
             var phi = this.lastSpherical.phi - spherical.phi;
@@ -54781,7 +54798,7 @@ function OrbitControl(camera, domElement, pano) {
     function onMouseWheel(event) {
         if (scope.enabled === false
             || scope.enableZoom === false
-            || (state !== STATE.NONE && state !== STATE.ROTATE)) {
+            || (!pano.gyro && state !== STATE.NONE && state !== STATE.ROTATE)) {
             return;
         }
         event.preventDefault();
@@ -55932,6 +55949,7 @@ var Pano = /** @class */ (function () {
         this.skyBox = null;
         this.orbit = null;
         this.gyro = null;
+        this.reqid = 0;
         this.currentData = null;
         this.frozen = true;
         this.event = new _core_event__WEBPACK_IMPORTED_MODULE_7__["default"]();
@@ -56136,7 +56154,7 @@ var Pano = /** @class */ (function () {
         this.updateControl();
         this.dispatch('render-process', this.currentData, this);
         this.render();
-        requestAnimationFrame(this.animate.bind(this));
+        this.reqid = requestAnimationFrame(this.animate.bind(this));
     };
     Pano.prototype.render = function () {
         this.webgl.render(this.scene, this.camera);
@@ -56319,12 +56337,14 @@ var Pano = /** @class */ (function () {
      * 释放资源
      */
     Pano.prototype.dispose = function () {
-        _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].cleanup(null, this.scene);
+        this.skyBox.dispose();
         this.stopControl();
         this.dispatch('render-dispose', this);
         this.event.removeAllListeners();
         this.webgl.dispose();
         this.root.innerHTML = '';
+        cancelAnimationFrame(this.reqid);
+        _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].cleanup(null, this.scene);
     };
     return Pano;
 }());
@@ -59424,7 +59444,7 @@ var VPano = /** @class */ (function (_super) {
         this.updateControl();
         this.dispatch('render-process', this.currentData, this);
         this.effectRender.render(this.scene, this.camera);
-        this.effectRender.requestAnimationFrame(this.animate.bind(this));
+        this.reqid = this.effectRender.requestAnimationFrame(this.animate.bind(this));
     };
     VPano.prototype.onResize = function () {
         var camera = this.getCamera();
@@ -59448,6 +59468,10 @@ var VPano = /** @class */ (function (_super) {
      */
     VPano.prototype.getCameraR = function () {
         return this.effectRender.cameraR;
+    };
+    VPano.prototype.dispose = function () {
+        _super.prototype.dispose.call(this);
+        this.effectRender.cancelAnimationFrame(this.reqid);
     };
     /**
      * 进入 vr 模式
