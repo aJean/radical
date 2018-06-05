@@ -8,7 +8,7 @@ import Tween from '../animations/tween.animation';
 
 const defaultOpts = {
     name: '',
-    fontface: 'serif',
+    fontface: 'monospace',
     width: 256,
     height: 128,
     fontsize: 42,

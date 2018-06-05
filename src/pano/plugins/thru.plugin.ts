@@ -62,11 +62,10 @@ export default class Thru {
      * 使用唯一点光源避免互相干扰
      */
     createLights() {
-        for (let i = 0;i < 1; i++) {
-            const light = new Light({type: 2});
-            light.addBy(this.pano);
-            this.lights.push(light);
-        }
+        const light = new Light({type: 2, y: 900});
+
+        light.addBy(this.pano);
+        this.lights.push(light);
     }
 
     /**
@@ -83,10 +82,10 @@ export default class Thru {
         list.forEach((item, i) => {
             loader.loadTexture(item.image).then(texture => {
                 const pos = this.getVector(i);              
-                const text = new Text({fontsize: 36, inverse: false, text: item.setName});
+                const text = new Text({fontsize: 32, width: 128, inverse: false, text: item.setName});
                 const hole = new Inradius({
                     name: i, shadow: true, position: pos, radius: radius,
-                    envMap: texture, visible: false, data: item
+                    emissive: '#999', envMap: texture, visible: false, data: item
                 }, pano);
                 hole.addBy(pano);
                 text.addTo(hole);

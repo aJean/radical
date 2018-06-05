@@ -56670,8 +56670,9 @@ var defaultOpts = {
     side: three__WEBPACK_IMPORTED_MODULE_0__["BackSide"],
     radius: 2000,
     color: '#fff',
-    widthSegments: 30,
-    heightSegments: 30,
+    emissive: '#000',
+    widthSegments: 40,
+    heightSegments: 40,
     opacity: 1,
     shadow: false,
     visible: true
@@ -56692,10 +56693,12 @@ var Inradius = /** @class */ (function (_super) {
         var opts = this.opts;
         var params = opts.shadow ? {
             color: opts.color,
+            emissive: opts.emissive,
+            shininess: 0,
+            specular: opts.color,
             side: opts.side,
             refractionRatio: 0,
             reflectivity: 1,
-            specular: 'grey',
             transparent: true,
             opacity: opts.opacity
         } : {
@@ -56832,7 +56835,7 @@ var __extends = (undefined && undefined.__extends) || (function () {
 
 
 /**
- * @file 聚光灯
+ * @file 光源
  */
 var defaultOpts = {
     type: 1,
@@ -56855,7 +56858,7 @@ var Light = /** @class */ (function (_super) {
     Light.prototype.create = function () {
         var opts = this.opts;
         var light = this.plastic = opts.type == 1 ? new three__WEBPACK_IMPORTED_MODULE_0__["SpotLight"](opts.color, opts.intensity, 0, opts.angle)
-            : new three__WEBPACK_IMPORTED_MODULE_0__["PointLight"](opts.color, opts.intensity);
+            : new three__WEBPACK_IMPORTED_MODULE_0__["PointLight"](opts.color, opts.intensity, 0, 2);
         this.setPosition(opts.x, opts.y, opts.z);
         if (opts.target) {
             this.setTarget(opts.target);
@@ -57108,7 +57111,7 @@ var __extends = (undefined && undefined.__extends) || (function () {
  */
 var defaultOpts = {
     name: '',
-    fontface: 'serif',
+    fontface: 'monospace',
     width: 256,
     height: 128,
     fontsize: 42,
@@ -57845,11 +57848,9 @@ var Thru = /** @class */ (function () {
      * 使用唯一点光源避免互相干扰
      */
     Thru.prototype.createLights = function () {
-        for (var i = 0; i < 1; i++) {
-            var light = new _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_5__["default"]({ type: 2 });
-            light.addBy(this.pano);
-            this.lights.push(light);
-        }
+        var light = new _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_5__["default"]({ type: 2, y: 900 });
+        light.addBy(this.pano);
+        this.lights.push(light);
     };
     /**
      * 创建穿越点
@@ -57865,10 +57866,10 @@ var Thru = /** @class */ (function () {
         list.forEach(function (item, i) {
             loader.loadTexture(item.image).then(function (texture) {
                 var pos = _this.getVector(i);
-                var text = new _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_4__["default"]({ fontsize: 36, inverse: false, text: item.setName });
+                var text = new _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_4__["default"]({ fontsize: 32, width: 128, inverse: false, text: item.setName });
                 var hole = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_3__["default"]({
                     name: i, shadow: true, position: pos, radius: radius,
-                    envMap: texture, visible: false, data: item
+                    emissive: '#999', envMap: texture, visible: false, data: item
                 }, pano);
                 hole.addBy(pano);
                 text.addTo(hole);

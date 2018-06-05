@@ -10,8 +10,9 @@ const defaultOpts = {
     side: BackSide,
     radius: 2000,
     color: '#fff',
-    widthSegments: 30,
-    heightSegments: 30,
+    emissive: '#000',
+    widthSegments: 40,
+    heightSegments: 40,
     opacity: 1,
     shadow: false,
     visible: true
@@ -35,10 +36,12 @@ export default class Inradius extends Plastic {
         const opts = this.opts;
         const params: any = opts.shadow ? {
                 color: opts.color,
+                emissive: opts.emissive,
+                shininess: 0,
+                specular: opts.color,
                 side: opts.side,
                 refractionRatio: 0,
                 reflectivity: 1,
-                specular: 'grey',
                 transparent: true,
                 opacity: opts.opacity                
             } : {
