@@ -9,6 +9,7 @@ import Media from '../pano/plugins/media.plugin';
 import Helper from '../pano/plugins/helper.plugin';
 import Pano from '../pano/pano';
 import Log from '../core/log';
+import * as PubSub from 'pubsub-js';
 
 /**
  * @file vr pano runtime
@@ -102,7 +103,7 @@ abstract class Runtime {
             // 用户订阅事件
             if (events) {
                 for (let name in events) {
-                    pano.subscribe(name, events[name]);
+                    PubSub.subscribe(name, events[name]);
                 }
             }
 

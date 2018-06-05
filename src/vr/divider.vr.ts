@@ -6,6 +6,8 @@ import Icon from '../pano/plastic/icon.plastic';
 import Point from '../pano/plastic/point.plastic';
 import Util from '../core/util';
 import Assets from './assets.vr';
+import * as PubSub from 'pubsub-js';
+import Topic from '../core/topic';
 
 /**
  * @file webvr 用户控制器
@@ -19,6 +21,7 @@ const defaultOpts = {
 };
 export default class Divider {
     data: any;
+    subtoken: any;    
     vpano: any;
     backBtn: any;
     enterBtn: any;
@@ -36,13 +39,13 @@ export default class Divider {
         data = this.data = Object.assign({}, defaultOpts, data);
         this.vpano = vpano;
 
-        vpano.subscribe('scene-load', () => {
+        PubSub.subscribe(Topic.SCENE.LOAD, () => {
             this.initPanel();
             this.initSetPanel();
             this.createVrBtn(data.el);
             this.hideAll();
         });
-        vpano.subscribe('render-process', this.update, this);
+        this.subtoken = PubSub.subscribe(Topic.RENDER.PROCESS, () => this.update());
     }
 
     createVrBtn(el) {
@@ -444,6 +447,6 @@ export default class Divider {
 
         root.removeChild(this.backBtn);
         root.removeChild(this.enterBtn);
-        vpano.unSubscribe('render-process', this.update, this);
+        PubSub.unsubscribe(this.subtoken);
     }
 };

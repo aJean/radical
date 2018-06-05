@@ -1,4 +1,5 @@
-import Pano from '../pano';
+import * as PubSub from 'pubsub-js';
+import Topic from '../../core/topic';
 import Log from '../../core/log';
 
 /**
@@ -46,8 +47,8 @@ const EFFECT = {
 };
 
 export default class Tween {
-    pano: Pano;
     obj: any;
+    subtoken: any;
     target: any;
     fn: Function;
     onProcess: Function;
@@ -65,21 +66,20 @@ export default class Tween {
         return this;
     }
 
-    start(keys, pano: Pano) {
+    start(keys) {
         if (!this.obj || !this.target || !this.fn) {
             Log.errorLog('leak of necessary parameters');
         } else {
             this.startTime = Date.now();
-            this.pano = pano;
             keys.forEach(key => this.record[key] = this.obj[key]);
-            pano.subscribe('render-process', this.animate, this);
+            this.subtoken = PubSub.subscribe(Topic.RENDER.PROCESS, () => this.animate());
         }
 
         return this;
     }
 
     stop() {
-        this.pano.unsubscribe('render-process', this.animate, this);
+        PubSub.unsubscribe(this.subtoken);
         return this;
     }
 

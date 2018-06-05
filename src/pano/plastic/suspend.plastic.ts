@@ -4,6 +4,8 @@ import Log from '../../core/log';
 import Util from '../../core/util';
 import Tween from '../animations/tween.animation';
 import Plastic from './plastic';
+import Topic from '../../core/topic';
+import * as PubSub from 'pubsub-js';
 
 /**
  * @file 悬浮球
@@ -14,7 +16,8 @@ export default class Suspend extends Plastic{
     scene: any;
     camera: any;
     sphere: any;
-    toScene: any;
+    toscene: any;
+    subtoken: any;
 
     constructor(opts, pano) {
         super();
@@ -24,7 +27,7 @@ export default class Suspend extends Plastic{
         this.onThrough = this.onThrough.bind(this);
         this.create();
 
-        pano.subscribe('render-process', this.update, this);
+        this.subtoken = PubSub.subscribe(Topic.RENDER.PROCESS, () => this.update());
         pano.getCanvas().addEventListener('click', this.onThrough);
     }
 
@@ -44,7 +47,7 @@ export default class Suspend extends Plastic{
             this.pano.webgl.autoClear = false;
         }).catch(e => Log.errorLog(e));
 
-        this.toScene = {bxlPath: opts.bxlPath, texPath: opts.texPath};
+        this.toscene = {bxlPath: opts.bxlPath, texPath: opts.texPath};
     }
 
     update() {
@@ -79,8 +82,8 @@ export default class Suspend extends Plastic{
         const ret = Util.intersect(pos, [this.sphere], this.camera);
 
         if (ret) {
-            const data = this.toScene;
-            this.toScene = pano.currentData;
+            const data = this.toscene;
+            this.toscene = pano.currentData;
             pano.enterNext(data);
             sphere.material.envMap = pano.skyBox.getMap();
         }
@@ -88,9 +91,9 @@ export default class Suspend extends Plastic{
 
     dispose() {
         const pano = this.pano;
-        pano.webgl.autoClear = true;
 
-        pano.unsubscribe('render-process', this.update, this);
+        PubSub.unsubscribe(this.subtoken);
+        pano.webgl.autoClear = true;
         pano.getCanvas().removeEventListener('click', this.onThrough);
     }
 }

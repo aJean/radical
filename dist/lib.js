@@ -96,6 +96,39 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ({
 
+/***/ "../../../../usr/local/lib/node_modules/webpack/buildin/module.js":
+/*!***********************************!*\
+  !*** (webpack)/buildin/module.js ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = function(module) {
+	if (!module.webpackPolyfill) {
+		module.deprecate = function() {};
+		module.paths = [];
+		// module.parent = undefined by default
+		if (!module.children) module.children = [];
+		Object.defineProperty(module, "loaded", {
+			enumerable: true,
+			get: function() {
+				return module.l;
+			}
+		});
+		Object.defineProperty(module, "id", {
+			enumerable: true,
+			get: function() {
+				return module.i;
+			}
+		});
+		module.webpackPolyfill = 1;
+	}
+	return module;
+};
+
+
+/***/ }),
+
 /***/ "./node_modules/crypto-js/aes.js":
 /*!***************************************!*\
   !*** ./node_modules/crypto-js/aes.js ***!
@@ -6773,6 +6806,294 @@ return /******/ (function(modules) { // webpackBootstrap
 	return CryptoJS;
 
 }));
+
+/***/ }),
+
+/***/ "./node_modules/pubsub-js/src/pubsub.js":
+/*!**********************************************!*\
+  !*** ./node_modules/pubsub-js/src/pubsub.js ***!
+  \**********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(module) {/*
+Copyright (c) 2010,2011,2012,2013,2014 Morgan Roderick http://roderick.dk
+License: MIT - http://mrgnrdrck.mit-license.org
+
+https://github.com/mroderick/PubSubJS
+*/
+(function (root, factory){
+    'use strict';
+
+    var PubSub = {};
+    root.PubSub = PubSub;
+
+    var define = root.define;
+
+    factory(PubSub);
+
+    // AMD support
+    if (typeof define === 'function' && define.amd){
+        define(function() { return PubSub; });
+
+        // CommonJS and Node.js module support
+    } else if (true){
+        if (module !== undefined && module.exports) {
+            exports = module.exports = PubSub; // Node.js specific `module.exports`
+        }
+        exports.PubSub = PubSub; // CommonJS module 1.1.1 spec
+        module.exports = exports = PubSub; // CommonJS
+    }
+
+}(( typeof window === 'object' && window ) || this, function (PubSub){
+    'use strict';
+
+    var messages = {},
+        lastUid = -1;
+
+    function hasKeys(obj){
+        var key;
+
+        for (key in obj){
+            if ( obj.hasOwnProperty(key) ){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+	 *	Returns a function that throws the passed exception, for use as argument for setTimeout
+	 *	@param { Object } ex An Error object
+	 */
+    function throwException( ex ){
+        return function reThrowException(){
+            throw ex;
+        };
+    }
+
+    function callSubscriberWithDelayedExceptions( subscriber, message, data ){
+        try {
+            subscriber( message, data );
+        } catch( ex ){
+            setTimeout( throwException( ex ), 0);
+        }
+    }
+
+    function callSubscriberWithImmediateExceptions( subscriber, message, data ){
+        subscriber( message, data );
+    }
+
+    function deliverMessage( originalMessage, matchedMessage, data, immediateExceptions ){
+        var subscribers = messages[matchedMessage],
+            callSubscriber = immediateExceptions ? callSubscriberWithImmediateExceptions : callSubscriberWithDelayedExceptions,
+            s;
+
+        if ( !messages.hasOwnProperty( matchedMessage ) ) {
+            return;
+        }
+
+        for (s in subscribers){
+            if ( subscribers.hasOwnProperty(s)){
+                callSubscriber( subscribers[s], originalMessage, data );
+            }
+        }
+    }
+
+    function createDeliveryFunction( message, data, immediateExceptions ){
+        return function deliverNamespaced(){
+            var topic = String( message ),
+                position = topic.lastIndexOf( '.' );
+
+            // deliver the message as it is now
+            deliverMessage(message, message, data, immediateExceptions);
+
+            // trim the hierarchy and deliver message to each level
+            while( position !== -1 ){
+                topic = topic.substr( 0, position );
+                position = topic.lastIndexOf('.');
+                deliverMessage( message, topic, data, immediateExceptions );
+            }
+        };
+    }
+
+    function messageHasSubscribers( message ){
+        var topic = String( message ),
+            found = Boolean(messages.hasOwnProperty( topic ) && hasKeys(messages[topic])),
+            position = topic.lastIndexOf( '.' );
+
+        while ( !found && position !== -1 ){
+            topic = topic.substr( 0, position );
+            position = topic.lastIndexOf( '.' );
+            found = Boolean(messages.hasOwnProperty( topic ) && hasKeys(messages[topic]));
+        }
+
+        return found;
+    }
+
+    function publish( message, data, sync, immediateExceptions ){
+        var deliver = createDeliveryFunction( message, data, immediateExceptions ),
+            hasSubscribers = messageHasSubscribers( message );
+
+        if ( !hasSubscribers ){
+            return false;
+        }
+
+        if ( sync === true ){
+            deliver();
+        } else {
+            setTimeout( deliver, 0 );
+        }
+        return true;
+    }
+
+    /**
+	 *	PubSub.publish( message[, data] ) -> Boolean
+	 *	- message (String): The message to publish
+	 *	- data: The data to pass to subscribers
+	 *	Publishes the the message, passing the data to it's subscribers
+	**/
+    PubSub.publish = function( message, data ){
+        return publish( message, data, false, PubSub.immediateExceptions );
+    };
+
+    /**
+	 *	PubSub.publishSync( message[, data] ) -> Boolean
+	 *	- message (String): The message to publish
+	 *	- data: The data to pass to subscribers
+	 *	Publishes the the message synchronously, passing the data to it's subscribers
+	**/
+    PubSub.publishSync = function( message, data ){
+        return publish( message, data, true, PubSub.immediateExceptions );
+    };
+
+    /**
+	 *	PubSub.subscribe( message, func ) -> String
+	 *	- message (String): The message to subscribe to
+	 *	- func (Function): The function to call when a new message is published
+	 *	Subscribes the passed function to the passed message. Every returned token is unique and should be stored if
+	 *	you need to unsubscribe
+	**/
+    PubSub.subscribe = function( message, func ){
+        if ( typeof func !== 'function'){
+            return false;
+        }
+
+        // message is not registered yet
+        if ( !messages.hasOwnProperty( message ) ){
+            messages[message] = {};
+        }
+
+        // forcing token as String, to allow for future expansions without breaking usage
+        // and allow for easy use as key names for the 'messages' object
+        var token = 'uid_' + String(++lastUid);
+        messages[message][token] = func;
+
+        // return token for unsubscribing
+        return token;
+    };
+
+    /**
+	 *	PubSub.subscribeOnce( message, func ) -> PubSub
+	 *	- message (String): The message to subscribe to
+	 *	- func (Function): The function to call when a new message is published
+	 *	Subscribes the passed function to the passed message once
+	**/
+    PubSub.subscribeOnce = function( message, func ){
+        var token = PubSub.subscribe( message, function(){
+            // before func apply, unsubscribe message
+            PubSub.unsubscribe( token );
+            func.apply( this, arguments );
+        });
+        return PubSub;
+    };
+
+    /* Public: Clears all subscriptions
+	 */
+    PubSub.clearAllSubscriptions = function clearAllSubscriptions(){
+        messages = {};
+    };
+
+    /*Public: Clear subscriptions by the topic
+	*/
+    PubSub.clearSubscriptions = function clearSubscriptions(topic){
+        var m;
+        for (m in messages){
+            if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0){
+                delete messages[m];
+            }
+        }
+    };
+
+    /* Public: removes subscriptions.
+	 * When passed a token, removes a specific subscription.
+	 * When passed a function, removes all subscriptions for that function
+	 * When passed a topic, removes all subscriptions for that topic (hierarchy)
+	 *
+	 * value - A token, function or topic to unsubscribe.
+	 *
+	 * Examples
+	 *
+	 *		// Example 1 - unsubscribing with a token
+	 *		var token = PubSub.subscribe('mytopic', myFunc);
+	 *		PubSub.unsubscribe(token);
+	 *
+	 *		// Example 2 - unsubscribing with a function
+	 *		PubSub.unsubscribe(myFunc);
+	 *
+	 *		// Example 3 - unsubscribing a topic
+	 *		PubSub.unsubscribe('mytopic');
+	 */
+    PubSub.unsubscribe = function(value){
+        var descendantTopicExists = function(topic) {
+                var m;
+                for ( m in messages ){
+                    if ( messages.hasOwnProperty(m) && m.indexOf(topic) === 0 ){
+                        // a descendant of the topic exists:
+                        return true;
+                    }
+                }
+
+                return false;
+            },
+            isTopic    = typeof value === 'string' && ( messages.hasOwnProperty(value) || descendantTopicExists(value) ),
+            isToken    = !isTopic && typeof value === 'string',
+            isFunction = typeof value === 'function',
+            result = false,
+            m, message, t;
+
+        if (isTopic){
+            PubSub.clearSubscriptions(value);
+            return;
+        }
+
+        for ( m in messages ){
+            if ( messages.hasOwnProperty( m ) ){
+                message = messages[m];
+
+                if ( isToken && message[value] ){
+                    delete message[value];
+                    result = value;
+                    // tokens are unique, so we can just stop here
+                    break;
+                }
+
+                if (isFunction) {
+                    for ( t in message ){
+                        if (message.hasOwnProperty(t) && message[t] === value){
+                            delete message[t];
+                            result = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    };
+}));
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../../../../usr/local/lib/node_modules/webpack/buildin/module.js */ "../../../../usr/local/lib/node_modules/webpack/buildin/module.js")(module)))
 
 /***/ }),
 
@@ -53065,325 +53386,6 @@ function LensFlare() {
 
 /***/ }),
 
-/***/ "./src/core/event.ts":
-/*!***************************!*\
-  !*** ./src/core/event.ts ***!
-  \***************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-var has = Object.prototype.hasOwnProperty;
-var prefix = '~';
-/**
- * Constructor to create a storage for our `EE` objects.
- * An `Events` instance is a plain object whose properties are event names.
- *
- * @constructor
- * @private
- */
-function Events() { }
-//
-// We try to not inherit from `Object.prototype`. In some engines creating an
-// instance in this way is faster than calling `Object.create(null)` directly.
-// If `Object.create(null)` is not supported we prefix the event names with a
-// character to make sure that the built-in object properties are not
-// overridden or used as an attack vector.
-//
-if (Object.create) {
-    Events.prototype = Object.create(null);
-    //
-    // This hack is needed because the `__proto__` property is still inherited in
-    // some old browsers like Android 4, iPhone 5.1, Opera 11 and Safari 5.
-    //
-    if (!new Events()['__proto__'])
-        prefix = false;
-}
-/**
- * Representation of a single event listener.
- *
- * @param {Function} fn The listener function.
- * @param {*} context The context to invoke the listener with.
- * @param {Boolean} [once=false] Specify if the listener is a one-time listener.
- * @constructor
- * @private
- */
-function EE(fn, context, once) {
-    this.fn = fn;
-    this.context = context;
-    this.once = once || false;
-}
-/**
- * Add a listener for a given event.
- *
- * @param {EventEmitter} emitter Reference to the `EventEmitter` instance.
- * @param {(String|Symbol)} event The event name.
- * @param {Function} fn The listener function.
- * @param {*} context The context to invoke the listener with.
- * @param {Boolean} once Specify if the listener is a one-time listener.
- * @returns {EventEmitter}
- * @private
- */
-function addListener(emitter, event, fn, context, once) {
-    if (typeof fn !== 'function') {
-        throw new TypeError('The listener must be a function');
-    }
-    var listener = new EE(fn, context || emitter, once), evt = prefix ? prefix + event : event;
-    if (!emitter._events[evt])
-        emitter._events[evt] = listener, emitter._eventsCount++;
-    else if (!emitter._events[evt].fn)
-        emitter._events[evt].push(listener);
-    else
-        emitter._events[evt] = [emitter._events[evt], listener];
-    return emitter;
-}
-/**
- * Clear event by name.
- *
- * @param {EventEmitter} emitter Reference to the `EventEmitter` instance.
- * @param {(String|Symbol)} evt The Event name.
- * @private
- */
-function clearEvent(emitter, evt) {
-    if (--emitter._eventsCount === 0)
-        emitter._events = new Events();
-    else
-        delete emitter._events[evt];
-}
-/**
- * Minimal `EventEmitter` interface that is molded against the Node.js
- * `EventEmitter` interface.
- *
- * @constructor
- * @public
- */
-function EventEmitter() {
-    this._events = new Events();
-    this._eventsCount = 0;
-}
-/**
- * Return an array listing the events for which the emitter has registered
- * listeners.
- *
- * @returns {Array}
- * @public
- */
-EventEmitter.prototype.eventNames = function eventNames() {
-    var names = [], events, name;
-    if (this._eventsCount === 0)
-        return names;
-    for (name in (events = this._events)) {
-        if (has.call(events, name))
-            names.push(prefix ? name.slice(1) : name);
-    }
-    if (Object['getOwnPropertySymbols']) {
-        return names.concat(Object['getOwnPropertySymbols'](events));
-    }
-    return names;
-};
-/**
- * Return the listeners registered for a given event.
- *
- * @param {(String|Symbol)} event The event name.
- * @returns {Array} The registered listeners.
- * @public
- */
-EventEmitter.prototype.listeners = function listeners(event) {
-    var evt = prefix ? prefix + event : event, handlers = this._events[evt];
-    if (!handlers)
-        return [];
-    if (handlers.fn)
-        return [handlers.fn];
-    for (var i = 0, l = handlers.length, ee = new Array(l); i < l; i++) {
-        ee[i] = handlers[i].fn;
-    }
-    return ee;
-};
-/**
- * Return the number of listeners listening to a given event.
- *
- * @param {(String|Symbol)} event The event name.
- * @returns {Number} The number of listeners.
- * @public
- */
-EventEmitter.prototype.listenerCount = function listenerCount(event) {
-    var evt = prefix ? prefix + event : event, listeners = this._events[evt];
-    if (!listeners)
-        return 0;
-    if (listeners.fn)
-        return 1;
-    return listeners.length;
-};
-/**
- * Calls each of the listeners registered for a given event.
- *
- * @param {(String|Symbol)} event The event name.
- * @returns {Boolean} `true` if the event had listeners, else `false`.
- * @public
- */
-EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
-    var evt = prefix ? prefix + event : event;
-    if (!this._events[evt])
-        return false;
-    var listeners = this._events[evt], len = arguments.length, args, i;
-    if (listeners.fn) {
-        if (listeners.once)
-            this.removeListener(event, listeners.fn, undefined, true);
-        switch (len) {
-            case 1:
-                return listeners.fn.call(listeners.context), true;
-            case 2:
-                return listeners.fn.call(listeners.context, a1), true;
-            case 3:
-                return listeners.fn.call(listeners.context, a1, a2), true;
-            case 4:
-                return listeners.fn.call(listeners.context, a1, a2, a3), true;
-            case 5:
-                return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
-            case 6:
-                return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
-        }
-        for (i = 1, args = new Array(len - 1); i < len; i++) {
-            args[i - 1] = arguments[i];
-        }
-        listeners.fn.apply(listeners.context, args);
-    }
-    else {
-        var length = listeners.length, j;
-        for (i = 0; i < length; i++) {
-            if (listeners[i].once)
-                this.removeListener(event, listeners[i].fn, undefined, true);
-            switch (len) {
-                case 1:
-                    listeners[i].fn.call(listeners[i].context);
-                    break;
-                case 2:
-                    listeners[i].fn.call(listeners[i].context, a1);
-                    break;
-                case 3:
-                    listeners[i].fn.call(listeners[i].context, a1, a2);
-                    break;
-                case 4:
-                    listeners[i].fn.call(listeners[i].context, a1, a2, a3);
-                    break;
-                default:
-                    if (!args)
-                        for (j = 1, args = new Array(len - 1); j < len; j++) {
-                            args[j - 1] = arguments[j];
-                        }
-                    listeners[i].fn.apply(listeners[i].context, args);
-            }
-        }
-    }
-    return true;
-};
-/**
- * Add a listener for a given event.
- *
- * @param {(String|Symbol)} event The event name.
- * @param {Function} fn The listener function.
- * @param {*} [context=this] The context to invoke the listener with.
- * @returns {EventEmitter} `this`.
- * @public
- */
-EventEmitter.prototype.on = function on(event, fn, context) {
-    return addListener(this, event, fn, context, false);
-};
-/**
- * Add a one-time listener for a given event.
- *
- * @param {(String|Symbol)} event The event name.
- * @param {Function} fn The listener function.
- * @param {*} [context=this] The context to invoke the listener with.
- * @returns {EventEmitter} `this`.
- * @public
- */
-EventEmitter.prototype.once = function once(event, fn, context) {
-    return addListener(this, event, fn, context, true);
-};
-/**
- * Remove the listeners of a given event.
- *
- * @param {(String|Symbol)} event The event name.
- * @param {Function} fn Only remove the listeners that match this function.
- * @param {*} context Only remove the listeners that have this context.
- * @param {Boolean} once Only remove one-time listeners.
- * @returns {EventEmitter} `this`.
- * @public
- */
-EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
-    var evt = prefix ? prefix + event : event;
-    if (!this._events[evt])
-        return this;
-    if (!fn) {
-        clearEvent(this, evt);
-        return this;
-    }
-    var listeners = this._events[evt];
-    if (listeners.fn) {
-        if (listeners.fn === fn &&
-            (!once || listeners.once) &&
-            (!context || listeners.context === context)) {
-            clearEvent(this, evt);
-        }
-    }
-    else {
-        for (var i = 0, events = [], length = listeners.length; i < length; i++) {
-            if (listeners[i].fn !== fn ||
-                (once && !listeners[i].once) ||
-                (context && listeners[i].context !== context)) {
-                events.push(listeners[i]);
-            }
-        }
-        //
-        // Reset the array, or remove it completely if we have no more listeners.
-        //
-        if (events.length)
-            this._events[evt] = events.length === 1 ? events[0] : events;
-        else
-            clearEvent(this, evt);
-    }
-    return this;
-};
-/**
- * Remove all listeners, or those of the specified event.
- *
- * @param {(String|Symbol)} [event] The event name.
- * @returns {EventEmitter} `this`.
- * @public
- */
-EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
-    var evt;
-    if (event) {
-        evt = prefix ? prefix + event : event;
-        if (this._events[evt])
-            clearEvent(this, evt);
-    }
-    else {
-        this._events = new Events();
-        this._eventsCount = 0;
-    }
-    return this;
-};
-//
-// Alias methods names because people roll like that.
-//
-EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
-EventEmitter.prototype.addListener = EventEmitter.prototype.on;
-//
-// Expose the prefix.
-//
-EventEmitter['prefixed'] = prefix;
-//
-// Allow `EventEmitter` to be imported as module namespace.
-//
-EventEmitter['EventEmitter'] = EventEmitter;
-/* harmony default export */ __webpack_exports__["default"] = (EventEmitter);
-
-
-/***/ }),
-
 /***/ "./src/core/external.ts":
 /*!******************************!*\
   !*** ./src/core/external.ts ***!
@@ -53515,6 +53517,58 @@ __webpack_require__.r(__webpack_exports__);
     }
 });
 ;
+
+
+/***/ }),
+
+/***/ "./src/core/topic.ts":
+/*!***************************!*\
+  !*** ./src/core/topic.ts ***!
+  \***************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/**
+ * @file subscribe topics
+ */
+/* harmony default export */ __webpack_exports__["default"] = ({
+    SCENE: {
+        // very beginning
+        CREATE: 'scene-create',
+        // preview texture load
+        INIT: 'scene-init',
+        // resource texture load
+        LOAD: 'scene-load',
+        // animation end
+        READY: 'scene-ready',
+        // before scene change 
+        ATTACHSTART: 'scene-attachstart',
+        // scene changed
+        ATTACH: 'scene-attach',
+        // reset scene group
+        RESET: 'scene-reset'
+    },
+    // webgl render
+    RENDER: {
+        PROCESS: 'render-process',
+        DISPOSE: 'render-dispose',
+        EXCEPTION: 'render-exception',
+        UNSUPPORT: 'render-unsupport'
+    },
+    // web vr
+    VR: {
+        ENTER: 'vr-enter',
+        EXIT: 'vr-exit'
+    },
+    // ui interface
+    UI: {
+        PANOCLICK: 'pano-click',
+        OVERLAYCLICK: 'overlay-click',
+        MULTIPLEACTIVE: 'multiple-active'
+    }
+});
 
 
 /***/ }),
@@ -53963,7 +54017,12 @@ var AnimationFly = /** @class */ (function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _fly_animation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./fly.animation */ "./src/pano/animations/fly.animation.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
+/* harmony import */ var _fly_animation__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./fly.animation */ "./src/pano/animations/fly.animation.ts");
+
+
 
 /**
  * @file animation timeline
@@ -53973,15 +54032,17 @@ var Timeline = /** @class */ (function () {
     function Timeline() {
     }
     Timeline.install = function (opts, pano) {
+        var _this = this;
         var camera = pano.getCamera();
+        var subtokens = this.subtokens;
         this.pano = pano;
         // minor planet
         if (opts.fly) {
-            var fly = new _fly_animation__WEBPACK_IMPORTED_MODULE_0__["default"](camera, opts.fly);
+            var fly = new _fly_animation__WEBPACK_IMPORTED_MODULE_2__["default"](camera, opts.fly);
             this.lines.push(fly);
         }
-        pano.subscribe('scene-init', this.onTimeInit, this);
-        pano.subscribe('render-process', this.onTimeChange, this);
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_0__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].SCENE.INIT, function () { return _this.onTimeInit(); }));
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_0__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].RENDER.PROCESS, function () { return _this.onTimeChange(); }));
     };
     Timeline.onTimeInit = function () {
         var lines = this.lines;
@@ -54004,12 +54065,11 @@ var Timeline = /** @class */ (function () {
         });
     };
     Timeline.onTimeEnd = function () {
-        var pano = this.pano;
-        pano.unsubscribe('scene-init', this.onTimeInit, this);
-        pano.unsubscribe('render-process', this.onTimeChange, this);
-        pano.noTimeline();
+        this.subtokens.forEach(function (token) { return pubsub_js__WEBPACK_IMPORTED_MODULE_0__["unsubscribe"](token); });
+        this.pano.noTimeline();
     };
     Timeline.lines = [];
+    Timeline.subtokens = [];
     return Timeline;
 }());
 /* harmony default export */ __webpack_exports__["default"] = (Timeline);
@@ -54026,7 +54086,12 @@ var Timeline = /** @class */ (function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
+
+
 
 /**
  * @file js frame animation
@@ -54073,21 +54138,20 @@ var Tween = /** @class */ (function () {
         this.target = obj;
         return this;
     };
-    Tween.prototype.start = function (keys, pano) {
+    Tween.prototype.start = function (keys) {
         var _this = this;
         if (!this.obj || !this.target || !this.fn) {
-            _core_log__WEBPACK_IMPORTED_MODULE_0__["default"].errorLog('leak of necessary parameters');
+            _core_log__WEBPACK_IMPORTED_MODULE_2__["default"].errorLog('leak of necessary parameters');
         }
         else {
             this.startTime = Date.now();
-            this.pano = pano;
             keys.forEach(function (key) { return _this.record[key] = _this.obj[key]; });
-            pano.subscribe('render-process', this.animate, this);
+            this.subtoken = pubsub_js__WEBPACK_IMPORTED_MODULE_0__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].RENDER.PROCESS, function () { return _this.animate(); });
         }
         return this;
     };
     Tween.prototype.stop = function () {
-        this.pano.unsubscribe('render-process', this.animate, this);
+        pubsub_js__WEBPACK_IMPORTED_MODULE_0__["unsubscribe"](this.subtoken);
         return this;
     };
     Tween.prototype.effect = function (type, duration) {
@@ -54128,7 +54192,7 @@ var Tween = /** @class */ (function () {
             }
         }
         catch (e) {
-            _core_log__WEBPACK_IMPORTED_MODULE_0__["default"].errorLog(e);
+            _core_log__WEBPACK_IMPORTED_MODULE_2__["default"].errorLog(e);
             this.stop();
         }
     };
@@ -55446,6 +55510,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _frame_overlay__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./frame.overlay */ "./src/pano/overlays/frame.overlay.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
+
+
 
 
 
@@ -55480,13 +55549,15 @@ var Overlays = /** @class */ (function () {
     function Overlays(pano, list) {
         this.maps = {};
         this.pluginFuncs = [];
+        this.subtokens = [];
         this.pano = pano;
         this.list = list;
-        pano.subscribe('scene-ready', this.init, this);
-        pano.subscribe('scene-attachstart', this.removeOverlays, this);
+        var subtokens = this.subtokens;
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_7__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_8__["default"].SCENE.INIT, this.init.bind(this)));
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_7__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_8__["default"].SCENE.ATTACHSTART, this.removeOverlays.bind(this)));
         // per scene change
-        pano.subscribe('scene-attach', this.init, this);
-        pano.subscribe('render-process', this.updateOverlays, this);
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_7__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_8__["default"].SCENE.ATTACH, this.init.bind(this)));
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_7__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_8__["default"].RENDER.PROCESS, this.updateOverlays.bind(this)));
         pano.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
     }
     Overlays.prototype.init = function (scene) {
@@ -55623,13 +55694,13 @@ var Overlays = /** @class */ (function () {
     Overlays.prototype.onCanvasHandle = function (evt) {
         var pano = this.pano;
         var camera = pano.getCamera();
-        var pos = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].transNdc({ x: evt.clientX, y: evt.clientY }, pano.getSize());
-        var vector = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].calcScreenToSphere(pos, camera);
+        var ndcpos = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].transNdc({ x: evt.clientX, y: evt.clientY }, pano.getSize());
+        var location = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].calcScreenToSphere(ndcpos, camera);
         try {
             var group = this.getCurrent(this.cid).detects;
             // self judgement
             if (group.children.length) {
-                var intersects = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].intersect(pos, group.children, camera);
+                var intersects = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].intersect(ndcpos, group.children, camera);
                 // disbale dom event
                 if (intersects) {
                     evt.stopPropagation();
@@ -55638,13 +55709,13 @@ var Overlays = /** @class */ (function () {
                 }
             }
             // other plugins judgement
-            if (this.pluginJudge(pos)) {
+            if (this.pluginJudge(ndcpos)) {
                 evt.stopPropagation();
                 evt.preventDefault();
                 return true;
             }
             else if (evt.target == pano.getCanvas()) {
-                pano.dispatch('pano-click', vector, pano);
+                pubsub_js__WEBPACK_IMPORTED_MODULE_7__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_8__["default"].UI.PANOCLICK, { location: location, pano: pano });
             }
         }
         catch (e) {
@@ -55659,7 +55730,7 @@ var Overlays = /** @class */ (function () {
         var data = instance.data;
         var size = pano.getSize();
         // for log & statistics & user behavior
-        pano.dispatch('overlay-click', instance, pano);
+        pubsub_js__WEBPACK_IMPORTED_MODULE_7__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_8__["default"].UI.OVERLAYCLICK, { instance: instance, pano: pano });
         switch (data.actionType) {
             case 'scene':
                 pano.enterNext(this.findScene(data.sceneId));
@@ -55669,7 +55740,7 @@ var Overlays = /** @class */ (function () {
                 break;
             // let Multiple plugin control
             case 'multiple':
-                pano.dispatch('multiple-active', data);
+                pubsub_js__WEBPACK_IMPORTED_MODULE_7__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_8__["default"].UI.MULTIPLEACTIVE, { data: data, pano: pano });
                 break;
             case 'video':
                 instance.play();
@@ -55761,10 +55832,7 @@ var Overlays = /** @class */ (function () {
     Overlays.prototype.dispose = function () {
         var pano = this.pano;
         this.pluginFuncs = [];
-        pano.unsubscribe('scene-ready', this.init, this);
-        pano.unsubscribe('scene-attachstart', this.removeOverlays, this);
-        pano.unsubscribe('scene-attach', this.init, this);
-        pano.unsubscribe('render-process', this.updateOverlays, this);
+        this.subtokens.forEach(function (token) { return pubsub_js__WEBPACK_IMPORTED_MODULE_7__["unsubscribe"](token); });
     };
     return Overlays;
 }());
@@ -55879,9 +55947,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 /* harmony import */ var _overlays_overlays__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./overlays/overlays */ "./src/pano/overlays/overlays.ts");
 /* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
-/* harmony import */ var _core_event__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/event */ "./src/core/event.ts");
-/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../core/topic */ "./src/core/topic.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_10__);
 var __assign = (undefined && undefined.__assign) || Object.assign || function(t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
         s = arguments[i];
@@ -55935,6 +56005,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
 
 
 
+
 /**
  * @file 全景渲染
  */
@@ -55959,9 +56030,8 @@ var Pano = /** @class */ (function () {
         this.reqid = 0;
         this.currentData = null;
         this.frozen = true;
-        this.event = new _core_event__WEBPACK_IMPORTED_MODULE_7__["default"]();
         this.pluginList = [];
-        var data = this.currentData = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].findScene(source);
+        var data = this.currentData = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].findScene(source);
         this.opts = Object.assign({ el: el }, defaultOpts, source['pano']);
         this.source = source;
         this.initEnv(data);
@@ -55969,8 +56039,8 @@ var Pano = /** @class */ (function () {
     Pano.prototype.initEnv = function (data) {
         var opts = this.opts;
         var container = opts.el;
-        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(container, opts);
-        var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].createElement("<div class=\"pano-root\"></div>");
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].calcRenderSize(container, opts);
+        var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].createElement("<div class=\"pano-root\"></div>");
         var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
         // webgl
         webgl.autoClear = true;
@@ -56005,7 +56075,7 @@ var Pano = /** @class */ (function () {
     Pano.prototype.run = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
-            var source, data_1, img, skyBox, e_1;
+            var source, data, img, skyBox, publishdata_1, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -56015,27 +56085,28 @@ var Pano = /** @class */ (function () {
                     case 1:
                         _a.trys.push([1, 4, , 5]);
                         // push pano obj for client
-                        this.dispatch('scene-create', this);
-                        data_1 = this.currentData;
-                        return [4 /*yield*/, myLoader.loadTexture(data_1.imgPath, 'canvas')];
+                        pubsub_js__WEBPACK_IMPORTED_MODULE_10__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_9__["default"].SCENE.CREATE, { pano: this });
+                        data = this.currentData;
+                        return [4 /*yield*/, myLoader.loadTexture(data.imgPath, 'canvas')];
                     case 2:
                         img = _a.sent();
                         skyBox = this.skyBox = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__["default"]({ envMap: img });
+                        publishdata_1 = { data: data, pano: this };
                         skyBox.addTo(this.scene);
-                        this.dispatch('scene-init', data_1, this);
+                        pubsub_js__WEBPACK_IMPORTED_MODULE_10__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_9__["default"].SCENE.INIT, publishdata_1);
                         this.render();
-                        return [4 /*yield*/, myLoader.loadTexture(data_1.bxlPath || data_1.texPath)
+                        return [4 /*yield*/, myLoader.loadTexture(data.bxlPath || data.texPath)
                                 .then(function (texture) {
                                 _this.skyBox.setMap(texture);
-                                _this.dispatch('scene-load', data_1, _this);
-                            }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output(e); })];
+                                pubsub_js__WEBPACK_IMPORTED_MODULE_10__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_9__["default"].SCENE.LOAD, publishdata_1);
+                            }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e); })];
                     case 3:
                         _a.sent();
                         this.animate();
                         return [3 /*break*/, 5];
                     case 4:
                         e_1 = _a.sent();
-                        _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output(e_1);
+                        _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e_1);
                         return [3 /*break*/, 5];
                     case 5: return [2 /*return*/];
                 }
@@ -56085,7 +56156,7 @@ var Pano = /** @class */ (function () {
         var camera = this.getCamera();
         if (this.opts.fovTrans) {
             new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__["default"](camera).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
-                .start(['fov'], this).process(function () { return camera.updateProjectionMatrix(); });
+                .start(['fov']).process(function () { return camera.updateProjectionMatrix(); });
         }
         else {
             camera.fov = fov;
@@ -56116,33 +56187,23 @@ var Pano = /** @class */ (function () {
         var plugin = new Plugin(this, data, external);
         this.pluginList.push(plugin);
     };
-    Pano.prototype.subscribe = function (type, fn, context) {
-        this.event.on(type, fn, context);
-    };
-    Pano.prototype.unsubscribe = function (type, fn, context) {
-        this.event.off(type, fn, context);
-    };
-    Pano.prototype.dispatch = function (type, arg1, arg2, arg3) {
-        this.event.emit(type, arg1, arg2, arg3);
-    };
     /**
      * 渲染场景贴图
      * @param {Object} texture 场景原图纹理
      */
     Pano.prototype.replaceTexture = function (texture) {
-        var _this = this;
-        this.dispatch('scene-attachstart', this.currentData, this);
+        var publishdata = { data: this.currentData, pano: this };
+        pubsub_js__WEBPACK_IMPORTED_MODULE_10__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_9__["default"].SCENE.ATTACHSTART, publishdata);
         this.skyBox.setMap(texture);
-        // 触发场景切换事件
-        setTimeout(function () { return _this.dispatch('scene-attach', _this.currentData, _this); }, 100);
+        setTimeout(function () { return pubsub_js__WEBPACK_IMPORTED_MODULE_10__["publish"]('scene-attach', publishdata); }, 100);
     };
     /**
      * 动画效果切换场景贴图
      * @param {Object} texture 场景原图纹理
      */
     Pano.prototype.replaceAnim = function (texture) {
-        var _this = this;
-        this.dispatch('scene-attachstart', this.currentData, this);
+        var publishdata = { data: this.currentData, pano: this };
+        pubsub_js__WEBPACK_IMPORTED_MODULE_10__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_9__["default"].SCENE.ATTACHSTART, publishdata);
         var skyBox = this.skyBox;
         var oldMap = skyBox.getMap();
         var newBox = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__["default"]({ envMap: texture, opacity: 0 });
@@ -56150,8 +56211,7 @@ var Pano = /** @class */ (function () {
         newBox.fadeIn(this, function () {
             skyBox.setMap(texture);
             newBox.dispose();
-            // 触发场景切换事件
-            _this.dispatch('scene-attach', _this.currentData, _this);
+            pubsub_js__WEBPACK_IMPORTED_MODULE_10__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_9__["default"].SCENE.ATTACH, publishdata);
         });
     };
     /**
@@ -56159,7 +56219,7 @@ var Pano = /** @class */ (function () {
      */
     Pano.prototype.animate = function () {
         this.updateControl();
-        this.dispatch('render-process', this.currentData, this);
+        pubsub_js__WEBPACK_IMPORTED_MODULE_10__["publishSync"](_core_topic__WEBPACK_IMPORTED_MODULE_9__["default"].RENDER.PROCESS, this);
         this.render();
         this.reqid = requestAnimationFrame(this.animate.bind(this));
     };
@@ -56172,7 +56232,7 @@ var Pano = /** @class */ (function () {
     Pano.prototype.onResize = function () {
         var camera = this.getCamera();
         var root = this.getRoot();
-        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(root);
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].calcRenderSize(root);
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.webgl.setSize(size.width, size.height);
@@ -56266,7 +56326,7 @@ var Pano = /** @class */ (function () {
      * 为 overlays 补充场景数据
      */
     Pano.prototype.supplyOverlayScenes = function (scenes) {
-        this.dispatch('scene-reset', scenes, this);
+        pubsub_js__WEBPACK_IMPORTED_MODULE_10__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_9__["default"].SCENE.RESET, { scenes: scenes, pano: this });
         this.overlays.addScenes(scenes);
     };
     /**
@@ -56299,7 +56359,7 @@ var Pano = /** @class */ (function () {
             _this.currentData = data;
             _this.resetEnv(data);
             _this.opts.sceneTrans ? _this.replaceAnim(texture) : _this.replaceTexture(texture);
-        }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output(e); });
+        }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e); });
     };
     /**
      * enter with thru
@@ -56338,20 +56398,20 @@ var Pano = /** @class */ (function () {
         this.frozen = false;
         this.startControl();
         // entrance animation end, scene become stable
-        this.dispatch('scene-ready', this.currentData, this);
+        pubsub_js__WEBPACK_IMPORTED_MODULE_10__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_9__["default"].SCENE.READY, { data: this.currentData, pano: this });
     };
     /**
      * 释放资源
      */
     Pano.prototype.dispose = function () {
-        this.skyBox.dispose();
         this.stopControl();
-        this.dispatch('render-dispose', this);
-        this.event.removeAllListeners();
+        _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].cleanup(null, this.scene);
+        this.skyBox.dispose();
         this.webgl.dispose();
         this.root.innerHTML = '';
         cancelAnimationFrame(this.reqid);
-        _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].cleanup(null, this.scene);
+        pubsub_js__WEBPACK_IMPORTED_MODULE_10__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_9__["default"].RENDER.DISPOSE, this);
+        // PubSub.clearAllSubscriptions();
     };
     return Pano;
 }());
@@ -56650,6 +56710,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 /* harmony import */ var _plastic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./plastic */ "./src/pano/plastic/plastic.ts");
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_4__);
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -56660,6 +56723,8 @@ var __extends = (undefined && undefined.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+
+
 
 
 
@@ -56685,7 +56750,7 @@ var Inradius = /** @class */ (function (_super) {
         _this.opts = Object.assign({}, defaultOpts, opts);
         _this.create();
         if (opts.rotate) {
-            pano.subscribe('render-process', _this.addRotate, _this);
+            _this.subtoken = pubsub_js__WEBPACK_IMPORTED_MODULE_4__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_3__["default"].RENDER.PROCESS, function () { return _this.addRotate(); });
         }
         return _this;
     }
@@ -56785,12 +56850,12 @@ var Inradius = /** @class */ (function (_super) {
     Inradius.prototype.fadeIn = function (pano, onComplete) {
         var material = this.plastic.material;
         new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](material).to({ opacity: 1 }).effect('linear', 1000)
-            .start(['opacity'], pano).complete(onComplete);
+            .start(['opacity']).complete(onComplete);
     };
     Inradius.prototype.fadeOut = function (pano, onComplete) {
         var material = this.plastic.material;
         new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](material).to({ opacity: 0 }).effect('linear', 1000)
-            .start(['opacity'], pano).complete(onComplete);
+            .start(['opacity']).complete(onComplete);
     };
     Inradius.prototype.dispose = function () {
         _super.prototype.dispose.call(this);
@@ -56800,9 +56865,7 @@ var Inradius = /** @class */ (function (_super) {
             wrap.material.map.dispose();
             wrap.material.dispose();
         }
-        if (this.pano) {
-            this.pano.unsubscribe('render-process', this.addRotate, this);
-        }
+        pubsub_js__WEBPACK_IMPORTED_MODULE_4__["unsubscribe"](this.subtoken);
     };
     return Inradius;
 }(_plastic__WEBPACK_IMPORTED_MODULE_2__["default"]));
@@ -56918,10 +56981,13 @@ var Plastic = /** @class */ (function () {
     Plastic.prototype.addBy = function (pano) {
         pano.addSceneObject(this.plastic);
     };
-    Plastic.prototype.setOpacity = function (num, pano) {
+    Plastic.prototype.removeBy = function (pano) {
+        pano.removeSceneObject(this.plastic);
+    };
+    Plastic.prototype.setOpacity = function (num, useanim) {
         var material = this.plastic.material;
-        pano ? new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"](material).to({ opacity: num }).effect('backOut', 500)
-            .start(['opacity'], pano)
+        useanim ? new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"](material).to({ opacity: num }).effect('backOut', 500)
+            .start(['opacity'])
             : (material.opacity = num);
     };
     Plastic.prototype.show = function () {
@@ -57028,7 +57094,7 @@ var Point = /** @class */ (function (_super) {
         circle.visible = false;
         frame.visible = true;
         this.tween = new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ rad: -Math.PI / 2 }).to({ rad: Math.PI * 2 }).effect('linear', 1500)
-            .start(['rad'], this.pano).process(function (old, val) {
+            .start(['rad']).process(function (old, val) {
             _this.draw(val);
         }).complete(function () {
             circle.visible = true;
@@ -57211,6 +57277,9 @@ var Text = /** @class */ (function (_super) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 /* harmony import */ var _interface_ui_class__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../interface/ui.class */ "./src/pano/interface/ui.class.ts");
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_3__);
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -57223,6 +57292,8 @@ var __extends = (undefined && undefined.__extends) || (function () {
 })();
 
 
+
+
 /**
  * @file 辅助工具
  */
@@ -57231,7 +57302,7 @@ var Helper = /** @class */ (function (_super) {
     function Helper(pano) {
         var _this = _super.call(this) || this;
         _this.pano = pano;
-        pano.subscribe('render-process', _this.update, _this);
+        _this.subtoken = pubsub_js__WEBPACK_IMPORTED_MODULE_3__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_2__["default"].RENDER.PROCESS, function () { return _this.update(); });
         var circle = _this.element = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div style="position:absolute;width:10px;height:10px;background:#fff;border-radius:10px;z-index:99;border:2px solid red;"></div>');
         _this.setContainer();
         return _this;
@@ -57253,7 +57324,7 @@ var Helper = /** @class */ (function (_super) {
     };
     Helper.prototype.dispose = function () {
         this.detachContainer();
-        this.pano.unsubscribe('render-process', this.update, this);
+        pubsub_js__WEBPACK_IMPORTED_MODULE_3__["unsubscribe"](this.subtoken);
     };
     return Helper;
 }(_interface_ui_class__WEBPACK_IMPORTED_MODULE_1__["default"]));
@@ -57272,6 +57343,11 @@ var Helper = /** @class */ (function (_super) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_2__);
+
+
 
 /**
  * @file 版权遮罩层
@@ -57280,7 +57356,7 @@ var Info = /** @class */ (function () {
     function Info(pano) {
         this.pano = pano;
         this.createDom(pano.currentData);
-        pano.subscribe('scene-attach', this.renderDom, this);
+        this.subtoken = pubsub_js__WEBPACK_IMPORTED_MODULE_2__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].SCENE.ATTACH, this.renderDom.bind(this));
     }
     Info.prototype.createDom = function (data) {
         var info = data.info;
@@ -57306,6 +57382,9 @@ var Info = /** @class */ (function () {
     Info.prototype.setContainer = function () {
         this.pano.getRoot().appendChild(this.element);
     };
+    Info.prototype.detachContainer = function () {
+        this.pano.getRoot().removeChild(this.element);
+    };
     Info.prototype.getElement = function () {
         return this.element;
     };
@@ -57316,7 +57395,8 @@ var Info = /** @class */ (function () {
         this.element.style.display = 'none';
     };
     Info.prototype.dispose = function () {
-        this.pano.unsubscribe('scene-attach', this.renderDom, this);
+        this.detachContainer();
+        pubsub_js__WEBPACK_IMPORTED_MODULE_2__["unsubscribe"](this.subtoken);
     };
     return Info;
 }());
@@ -57337,6 +57417,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 /* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_4__);
+
+
 
 
 
@@ -57353,6 +57438,7 @@ var defaultOpts = {
 };
 var Media = /** @class */ (function () {
     function Media(pano, opts) {
+        this.subtokens = [];
         this.pano = pano;
         this.opts = Object.assign({}, defaultOpts, opts);
         this.create();
@@ -57410,10 +57496,11 @@ var Media = /** @class */ (function () {
         this.pano.getRoot().removeChild(this.element);
     };
     Media.prototype.bindEvent = function () {
-        var pano = this.pano;
-        pano.webgl.autoClear = false;
-        pano.subscribe('render-process', this.update, this);
-        pano.subscribe('scene-load', this.createInradius, this);
+        var _this = this;
+        var subtokens = this.subtokens;
+        this.pano.webgl.autoClear = false;
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_4__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_3__["default"].RENDER.PROCESS, function () { return _this.update(); }));
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_4__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_3__["default"].SCENE.LOAD, function () { return _this.createInradius(); }));
     };
     Media.prototype.getElement = function () {
         return this.element;
@@ -57456,7 +57543,7 @@ var Media = /** @class */ (function () {
         if (video.paused) {
             elem.className = 'pano-media-pause';
             inradius.show();
-            inradius.setOpacity(.5, pano);
+            inradius.setOpacity(.5, true);
             this.box.visible = true;
             video.play();
         }
@@ -57494,9 +57581,8 @@ var Media = /** @class */ (function () {
         box.material.dispose();
         box.geometry.dispose();
         pano.removeSceneObject(box);
-        pano.unsubscribe('render-process', this.update, this);
-        pano.unsubscribe('scene-load', this.createInradius, this);
         pano.webgl.autoClear = true;
+        this.subtokens.forEach(function (token) { return pubsub_js__WEBPACK_IMPORTED_MODULE_4__["unsubscribe"](token); });
     };
     return Media;
 }());
@@ -57515,6 +57601,11 @@ var Media = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_2__);
+
+
 
 /**
  * @file 多场景切换插件
@@ -57522,6 +57613,7 @@ __webpack_require__.r(__webpack_exports__);
 var Multiple = /** @class */ (function () {
     function Multiple(pano, data) {
         this.isActive = true;
+        this.subtokens = [];
         this.pano = pano;
         this.data = data;
         this.create();
@@ -57543,17 +57635,18 @@ var Multiple = /** @class */ (function () {
     Multiple.prototype.bindEvent = function () {
         var pano = this.pano;
         var inner = this.inner;
+        var subtokens = this.subtokens;
         this.onClickHandle = this.onClickHandle.bind(this);
         this.onWheelHandle = this.onWheelHandle.bind(this);
         inner.addEventListener('click', this.onClickHandle);
         inner.addEventListener('mousewheel', this.onWheelHandle);
         // 管理 actionType 为 multiple 的 overlay 
-        pano.subscribe('multiple-active', this.onMultipleActive, this);
+        subtokens.push(pano.subscribe(_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].UI.MULTIPLEACTIVE, this.onMultipleActive.bind(this)));
         // 管理激活状态
-        pano.subscribe('scene-attachstart', this.onDisable, this);
-        pano.subscribe('scene-attach', this.onEnable, this);
+        subtokens.push(pano.subscribe(_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].SCENE.ATTACHSTART, this.onDisable.bind(this)));
+        subtokens.push(pano.subscribe(_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].SCENE.ATTACH, this.onEnable.bind(this)));
         // 重新渲染场景列表
-        pano.subscribe('scene-reset', this.onReset, this);
+        subtokens.push(pano.subscribe(_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].SCENE.RESET, this.onReset.bind(this)));
     };
     Multiple.prototype.getElement = function () {
         return this.element;
@@ -57578,9 +57671,10 @@ var Multiple = /** @class */ (function () {
         var dis = e.deltaY;
         this.inner.scrollLeft += dis;
     };
-    Multiple.prototype.onMultipleActive = function (data) {
-        var scene = this.data.find(function (item) { return item.id == data.sceneId; });
-        var index = this.data.indexOf(scene);
+    Multiple.prototype.onMultipleActive = function (payload) {
+        var scenes = this.data;
+        var scene = scenes.find(function (item) { return item.id == payload.data.sceneId; });
+        var index = scenes.indexOf(scene);
         var node = this.inner.querySelector("div[data-id=\"" + index + "\"]");
         if (scene && node) {
             this.pano.enterNext(scene);
@@ -57633,9 +57727,7 @@ var Multiple = /** @class */ (function () {
         var inner = this.inner;
         inner.removeEventListener('click', this.onClickHandle);
         inner.removeEventListener('mousewheel', this.onWheelHandle);
-        pano.unsubscribe('multiple-active', this.onMultipleActive, this);
-        pano.unsubscribe('scene-attachStart', this.onDisable, this);
-        pano.unsubscribe('scene-attach', this.onEnable, this);
+        this.subtokens.forEach(function (token) { return pubsub_js__WEBPACK_IMPORTED_MODULE_2__["unsubscribe"](token); });
         this.element.innerHTML = '';
         this.container.removeChild(this.element);
     };
@@ -57656,6 +57748,11 @@ var Multiple = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_2__);
+
+
 
 /**
  * @file 漫游插件
@@ -57669,6 +57766,7 @@ var defaultOpts = {
 var Rotate = /** @class */ (function () {
     function Rotate(pano, data) {
         var _this = this;
+        this.subtokens = [];
         this.data = Object.assign({}, defaultOpts, data);
         this.pano = pano;
         this.onDisturb = this.onDisturb.bind(this);
@@ -57681,8 +57779,9 @@ var Rotate = /** @class */ (function () {
             canvas.addEventListener('touchend', _this.onRecover);
             canvas.addEventListener('mouseup', _this.onRecover);
         });
-        pano.subscribe('scene-attachstart', function () { return pano.setRotate(false); });
-        pano.subscribe('scene-attach', function () { return pano.setRotate(true); });
+        var subtokens = this.subtokens;
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_2__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].SCENE.ATTACHSTART, function () { return pano.setRotate(false); }));
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_2__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].SCENE.ATTACH, function () { return pano.setRotate(true); }));
     }
     Rotate.prototype.create = function () {
         var data = this.data;
@@ -57713,7 +57812,7 @@ var Rotate = /** @class */ (function () {
         this.timeid = setTimeout(function () {
             _this.tween = new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"]({ polar: orbit.getPolarAngle() }).to(_this.target)
                 .effect('quadEaseOut', data.recover)
-                .start(['polar'], pano)
+                .start(['polar'])
                 .process(function (newVal, oldVal) { return orbit.rotateUp(oldVal - newVal); });
             pano.setRotate(true);
         }, data.lazy);
@@ -57721,11 +57820,12 @@ var Rotate = /** @class */ (function () {
     Rotate.prototype.dispose = function () {
         var canvas = this.pano.getCanvas();
         try {
+            this.subtokens.forEach(function (token) { return pubsub_js__WEBPACK_IMPORTED_MODULE_2__["unsubscribe"](token); });
+            this.tween.stop();
             canvas.removeEventListener('touchstart', this.onDisturb);
             canvas.removeEventListener('mousedown', this.onDisturb);
             canvas.removeEventListener('touchend', this.onRecover);
             canvas.removeEventListener('mouseup', this.onRecover);
-            this.tween.stop();
         }
         catch (e) { }
     };
@@ -57796,6 +57896,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
 /* harmony import */ var _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../plastic/text.plastic */ "./src/pano/plastic/text.plastic.ts");
 /* harmony import */ var _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../plastic/light.plastic */ "./src/pano/plastic/light.plastic.ts");
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_7__);
+
+
 
 
 
@@ -57820,16 +57925,18 @@ var Thru = /** @class */ (function () {
         this.group = [];
         this.objs = [];
         this.lights = [];
+        this.subtokens = [];
         this.pano = pano;
         this.camera = pano.getCamera();
         this.opts = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].assign({}, defaultOpts, opts);
         this.onCanvasHandle = this.onCanvasHandle.bind(this);
         var webgl = pano.webgl;
-        pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', this.load, this);
+        var subtokens = this.subtokens;
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_7__["subscribe"](pano.frozen ? _core_topic__WEBPACK_IMPORTED_MODULE_6__["default"].SCENE.READY : _core_topic__WEBPACK_IMPORTED_MODULE_6__["default"].SCENE.INIT, this.load.bind(this)));
         // pano.subscribe('scene-drag', this.everyToShow, this);
-        pano.subscribe('scene-attachstart', this.needToHide, this);
-        pano.subscribe('scene-attach', this.load, this);
-        pano.subscribe('pano-click', this.toggle, this);
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_7__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_6__["default"].SCENE.ATTACHSTART, this.needToHide.bind(this)));
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_7__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_6__["default"].SCENE.ATTACH, this.load.bind(this)));
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_7__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_6__["default"].UI.PANOCLICK, this.toggle.bind(this)));
         pano.overlays.addJudgeFunc(this.onCanvasHandle.bind(this));
         // common lights
         this.createLights();
@@ -57993,10 +58100,10 @@ var Thru = /** @class */ (function () {
                             pos_1.z += pos_1.z > 0 ? 100 : -100;
                             pano.gyro && pano.gyro.makeEnable(false);
                             new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"](lookTarget).to(pos_1).effect('quintEaseIn', 1000)
-                                .start(['x', 'y', 'z'], pano)
+                                .start(['x', 'y', 'z'])
                                 .complete(function () {
                                 new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"](camera.position).to(obj_1.position).effect('quadEaseOut', 1000)
-                                    .start(['x', 'y', 'z'], pano)
+                                    .start(['x', 'y', 'z'])
                                     .complete(function () {
                                     _this.active = true;
                                     pano.supplyOverlayScenes(sceneGroup);
@@ -58033,14 +58140,10 @@ var Thru = /** @class */ (function () {
         var pano = this.pano;
         var webgl = pano.webgl;
         this.cleanup();
-        pano.unsubscribe('scene-ready', this.load, this);
-        pano.unsubscribe('scene-init', this.load, this);
-        pano.unsubscribe('scene-drag', this.everyToShow, this);
-        pano.unsubscribe('scene-attachstart', this.needToHide, this);
-        pano.unsubscribe('scene-attach', this.needToShow, this);
+        this.subtokens.forEach(function (token) { return pubsub_js__WEBPACK_IMPORTED_MODULE_7__["unsubscribe"](token); });
         this.lights.forEach(function (light) {
+            light.removeBy(pano);
             light.dispose();
-            pano.removeSceneObject(light.plastic);
         });
     };
     return Thru;
@@ -58065,10 +58168,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../plastic/light.plastic */ "./src/pano/plastic/light.plastic.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_7__);
 
 
 
 // 聚光灯
+
+
 
 
 
@@ -58110,9 +58218,9 @@ var Wormhole = /** @class */ (function () {
         }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_4__["default"].errorLog(e); });
     };
     Wormhole.prototype.bindEvents = function () {
-        var pano = this.pano;
-        pano.subscribe('scene-init', this.create, this);
-        pano.getCanvas().addEventListener('click', this.onDetect);
+        var _this = this;
+        this.subtoken = pubsub_js__WEBPACK_IMPORTED_MODULE_7__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_6__["default"].SCENE.LOAD, function () { return _this.create(); });
+        this.pano.getCanvas().addEventListener('click', this.onDetect);
     };
     Wormhole.prototype.detect = function (evt) {
         var _this = this;
@@ -58131,11 +58239,11 @@ var Wormhole = /** @class */ (function () {
             pos_1.z += this.direction ? 100 : -100;
             // camera lookAt
             new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](lookTarget).to(pos_1).effect('quintEaseIn', 1000)
-                .start(['x', 'y', 'z'], pano)
+                .start(['x', 'y', 'z'])
                 .complete(function () {
                 // camera position
                 new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](camera.position).to(_this.pos).effect('quadEaseOut', 1000)
-                    .start(['x', 'y', 'z'], pano)
+                    .start(['x', 'y', 'z'])
                     .complete(function () {
                     _this.finish();
                     _this.addBackDoor();
@@ -58163,9 +58271,8 @@ var Wormhole = /** @class */ (function () {
         this.direction = !this.direction;
     };
     Wormhole.prototype.dispose = function () {
-        var pano = this.pano;
-        pano.unsubscribe('scene-init', this.create, this);
-        pano.getCanvas().removeEventListener('click', this.onDetect);
+        this.pano.getCanvas().removeEventListener('click', this.onDetect);
+        pubsub_js__WEBPACK_IMPORTED_MODULE_7__["unsubscribe"](this.subtoken);
     };
     return Wormhole;
 }());
@@ -58194,6 +58301,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pano_plugins_helper_plugin__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../pano/plugins/helper.plugin */ "./src/pano/plugins/helper.plugin.ts");
 /* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_11__);
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -58229,6 +58338,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+
 
 
 
@@ -58330,7 +58440,7 @@ var Runtime = /** @class */ (function () {
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
-                                    pano.subscribe(name_1, events[name_1]);
+                                    pubsub_js__WEBPACK_IMPORTED_MODULE_11__["subscribe"](name_1, events[name_1]);
                                 }
                             }
                             if (source['animation']) {
@@ -58420,6 +58530,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vr_divider_vr__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../vr/divider.vr */ "./src/vr/divider.vr.ts");
 /* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
 /* harmony import */ var _core_external__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../core/external */ "./src/core/external.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_6__);
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -58455,6 +58567,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+
 
 
 
@@ -58524,7 +58637,7 @@ var Runtime = /** @class */ (function () {
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
-                                    vpano_1.subscribe(name_1, events[name_1]);
+                                    pubsub_js__WEBPACK_IMPORTED_MODULE_6__["subscribe"](name_1, events[name_1]);
                                 }
                             }
                             // 开场动画
@@ -58636,6 +58749,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pano_plastic_point_plastic__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/plastic/point.plastic */ "./src/pano/plastic/point.plastic.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
 /* harmony import */ var _assets_vr__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./assets.vr */ "./src/vr/assets.vr.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/topic */ "./src/core/topic.ts");
+
+
 
 
 
@@ -58662,13 +58780,13 @@ var Divider = /** @class */ (function () {
         this.ray = new three__WEBPACK_IMPORTED_MODULE_0__["Raycaster"]();
         data = this.data = Object.assign({}, defaultOpts, data);
         this.vpano = vpano;
-        vpano.subscribe('scene-load', function () {
+        pubsub_js__WEBPACK_IMPORTED_MODULE_7__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_8__["default"].SCENE.LOAD, function () {
             _this.initPanel();
             _this.initSetPanel();
             _this.createVrBtn(data.el);
             _this.hideAll();
         });
-        vpano.subscribe('render-process', this.update, this);
+        this.subtoken = pubsub_js__WEBPACK_IMPORTED_MODULE_7__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_8__["default"].RENDER.PROCESS, function () { return _this.update(); });
     }
     Divider.prototype.createVrBtn = function (el) {
         var _this = this;
@@ -59016,7 +59134,7 @@ var Divider = /** @class */ (function () {
         var root = vpano.getRoot();
         root.removeChild(this.backBtn);
         root.removeChild(this.enterBtn);
-        vpano.unSubscribe('render-process', this.update, this);
+        pubsub_js__WEBPACK_IMPORTED_MODULE_7__["unsubscribe"](this.subtoken);
     };
     return Divider;
 }());
@@ -59406,6 +59524,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
 /* harmony import */ var _effect_vr__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./effect.vr */ "./src/vr/effect.vr.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
+/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_3__);
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -59416,6 +59536,7 @@ var __extends = (undefined && undefined.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+
 
 
 
@@ -59440,7 +59561,7 @@ var VPano = /** @class */ (function (_super) {
     }
     VPano.prototype.animate = function () {
         this.updateControl();
-        this.dispatch('render-process', this.currentData, this);
+        pubsub_js__WEBPACK_IMPORTED_MODULE_3__["publish"]('render-process', this);
         this.effectRender.render(this.scene, this.camera);
         this.reqid = this.effectRender.requestAnimationFrame(this.animate.bind(this));
     };
@@ -59476,7 +59597,7 @@ var VPano = /** @class */ (function (_super) {
      */
     VPano.prototype.enter = function () {
         this.state = 1;
-        this.dispatch('vr-enter', this);
+        pubsub_js__WEBPACK_IMPORTED_MODULE_3__["publish"]('vr-enter', this);
         return this.display.requestPresent([{ source: this.webgl.domElement }]);
     };
     /**
@@ -59484,7 +59605,7 @@ var VPano = /** @class */ (function (_super) {
      */
     VPano.prototype.exit = function () {
         this.state = 0;
-        this.dispatch('vr-exit', this);
+        pubsub_js__WEBPACK_IMPORTED_MODULE_3__["publish"]('vr-exit', this);
         return this.display.exitPresent();
     };
     return VPano;

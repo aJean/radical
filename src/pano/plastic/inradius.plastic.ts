@@ -1,6 +1,8 @@
 import { BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending } from 'three';
 import Tween from '../animations/tween.animation';
 import Plastic from './plastic';
+import Topic from '../../core/topic';
+import * as PubSub from 'pubsub-js';
 
 /**
  * @file 内切球
@@ -19,6 +21,7 @@ const defaultOpts = {
 };
 export default class Inradius extends Plastic {
     wrap: any;
+    subtoken: any;
 
     constructor(opts, pano?) {
         super();
@@ -28,7 +31,7 @@ export default class Inradius extends Plastic {
         this.create();
 
         if (opts.rotate) {
-            pano.subscribe('render-process', this.addRotate, this);
+            this.subtoken = PubSub.subscribe(Topic.RENDER.PROCESS, () => this.addRotate());
         }
     }
 
@@ -165,14 +168,14 @@ export default class Inradius extends Plastic {
         const material = this.plastic.material;
 
         new Tween(material).to({ opacity: 1 }).effect('linear', 1000)
-            .start(['opacity'], pano).complete(onComplete);
+            .start(['opacity']).complete(onComplete);
     }
 
     fadeOut(pano, onComplete) {
         const material = this.plastic.material;
 
         new Tween(material).to({ opacity: 0 }).effect('linear', 1000)
-            .start(['opacity'], pano).complete(onComplete);
+            .start(['opacity']).complete(onComplete);
     }
 
     dispose() {
@@ -185,8 +188,6 @@ export default class Inradius extends Plastic {
             wrap.material.dispose();
         }
 
-        if (this.pano) {
-            this.pano.unsubscribe('render-process', this.addRotate, this);
-        }
+        PubSub.unsubscribe(this.subtoken);
     }
 }

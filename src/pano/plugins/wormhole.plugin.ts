@@ -8,6 +8,8 @@ import Light from '../plastic/light.plastic';
 import Shadow from '../plastic/shadow.plastic';
 import Log from '../../core/log';
 import Util from '../../core/util';
+import Topic from '../../core/topic';
+import * as PubSub from 'pubsub-js';
 
 /**
  * @file wormhole space through effection
@@ -19,6 +21,7 @@ const myLoader = new ResourceLoader();
 export default class Wormhole {
     pano: Pano;
     onDetect: Function;
+    subtoken: any;
     data: any;
     pos: any;
     texture: any;
@@ -61,10 +64,8 @@ export default class Wormhole {
     }
 
     bindEvents() {
-        const pano = this.pano;
-
-        pano.subscribe('scene-init', this.create, this);
-        pano.getCanvas().addEventListener('click', this.onDetect);
+        this.subtoken = PubSub.subscribe(Topic.SCENE.LOAD, () => this.create());
+        this.pano.getCanvas().addEventListener('click', this.onDetect);
     }
 
     detect(evt) {
@@ -85,11 +86,11 @@ export default class Wormhole {
 
             // camera lookAt
             new Tween(lookTarget).to(pos).effect('quintEaseIn', 1000)
-                .start(['x', 'y', 'z'], pano)
+                .start(['x', 'y', 'z'])
                 .complete(() => {
                     // camera position
                     new Tween(camera.position).to(this.pos).effect('quadEaseOut', 1000)
-                        .start(['x', 'y', 'z'], pano)
+                        .start(['x', 'y', 'z'])
                         .complete(() => {
                             this.finish();
                             this.addBackDoor();
@@ -124,9 +125,7 @@ export default class Wormhole {
     }
 
     dispose() {
-        const pano = this.pano;
-
-        pano.unsubscribe('scene-init', this.create, this);
-        pano.getCanvas().removeEventListener('click', this.onDetect);
+        this.pano.getCanvas().removeEventListener('click', this.onDetect);
+        PubSub.unsubscribe(this.subtoken);
     }
 }

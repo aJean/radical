@@ -25,11 +25,15 @@ export default abstract class Plastic {
         pano.addSceneObject(this.plastic);
     }
 
-    setOpacity(num, pano) {
+    removeBy(pano) {
+        pano.removeSceneObject(this.plastic);
+    }
+
+    setOpacity(num, useanim) {
         const material = this.plastic.material;
        
-        pano ? new Tween(material).to({opacity: num}).effect('backOut', 500)
-            .start(['opacity'], pano)
+        useanim ? new Tween(material).to({opacity: num}).effect('backOut', 500)
+            .start(['opacity'])
             : (material.opacity = num);
     }
 

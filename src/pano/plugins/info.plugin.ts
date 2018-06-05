@@ -1,5 +1,7 @@
 import {IPluggableUI} from '../interface/ui.interface';
 import Util from '../../core/util';
+import Topic from '../../core/topic';
+import * as PubSub from 'pubsub-js';
 
 /**
  * @file 版权遮罩层
@@ -9,12 +11,13 @@ export default class Info implements IPluggableUI {
     element: any;
     container: any;
     pano: any;
+    subtoken: any;
     
     constructor(pano) {
         this.pano = pano;
         
         this.createDom(pano.currentData);
-        pano.subscribe('scene-attach', this.renderDom, this);
+        this.subtoken = PubSub.subscribe(Topic.SCENE.ATTACH, this.renderDom.bind(this));
     }
 
     createDom(data) {
@@ -46,6 +49,10 @@ export default class Info implements IPluggableUI {
         this.pano.getRoot().appendChild(this.element);
     }
 
+    detachContainer() {
+        this.pano.getRoot().removeChild(this.element);
+    }
+
     getElement() {
         return this.element;
     }
@@ -59,6 +66,7 @@ export default class Info implements IPluggableUI {
     }
 
     dispose() {
-        this.pano.unsubscribe('scene-attach', this.renderDom, this);
+        this.detachContainer();
+        PubSub.unsubscribe(this.subtoken);
     }
 }

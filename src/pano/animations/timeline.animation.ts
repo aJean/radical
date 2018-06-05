@@ -1,3 +1,5 @@
+import * as PubSub from 'pubsub-js';
+import Topic from '../../core/topic';
 import AnimationFly from './fly.animation';
 
 /**
@@ -8,9 +10,12 @@ import AnimationFly from './fly.animation';
 export default abstract class Timeline {
     static pano: any;
     static lines = [];
+    static subtokens = [];
 
     static install(opts, pano) {
         const camera = pano.getCamera();
+        const subtokens = this.subtokens;
+
         this.pano = pano;
         // minor planet
         if (opts.fly) {
@@ -18,8 +23,8 @@ export default abstract class Timeline {
             this.lines.push(fly);
         }
 
-        pano.subscribe('scene-init', this.onTimeInit, this);
-        pano.subscribe('render-process', this.onTimeChange, this);
+        subtokens.push(PubSub.subscribe(Topic.SCENE.INIT, () => this.onTimeInit()));
+        subtokens.push(PubSub.subscribe(Topic.RENDER.PROCESS, () => this.onTimeChange()));
     }
 
     static onTimeInit() {
@@ -46,10 +51,7 @@ export default abstract class Timeline {
     }
 
     static onTimeEnd() {
-        const pano = this.pano;
-
-        pano.unsubscribe('scene-init', this.onTimeInit, this);
-        pano.unsubscribe('render-process', this.onTimeChange, this);
-        pano.noTimeline();
+        this.subtokens.forEach(token => PubSub.unsubscribe(token));
+        this.pano.noTimeline();
     }
 }

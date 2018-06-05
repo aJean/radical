@@ -3,9 +3,10 @@ import DomOverlay from './dom.overlay';
 import MeshOverlay from './mesh.overlay';
 import SpriteOverlay from './sprite.overlay';
 import FrameOverlay from './frame.overlay';
-import Pano from '../pano';
 import Util from '../../core/util';
 import Log from '../../core/log';
+import * as PubSub from 'pubsub-js';
+import Topic from '../../core/topic';
 
 /**
  * @file 管理所有场景下的覆盖物
@@ -33,20 +34,22 @@ const AnimationOpts = {
 };
 export default class Overlays {
     cid: number;
-    pano: Pano;
+    pano: any;
     list: any;
     maps = {};
     pluginFuncs = [];
+    subtokens = [];
 
-    constructor(pano: Pano, list) {
+    constructor(pano: any, list) {
         this.pano = pano;
         this.list = list;
 
-        pano.subscribe('scene-ready', this.init, this);
-        pano.subscribe('scene-attachstart', this.removeOverlays, this);
+        const subtokens = this.subtokens;
+        subtokens.push(PubSub.subscribe(Topic.SCENE.INIT, this.init.bind(this)));
+        subtokens.push(PubSub.subscribe(Topic.SCENE.ATTACHSTART, this.removeOverlays.bind(this)));
         // per scene change
-        pano.subscribe('scene-attach', this.init, this);
-        pano.subscribe('render-process', this.updateOverlays, this);
+        subtokens.push(PubSub.subscribe(Topic.SCENE.ATTACH, this.init.bind(this)));
+        subtokens.push(PubSub.subscribe(Topic.RENDER.PROCESS, this.updateOverlays.bind(this)));
 
         pano.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
     }
@@ -203,14 +206,14 @@ export default class Overlays {
     onCanvasHandle(evt) {
         const pano = this.pano;
         const camera = pano.getCamera();
-        const pos = Util.transNdc({x: evt.clientX, y: evt.clientY}, pano.getSize());
-        const vector = Util.calcScreenToSphere(pos, camera);
+        const ndcpos = Util.transNdc({x: evt.clientX, y: evt.clientY}, pano.getSize());
+        const location = Util.calcScreenToSphere(ndcpos, camera);
 
         try {
             const group = this.getCurrent(this.cid).detects;
             // self judgement
             if (group.children.length) {
-                const intersects = Util.intersect(pos, group.children, camera);
+                const intersects = Util.intersect(ndcpos, group.children, camera);
                 // disbale dom event
                 if (intersects) {
                     evt.stopPropagation();
@@ -220,13 +223,13 @@ export default class Overlays {
                 } 
             } 
             // other plugins judgement
-            if (this.pluginJudge(pos)) {
+            if (this.pluginJudge(ndcpos)) {
                 evt.stopPropagation();
                 evt.preventDefault();
 
                 return true;
             } else if (evt.target == pano.getCanvas()) {
-                pano.dispatch('pano-click', vector, pano);
+                PubSub.publish(Topic.UI.PANOCLICK, {location, pano});
             }
         } catch(e) {
             Log.output(e);
@@ -242,7 +245,7 @@ export default class Overlays {
         const size = pano.getSize();
 
         // for log & statistics & user behavior
-        pano.dispatch('overlay-click', instance, pano);
+        PubSub.publish(Topic.UI.OVERLAYCLICK, {instance, pano});
         switch (data.actionType) {
             case 'scene':
                 pano.enterNext(this.findScene(data.sceneId));
@@ -252,7 +255,7 @@ export default class Overlays {
                 break;
             // let Multiple plugin control
             case 'multiple':
-                pano.dispatch('multiple-active', data);
+                PubSub.publish(Topic.UI.MULTIPLEACTIVE, {data, pano});
                 break;
             case 'video':
                 instance.play();
@@ -358,9 +361,6 @@ export default class Overlays {
         const pano = this.pano;
 
         this.pluginFuncs = [];
-        pano.unsubscribe('scene-ready', this.init, this);
-        pano.unsubscribe('scene-attachstart', this.removeOverlays, this);
-        pano.unsubscribe('scene-attach', this.init, this);
-        pano.unsubscribe('render-process', this.updateOverlays, this);
+        this.subtokens.forEach(token => PubSub.unsubscribe(token));
     }
 }

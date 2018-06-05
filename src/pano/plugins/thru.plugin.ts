@@ -5,6 +5,8 @@ import Loader from '../loaders/resource.loader';
 import Inradius from '../plastic/inradius.plastic';
 import Text from '../plastic/text.plastic';
 import Light from '../plastic/light.plastic';
+import Topic from '../../core/topic';
+import * as PubSub from 'pubsub-js';
 
 /**
  * @file 星际穿越 plugin
@@ -28,6 +30,7 @@ export default class Thru {
     group = [];
     objs = [];
     lights = [];
+    subtokens = [];
 
     constructor(pano, opts) {
         this.pano = pano;
@@ -36,11 +39,14 @@ export default class Thru {
         this.onCanvasHandle = this.onCanvasHandle.bind(this);
         
         const webgl = pano.webgl;
-        pano.subscribe(pano.frozen ? 'scene-ready' : 'scene-init', this.load, this);
+        const subtokens = this.subtokens;
+
+        subtokens.push(PubSub.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT,
+            this.load.bind(this)));
         // pano.subscribe('scene-drag', this.everyToShow, this);
-        pano.subscribe('scene-attachstart', this.needToHide, this);
-        pano.subscribe('scene-attach', this.load, this);
-        pano.subscribe('pano-click', this.toggle, this);
+        subtokens.push(PubSub.subscribe(Topic.SCENE.ATTACHSTART, this.needToHide.bind(this)));
+        subtokens.push(PubSub.subscribe(Topic.SCENE.ATTACH, this.load.bind(this)));
+        subtokens.push(PubSub.subscribe(Topic.UI.PANOCLICK, this.toggle.bind(this)));
         pano.overlays.addJudgeFunc(this.onCanvasHandle.bind(this));
         // common lights
         this.createLights();
@@ -226,10 +232,10 @@ export default class Thru {
 
                                 pano.gyro && pano.gyro.makeEnable(false);
                                 new Tween(lookTarget).to(pos).effect('quintEaseIn', 1000)
-                                    .start(['x', 'y', 'z'], pano)
+                                    .start(['x', 'y', 'z'])
                                     .complete(() => {
                                         new Tween(camera.position).to(obj.position).effect('quadEaseOut', 1000)
-                                            .start(['x', 'y', 'z'], pano)
+                                            .start(['x', 'y', 'z'])
                                             .complete(() => {
                                                 this.active = true;
                                                 pano.supplyOverlayScenes(sceneGroup);
@@ -270,15 +276,11 @@ export default class Thru {
         const webgl = pano.webgl;
 
         this.cleanup();
-        pano.unsubscribe('scene-ready', this.load, this);
-        pano.unsubscribe('scene-init', this.load, this);
-        pano.unsubscribe('scene-drag', this.everyToShow, this);
-        pano.unsubscribe('scene-attachstart', this.needToHide, this);
-        pano.unsubscribe('scene-attach', this.needToShow, this);
+        this.subtokens.forEach(token => PubSub.unsubscribe(token));
 
         this.lights.forEach(light => {
+            light.removeBy(pano);
             light.dispose();
-            pano.removeSceneObject(light.plastic);
         });
     }
 }

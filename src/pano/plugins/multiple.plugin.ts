@@ -1,5 +1,7 @@
 import {IPluggableUI} from '../interface/ui.interface';
 import Util from '../../core/util';
+import Topic from '../../core/topic';
+import * as PubSub from 'pubsub-js';
 
 /**
  * @file 多场景切换插件
@@ -14,6 +16,7 @@ export default class Multiple implements IPluggableUI {
     inner: any;
     activeItem: any;
     isActive = true;
+    subtokens = [];
 
     constructor(pano, data) {
         this.pano = pano;
@@ -44,6 +47,7 @@ export default class Multiple implements IPluggableUI {
     bindEvent() {
         const pano = this.pano;
         const inner = this.inner;
+        const subtokens = this.subtokens;
 
         this.onClickHandle = this.onClickHandle.bind(this);
         this.onWheelHandle = this.onWheelHandle.bind(this);
@@ -51,12 +55,12 @@ export default class Multiple implements IPluggableUI {
         inner.addEventListener('click', this.onClickHandle);
         inner.addEventListener('mousewheel', this.onWheelHandle);
         // 管理 actionType 为 multiple 的 overlay 
-        pano.subscribe('multiple-active', this.onMultipleActive, this);
+        subtokens.push(pano.subscribe(Topic.UI.MULTIPLEACTIVE, this.onMultipleActive.bind(this)));
         // 管理激活状态
-        pano.subscribe('scene-attachstart', this.onDisable, this);
-        pano.subscribe('scene-attach', this.onEnable, this);
+        subtokens.push(pano.subscribe(Topic.SCENE.ATTACHSTART, this.onDisable.bind(this)));
+        subtokens.push(pano.subscribe(Topic.SCENE.ATTACH, this.onEnable.bind(this)));
         // 重新渲染场景列表
-        pano.subscribe('scene-reset', this.onReset, this);
+        subtokens.push(pano.subscribe(Topic.SCENE.RESET, this.onReset.bind(this)));
     }
 
     getElement() {
@@ -88,9 +92,10 @@ export default class Multiple implements IPluggableUI {
         this.inner.scrollLeft += dis;
     }
 
-    onMultipleActive(data) {
-        const scene = this.data.find(item => item.id == data.sceneId);
-        const index = this.data.indexOf(scene);
+    onMultipleActive(payload) {
+        const scenes = this.data;
+        const scene = scenes.find(item => item.id == payload.data.sceneId);
+        const index = scenes.indexOf(scene);
         const node = this.inner.querySelector(`div[data-id="${index}"]`);
 
         if (scene && node) {
@@ -160,10 +165,8 @@ export default class Multiple implements IPluggableUI {
 
         inner.removeEventListener('click', this.onClickHandle);
         inner.removeEventListener('mousewheel', this.onWheelHandle);
-        pano.unsubscribe('multiple-active', this.onMultipleActive, this);
-        pano.unsubscribe('scene-attachStart', this.onDisable, this);
-        pano.unsubscribe('scene-attach', this.onEnable, this);
 
+        this.subtokens.forEach(token => PubSub.unsubscribe(token));
         this.element.innerHTML = '';
         this.container.removeChild(this.element);
     }

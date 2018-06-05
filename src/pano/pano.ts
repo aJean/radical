@@ -5,9 +5,10 @@ import ResourceLoader from './loaders/resource.loader';
 import Tween from './animations/tween.animation';
 import Overlays from './overlays/overlays';
 import Inradius from './plastic/inradius.plastic';
-import EventEmitter from '../core/event';
 import Log from '../core/log';
 import Util from '../core/util';
+import Topic from '../core/topic';
+import * as PubSub from 'pubsub-js';
 
 /**
  * @file 全景渲染
@@ -36,7 +37,6 @@ export default class Pano {
     reqid = 0;
     currentData = null;
     frozen = true;
-    event = new EventEmitter();
     pluginList = [];
 
     constructor(el, source) {
@@ -91,19 +91,20 @@ export default class Pano {
 
         try {
             // push pano obj for client
-            this.dispatch('scene-create', this);
+            PubSub.publish(Topic.SCENE.CREATE, {pano: this});
             const data = this.currentData;
             const img = await myLoader.loadTexture(data.imgPath, 'canvas');
             const skyBox = this.skyBox = new Inradius({envMap: img});
+            const publishdata = {data, pano: this};
 
             skyBox.addTo(this.scene);
-            this.dispatch('scene-init', data, this);
+            PubSub.publish(Topic.SCENE.INIT, publishdata);
             this.render();
 
             await myLoader.loadTexture(data.bxlPath || data.texPath)
                 .then(texture => {
                     this.skyBox.setMap(texture);
-                    this.dispatch('scene-load', data, this);
+                    PubSub.publish(Topic.SCENE.LOAD, publishdata);
                 }).catch(e => Log.output(e));
             this.animate();
         } catch(e) {
@@ -161,7 +162,7 @@ export default class Pano {
         
         if (this.opts.fovTrans) {
             new Tween(camera).to({fov}).effect('quadEaseOut', duration || 1000)
-                .start(['fov'], this).process(() => camera.updateProjectionMatrix());
+                .start(['fov']).process(() => camera.updateProjectionMatrix());
         } else {
             camera.fov = fov;
             camera.updateProjectionMatrix();
@@ -195,28 +196,16 @@ export default class Pano {
         this.pluginList.push(plugin);
     }
 
-    subscribe(type, fn, context?) {
-        this.event.on(type, fn, context);
-    }
-
-    unsubscribe(type, fn, context?) {
-        this.event.off(type, fn, context);
-    }
-
-    dispatch(type, arg1?, arg2?, arg3?) {
-        this.event.emit(type, arg1, arg2, arg3);
-    }
-
     /**
      * 渲染场景贴图
      * @param {Object} texture 场景原图纹理
      */
     replaceTexture(texture) {
-        this.dispatch('scene-attachstart', this.currentData, this);
+        const publishdata = {data: this.currentData, pano: this};
 
+        PubSub.publish(Topic.SCENE.ATTACHSTART, publishdata);
         this.skyBox.setMap(texture);
-        // 触发场景切换事件
-        setTimeout(() => this.dispatch('scene-attach', this.currentData, this), 100);
+        setTimeout(() => PubSub.publish('scene-attach', publishdata), 100);
     }
 
     /**
@@ -224,7 +213,9 @@ export default class Pano {
      * @param {Object} texture 场景原图纹理
      */
     replaceAnim(texture) {
-        this.dispatch('scene-attachstart', this.currentData, this);
+        const publishdata = {data: this.currentData, pano: this};
+        
+        PubSub.publish(Topic.SCENE.ATTACHSTART, publishdata);
         
         const skyBox = this.skyBox;
         const oldMap = skyBox.getMap();
@@ -234,8 +225,7 @@ export default class Pano {
         newBox.fadeIn(this, () => {
             skyBox.setMap(texture);
             newBox.dispose();
-            // 触发场景切换事件
-            this.dispatch('scene-attach', this.currentData, this);
+            PubSub.publish(Topic.SCENE.ATTACH, publishdata);
         });
     }
 
@@ -244,7 +234,7 @@ export default class Pano {
      */
     animate() {
         this.updateControl();
-        this.dispatch('render-process', this.currentData, this);
+        PubSub.publishSync(Topic.RENDER.PROCESS, this)
         this.render();
 
         this.reqid = requestAnimationFrame(this.animate.bind(this));
@@ -370,7 +360,7 @@ export default class Pano {
      * 为 overlays 补充场景数据
      */
     supplyOverlayScenes(scenes) {
-        this.dispatch('scene-reset', scenes, this);
+        PubSub.publish(Topic.SCENE.RESET, {scenes, pano: this});
         this.overlays.addScenes(scenes);
     }
 
@@ -451,21 +441,22 @@ export default class Pano {
         this.frozen = false;
         this.startControl();
         // entrance animation end, scene become stable
-        this.dispatch('scene-ready', this.currentData, this);
+        PubSub.publish(Topic.SCENE.READY, {data: this.currentData, pano: this});
     }
 
     /** 
      * 释放资源
      */
     dispose() {
-        this.skyBox.dispose();
         this.stopControl();
-        this.dispatch('render-dispose', this);
-        this.event.removeAllListeners();
+        Util.cleanup(null, this.scene);
+
+        this.skyBox.dispose();
         this.webgl.dispose();
         this.root.innerHTML = '';
-        
+
         cancelAnimationFrame(this.reqid);
-        Util.cleanup(null, this.scene);
+        PubSub.publish(Topic.RENDER.DISPOSE, this);
+        // PubSub.clearAllSubscriptions();
     }
 }

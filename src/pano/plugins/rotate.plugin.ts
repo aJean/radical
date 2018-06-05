@@ -1,4 +1,6 @@
 import Tween from '../animations/tween.animation';
+import Topic from '../../core/topic';
+import * as PubSub from 'pubsub-js';
 
 /**
  * @file 漫游插件
@@ -16,6 +18,7 @@ export default class Rotate {
     timeid: any;
     target: any;
     tween: Tween;
+    subtokens = [];
 
     constructor(pano, data) {
         this.data = Object.assign({}, defaultOpts, data);
@@ -33,8 +36,9 @@ export default class Rotate {
             canvas.addEventListener('mouseup', this.onRecover);
         });
 
-        pano.subscribe('scene-attachstart', () => pano.setRotate(false));
-        pano.subscribe('scene-attach', () => pano.setRotate(true));
+        const subtokens = this.subtokens;
+        subtokens.push(PubSub.subscribe(Topic.SCENE.ATTACHSTART, () => pano.setRotate(false)));
+        subtokens.push(PubSub.subscribe(Topic.SCENE.ATTACH, () => pano.setRotate(true)));
     }
 
     create() {
@@ -69,7 +73,7 @@ export default class Rotate {
         this.timeid = setTimeout(() => {
             this.tween = new Tween({polar: orbit.getPolarAngle()}).to(this.target)
                 .effect('quadEaseOut', data.recover)
-                .start(['polar'], pano)
+                .start(['polar'])
                 .process((newVal, oldVal) => orbit.rotateUp(oldVal - newVal));
             pano.setRotate(true);
         }, data.lazy);
@@ -79,11 +83,13 @@ export default class Rotate {
         const canvas = this.pano.getCanvas();
 
         try {
+            this.subtokens.forEach(token => PubSub.unsubscribe(token));
+            this.tween.stop();
+
             canvas.removeEventListener('touchstart', this.onDisturb);
             canvas.removeEventListener('mousedown', this.onDisturb);
             canvas.removeEventListener('touchend', this.onRecover);
             canvas.removeEventListener('mouseup', this.onRecover);
-            this.tween.stop();
         } catch (e) {}
     }
 }
