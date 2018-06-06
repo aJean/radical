@@ -23,7 +23,7 @@ export default abstract class Timeline {
             this.lines.push(fly);
         }
 
-        subtokens.push(PubSub.subscribe(Topic.SCENE.INIT, () => this.onTimeInit()));
+        this.onTimeInit();
         subtokens.push(PubSub.subscribe(Topic.RENDER.PROCESS, () => this.onTimeChange()));
     }
 

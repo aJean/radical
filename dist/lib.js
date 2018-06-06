@@ -54146,7 +54146,7 @@ var Timeline = /** @class */ (function () {
             var fly = new _fly_animation__WEBPACK_IMPORTED_MODULE_2__["default"](camera, opts.fly);
             this.lines.push(fly);
         }
-        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_0__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].SCENE.INIT, function () { return _this.onTimeInit(); }));
+        this.onTimeInit();
         subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_0__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].RENDER.PROCESS, function () { return _this.onTimeChange(); }));
     };
     Timeline.onTimeInit = function () {
@@ -56515,7 +56515,7 @@ var Pano = /** @class */ (function (_super) {
         this.frozen = false;
         this.startControl();
         // entrance animation end, scene become stable
-        this.publish(this.Topic.SCENE.READY, { data: this.currentData, pano: this });
+        this.publish(this.Topic.SCENE.READY, { scene: this.currentData, pano: this });
     };
     /**
      * 释放资源

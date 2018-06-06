@@ -445,7 +445,7 @@ export default class Pano extends PubSubAble {
         this.frozen = false;
         this.startControl();
         // entrance animation end, scene become stable
-        this.publish(this.Topic.SCENE.READY, {data: this.currentData, pano: this});
+        this.publish(this.Topic.SCENE.READY, {scene: this.currentData, pano: this});
     }
 
     /** 
