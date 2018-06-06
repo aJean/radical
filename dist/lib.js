@@ -54861,12 +54861,12 @@ function OrbitControl(camera, domElement, pano) {
         dollyStart.set(0, distance);
         var pano = scope.pano;
         var size = pano.getSize();
-        var pos = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToSphere({
+        var location = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToSphere({
             x: (event.touches[0].pageX + dx / 2) / size.width * 2 - 1,
             y: -(event.touches[0].pageY + dy / 2) / size.height * 2 + 1
         }, scope.camera);
         // center of tow fingers
-        pubsub_js__WEBPACK_IMPORTED_MODULE_3__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_2__["default"].UI.ZOOM, { pos: pos, pano: pano });
+        pubsub_js__WEBPACK_IMPORTED_MODULE_3__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_2__["default"].UI.ZOOM, { location: location, pano: pano });
     }
     function handleTouchStartPan(event) {
         panStart.set(event.touches[0].pageX, event.touches[0].pageY);

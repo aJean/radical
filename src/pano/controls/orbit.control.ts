@@ -437,12 +437,12 @@ function OrbitControl(camera, domElement, pano) {
 
         const pano = scope.pano;
         const size = pano.getSize();
-        const pos = Util.calcScreenToSphere({
+        const location = Util.calcScreenToSphere({
             x: (event.touches[0].pageX + dx / 2) / size.width * 2 - 1,
             y: -(event.touches[0].pageY + dy / 2) / size.height * 2 + 1
         }, scope.camera);
         // center of tow fingers
-        PubSub.publish(Topic.UI.ZOOM, {pos, pano});
+        PubSub.publish(Topic.UI.ZOOM, {location, pano});
     }
 
     function handleTouchStartPan(event) {
