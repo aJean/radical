@@ -29,13 +29,13 @@
             let pos;
             let selected;
             bxl.startPano('./add.json', '#test', {
-                'pano-click': function (data) {
-                    pos = data;
-                    $('.show-point span').first().html(data.lng.toFixed(2));
-                    $('.show-point span').last().html(data.lat.toFixed(2));
+                'pano-click': function (topic, payload) {
+                    pos = payload.location;
+                    $('.show-point span').first().html(pos.lng.toFixed(2));
+                    $('.show-point span').last().html(pos.lat.toFixed(2));
                 },
-                'overlay-click': function (data) {
-                    selected = data;
+                'overlay-click': function (topic, payload) {
+                    selected = payload.instance;
                 }
             });
 

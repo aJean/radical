@@ -1,5 +1,4 @@
-import * as PubSub from 'pubsub-js';
-import Topic from '../../core/topic';
+import PubSubAble from '../../interface/common.interface';
 import Log from '../../core/log';
 
 /**
@@ -46,9 +45,8 @@ const EFFECT = {
     }
 };
 
-export default class Tween {
+export default class Tween extends PubSubAble {
     obj: any;
-    subtoken: any;
     target: any;
     fn: Function;
     onProcess: Function;
@@ -58,6 +56,7 @@ export default class Tween {
     duration = 500;
 
     constructor(obj) {
+        super();
         this.obj = obj;
     }
 
@@ -72,14 +71,14 @@ export default class Tween {
         } else {
             this.startTime = Date.now();
             keys.forEach(key => this.record[key] = this.obj[key]);
-            this.subtoken = PubSub.subscribe(Topic.RENDER.PROCESS, () => this.animate());
+            this.subscribe(this.Topic.RENDER.PROCESS, () => this.animate());
         }
 
         return this;
     }
 
     stop() {
-        PubSub.unsubscribe(this.subtoken);
+        super.dispose();
         return this;
     }
 

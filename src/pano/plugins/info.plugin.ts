@@ -1,4 +1,4 @@
-import {IPluggableUI} from '../interface/ui.interface';
+import PluggableUI from '../../interface/ui.interface';
 import Util from '../../core/util';
 import Topic from '../../core/topic';
 import * as PubSub from 'pubsub-js';
@@ -7,17 +7,21 @@ import * as PubSub from 'pubsub-js';
  * @file 版权遮罩层
  */
 
-export default class Info implements IPluggableUI {
+export default class Info extends PluggableUI {
     element: any;
     container: any;
     pano: any;
-    subtoken: any;
     
     constructor(pano) {
+        super();
+
         this.pano = pano;
-        
         this.createDom(pano.currentData);
-        this.subtoken = PubSub.subscribe(Topic.SCENE.ATTACH, this.renderDom.bind(this));
+        this.subscribe(Topic.SCENE.ATTACH, this.renderDom.bind(this));
+    }
+
+    setContainer() {
+        this.pano.getRoot().appendChild(this.element);
     }
 
     createDom(data) {
@@ -32,8 +36,8 @@ export default class Info implements IPluggableUI {
         this.setContainer();
     }
 
-    renderDom(data) {
-        const info = data.info;
+    renderDom(topic, payload) {
+        const info = payload.scene.info;
         const element = this.element;
 
         if (info) {
@@ -45,28 +49,7 @@ export default class Info implements IPluggableUI {
         }
     }
 
-    setContainer() {
-        this.pano.getRoot().appendChild(this.element);
-    }
-
-    detachContainer() {
-        this.pano.getRoot().removeChild(this.element);
-    }
-
-    getElement() {
-        return this.element;
-    }
-
-    show() {
-        this.element.style.display = 'block';
-    }
-
-    hide() {
-        this.element.style.display = 'none';
-    }
-
     dispose() {
-        this.detachContainer();
-        PubSub.unsubscribe(this.subtoken);
+        super.dispose();
     }
 }

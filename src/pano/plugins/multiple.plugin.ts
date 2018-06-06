@@ -1,13 +1,11 @@
-import {IPluggableUI} from '../interface/ui.interface';
+import PluggableUI from '../../interface/ui.interface';
 import Util from '../../core/util';
-import Topic from '../../core/topic';
-import * as PubSub from 'pubsub-js';
 
 /**
  * @file 多场景切换插件
  */
 
-export default class Multiple implements IPluggableUI {
+export default class Multiple extends PluggableUI {
     pano: any;
     data: any;
     element: any;
@@ -16,9 +14,10 @@ export default class Multiple implements IPluggableUI {
     inner: any;
     activeItem: any;
     isActive = true;
-    subtokens = [];
 
     constructor(pano, data) {
+        super();
+
         this.pano = pano;
         this.data = data;
         this.create();
@@ -47,7 +46,7 @@ export default class Multiple implements IPluggableUI {
     bindEvent() {
         const pano = this.pano;
         const inner = this.inner;
-        const subtokens = this.subtokens;
+        const Topic = this.Topic;
 
         this.onClickHandle = this.onClickHandle.bind(this);
         this.onWheelHandle = this.onWheelHandle.bind(this);
@@ -55,12 +54,12 @@ export default class Multiple implements IPluggableUI {
         inner.addEventListener('click', this.onClickHandle);
         inner.addEventListener('mousewheel', this.onWheelHandle);
         // 管理 actionType 为 multiple 的 overlay 
-        subtokens.push(pano.subscribe(Topic.UI.MULTIPLEACTIVE, this.onMultipleActive.bind(this)));
+        this.subscribe(Topic.UI.MULTIPLEACTIVE, this.onMultipleActive.bind(this));
         // 管理激活状态
-        subtokens.push(pano.subscribe(Topic.SCENE.ATTACHSTART, this.onDisable.bind(this)));
-        subtokens.push(pano.subscribe(Topic.SCENE.ATTACH, this.onEnable.bind(this)));
+        this.subscribe(Topic.SCENE.ATTACHSTART, this.onDisable.bind(this));
+        this.subscribe(Topic.SCENE.ATTACH, this.onEnable.bind(this));
         // 重新渲染场景列表
-        subtokens.push(pano.subscribe(Topic.SCENE.RESET, this.onReset.bind(this)));
+        this.subscribe(Topic.SCENE.RESET, this.onReset.bind(this));
     }
 
     getElement() {
@@ -92,9 +91,16 @@ export default class Multiple implements IPluggableUI {
         this.inner.scrollLeft += dis;
     }
 
-    onMultipleActive(payload) {
+    /**
+     * 热点触发的组件管理切换
+     * @param topic 订阅主题
+     * @param {Object} payload 负载
+     * @param {Object} payload.scene 要切换到的场景
+     * @param {Object} payload.pano 全景对象
+     */
+    onMultipleActive(topic, payload) {
         const scenes = this.data;
-        const scene = scenes.find(item => item.id == payload.data.sceneId);
+        const scene = scenes.find(item => item.id == payload.scene.sceneId);
         const index = scenes.indexOf(scene);
         const node = this.inner.querySelector(`div[data-id="${index}"]`);
 
@@ -112,12 +118,12 @@ export default class Multiple implements IPluggableUI {
         this.isActive = true;
     }
 
-    onReset(data, pano) {
+    onReset(topic, payload) {
         const inner = this.inner;
         const outer = this.outer;
-        this.data = data;
+        const scenes = this.data = payload.scenes;
 
-        inner.innerHTML = data.map((item, i) => {
+        inner.innerHTML = scenes.map((item, i) => {
             return `<div class="pano-multiplescene-item" data-id="${i}">
                 <img src="${item.thumbPath}" class="pano-multiplescene-img">
                 <span class="pano-multiplescene-name">${item.name}</span>
@@ -165,9 +171,9 @@ export default class Multiple implements IPluggableUI {
 
         inner.removeEventListener('click', this.onClickHandle);
         inner.removeEventListener('mousewheel', this.onWheelHandle);
-
-        this.subtokens.forEach(token => PubSub.unsubscribe(token));
         this.element.innerHTML = '';
         this.container.removeChild(this.element);
+
+        super.dispose();
     }
 }

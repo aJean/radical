@@ -29,8 +29,8 @@
             };
 
             bxl.startPano(json, '#test', {
-                'overlay-click': function (data) {
-                    console.log(data);
+                'overlay-click': function (topic, payload) {
+                    console.log(topic);
                 }
             });
         </script>

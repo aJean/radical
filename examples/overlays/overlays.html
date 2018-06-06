@@ -14,8 +14,8 @@
         <script>
             // start
             bxl.startPano('./overlays.json', '#test', {
-                'overlay-click': function (instance, pano) {
-                    const data = instance.data;
+                'overlay-click': function (topic, payload) {
+                    const data = payload.instance.data;
     
                     if (data.actionType == 'custom') {
                         const node = document.createElement('div');
@@ -24,7 +24,7 @@
                         node.style.left = data.x + 20 + 'px';
                         node.style.top = data.y + 20 + 'px';
 
-                        pano.addDomObject(node);
+                        payload.pano.addDomObject(node);
                     }
                 }
             });

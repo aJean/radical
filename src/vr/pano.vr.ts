@@ -2,8 +2,6 @@ import Pano from '../pano/pano';
 import VrControl from './control.vr';
 import VrEffect from './effect.vr';
 import Util from '../core/util';
-import Topic from '../core/topic';
-import * as PubSub from 'pubsub-js';
 
 /**
  * @file vr pano
@@ -31,7 +29,7 @@ export default class VPano extends Pano {
 
     animate() {
         this.updateControl();
-        PubSub.publish('render-process', this);
+        this.publish(this.Topic.RENDER.PROCESS, this);
 
         this.effectRender.render(this.scene, this.camera);
         this.reqid = this.effectRender.requestAnimationFrame(this.animate.bind(this));
@@ -75,7 +73,7 @@ export default class VPano extends Pano {
      */
     enter() {
         this.state = 1;
-        PubSub.publish('vr-enter', this);
+        this.publish(this.Topic.VR.ENTER, this);
 
         return this.display.requestPresent([{source: this.webgl.domElement}]);
     }
@@ -85,7 +83,7 @@ export default class VPano extends Pano {
      */
     exit() {
         this.state = 0;
-        PubSub.publish('vr-exit', this);
+        this.publish(this.Topic.VR.EXIT, this);
 
         return this.display.exitPresent();
     }

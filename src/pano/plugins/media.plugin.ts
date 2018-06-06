@@ -1,9 +1,7 @@
 import {Scene, PerspectiveCamera, Vector3, Mesh, LinearFilter, RGBFormat, BoxBufferGeometry, MeshBasicMaterial, VideoTexture} from 'three';
-import {IPluggableUI} from '../interface/ui.interface';
+import PluggableUI from '../../interface/ui.interface';
 import Util from '../../core/util';
 import Inradius from '../plastic/inradius.plastic';
-import Topic from '../../core/topic';
-import * as PubSub from 'pubsub-js';
 
 /**
  * @file 多媒体面板
@@ -17,7 +15,7 @@ const defaultOpts = {
     aloop: true,
     aauto: true
 };
-export default class Media implements IPluggableUI {
+export default class Media extends PluggableUI {
     container: any;
     element: any;
     pano: any;
@@ -28,9 +26,10 @@ export default class Media implements IPluggableUI {
     box: any;
     inradius: any;
     audio: any;
-    subtokens = [];
 
     constructor(pano, opts) {
+        super();
+
         this.pano = pano;
         this.opts = Object.assign({}, defaultOpts, opts);
 
@@ -45,7 +44,7 @@ export default class Media implements IPluggableUI {
             + '<div class="pano-media-video"></div><div class="pano-media-audio"></div></section>');
 
         // video
-        const video: any = this.video = Util.createElement(`<video width="600" height="400" preload="auto" webkit-playsinlin></video>`);
+        const video: any = this.video = Util.createElement(`<video width="600" height="400" preload="auto" webkit-playsinline></video>`);
         video.src = opts.vsrc;
         video.loop = opts.vloop;
         const texture = new VideoTexture(video);
@@ -95,16 +94,12 @@ export default class Media implements IPluggableUI {
         this.pano.getRoot().appendChild(this.element);
     }
 
-    detachContainer() {
-        this.pano.getRoot().removeChild(this.element);
-    }
-
     bindEvent() {
-        const subtokens = this.subtokens;
+        const Topic = this.Topic;
 
         this.pano.webgl.autoClear = false;
-        subtokens.push(PubSub.subscribe(Topic.RENDER.PROCESS, () => this.update()));
-        subtokens.push(PubSub.subscribe(Topic.SCENE.LOAD, () => this.createInradius()));
+        this.subscribe(Topic.RENDER.PROCESS, () => this.update());
+        this.subscribe(Topic.SCENE.LOAD, () => this.createInradius());
     }
 
     getElement() {
@@ -192,15 +187,12 @@ export default class Media implements IPluggableUI {
         const pano = this.pano;
         const box = this.box;
 
-        this.detachContainer();
-
         box.material.map.dispose();
         box.material.dispose();
         box.geometry.dispose();
-
         pano.removeSceneObject(box);
         pano.webgl.autoClear = true;
 
-        this.subtokens.forEach(token => PubSub.unsubscribe(token));
+        super.dispose();
     }
 }

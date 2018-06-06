@@ -14,8 +14,8 @@
         <script>
             // start
             bxl.startPano('./animation.json', '#test', {
-                'animation-end': function (data) {
-                    console.log(data);
+                'animation-end': function (topic, payload) {
+                    console.log(topic);
                 }
             });
         </script>

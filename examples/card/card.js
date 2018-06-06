@@ -1,7 +1,7 @@
 let flag = 0;
 let oheight;
 bxl.startPano('./card.json', '.scene', {
-    'scene-init': function (data, pano) {
+    'scene-init': function (topic, payload) {
         const $root = $('.scene');
         // dom placeholder
         const $copy = $('<div class="scene"></div>')
@@ -15,7 +15,7 @@ bxl.startPano('./card.json', '.scene', {
                     transform: 'translate3d(0px, 0px, 0px)',
                     height: oheight
                 });
-                pano.setFov(85);
+                payload.pano.setFov(85);
                 setTimeout(function() {
                     $root.css({
                         position: 'static'
@@ -36,7 +36,7 @@ bxl.startPano('./card.json', '.scene', {
                         transform: 'translate3d(0px, -' + top + 'px, 0px)',
                         height: window.innerHeight
                     });
-                    pano.setFov(55);
+                    payload.pano.setFov(55);
                 }, 20);
                 flag = 1;
             }

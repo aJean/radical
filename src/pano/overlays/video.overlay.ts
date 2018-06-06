@@ -1,5 +1,5 @@
 import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
-import {IPluggableOverlay} from '../interface/overlay.interface';
+import {IPluggableOverlay} from '../../interface/overlay.interface';
 import Popup from '../ui/popup.ui';
 import Util from '../../core/util';
 

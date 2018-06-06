@@ -35,6 +35,17 @@ export default {
     UI: {
         PANOCLICK: 'pano-click',
         OVERLAYCLICK: 'overlay-click',
-        MULTIPLEACTIVE: 'multiple-active'
+        MULTIPLEACTIVE: 'multiple-active',
+        DRAG: 'pano-drag',
+        ZOOM: 'pano-zoom'
+    },
+    // star through
+    THRU: {
+        SHOW: 'thru-show',
+        CHANGE: 'thru-change'
+    },
+    // animation
+    ANIMATION: {
+        END: 'animation-end'
     }
 };

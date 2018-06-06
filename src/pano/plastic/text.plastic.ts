@@ -14,6 +14,7 @@ const defaultOpts = {
     fontsize: 42,
     linewidth: window.devicePixelRatio > 2 ? 6 : 4,
     color: '#fff',
+    shadow: false,
     hide: false,
     order: 5,
     inverse: true,
@@ -78,8 +79,15 @@ export default class Text extends Plastic {
         ctx.lineWidth = opts.linewidth;
         ctx.textAlign = 'center';
         ctx.fillStyle = opts.color;
+        // 阴影
+        if (opts.shadow) {
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.shadowBlur = 2;
+        }
         ctx.fillText(opts.text, width / 2, height / 2 + 10);
-
+        // 描边
         if (opts.strokecolor) {
             ctx.lineWidth = 1;
             ctx.strokeStyle = opts.strokecolor;

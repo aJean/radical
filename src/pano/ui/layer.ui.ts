@@ -1,4 +1,4 @@
-import {IPluggableUI} from '../interface/ui.interface';
+import {IPluggableUI} from '../../interface/ui.interface';
 
 /**
  * @file dom layer

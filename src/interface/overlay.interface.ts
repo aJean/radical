@@ -15,3 +15,7 @@ export interface IPluggableOverlay {
 
     dispose(): void;
 }
+
+export default class PluggableOverlay {
+
+}

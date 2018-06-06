@@ -27,13 +27,12 @@
                 }],
             }, '#test', {
                 // 拖动起点
-                'scene-drag': function (c1, c2, pano) {
-                    console.log(c1);
-                    console.log(c2);
+                'pano-drag': function (topic, payload) {
+                    console.log(payload);
                 },
                 // 缩放起点
-                'scene-zoom': function (data, pano) {
-                    console.log(data);
+                'pano-zoom': function (topic, payload) {
+                    console.log(payload);
                 }
             });
         </script>

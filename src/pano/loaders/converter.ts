@@ -1,5 +1,5 @@
 /**
- * data coordinate transform
+ * @file data coordinate transform
  */
 
 export default abstract class Converter {

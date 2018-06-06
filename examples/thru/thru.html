@@ -29,8 +29,8 @@
                     };
 
                     bxl.startPano(data, '#test', {
-                        'overlay-click': function (data) {
-                            console.log(data);
+                        'pano-click': function (topic, payload) {
+                            console.log(payload);
                         }
                     });
                 }

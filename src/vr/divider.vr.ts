@@ -1,13 +1,13 @@
 import {Group, Vector3, Raycaster, CanvasTexture, DoubleSide, Mesh, PlaneGeometry, MeshBasicMaterial, 
     TextureLoader, CircleGeometry, Geometry, Line, LineBasicMaterial} from 'three';
+import PubSubAble from '../interface/common.interface';
 import Text from '../pano/plastic/text.plastic';
 import Button from '../pano/plastic/button.plastic';
 import Icon from '../pano/plastic/icon.plastic';
 import Point from '../pano/plastic/point.plastic';
 import Util from '../core/util';
 import Assets from './assets.vr';
-import * as PubSub from 'pubsub-js';
-import Topic from '../core/topic';
+
 
 /**
  * @file webvr 用户控制器
@@ -19,7 +19,7 @@ const defaultOpts = {
     lng: 0,
     lat: 0
 };
-export default class Divider {
+export default class Divider extends PubSubAble {
     data: any;
     subtoken: any;    
     vpano: any;
@@ -36,16 +36,19 @@ export default class Divider {
     ray = new Raycaster();
 
     constructor(vpano, data) {
+        super();
+
         data = this.data = Object.assign({}, defaultOpts, data);
         this.vpano = vpano;
 
-        PubSub.subscribe(Topic.SCENE.LOAD, () => {
+        const Topic = this.Topic;
+        this.subscribe(Topic.SCENE.LOAD, () => {
             this.initPanel();
             this.initSetPanel();
             this.createVrBtn(data.el);
             this.hideAll();
         });
-        this.subtoken = PubSub.subscribe(Topic.RENDER.PROCESS, () => this.update());
+        this.subscribe(Topic.RENDER.PROCESS, () => this.update());
     }
 
     createVrBtn(el) {
@@ -442,11 +445,10 @@ export default class Divider {
     }
 
     dispose() {
-        const vpano = this.vpano;
-        const root = vpano.getRoot();
+        super.dispose();
 
+        const root = this.vpano.getRoot();
         root.removeChild(this.backBtn);
         root.removeChild(this.enterBtn);
-        PubSub.unsubscribe(this.subtoken);
     }
 };

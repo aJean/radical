@@ -5,8 +5,7 @@ import SpriteOverlay from './sprite.overlay';
 import FrameOverlay from './frame.overlay';
 import Util from '../../core/util';
 import Log from '../../core/log';
-import * as PubSub from 'pubsub-js';
-import Topic from '../../core/topic';
+import PubSubAble from '../../interface/common.interface';
 
 /**
  * @file 管理所有场景下的覆盖物
@@ -32,29 +31,31 @@ const AnimationOpts = {
         colorB: 1
     }
 };
-export default class Overlays {
+export default class Overlays extends PubSubAble {
     cid: number;
     pano: any;
     list: any;
     maps = {};
     pluginFuncs = [];
-    subtokens = [];
 
     constructor(pano: any, list) {
+        super();
+
         this.pano = pano;
         this.list = list;
 
-        const subtokens = this.subtokens;
-        subtokens.push(PubSub.subscribe(Topic.SCENE.INIT, this.init.bind(this)));
-        subtokens.push(PubSub.subscribe(Topic.SCENE.ATTACHSTART, this.removeOverlays.bind(this)));
+        const Topic = this.Topic;
+        this.subscribe(Topic.SCENE.INIT, this.init.bind(this));
+        this.subscribe(Topic.SCENE.ATTACHSTART, this.removeOverlays.bind(this));
         // per scene change
-        subtokens.push(PubSub.subscribe(Topic.SCENE.ATTACH, this.init.bind(this)));
-        subtokens.push(PubSub.subscribe(Topic.RENDER.PROCESS, this.updateOverlays.bind(this)));
+        this.subscribe(Topic.SCENE.ATTACH, this.init.bind(this));
+        this.subscribe(Topic.RENDER.PROCESS, this.updateOverlays.bind(this));
 
         pano.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
     }
 
-    init(scene) {
+    init(topic, payload) {
+        const scene = payload.scene;
         if (!scene.overlays) {
             return;
         }
@@ -229,7 +230,7 @@ export default class Overlays {
 
                 return true;
             } else if (evt.target == pano.getCanvas()) {
-                PubSub.publish(Topic.UI.PANOCLICK, {location, pano});
+                this.publish(this.Topic.UI.PANOCLICK, {location, pano});
             }
         } catch(e) {
             Log.output(e);
@@ -243,9 +244,10 @@ export default class Overlays {
         const pano = this.pano;
         const data = instance.data;
         const size = pano.getSize();
+        const Topic = this.Topic;
 
         // for log & statistics & user behavior
-        PubSub.publish(Topic.UI.OVERLAYCLICK, {instance, pano});
+        this.publish(Topic.UI.OVERLAYCLICK, {instance, pano});
         switch (data.actionType) {
             case 'scene':
                 pano.enterNext(this.findScene(data.sceneId));
@@ -255,7 +257,7 @@ export default class Overlays {
                 break;
             // let Multiple plugin control
             case 'multiple':
-                PubSub.publish(Topic.UI.MULTIPLEACTIVE, {data, pano});
+                this.publish(Topic.UI.MULTIPLEACTIVE, {scene: data, pano});
                 break;
             case 'video':
                 instance.play();
@@ -280,8 +282,13 @@ export default class Overlays {
         });
     }
 
-    updateOverlays(scene) {
-        const cache = this.getCurrent(scene.id);
+    /**
+     * 更新覆盖物的状态或位置
+     * @param {string} topic 
+     * @param {Object} pano 全景对象
+     */
+    updateOverlays(topic, pano) {
+        const cache = this.getCurrent(pano.currentData.id);
         cache.domGroup.forEach(item => this.updateDomOverlay(item));
         cache.meshGroup.forEach(item => item.update());
     }
@@ -358,9 +365,7 @@ export default class Overlays {
     }
 
     dispose() {
-        const pano = this.pano;
-
+        super.dispose();
         this.pluginFuncs = [];
-        this.subtokens.forEach(token => PubSub.unsubscribe(token));
     }
 }

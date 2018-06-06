@@ -1,12 +1,10 @@
 import { TextureLoader, MeshBasicMaterial, CircleGeometry, CanvasTexture, Mesh, Vector3 } from 'three';
+import PubSubAble from '../../interface/common.interface';
 import Tween from '../animations/tween.animation';
 import Util from '../../core/util';
 import Loader from '../loaders/resource.loader';
 import Inradius from '../plastic/inradius.plastic';
-import Text from '../plastic/text.plastic';
 import Light from '../plastic/light.plastic';
-import Topic from '../../core/topic';
-import * as PubSub from 'pubsub-js';
 
 /**
  * @file 星际穿越 plugin
@@ -19,7 +17,7 @@ const defaultOpts = {
     surl: null
 };
 const loader = new Loader();
-export default class Thru {
+export default class Thru extends PubSubAble {
     opts: any;
     list: any;
     camera: any;
@@ -30,36 +28,38 @@ export default class Thru {
     group = [];
     objs = [];
     lights = [];
-    subtokens = [];
 
     constructor(pano, opts) {
+        super();
+
         this.pano = pano;
         this.camera = pano.getCamera();
         this.opts = Util.assign({}, defaultOpts, opts);
         this.onCanvasHandle = this.onCanvasHandle.bind(this);
         
         const webgl = pano.webgl;
-        const subtokens = this.subtokens;
+        const Topic = this.Topic;
 
-        subtokens.push(PubSub.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT,
-            this.load.bind(this)));
-        // pano.subscribe('scene-drag', this.everyToShow, this);
-        subtokens.push(PubSub.subscribe(Topic.SCENE.ATTACHSTART, this.needToHide.bind(this)));
-        subtokens.push(PubSub.subscribe(Topic.SCENE.ATTACH, this.load.bind(this)));
-        subtokens.push(PubSub.subscribe(Topic.UI.PANOCLICK, this.toggle.bind(this)));
-        pano.overlays.addJudgeFunc(this.onCanvasHandle.bind(this));
         // common lights
         this.createLights();
+
+        this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT,
+            this.load.bind(this));
+        // this.subscribe(Topic.UI.DRAG, this.everyToShow.bind(this));
+        this.subscribe(Topic.SCENE.ATTACHSTART, this.needToHide.bind(this));
+        this.subscribe(Topic.SCENE.ATTACH, this.load.bind(this));
+        this.subscribe(Topic.UI.PANOCLICK, this.toggle.bind(this));
+        pano.overlays.addJudgeFunc(this.onCanvasHandle.bind(this));
     }
 
-    load(scene) {
+    load(topic, payload) {
+        const scene = payload.scene;
         const list = this.list = scene.recomList;
 
         if (!list || !list.length) {
             return;
         }
         // clean current thru list
-        this.cleanup(); 
         this.create(list);
         this.needToShow();
     }
@@ -68,7 +68,7 @@ export default class Thru {
      * 使用唯一点光源避免互相干扰
      */
     createLights() {
-        const light = new Light({type: 2, y: 900});
+        const light = new Light({type: 2});
 
         light.addBy(this.pano);
         this.lights.push(light);
@@ -88,15 +88,13 @@ export default class Thru {
         list.forEach((item, i) => {
             loader.loadTexture(item.image).then(texture => {
                 const pos = this.getVector(i);              
-                const text = new Text({fontsize: 32, width: 128, inverse: false, text: item.setName});
                 const hole = new Inradius({
-                    name: i, shadow: true, position: pos, radius: radius,
-                    emissive: '#999', envMap: texture, visible: false, data: item
+                    name: i, shadow: true, position: pos, radius: radius, type: 'mask',
+                    emissive: '#999', envMap: texture, visible: false, data: item, text: item.setName
                 }, pano);
                 hole.addBy(pano);
-                text.addTo(hole);
 
-                group.push(hole.plastic);
+                group.push(hole.getPlastic());
                 objs.push(hole);
             });
         });
@@ -107,7 +105,7 @@ export default class Thru {
      */
     getVector(i) {
         let lng = Math.random() * 60 - 30;
-        let lat = Math.random() * 60 - 30;
+        let lat = Math.random() * 30;
 
         lng += i * 90;
         return Util.calcSphereToWorld(lng, lat);
@@ -135,8 +133,7 @@ export default class Thru {
 
         clearTimeout(this.timeid);
         this.timeid = setTimeout(() => {
-            const pano = this.pano;
-            pano.dispatch('thru-show', this.list, pano);
+            this.publish(this.Topic.THRU.SHOW, {list: this.list, pano: this.pano});
             this.show();
         }, this.opts.lazy);
     }
@@ -214,7 +211,9 @@ export default class Thru {
                 this.active = false;
 
                 const obj: any = intersects[0].object;
-                const data = obj.data;
+                const instance = obj.instance;
+                const data = instance.getData();
+
                 if (data) {
                     const id = data.sceneId;
                     const sid = data.setId;
@@ -227,27 +226,31 @@ export default class Thru {
                             if (sceneGroup) {
                                 const scene = sceneGroup.find(item => item.id == id);
                                 const lookTarget = pano.getLookAtTarget();
-                                const pos = obj.position.clone();
-                                pos.z += pos.z > 0 ? 100 : -100;
-
+                                const pos = instance.getPosition().clone();
+                                pos.z += pos.z > 0 ? 50 : -50;
+                                // lock gyro control
                                 pano.gyro && pano.gyro.makeEnable(false);
                                 new Tween(lookTarget).to(pos).effect('quintEaseIn', 1000)
                                     .start(['x', 'y', 'z'])
                                     .complete(() => {
-                                        new Tween(camera.position).to(obj.position).effect('quadEaseOut', 1000)
+                                        instance.hideText();                                        
+                                        new Tween(camera.position).to(instance.getPosition())
+                                            .effect('quadEaseOut', 1000)
                                             .start(['x', 'y', 'z'])
                                             .complete(() => {
                                                 this.active = true;
-                                                pano.supplyOverlayScenes(sceneGroup);
-                                                pano.enterThru(scene, obj.material.envMap);
-                                                pano.dispatch('thru-change', data, scene, pano);
+                                                pano.enterThru(scene, instance.getMap());
+                                                this.cleanup(); 
                                                 pano.getControl().reset(pos.z > 0);
+                                                pano.supplyOverlayScenes(sceneGroup);
                                                 pano.gyro && pano.gyro.makeEnable(true);
+                                                this.publish(this.Topic.THRU.CHANGE, {data, scene, pano});
                                             });
                                     });
                             }
                         }).catch(e => {
                             this.active = true;
+                            // release gyro control
                             pano.gyro && pano.gyro.makeEnable(true);
                         });
                 }
@@ -276,11 +279,11 @@ export default class Thru {
         const webgl = pano.webgl;
 
         this.cleanup();
-        this.subtokens.forEach(token => PubSub.unsubscribe(token));
-
         this.lights.forEach(light => {
             light.removeBy(pano);
             light.dispose();
         });
+
+        super.dispose();
     }
 }

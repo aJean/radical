@@ -7,8 +7,7 @@ import Overlays from './overlays/overlays';
 import Inradius from './plastic/inradius.plastic';
 import Log from '../core/log';
 import Util from '../core/util';
-import Topic from '../core/topic';
-import * as PubSub from 'pubsub-js';
+import PubSubAble from '../interface/common.interface';
 
 /**
  * @file 全景渲染
@@ -22,7 +21,7 @@ const defaultOpts = {
     sceneTrans: false
 };
 const myLoader = new ResourceLoader();
-export default class Pano {
+export default class Pano extends PubSubAble {
     overlays: Overlays;
     source: any;
     size: any;
@@ -40,6 +39,8 @@ export default class Pano {
     pluginList = [];
 
     constructor(el, source) {
+        super();
+
         const data = this.currentData = Util.findScene(source);
 
         this.opts = Object.assign({el}, defaultOpts, source['pano']);
@@ -87,24 +88,25 @@ export default class Pano {
 
     async run() {
         const source = this.source;
+        const Topic = this.Topic;
         source['cretPath'] && myLoader.loadCret(source['cretPath']);
 
         try {
             // push pano obj for client
-            PubSub.publish(Topic.SCENE.CREATE, {pano: this});
+            this.publish(Topic.SCENE.CREATE, {pano: this});
             const data = this.currentData;
             const img = await myLoader.loadTexture(data.imgPath, 'canvas');
             const skyBox = this.skyBox = new Inradius({envMap: img});
-            const publishdata = {data, pano: this};
+            const publishdata = {scene: data, pano: this};
 
             skyBox.addTo(this.scene);
-            PubSub.publish(Topic.SCENE.INIT, publishdata);
+            this.publish(Topic.SCENE.INIT, publishdata);
             this.render();
 
             await myLoader.loadTexture(data.bxlPath || data.texPath)
                 .then(texture => {
                     this.skyBox.setMap(texture);
-                    PubSub.publish(Topic.SCENE.LOAD, publishdata);
+                    this.publish(Topic.SCENE.LOAD, publishdata);
                 }).catch(e => Log.output(e));
             this.animate();
         } catch(e) {
@@ -201,11 +203,12 @@ export default class Pano {
      * @param {Object} texture 场景原图纹理
      */
     replaceTexture(texture) {
-        const publishdata = {data: this.currentData, pano: this};
+        const publishdata = {scene: this.currentData, pano: this};
+        const Topic = this.Topic;
 
-        PubSub.publish(Topic.SCENE.ATTACHSTART, publishdata);
+        this.publish(Topic.SCENE.ATTACHSTART, publishdata);
         this.skyBox.setMap(texture);
-        setTimeout(() => PubSub.publish('scene-attach', publishdata), 100);
+        setTimeout(() => this.publish(Topic.SCENE.ATTACH, publishdata), 100);
     }
 
     /**
@@ -213,9 +216,10 @@ export default class Pano {
      * @param {Object} texture 场景原图纹理
      */
     replaceAnim(texture) {
-        const publishdata = {data: this.currentData, pano: this};
+        const publishdata = {scene: this.currentData, pano: this};
+        const Topic = this.Topic;        
         
-        PubSub.publish(Topic.SCENE.ATTACHSTART, publishdata);
+        this.publish(Topic.SCENE.ATTACHSTART, publishdata);
         
         const skyBox = this.skyBox;
         const oldMap = skyBox.getMap();
@@ -225,7 +229,7 @@ export default class Pano {
         newBox.fadeIn(this, () => {
             skyBox.setMap(texture);
             newBox.dispose();
-            PubSub.publish(Topic.SCENE.ATTACH, publishdata);
+            this.publish(Topic.SCENE.ATTACH, publishdata);
         });
     }
 
@@ -234,7 +238,7 @@ export default class Pano {
      */
     animate() {
         this.updateControl();
-        PubSub.publishSync(Topic.RENDER.PROCESS, this)
+        this.publishSync(this.Topic.RENDER.PROCESS, this)
         this.render();
 
         this.reqid = requestAnimationFrame(this.animate.bind(this));
@@ -360,7 +364,7 @@ export default class Pano {
      * 为 overlays 补充场景数据
      */
     supplyOverlayScenes(scenes) {
-        PubSub.publish(Topic.SCENE.RESET, {scenes, pano: this});
+        this.publish(this.Topic.SCENE.RESET, {scenes, pano: this});
         this.overlays.addScenes(scenes);
     }
 
@@ -441,13 +445,15 @@ export default class Pano {
         this.frozen = false;
         this.startControl();
         // entrance animation end, scene become stable
-        PubSub.publish(Topic.SCENE.READY, {data: this.currentData, pano: this});
+        this.publish(this.Topic.SCENE.READY, {data: this.currentData, pano: this});
     }
 
     /** 
      * 释放资源
      */
     dispose() {
+        cancelAnimationFrame(this.reqid);
+        
         this.stopControl();
         Util.cleanup(null, this.scene);
 
@@ -455,8 +461,8 @@ export default class Pano {
         this.webgl.dispose();
         this.root.innerHTML = '';
 
-        cancelAnimationFrame(this.reqid);
-        PubSub.publish(Topic.RENDER.DISPOSE, this);
-        // PubSub.clearAllSubscriptions();
+        this.publish(this.Topic.RENDER.DISPOSE, this);
+        // delete all subscribes
+        super.dispose();
     }
 }

@@ -1,7 +1,5 @@
 import Util from '../../core/util';
-import PluggableUI from '../interface/ui.class';
-import Topic from '../../core/topic';
-import * as PubSub from 'pubsub-js';
+import PluggableUI from '../../interface/ui.interface';
 
 /**
  * @file 辅助工具
@@ -9,13 +7,12 @@ import * as PubSub from 'pubsub-js';
 
 export default class Helper extends PluggableUI {
     pano: any;
-    subtoken: any;
 
     constructor(pano) {
         super();
 
         this.pano = pano;
-        this.subtoken = PubSub.subscribe(Topic.RENDER.PROCESS, () => this.update());
+        this.subscribe(this.Topic.RENDER.PROCESS, () => this.update());
 
         const circle = this.element = Util.createElement('<div style="position:absolute;width:10px;height:10px;background:#fff;border-radius:10px;z-index:99;border:2px solid red;"></div>');
         this.setContainer();
@@ -29,6 +26,7 @@ export default class Helper extends PluggableUI {
     update() {
         const pano = this.pano;
         let pos = this.pano.getLook();
+        // camera to object
         pos.lng -= 180;
         pos.lat -= 90;
 
@@ -40,7 +38,6 @@ export default class Helper extends PluggableUI {
     }
 
     dispose() {
-        this.detachContainer();
-        PubSub.unsubscribe(this.subtoken);
+        super.dispose();
     }
 }

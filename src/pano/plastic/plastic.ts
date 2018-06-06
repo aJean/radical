@@ -1,10 +1,11 @@
 import Tween from '../animations/tween.animation';
+import PubSubAble from '../../interface/common.interface';
 
 /**
  * @file 内置物体材质抽象类
  */
 
-export default abstract class Plastic {
+export default abstract class Plastic extends PubSubAble {
     pano: any;
     opts: any;
     plastic: any;
@@ -55,5 +56,7 @@ export default abstract class Plastic {
         material.envMap && material.envMap.dispose();
         material.dispose();
         plastic.parent.remove(plastic);
+
+        super.dispose();
     }
 }

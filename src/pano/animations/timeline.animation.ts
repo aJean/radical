@@ -42,7 +42,7 @@ export default abstract class Timeline {
 
         lines.forEach((anim, i) => {
             if (anim.isEnd()) {
-                pano.dispatch('animation-end', anim);
+                PubSub.publish(Topic.ANIMATION.END, anim);
                 lines.splice(i, 1);
             } else {
                 anim.update();

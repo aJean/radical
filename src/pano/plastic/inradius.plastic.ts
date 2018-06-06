@@ -1,8 +1,8 @@
 import { BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending } from 'three';
 import Tween from '../animations/tween.animation';
 import Plastic from './plastic';
-import Topic from '../../core/topic';
-import * as PubSub from 'pubsub-js';
+import Text from '../plastic/text.plastic';
+import Shader from '../../shader/plastic.shader';
 
 /**
  * @file 内切球
@@ -21,7 +21,7 @@ const defaultOpts = {
 };
 export default class Inradius extends Plastic {
     wrap: any;
-    subtoken: any;
+    text: any;
 
     constructor(opts, pano?) {
         super();
@@ -31,7 +31,7 @@ export default class Inradius extends Plastic {
         this.create();
 
         if (opts.rotate) {
-            this.subtoken = PubSub.subscribe(Topic.RENDER.PROCESS, () => this.addRotate());
+            this.subscribe(this.Topic.RENDER.PROCESS, () => this.addRotate());
         }
     }
 
@@ -65,62 +65,98 @@ export default class Inradius extends Plastic {
         const sphere: any = this.plastic = new Mesh(new SphereGeometry(opts.radius, opts.widthSegments, 
             opts.heightSegments), material);
 
-        sphere.visible = opts.visible;
-        sphere.name = opts.name;
-        sphere.data = opts.data;
-        
-        // if (opts.shadow) {
-        //     sphere.castShadow = true;
-        // }
+        switch (opts.type) {
+            case 'mask':
+                this.createMask(sphere);
+                break;
+            case 'cloud':
+                this.createCloud(sphere);
+                break;
+            case 'glow':
+                this.createGlow(sphere);
+                break;
+        }
 
-        if (opts.cloud) {
-            const cloud = this.wrap = new Mesh(
-                new SphereGeometry(opts.radius, 40, 40),
-                new MeshBasicMaterial({
-                    map: new TextureLoader().load('../assets/cloud.png'),
-                    transparent: true,
-                    depthTest: false
-                })
-            );
-            cloud.add(sphere);
-        // 辉光
-        } else if (opts.glow) {
-            const glowMaterial = new ShaderMaterial({
-                uniforms: { 
-                    c: {type: 'f', value: 0.1},
-                    p: {type: 'f', value: 1.4},
-                    glowColor: {type: 'c', value: new Color('#999')},
-                    viewVector: {type: 'v3', value: opts.position}
-                },
-                vertexShader: `
-                    uniform vec3 viewVector;
-                    uniform float c;
-                    uniform float p;
-                    varying float intensity;
-                    void main() {
-                        vec3 vNormal = normalize( normalMatrix * normal );
-                        vec3 vNormel = normalize( normalMatrix * viewVector );
-                        intensity = pow( c - dot(vNormal, vNormel), p );
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-                    }`,
-                fragmentShader: `
-                    uniform vec3 glowColor;
-                    varying float intensity;
-                    void main() {
-                        vec3 glow = glowColor * intensity;
-                        gl_FragColor = vec4( glow, 1.0 );
-                    }`,
-                blending: AdditiveBlending,
-                transparent: true
-            });
-
-            const glow = this.wrap = new Mesh(new SphereGeometry(opts.radius, 40, 40), glowMaterial);
-            glow.add(sphere);
+        if (opts.text) {
+            this.createText(opts.text);
         }
 
         if (opts.position) {
             this.setPosition(opts.position.x, opts.position.y, opts.position.z);
         }
+
+        const target = this.wrap || this.plastic;
+        target.name = opts.name;
+        target.visible = opts.visible;
+        target.instance = this;
+        // target.castShadow = opts.shadow;
+    }
+
+    /**
+     * 创建蒙层
+     */
+    createMask(sphere) {
+        const mask = this.wrap = new Mesh(
+            new SphereGeometry(this.opts.radius, 40, 40),
+            new MeshBasicMaterial({
+                color: '#333',
+                transparent: true,
+                opacity: 0.1,
+                depthTest: false
+            })
+        );
+        mask.add(sphere);
+    }
+
+    /**
+     * 创建云层
+     */
+    createCloud(sphere) {
+        const cloud = this.wrap = new Mesh(
+            new SphereGeometry(this.opts.radius, 40, 40),
+            new MeshBasicMaterial({
+                map: new TextureLoader().load('../assets/cloud.png'),
+                transparent: true,
+                depthTest: false
+            })
+        );
+        cloud.add(sphere);
+    }
+
+    /**
+     * 创建辉光
+     */
+    createGlow(sphere) {
+        const opts = this.opts;
+        const glowMaterial = new ShaderMaterial({
+            uniforms: { 
+                c: {type: 'f', value: 0.1},
+                p: {type: 'f', value: 1.4},
+                glowColor: {type: 'c', value: new Color('#999')},
+                viewVector: {type: 'v3', value: opts.position}
+            },
+            vertexShader: Shader.GLOW.VTEX,
+            fragmentShader: Shader.GLOW.FRAGMENT,
+            blending: AdditiveBlending,
+            transparent: true
+        });
+
+        const glow = this.wrap = new Mesh(new SphereGeometry(opts.radius, 40, 40), glowMaterial);
+        glow.add(sphere);
+    }
+
+    createText(str) {
+        const text = this.text = new Text({fontsize: 32, width: 128, shadow: true, 
+            text: str, inverse: false});
+        text.addTo(this.wrap || this.plastic);
+    }
+
+    hideText() {
+        this.text && this.text.hide();
+    }
+
+    getData() {
+        return this.opts.data;
     }
 
     getMap() {
@@ -143,6 +179,11 @@ export default class Inradius extends Plastic {
     setPosition(x, y, z) {
         const target = this.wrap || this.plastic;
         target.position.set(x, y, z);
+    }
+
+    getPosition() {
+        const target = this.wrap || this.plastic;
+        return target.position;
     }
 
     getPlastic() {
@@ -179,15 +220,15 @@ export default class Inradius extends Plastic {
     }
 
     dispose() {
-        super.dispose();
-
         const wrap = this.wrap;
         if (wrap) {
             wrap.geometry.dispose();
-            wrap.material.map.dispose();
+            wrap.material.map && wrap.material.map.dispose();
             wrap.material.dispose();
+            delete wrap.data;
+            delete wrap.instance;
         }
 
-        PubSub.unsubscribe(this.subtoken);
+        super.dispose();
     }
 }

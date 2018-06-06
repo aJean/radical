@@ -4,15 +4,13 @@ import Log from '../../core/log';
 import Util from '../../core/util';
 import Tween from '../animations/tween.animation';
 import Plastic from './plastic';
-import Topic from '../../core/topic';
-import * as PubSub from 'pubsub-js';
 
 /**
  * @file 悬浮球
  */
 
 const myLoader = new ResourceLoader();
-export default class Suspend extends Plastic{
+export default class Suspend extends Plastic {
     scene: any;
     camera: any;
     sphere: any;
@@ -27,7 +25,7 @@ export default class Suspend extends Plastic{
         this.onThrough = this.onThrough.bind(this);
         this.create();
 
-        this.subtoken = PubSub.subscribe(Topic.RENDER.PROCESS, () => this.update());
+        this.subscribe(this.Topic.RENDER.PROCESS, () => this.update());
         pano.getCanvas().addEventListener('click', this.onThrough);
     }
 
@@ -90,9 +88,9 @@ export default class Suspend extends Plastic{
     }
 
     dispose() {
+        super.dispose();
+        
         const pano = this.pano;
-
-        PubSub.unsubscribe(this.subtoken);
         pano.webgl.autoClear = true;
         pano.getCanvas().removeEventListener('click', this.onThrough);
     }

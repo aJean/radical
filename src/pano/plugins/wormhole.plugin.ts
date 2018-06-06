@@ -8,8 +8,7 @@ import Light from '../plastic/light.plastic';
 import Shadow from '../plastic/shadow.plastic';
 import Log from '../../core/log';
 import Util from '../../core/util';
-import Topic from '../../core/topic';
-import * as PubSub from 'pubsub-js';
+import PubSubAble from '../../interface/common.interface';
 
 /**
  * @file wormhole space through effection
@@ -18,10 +17,9 @@ import * as PubSub from 'pubsub-js';
  */
 
 const myLoader = new ResourceLoader();
-export default class Wormhole {
+export default class Wormhole extends PubSubAble {
     pano: Pano;
     onDetect: Function;
-    subtoken: any;
     data: any;
     pos: any;
     texture: any;
@@ -32,6 +30,8 @@ export default class Wormhole {
     direction = true;
 
     constructor(pano: Pano, data) {
+        super();
+
         this.data = data;
         this.pano = pano;
 
@@ -47,12 +47,8 @@ export default class Wormhole {
         // pano.enableShadow();
         myLoader.loadTexture(data.bxlPath || data.texPath).then((texture: Texture) => {
             const hole = this.hole = new Inradius({
-                rotate: true,
-                shadow: true,
-                cloud: true,
-                position: pos,
-                radius: 100,
-                envMap: this.texture = texture
+                rotate: true, shadow: true, type: 'cloud',
+                position: pos, radius: 100, envMap: this.texture = texture
             }, pano);
             hole.addBy(pano);
 
@@ -64,7 +60,7 @@ export default class Wormhole {
     }
 
     bindEvents() {
-        this.subtoken = PubSub.subscribe(Topic.SCENE.LOAD, () => this.create());
+        this.subscribe(this.Topic.SCENE.LOAD, () => this.create());
         this.pano.getCanvas().addEventListener('click', this.onDetect);
     }
 
@@ -126,6 +122,6 @@ export default class Wormhole {
 
     dispose() {
         this.pano.getCanvas().removeEventListener('click', this.onDetect);
-        PubSub.unsubscribe(this.subtoken);
+        super.dispose();
     }
 }

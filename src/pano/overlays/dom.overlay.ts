@@ -1,4 +1,4 @@
-import {IPluggableOverlay} from '../interface/overlay.interface';
+import {IPluggableOverlay} from '../../interface/overlay.interface';
 import Util from '../../core/util';
 
 /**

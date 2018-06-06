@@ -1,5 +1,7 @@
 import {Vector3, Vector2, MOUSE, Spherical, EventDispatcher, Quaternion, PerspectiveCamera, OrthographicCamera} from 'three';
 import Util from '../../core/util';
+import Topic from '../../core/topic';
+import * as PubSub from 'pubsub-js';
 
 /**
  * @file 全景相机控制器
@@ -386,7 +388,8 @@ function OrbitControl(camera, domElement, pano) {
         if (_rotatestart) {
             //TODO: prevent to dispatch click
             const pano = scope.pano;
-            pano.dispatch('scene-drag', _rotatestart, Util.calcScreenToSphere({x: 0, y: 0}, scope.camera), pano);
+            const end = Util.calcScreenToSphere({x: 0, y: 0}, scope.camera);
+            PubSub.publish(Topic.UI.DRAG, {start: _rotatestart, end, pano});
         }
         _rotatestart = null;
     }
@@ -434,11 +437,12 @@ function OrbitControl(camera, domElement, pano) {
 
         const pano = scope.pano;
         const size = pano.getSize();
-        // center of tow fingers
-        pano.dispatch('scene-zoom', Util.calcScreenToSphere({
+        const pos = Util.calcScreenToSphere({
             x: (event.touches[0].pageX + dx / 2) / size.width * 2 - 1,
             y: -(event.touches[0].pageY + dy / 2) / size.height * 2 + 1
-        }, scope.camera), pano);
+        }, scope.camera);
+        // center of tow fingers
+        PubSub.publish(Topic.UI.ZOOM, {pos, pano});
     }
 
     function handleTouchStartPan(event) {
@@ -487,7 +491,8 @@ function OrbitControl(camera, domElement, pano) {
     function handleTouchEnd(event) {
         if (_rotatestart) {
             const pano = scope.pano;
-            pano.dispatch('scene-drag', _rotatestart, Util.calcScreenToSphere({x: 0, y: 0}, scope.camera), pano);
+            const end = Util.calcScreenToSphere({x: 0, y: 0}, scope.camera);
+            PubSub.publish(Topic.UI.DRAG, {start: _rotatestart, end, pano});
         }
         _rotatestart = null;
     }
