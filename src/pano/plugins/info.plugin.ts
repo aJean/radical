@@ -1,7 +1,5 @@
 import PluggableUI from '../../interface/ui.interface';
 import Util from '../../core/util';
-import Topic from '../../core/topic';
-import * as PubSub from 'pubsub-js';
 
 /**
  * @file 版权遮罩层
@@ -17,7 +15,7 @@ export default class Info extends PluggableUI {
 
         this.pano = pano;
         this.createDom(pano.currentData);
-        this.subscribe(Topic.SCENE.ATTACH, this.renderDom.bind(this));
+        this.subscribe(this.Topic.SCENE.ATTACH, this.renderDom.bind(this));
     }
 
     setContainer() {

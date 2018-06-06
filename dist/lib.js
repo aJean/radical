@@ -57527,7 +57527,6 @@ var Helper = /** @class */ (function (_super) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _interface_ui_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../interface/ui.interface */ "./src/interface/ui.interface.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
-/* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -57540,7 +57539,6 @@ var __extends = (undefined && undefined.__extends) || (function () {
 })();
 
 
-
 /**
  * @file 版权遮罩层
  */
@@ -57550,7 +57548,7 @@ var Info = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.pano = pano;
         _this.createDom(pano.currentData);
-        _this.subscribe(_core_topic__WEBPACK_IMPORTED_MODULE_2__["default"].SCENE.ATTACH, _this.renderDom.bind(_this));
+        _this.subscribe(_this.Topic.SCENE.ATTACH, _this.renderDom.bind(_this));
         return _this;
     }
     Info.prototype.setContainer = function () {
