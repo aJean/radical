@@ -10,8 +10,22 @@ export default abstract class Plastic extends PubSubAble {
     opts: any;
     plastic: any;
 
+    /**
+     * 重新这个方法可以改变行为
+     */
+    getPlastic() {
+        return this.plastic;
+    }
+
     setPosition(x, y, z) {
-        this.plastic.position.set(x, y, z);
+        this.getPlastic().position.set(x, y, z);
+    }
+
+    /**
+     * 外部动画会用到
+     */
+    getPosition() {
+        return this.getPlastic().position;
     }
 
     addTo(obj) {
@@ -19,17 +33,21 @@ export default abstract class Plastic extends PubSubAble {
             obj = obj.plastic;
         }
 
-        obj.add(this.plastic);
+        obj.add(this.getPlastic());
     }
 
     addBy(pano) {
-        pano.addSceneObject(this.plastic);
+        pano.addSceneObject(this.getPlastic());
     }
 
     removeBy(pano) {
-        pano.removeSceneObject(this.plastic);
+        pano.removeSceneObject(this.getPlastic());
+        this.dispose();
     }
 
+    /**
+     * 设置透明度
+     */
     setOpacity(num, useanim) {
         const material = this.plastic.material;
        
@@ -39,13 +57,16 @@ export default abstract class Plastic extends PubSubAble {
     }
 
     show() {
-        this.plastic.visible = true;
+        this.getPlastic().visible = true;
     }
 
     hide() {
-        this.plastic.visible = false;
+        this.getPlastic().visible = false;
     }
 
+    /**
+     * 子类必须调用 super.dispose()
+     */
     dispose() {
         const plastic = this.plastic;
         const material = plastic.material;

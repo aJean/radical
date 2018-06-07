@@ -41,10 +41,6 @@ export default class Light extends Plastic {
         }
     }
 
-    setPosition(x, y, z) {
-        this.plastic.position.set(x, y, z);
-    }
-
     setTarget(obj) {
         this.plastic.target = obj.plastic || obj;
     }

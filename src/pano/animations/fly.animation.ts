@@ -18,13 +18,15 @@ export default class AnimationFly {
     enable = false;
 
     constructor(camera, type) {
-        this.path = this.getPath(this.camera = camera, this.type = type);
+        this.camera = camera;
+        this.type = type;
     }
 
     /** 
      * set camera position when pano first render
      */
     init() {
+        const path = this.path = this.getPath(this.camera, this.type);
         const camera = this.camera;
         const data = this.path[0].start;
 
@@ -88,19 +90,34 @@ export default class AnimationFly {
     }
 
     getPath(camera, type = 'fly1') {
+        const fov = camera.fov;
+        const px = camera.position.x;
+        const py = camera.position.y;
+        const pz = camera.position.z;
+        const rx = camera.rotation.x;
+        const ry = camera.rotation.y;
+        const rz = camera.rotation.z;
+        
         const FlyPath = {
             fly1: [{
-                    start: {fov: 160, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
-                    end: {fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI},
-                    time: 1500
-                }, {
-                    start: {fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI},
-                    end: {fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI},
-                    time: 1500
-                }],
+                start: {fov: 160, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
+                end: {fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI},
+                time: 1500
+            }, {
+                start: {fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI},
+                end: {fov, px, py, pz, rx: -Math.PI, ry: 0, rz: Math.PI},
+                time: 1500
+            }],
+            // some not well anim
             fly2: [{
                 start: {fov: 150, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
-                'end': {fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz:  Math.PI},
+                end: {fov, px, py, pz, rx: -Math.PI, ry: 0, rz:  Math.PI},
+                time: 4000
+            }],
+            // has beginning lookat
+            fly3: [{
+                start: {fov: 150, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
+                end: {fov, px, py, pz, rx: rx, ry: ry, rz: rz},
                 time: 4000
             }]
         };

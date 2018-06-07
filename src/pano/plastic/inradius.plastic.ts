@@ -40,7 +40,6 @@ export default class Inradius extends Plastic {
         const params: any = opts.shadow ? {
                 color: opts.color,
                 emissive: opts.emissive,
-                shininess: 0,
                 specular: opts.color,
                 side: opts.side,
                 refractionRatio: 0,
@@ -99,9 +98,9 @@ export default class Inradius extends Plastic {
         const mask = this.wrap = new Mesh(
             new SphereGeometry(this.opts.radius, 40, 40),
             new MeshBasicMaterial({
-                color: '#333',
+                color: '#000',
                 transparent: true,
-                opacity: 0.1,
+                opacity: 0.2,
                 depthTest: false
             })
         );
@@ -176,16 +175,6 @@ export default class Inradius extends Plastic {
         texture.needsUpdate = true;
     }
 
-    setPosition(x, y, z) {
-        const target = this.wrap || this.plastic;
-        target.position.set(x, y, z);
-    }
-
-    getPosition() {
-        const target = this.wrap || this.plastic;
-        return target.position;
-    }
-
     getPlastic() {
         return this.wrap || this.plastic;
     }
@@ -195,14 +184,6 @@ export default class Inradius extends Plastic {
         target.rotation.x += 0.01;
         target.rotation.y += 0.01;
         target.rotation.z += 0.01;
-    }
-
-    addTo(scene) {
-        scene.add(this.wrap || this.plastic);
-    }
-
-    addBy(pano) {
-        pano.addSceneObject(this.wrap || this.plastic);
     }
 
     fadeIn(pano, onComplete) {

@@ -47,10 +47,11 @@ export default class Wormhole extends PubSubAble {
         // pano.enableShadow();
         myLoader.loadTexture(data.bxlPath || data.texPath).then((texture: Texture) => {
             const hole = this.hole = new Inradius({
-                rotate: true, shadow: true, type: 'cloud',
+                rotate: false, shadow: true, type: 'cloud', text: '测试',
                 position: pos, radius: 100, envMap: this.texture = texture
             }, pano);
             hole.addBy(pano);
+            hole.getPlastic().lookAt(pano.getCamera().position);
 
             const light = this.light = new Light({
                 target: hole, x: pos.x, y: pos.y, z: pos.z - 200

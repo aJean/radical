@@ -10,13 +10,15 @@
         "bxlPath": "../assets/scene0/scene0.bxl",
         "imgPath": "../assets/scene0/scene0.jpg",
         "thumbPath": "../assets/scene0/thumb0.jpg",
-        "fov": 80,
+        "fov": 90,
+        "lng": 150,
+        "lat": 70,
         "overlays": [{
             "type": "animation",
             "category": "snow"
         }]
     }],
     "animation": {
-        "fly": "fly2"
+        "fly": "fly3"
     }
 }

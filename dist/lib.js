@@ -54032,13 +54032,15 @@ var AnimationFly = /** @class */ (function () {
         this.time = 0;
         this.finished = false;
         this.enable = false;
-        this.path = this.getPath(this.camera = camera, this.type = type);
+        this.camera = camera;
+        this.type = type;
     }
     /**
      * set camera position when pano first render
      */
     AnimationFly.prototype.init = function () {
         var _this = this;
+        var path = this.path = this.getPath(this.camera, this.type);
         var camera = this.camera;
         var data = this.path[0].start;
         camera.fov = data.fov;
@@ -54084,6 +54086,13 @@ var AnimationFly = /** @class */ (function () {
     };
     AnimationFly.prototype.getPath = function (camera, type) {
         if (type === void 0) { type = 'fly1'; }
+        var fov = camera.fov;
+        var px = camera.position.x;
+        var py = camera.position.y;
+        var pz = camera.position.z;
+        var rx = camera.rotation.x;
+        var ry = camera.rotation.y;
+        var rz = camera.rotation.z;
         var FlyPath = {
             fly1: [{
                     start: { fov: 160, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
@@ -54091,12 +54100,19 @@ var AnimationFly = /** @class */ (function () {
                     time: 1500
                 }, {
                     start: { fov: 120, px: 0, py: 1000, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI },
-                    end: { fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI },
+                    end: { fov: fov, px: px, py: py, pz: pz, rx: -Math.PI, ry: 0, rz: Math.PI },
                     time: 1500
                 }],
+            // some not well anim
             fly2: [{
                     start: { fov: 150, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
-                    'end': { fov: camera.fov, px: camera.position.x, py: camera.position.y, pz: camera.position.z, rx: -Math.PI, ry: 0, rz: Math.PI },
+                    end: { fov: fov, px: px, py: py, pz: pz, rx: -Math.PI, ry: 0, rz: Math.PI },
+                    time: 4000
+                }],
+            // has beginning lookat
+            fly3: [{
+                    start: { fov: 150, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
+                    end: { fov: fov, px: px, py: py, pz: pz, rx: rx, ry: ry, rz: rz },
                     time: 4000
                 }]
         };
@@ -54146,7 +54162,7 @@ var Timeline = /** @class */ (function () {
             var fly = new _fly_animation__WEBPACK_IMPORTED_MODULE_2__["default"](camera, opts.fly);
             this.lines.push(fly);
         }
-        this.onTimeInit();
+        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_0__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].SCENE.INIT, function () { return _this.onTimeInit(); }));
         subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_0__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].RENDER.PROCESS, function () { return _this.onTimeChange(); }));
     };
     Timeline.onTimeInit = function () {
@@ -54351,6 +54367,7 @@ var GyroControl = /** @class */ (function () {
         this.q1 = new three__WEBPACK_IMPORTED_MODULE_0__["Quaternion"](-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
         this.spherical = new three__WEBPACK_IMPORTED_MODULE_0__["Spherical"]();
         camera.rotation.reorder('YXZ');
+        this.oribtcamera = camera;
         this.camera = camera.clone();
         this.orbit = orbit;
         this.onDeviceOrientationChange = function (event) { return _this.deviceOrien = event; };
@@ -54423,8 +54440,19 @@ var GyroControl = /** @class */ (function () {
         this.alphaOffset = angle;
         this.update();
     };
+    /**
+     * 锁定 gyro 控制器
+     */
     GyroControl.prototype.makeEnable = function (single) {
         this.enabled = single;
+    };
+    /**
+     * 重置 gyro 和 orbit 控制器
+     */
+    GyroControl.prototype.reset = function () {
+        this.orbit.reset();
+        this.lastSpherical = null;
+        this.camera.copy(this.oribtcamera);
     };
     return GyroControl;
 }());
@@ -55931,6 +55959,19 @@ var Overlays = /** @class */ (function (_super) {
      */
     Overlays.prototype.addJudgeFunc = function (fn) {
         this.pluginFuncs.push(fn);
+        return (fn.id = 'jd_' + Date.now());
+    };
+    /**
+     * 删除判断函数
+     * @param {string} key 标识
+     */
+    Overlays.prototype.reMoveJudgeFunc = function (key) {
+        var _this = this;
+        this.pluginFuncs.forEach(function (fn, i) {
+            if (fn.id == key) {
+                _this.pluginFuncs.splice(i, 1);
+            }
+        });
     };
     Overlays.prototype.dispose = function () {
         _super.prototype.dispose.call(this);
@@ -56148,42 +56189,57 @@ var Pano = /** @class */ (function (_super) {
         _this.initEnv(data);
         return _this;
     }
+    /**
+     * 初始化环境, 创建 webgl, scene, camera
+     * @param {Object} data 全景参数
+     */
     Pano.prototype.initEnv = function (data) {
         var opts = this.opts;
         var container = opts.el;
         var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].calcRenderSize(container, opts);
         var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].createElement("<div class=\"pano-root\"></div>");
         var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
-        // webgl
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(size.width, size.height);
-        // canvas
         root.appendChild(webgl.domElement);
         container.appendChild(root);
-        // 场景, 相机
         this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
         this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](data.fov || opts.fov, size.aspect, 0.1, 10000);
-        // control
+        // create control
         var orbit = this.orbit = new _controls_orbit_control__WEBPACK_IMPORTED_MODULE_1__["default"](this.camera, webgl.domElement, this);
-        if (opts.gyro) {
-            this.gyro = new _controls_gyro_control__WEBPACK_IMPORTED_MODULE_2__["default"](this.camera, orbit);
+        // 设置初始角度, 需要执行 orbit control update
+        if (data.lng !== void 0) {
+            this.setLook(data.lng, data.lat);
+            orbit.update();
         }
+        opts.gyro && (this.gyro = new _controls_gyro_control__WEBPACK_IMPORTED_MODULE_2__["default"](this.camera, orbit));
         // all overlays manager
         this.overlays = new _overlays_overlays__WEBPACK_IMPORTED_MODULE_5__["default"](this, this.source['sceneGroup']);
     };
+    /**
+     * 重置场景的 fov, lookat
+     * @param data
+     */
     Pano.prototype.resetEnv = function (data) {
+        // 开启陀螺仪模式忽略场景自身参数
+        if (this.gyro) {
+            return;
+        }
         var fov = data.fov || this.opts.fov;
         var camera = this.camera;
-        // scene fov        
-        if (fov != camera.fov) {
-            this.setFov(fov);
-        }
         // look at angle
         if (data.lng !== void 0) {
             this.setLook(data.lng, data.lat);
         }
+        // scene fov        
+        if (fov != camera.fov) {
+            this.setFov(fov);
+        }
     };
+    /**
+     * 执行渲染流水线
+     */
     Pano.prototype.run = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
@@ -56198,7 +56254,7 @@ var Pano = /** @class */ (function (_super) {
                     case 1:
                         _a.trys.push([1, 4, , 5]);
                         // push pano obj for client
-                        this.publish(Topic.SCENE.CREATE, { pano: this });
+                        this.publishSync(Topic.SCENE.CREATE, { pano: this });
                         data = this.currentData;
                         return [4 /*yield*/, myLoader.loadTexture(data.imgPath, 'canvas')];
                     case 2:
@@ -56206,12 +56262,12 @@ var Pano = /** @class */ (function (_super) {
                         skyBox = this.skyBox = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__["default"]({ envMap: img });
                         publishdata_1 = { scene: data, pano: this };
                         skyBox.addTo(this.scene);
-                        this.publish(Topic.SCENE.INIT, publishdata_1);
+                        this.publishSync(Topic.SCENE.INIT, publishdata_1);
                         this.render();
                         return [4 /*yield*/, myLoader.loadTexture(data.bxlPath || data.texPath)
                                 .then(function (texture) {
                                 _this.skyBox.setMap(texture);
-                                _this.publish(Topic.SCENE.LOAD, publishdata_1);
+                                _this.publishSync(Topic.SCENE.LOAD, publishdata_1);
                             }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e); })];
                     case 3:
                         _a.sent();
@@ -56232,6 +56288,13 @@ var Pano = /** @class */ (function (_super) {
     Pano.prototype.updateControl = function () {
         var control = this.gyro || this.orbit;
         !this.frozen && control.update();
+    };
+    /**
+     * 重置控制器
+     */
+    Pano.prototype.resetControl = function () {
+        var control = this.gyro || this.orbit;
+        control.reset();
     };
     /**
      * 设置相机角度, 相机方向 (0, 0, -1), 相对初始 z 轴正方向 (180, 90)
@@ -56515,7 +56578,7 @@ var Pano = /** @class */ (function (_super) {
         this.frozen = false;
         this.startControl();
         // entrance animation end, scene become stable
-        this.publish(this.Topic.SCENE.READY, { scene: this.currentData, pano: this });
+        this.publishSync(this.Topic.SCENE.READY, { scene: this.currentData, pano: this });
     };
     /**
      * 释放资源
@@ -56876,7 +56939,6 @@ var Inradius = /** @class */ (function (_super) {
         var params = opts.shadow ? {
             color: opts.color,
             emissive: opts.emissive,
-            shininess: 0,
             specular: opts.color,
             side: opts.side,
             refractionRatio: 0,
@@ -56925,9 +56987,9 @@ var Inradius = /** @class */ (function (_super) {
      */
     Inradius.prototype.createMask = function (sphere) {
         var mask = this.wrap = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["SphereGeometry"](this.opts.radius, 40, 40), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
-            color: '#333',
+            color: '#000',
             transparent: true,
-            opacity: 0.1,
+            opacity: 0.2,
             depthTest: false
         }));
         mask.add(sphere);
@@ -56987,14 +57049,6 @@ var Inradius = /** @class */ (function (_super) {
         texture.mapping = three__WEBPACK_IMPORTED_MODULE_0__["CubeRefractionMapping"];
         texture.needsUpdate = true;
     };
-    Inradius.prototype.setPosition = function (x, y, z) {
-        var target = this.wrap || this.plastic;
-        target.position.set(x, y, z);
-    };
-    Inradius.prototype.getPosition = function () {
-        var target = this.wrap || this.plastic;
-        return target.position;
-    };
     Inradius.prototype.getPlastic = function () {
         return this.wrap || this.plastic;
     };
@@ -57003,12 +57057,6 @@ var Inradius = /** @class */ (function (_super) {
         target.rotation.x += 0.01;
         target.rotation.y += 0.01;
         target.rotation.z += 0.01;
-    };
-    Inradius.prototype.addTo = function (scene) {
-        scene.add(this.wrap || this.plastic);
-    };
-    Inradius.prototype.addBy = function (pano) {
-        pano.addSceneObject(this.wrap || this.plastic);
     };
     Inradius.prototype.fadeIn = function (pano, onComplete) {
         var material = this.plastic.material;
@@ -57095,9 +57143,6 @@ var Light = /** @class */ (function (_super) {
             this.helper = new three__WEBPACK_IMPORTED_MODULE_0__["CameraHelper"](light.shadow.camera);
         }
     };
-    Light.prototype.setPosition = function (x, y, z) {
-        this.plastic.position.set(x, y, z);
-    };
     Light.prototype.setTarget = function (obj) {
         this.plastic.target = obj.plastic || obj;
     };
@@ -57147,21 +57192,37 @@ var Plastic = /** @class */ (function (_super) {
     function Plastic() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
+    /**
+     * 重新这个方法可以改变行为
+     */
+    Plastic.prototype.getPlastic = function () {
+        return this.plastic;
+    };
     Plastic.prototype.setPosition = function (x, y, z) {
-        this.plastic.position.set(x, y, z);
+        this.getPlastic().position.set(x, y, z);
+    };
+    /**
+     * 外部动画会用到
+     */
+    Plastic.prototype.getPosition = function () {
+        return this.getPlastic().position;
     };
     Plastic.prototype.addTo = function (obj) {
         if (obj instanceof Plastic) {
             obj = obj.plastic;
         }
-        obj.add(this.plastic);
+        obj.add(this.getPlastic());
     };
     Plastic.prototype.addBy = function (pano) {
-        pano.addSceneObject(this.plastic);
+        pano.addSceneObject(this.getPlastic());
     };
     Plastic.prototype.removeBy = function (pano) {
-        pano.removeSceneObject(this.plastic);
+        pano.removeSceneObject(this.getPlastic());
+        this.dispose();
     };
+    /**
+     * 设置透明度
+     */
     Plastic.prototype.setOpacity = function (num, useanim) {
         var material = this.plastic.material;
         useanim ? new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"](material).to({ opacity: num }).effect('backOut', 500)
@@ -57169,11 +57230,14 @@ var Plastic = /** @class */ (function (_super) {
             : (material.opacity = num);
     };
     Plastic.prototype.show = function () {
-        this.plastic.visible = true;
+        this.getPlastic().visible = true;
     };
     Plastic.prototype.hide = function () {
-        this.plastic.visible = false;
+        this.getPlastic().visible = false;
     };
+    /**
+     * 子类必须调用 super.dispose()
+     */
     Plastic.prototype.dispose = function () {
         var plastic = this.plastic;
         var material = plastic.material;
@@ -57311,15 +57375,9 @@ var Point = /** @class */ (function (_super) {
             this.plastic.material.visible = true;
         }
     };
-    Point.prototype.show = function () {
-        this.plastic.visible = true;
-    };
-    Point.prototype.hide = function () {
-        this.plastic.visible = false;
-    };
     Point.prototype.dispose = function () {
-        delete this.plastic['wrapper'];
         _super.prototype.dispose.call(this);
+        delete this.plastic['wrapper'];
     };
     return Point;
 }(_plastic_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]));
@@ -57419,10 +57477,10 @@ var Text = /** @class */ (function (_super) {
         ctx.fillStyle = opts.color;
         // 阴影
         if (opts.shadow) {
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-            ctx.shadowOffsetX = 2;
-            ctx.shadowOffsetY = 2;
-            ctx.shadowBlur = 2;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.shadowBlur = 6;
         }
         ctx.fillText(opts.text, width / 2, height / 2 + 10);
         // 描边
@@ -57841,9 +57899,7 @@ var Multiple = /** @class */ (function (_super) {
         this.subscribe(Topic.SCENE.ATTACH, this.onEnable.bind(this));
         // 重新渲染场景列表
         this.subscribe(Topic.SCENE.RESET, this.onReset.bind(this));
-    };
-    Multiple.prototype.getElement = function () {
-        return this.element;
+        this.subscribe(Topic.UI.PANOCLICK, this.onToggle.bind(this));
     };
     Multiple.prototype.setContainer = function (container) {
         this.container = container;
@@ -57917,11 +57973,8 @@ var Multiple = /** @class */ (function (_super) {
         node.className += ' active';
         this.activeItem = node;
     };
-    Multiple.prototype.show = function () {
-        this.element.style.display = 'block';
-    };
-    Multiple.prototype.hide = function () {
-        this.element.style.display = 'none';
+    Multiple.prototype.onToggle = function () {
+        this.element.style.display != 'none' ? this.hide() : this.show();
     };
     Multiple.prototype.dispose = function () {
         var pano = this.pano;
@@ -58136,7 +58189,6 @@ var Thru = /** @class */ (function (_super) {
     function Thru(pano, opts) {
         var _this = _super.call(this) || this;
         _this.active = false; // prevent excessive click
-        _this.animating = false; // lock when animating
         _this.timeid = 0;
         _this.group = [];
         _this.objs = [];
@@ -58144,23 +58196,22 @@ var Thru = /** @class */ (function (_super) {
         _this.pano = pano;
         _this.camera = pano.getCamera();
         _this.opts = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].assign({}, defaultOpts, opts);
-        _this.onCanvasHandle = _this.onCanvasHandle.bind(_this);
+        _this.onCanvasClick = _this.onCanvasClick.bind(_this);
         var webgl = pano.webgl;
         var Topic = _this.Topic;
         // common lights
         _this.createLights();
         _this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT, _this.load.bind(_this));
-        // this.subscribe(Topic.UI.DRAG, this.everyToShow.bind(this));
-        _this.subscribe(Topic.SCENE.ATTACHSTART, _this.needToHide.bind(_this));
+        _this.subscribe(Topic.SCENE.ATTACHSTART, _this.onSceneChange.bind(_this));
         _this.subscribe(Topic.SCENE.ATTACH, _this.load.bind(_this));
-        _this.subscribe(Topic.UI.PANOCLICK, _this.toggle.bind(_this));
-        pano.overlays.addJudgeFunc(_this.onCanvasHandle.bind(_this));
+        _this.subscribe(Topic.UI.PANOCLICK, _this.onToggle.bind(_this));
+        _this.jdid = pano.overlays.addJudgeFunc(_this.onCanvasClick.bind(_this));
         return _this;
     }
     Thru.prototype.load = function (topic, payload) {
         var scene = payload.scene;
         var list = this.list = scene.recomList;
-        if (!list || !list.length) {
+        if (!list || !list.length || this.objs.length) {
             return;
         }
         // clean current thru list
@@ -58187,11 +58238,11 @@ var Thru = /** @class */ (function (_super) {
         var lights = this.lights;
         var radius = opts.radius;
         list.forEach(function (item, i) {
-            loader.loadTexture(item.image).then(function (texture) {
+            item.setName && loader.loadTexture(item.image).then(function (texture) {
                 var pos = _this.getVector(i);
                 var hole = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_4__["default"]({
-                    name: i, shadow: true, position: pos, radius: radius, type: 'mask',
-                    emissive: '#999', envMap: texture, visible: false, data: item, text: item.setName
+                    name: i, shadow: true, position: pos, radius: radius, type: 'mask', data: item,
+                    emissive: '#787878', envMap: texture, visible: false, text: item.setName
                 }, pano);
                 hole.addBy(pano);
                 group.push(hole.getPlastic());
@@ -58209,41 +58260,15 @@ var Thru = /** @class */ (function (_super) {
         return _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].calcSphereToWorld(lng, lat);
     };
     /**
-     * lazy 隐藏穿越点
-     */
-    Thru.prototype.needToHide = function () {
-        if (this.animating) {
-            return;
-        }
-        clearTimeout(this.timeid);
-        this.hide();
-    };
-    /**
      * lazy 显示穿越点
      */
     Thru.prototype.needToShow = function () {
         var _this = this;
-        if (this.animating) {
-            return;
-        }
         clearTimeout(this.timeid);
         this.timeid = setTimeout(function () {
             _this.publish(_this.Topic.THRU.SHOW, { list: _this.list, pano: _this.pano });
             _this.show();
         }, this.opts.lazy);
-    };
-    /**
-     * 每次拖动重新展示 ?
-     */
-    Thru.prototype.everyToShow = function () {
-        var _this = this;
-        if (this.animating) {
-            return;
-        }
-        clearTimeout(this.timeid);
-        if (!this.active) {
-            this.timeid = setTimeout(function () { return _this.show(); }, this.opts.lazy);
-        }
     };
     /**
      * 显示穿越点
@@ -58261,29 +58286,33 @@ var Thru = /** @class */ (function (_super) {
      * 隐藏穿越点
      */
     Thru.prototype.hide = function () {
-        var _this = this;
+        clearTimeout(this.timeid);
         this.active = false;
         if (this.group.length) {
-            this.animating = true;
-            this.group.forEach(function (item) {
-                _this.animating = false;
-                item.visible = false;
-            });
+            this.group.forEach(function (item) { return item.visible = false; });
         }
     };
-    Thru.prototype.toggle = function () {
+    /**
+     * 场景变换删除穿越点
+     */
+    Thru.prototype.onSceneChange = function () {
+        this.cleanup();
+        this.hide();
+    };
+    /**
+     * 沉浸模式
+     */
+    Thru.prototype.onToggle = function () {
         var _this = this;
         if (this.group.length) {
-            this.group.forEach(function (item) {
-                _this.active ? item.visible = false : item.visible = true;
-            });
+            this.group.forEach(function (item) { return item.visible = !_this.active; });
             this.active = !this.active;
         }
     };
     /**
      * 判断是否点击穿越点
      */
-    Thru.prototype.onCanvasHandle = function (pos) {
+    Thru.prototype.onCanvasClick = function (pos) {
         var _this = this;
         if (!this.active) {
             return;
@@ -58346,12 +58375,9 @@ var Thru = /** @class */ (function (_super) {
      * 删除穿越点
      */
     Thru.prototype.cleanup = function () {
+        var _this = this;
         var objs = this.objs;
-        var scene = this.pano.getScene();
-        objs.forEach(function (obj) {
-            obj.dispose();
-            scene.remove(obj.getPlastic());
-        });
+        objs.forEach(function (obj) { return obj.removeBy(_this.pano); });
         objs.length = 0;
         this.group.length = 0;
     };
@@ -58359,11 +58385,9 @@ var Thru = /** @class */ (function (_super) {
         var pano = this.pano;
         var webgl = pano.webgl;
         this.cleanup();
-        this.lights.forEach(function (light) {
-            light.removeBy(pano);
-            light.dispose();
-        });
+        this.lights.forEach(function (light) { return light.removeBy(pano); });
         _super.prototype.dispose.call(this);
+        pano.overlays.reMoveJudgeFunc(this.jdid);
     };
     return Thru;
 }(_interface_common_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
@@ -58431,10 +58455,11 @@ var Wormhole = /** @class */ (function (_super) {
         // pano.enableShadow();
         myLoader.loadTexture(data.bxlPath || data.texPath).then(function (texture) {
             var hole = _this.hole = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_2__["default"]({
-                rotate: true, shadow: true, type: 'cloud',
+                rotate: false, shadow: true, type: 'cloud', text: '测试',
                 position: pos, radius: 100, envMap: _this.texture = texture
             }, pano);
             hole.addBy(pano);
+            hole.getPlastic().lookAt(pano.getCamera().position);
             var light = _this.light = new _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_3__["default"]({
                 target: hole, x: pos.x, y: pos.y, z: pos.z - 200
             });

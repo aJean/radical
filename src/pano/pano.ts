@@ -48,44 +48,62 @@ export default class Pano extends PubSubAble {
         this.initEnv(data);
     }
 
+    /**
+     * 初始化环境, 创建 webgl, scene, camera
+     * @param {Object} data 全景参数 
+     */
     initEnv(data) {
         const opts = this.opts;
         const container = opts.el;
         const size = this.size = Util.calcRenderSize(container, opts);
         const root = this.root = Util.createElement(`<div class="pano-root"></div>`);
         const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});
-        // webgl
+
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(size.width, size.height);
-        // canvas
         root.appendChild(webgl.domElement);
         container.appendChild(root);
-        // 场景, 相机
         this.scene = new Scene();
         this.camera = new PerspectiveCamera(data.fov || opts.fov, size.aspect, 0.1, 10000);
-        // control
+        // create control
         const orbit = this.orbit = new OrbitControl(this.camera, webgl.domElement, this);
-        if (opts.gyro) {
-            this.gyro = new GyroControl(this.camera, orbit);
+        // 设置初始角度, 需要执行 orbit control update
+        if (data.lng !== void 0) {
+            this.setLook(data.lng, data.lat);
+            orbit.update();
         }
+        opts.gyro && (this.gyro = new GyroControl(this.camera, orbit));        
         // all overlays manager
         this.overlays = new Overlays(this, this.source['sceneGroup']);
     }
 
+    /**
+     * 重置场景的 fov, lookat
+     * @param data 
+     */
     resetEnv(data) {
+        // 开启陀螺仪模式忽略场景自身参数
+        if (this.gyro) {
+            return;
+        }
+
         const fov = data.fov || this.opts.fov;
         const camera = this.camera;
-        // scene fov        
-        if (fov != camera.fov) {
-            this.setFov(fov);
-        }
+        
         // look at angle
         if (data.lng !== void 0) {
             this.setLook(data.lng, data.lat);
         }
+        // scene fov        
+        if (fov != camera.fov) {
+            this.setFov(fov);
+        }
     }
-
+    
+    /**
+     * 执行渲染流水线
+     */
     async run() {
         const source = this.source;
         const Topic = this.Topic;
@@ -93,20 +111,20 @@ export default class Pano extends PubSubAble {
 
         try {
             // push pano obj for client
-            this.publish(Topic.SCENE.CREATE, {pano: this});
+            this.publishSync(Topic.SCENE.CREATE, {pano: this});
             const data = this.currentData;
             const img = await myLoader.loadTexture(data.imgPath, 'canvas');
             const skyBox = this.skyBox = new Inradius({envMap: img});
             const publishdata = {scene: data, pano: this};
 
             skyBox.addTo(this.scene);
-            this.publish(Topic.SCENE.INIT, publishdata);
+            this.publishSync(Topic.SCENE.INIT, publishdata);
             this.render();
 
             await myLoader.loadTexture(data.bxlPath || data.texPath)
                 .then(texture => {
                     this.skyBox.setMap(texture);
-                    this.publish(Topic.SCENE.LOAD, publishdata);
+                    this.publishSync(Topic.SCENE.LOAD, publishdata);
                 }).catch(e => Log.output(e));
             this.animate();
         } catch(e) {
@@ -120,6 +138,14 @@ export default class Pano extends PubSubAble {
     updateControl() {
         const control = this.gyro || this.orbit;
         !this.frozen && control.update();
+    }
+
+    /**
+     * 重置控制器
+     */
+    resetControl() {
+        const control = this.gyro || this.orbit;
+        control.reset();
     }
 
     /**
@@ -445,7 +471,7 @@ export default class Pano extends PubSubAble {
         this.frozen = false;
         this.startControl();
         // entrance animation end, scene become stable
-        this.publish(this.Topic.SCENE.READY, {scene: this.currentData, pano: this});
+        this.publishSync(this.Topic.SCENE.READY, {scene: this.currentData, pano: this});
     }
 
     /** 

@@ -121,16 +121,8 @@ export default class Point extends Plastic {
         }
     }
 
-    show() {
-        this.plastic.visible = true;
-    }
-
-    hide() {
-        this.plastic.visible = false;
-    }
-
     dispose() {
-        delete this.plastic['wrapper'];
         super.dispose();
+        delete this.plastic['wrapper'];
     }
 }

@@ -362,6 +362,19 @@ export default class Overlays extends PubSubAble {
      */
     addJudgeFunc(fn) {
         this.pluginFuncs.push(fn);
+        return (fn.id = 'jd_' + Date.now());
+    }
+
+    /**
+     * 删除判断函数
+     * @param {string} key 标识
+     */
+    reMoveJudgeFunc(key) {
+        this.pluginFuncs.forEach((fn, i) => {
+            if (fn.id == key) {
+                this.pluginFuncs.splice(i, 1);
+            }
+        });
     }
 
     dispose() {

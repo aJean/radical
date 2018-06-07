@@ -60,10 +60,7 @@ export default class Multiple extends PluggableUI {
         this.subscribe(Topic.SCENE.ATTACH, this.onEnable.bind(this));
         // 重新渲染场景列表
         this.subscribe(Topic.SCENE.RESET, this.onReset.bind(this));
-    }
-
-    getElement() {
-        return this.element;
+        this.subscribe(Topic.UI.PANOCLICK, this.onToggle.bind(this));
     }
 
     setContainer(container) {
@@ -157,12 +154,8 @@ export default class Multiple extends PluggableUI {
         this.activeItem = node;
     }
 
-    show() {
-        this.element.style.display = 'block';
-    }
-
-    hide() {
-        this.element.style.display = 'none';
+    onToggle() {
+        this.element.style.display != 'none' ? this.hide() : this.show();
     }
 
     dispose() {

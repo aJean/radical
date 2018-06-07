@@ -19,11 +19,11 @@ const defaultOpts = {
 const loader = new Loader();
 export default class Thru extends PubSubAble {
     opts: any;
+    jdid: any;
     list: any;
     camera: any;
     pano: any;
     active = false; // prevent excessive click
-    animating = false; // lock when animating
     timeid = 0;
     group = [];
     objs = [];
@@ -35,7 +35,7 @@ export default class Thru extends PubSubAble {
         this.pano = pano;
         this.camera = pano.getCamera();
         this.opts = Util.assign({}, defaultOpts, opts);
-        this.onCanvasHandle = this.onCanvasHandle.bind(this);
+        this.onCanvasClick = this.onCanvasClick.bind(this);
         
         const webgl = pano.webgl;
         const Topic = this.Topic;
@@ -43,20 +43,18 @@ export default class Thru extends PubSubAble {
         // common lights
         this.createLights();
 
-        this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT,
-            this.load.bind(this));
-        // this.subscribe(Topic.UI.DRAG, this.everyToShow.bind(this));
-        this.subscribe(Topic.SCENE.ATTACHSTART, this.needToHide.bind(this));
+        this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT, this.load.bind(this));
+        this.subscribe(Topic.SCENE.ATTACHSTART, this.onSceneChange.bind(this));
         this.subscribe(Topic.SCENE.ATTACH, this.load.bind(this));
-        this.subscribe(Topic.UI.PANOCLICK, this.toggle.bind(this));
-        pano.overlays.addJudgeFunc(this.onCanvasHandle.bind(this));
+        this.subscribe(Topic.UI.PANOCLICK, this.onToggle.bind(this));
+        this.jdid = pano.overlays.addJudgeFunc(this.onCanvasClick.bind(this));
     }
 
     load(topic, payload) {
         const scene = payload.scene;
         const list = this.list = scene.recomList;
 
-        if (!list || !list.length) {
+        if (!list || !list.length || this.objs.length) {
             return;
         }
         // clean current thru list
@@ -86,11 +84,11 @@ export default class Thru extends PubSubAble {
         const radius = opts.radius;
 
         list.forEach((item, i) => {
-            loader.loadTexture(item.image).then(texture => {
+            item.setName && loader.loadTexture(item.image).then(texture => {
                 const pos = this.getVector(i);              
                 const hole = new Inradius({
-                    name: i, shadow: true, position: pos, radius: radius, type: 'mask',
-                    emissive: '#999', envMap: texture, visible: false, data: item, text: item.setName
+                    name: i, shadow: true, position: pos, radius: radius, type: 'mask', data: item,
+                    emissive: '#787878', envMap: texture, visible: false, text: item.setName
                 }, pano);
                 hole.addBy(pano);
 
@@ -112,44 +110,14 @@ export default class Thru extends PubSubAble {
     }
 
     /**
-     * lazy 隐藏穿越点
-     */
-    needToHide() {
-        if (this.animating) {
-            return;
-        }
-
-        clearTimeout(this.timeid);
-        this.hide();
-    }
-
-    /**
      * lazy 显示穿越点
      */
     needToShow() {
-        if (this.animating) {
-            return;
-        }
-
         clearTimeout(this.timeid);
         this.timeid = setTimeout(() => {
             this.publish(this.Topic.THRU.SHOW, {list: this.list, pano: this.pano});
             this.show();
         }, this.opts.lazy);
-    }
-
-    /**
-     * 每次拖动重新展示 ?
-     */
-    everyToShow() {
-        if (this.animating) {
-            return;
-        }
-
-        clearTimeout(this.timeid);
-        if (!this.active) {
-            this.timeid = setTimeout(() => this.show(), this.opts.lazy);
-        }
     }
 
     /**
@@ -170,23 +138,28 @@ export default class Thru extends PubSubAble {
      * 隐藏穿越点
      */
     hide() {
+        clearTimeout(this.timeid);
         this.active = false;
 
         if (this.group.length) {
-            this.animating = true;
-
-            this.group.forEach(item => {
-                this.animating = false;
-                item.visible = false;
-            });
+            this.group.forEach(item => item.visible = false);
         }
     }
 
-    toggle() {
+    /**
+     * 场景变换删除穿越点
+     */
+    onSceneChange() {
+        this.cleanup();
+        this.hide();
+    }
+
+    /**
+     * 沉浸模式
+     */
+    onToggle() {
         if (this.group.length) {
-            this.group.forEach(item => {
-                this.active ? item.visible = false : item.visible = true;
-            });
+            this.group.forEach(item => item.visible = !this.active);
             this.active = !this.active;            
         }
     }
@@ -194,7 +167,7 @@ export default class Thru extends PubSubAble {
     /**
      * 判断是否点击穿越点
      */
-    onCanvasHandle(pos) {
+    onCanvasClick(pos) {
         if (!this.active) {
             return;
         }
@@ -264,12 +237,8 @@ export default class Thru extends PubSubAble {
      */
     cleanup() {
         const objs = this.objs;
-        const scene = this.pano.getScene();
 
-        objs.forEach(obj => {
-            obj.dispose();
-            scene.remove(obj.getPlastic());
-        });
+        objs.forEach(obj => obj.removeBy(this.pano));
         objs.length = 0;
         this.group.length = 0;
     }
@@ -279,11 +248,8 @@ export default class Thru extends PubSubAble {
         const webgl = pano.webgl;
 
         this.cleanup();
-        this.lights.forEach(light => {
-            light.removeBy(pano);
-            light.dispose();
-        });
-
+        this.lights.forEach(light => light.removeBy(pano));
         super.dispose();
+        pano.overlays.reMoveJudgeFunc(this.jdid);
     }
 }

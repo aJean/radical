@@ -81,10 +81,10 @@ export default class Text extends Plastic {
         ctx.fillStyle = opts.color;
         // 阴影
         if (opts.shadow) {
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-            ctx.shadowOffsetX = 2;
-            ctx.shadowOffsetY = 2;
-            ctx.shadowBlur = 2;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.shadowBlur = 6;
         }
         ctx.fillText(opts.text, width / 2, height / 2 + 10);
         // 描边

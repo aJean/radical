@@ -8,6 +8,7 @@ export default class GyroControl {
     orbit: any;
     onDeviceOrientationChange: any;
     onScreenOrientationChange: any;
+    oribtcamera: any;
     camera: any;
     enabled = false;
     deviceOrien: any = {};
@@ -24,6 +25,7 @@ export default class GyroControl {
     constructor(camera, orbit) {
         camera.rotation.reorder('YXZ');
 
+        this.oribtcamera = camera;
         this.camera = camera.clone();
         this.orbit = orbit;
         this.onDeviceOrientationChange = event => this.deviceOrien = event;
@@ -110,7 +112,19 @@ export default class GyroControl {
         this.update();
     }
 
+    /**
+     * 锁定 gyro 控制器
+     */
     makeEnable(single) {
         this.enabled = single;
+    }
+
+    /**
+     * 重置 gyro 和 orbit 控制器
+     */
+    reset() {
+        this.orbit.reset();
+        this.lastSpherical = null;
+        this.camera.copy(this.oribtcamera);
     }
 }
