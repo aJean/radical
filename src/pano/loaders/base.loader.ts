@@ -29,9 +29,9 @@ export default abstract class BaseLoader {
      * @param url 
      */
     crosUrl(url) {
-        if (/\.cdn\./.test(url)) {
-            url += `?_=${Date.now()}`;
-        }
+        // if (/\.cdn\./.test(url)) {
+        //     url += `?_=${Date.now()}`;
+        // }
         
         return url;
     }

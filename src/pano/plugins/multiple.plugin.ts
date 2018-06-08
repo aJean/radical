@@ -155,7 +155,9 @@ export default class Multiple extends PluggableUI {
     }
 
     onToggle() {
-        this.element.style.display != 'none' ? this.hide() : this.show();
+        const should = this.element.style.display == 'none';
+        should ? this.show() : this.hide();
+        this.publish(this.Topic.UI.IMMERSION, {should});
     }
 
     dispose() {

@@ -217,6 +217,11 @@ export default {
             height = /%$/.test(opts.height) ? (parseInt(opts.height) / 100 * winHeight) : parseInt(opts.height);
         }
 
+        // 横屏但是获取尺寸出现异常
+        if (Math.abs(<number>window.orientation) == 90 && width <= height) {
+            width = screen.height;
+        }
+
         return {width, height, aspect: width / height};
     },
 

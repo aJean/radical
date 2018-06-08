@@ -46,7 +46,7 @@ export default class Thru extends PubSubAble {
         this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT, this.load.bind(this));
         this.subscribe(Topic.SCENE.ATTACHSTART, this.onSceneChange.bind(this));
         this.subscribe(Topic.SCENE.ATTACH, this.load.bind(this));
-        this.subscribe(Topic.UI.PANOCLICK, this.onToggle.bind(this));
+        this.subscribe(Topic.UI.IMMERSION, this.onToggle.bind(this));
         this.jdid = pano.overlays.addJudgeFunc(this.onCanvasClick.bind(this));
     }
 
@@ -157,11 +157,9 @@ export default class Thru extends PubSubAble {
     /**
      * 沉浸模式
      */
-    onToggle() {
-        if (this.group.length) {
-            this.group.forEach(item => item.visible = !this.active);
-            this.active = !this.active;            
-        }
+    onToggle(topic, payload) {
+        clearTimeout(this.timeid);
+        payload.should ? this.show() : this.hide();
     }
 
     /**
@@ -176,6 +174,7 @@ export default class Thru extends PubSubAble {
         const camera = this.camera;
         const group = this.group;
         const surl = this.opts.surl;
+        const oldscene = pano.currentData;
 
         if (group.length) {
             const intersects = Util.intersect(pos, group, pano.getCamera());
@@ -206,18 +205,18 @@ export default class Thru extends PubSubAble {
                                 new Tween(lookTarget).to(pos).effect('quintEaseIn', 1000)
                                     .start(['x', 'y', 'z'])
                                     .complete(() => {
-                                        instance.hideText();                                        
+                                        instance.hideText();                                  
                                         new Tween(camera.position).to(instance.getPosition())
                                             .effect('quadEaseOut', 1000)
                                             .start(['x', 'y', 'z'])
                                             .complete(() => {
+                                                this.publish(this.Topic.THRU.CHANGE, {data, scene: oldscene, pano});
                                                 this.active = true;
                                                 pano.enterThru(scene, instance.getMap());
                                                 this.cleanup(); 
                                                 pano.getControl().reset(pos.z > 0);
                                                 pano.supplyOverlayScenes(sceneGroup);
                                                 pano.gyro && pano.gyro.makeEnable(true);
-                                                this.publish(this.Topic.THRU.CHANGE, {data, scene, pano});
                                             });
                                     });
                             }

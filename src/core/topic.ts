@@ -37,7 +37,8 @@ export default {
         OVERLAYCLICK: 'overlay-click',
         MULTIPLEACTIVE: 'multiple-active',
         DRAG: 'pano-drag',
-        ZOOM: 'pano-zoom'
+        ZOOM: 'pano-zoom',
+        IMMERSION: 'pano-immersion'
     },
     // star through
     THRU: {

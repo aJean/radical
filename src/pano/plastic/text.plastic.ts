@@ -8,11 +8,12 @@ import Tween from '../animations/tween.animation';
 
 const defaultOpts = {
     name: '',
-    fontface: 'monospace',
+    fontface: 'helvetica',
     width: 256,
-    height: 128,
+    height: 256,
     fontsize: 42,
     linewidth: window.devicePixelRatio > 2 ? 6 : 4,
+    weight: 300,
     color: '#fff',
     shadow: false,
     hide: false,
@@ -73,7 +74,7 @@ export default class Text extends Plastic {
 
         if (metrics.width > width) {
             width = opts.twidth = canvas.width = width * 2;
-            ctx.font = `normal ${opts.fontsize}px ${opts.fontface}`;
+            ctx.font = `normal ${opts.weight} ${opts.fontsize}px ${opts.fontface}`;
         }
 
         ctx.lineWidth = opts.linewidth;
@@ -86,12 +87,19 @@ export default class Text extends Plastic {
             ctx.shadowOffsetY = 0;
             ctx.shadowBlur = 6;
         }
-        ctx.fillText(opts.text, width / 2, height / 2 + 10);
+        
+        const text = opts.text;
+        if (text.length > 8) {
+            ctx.fillText(text.substring(0, 7), width / 2, height / 2 - 8);
+            ctx.fillText(text.substring(7), width / 2, height / 2 + 33);
+        } else {
+            ctx.fillText(text, width / 2, height / 2 + 10);
+        }
         // 描边
         if (opts.strokecolor) {
             ctx.lineWidth = 1;
             ctx.strokeStyle = opts.strokecolor;
-            ctx.strokeText(opts.text, width / 2, height / 2 + 10);
+            ctx.strokeText(opts.text, width / 2, height / 2 + 10, 200);
         }
     }
     

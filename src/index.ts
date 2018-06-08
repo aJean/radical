@@ -6,8 +6,7 @@ import '../styles/vr.style.less';
 import polyfill from './core/polyfill';
 import PRuntime from './runtime/pano.runtime';
 import VRuntime from './runtime/vr.runtime';
-// TODO: delete after testing
-import testMapping from './pano/plugins/test.plugin';
+import * as PubSub from 'pubsub-js';
 
 /**
  * @file bxl lib
@@ -31,5 +30,12 @@ export default {
         VRuntime.start(url, el, events);
     },
 
-    testMapping
+    /**
+     * 业务方发布事件
+     * @param {string} topic 
+     * @param {Object} data 
+     */
+    publish(topic, data) {
+        PubSub.publish(topic, data);
+    }
 };

@@ -144,10 +144,13 @@ export default class Inradius extends Plastic {
         glow.add(sphere);
     }
 
+    /**
+     * 球内文字
+     */
     createText(str) {
-        const text = this.text = new Text({fontsize: 32, width: 128, shadow: true, 
-            text: str, inverse: false});
-        text.addTo(this.wrap || this.plastic);
+        const text = this.text = new Text({fontsize: 32, width: 128, height: 128, weight: 600, 
+            shadow: true, text: str, inverse: false});
+        text.addTo(this.getPlastic());
     }
 
     hideText() {

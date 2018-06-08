@@ -168,7 +168,7 @@ window.onload = function() {
     }  
 };
 
-const eventType = /Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
+const eventType = /webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
     ? 'orientationchange' : 'resize';
 const onEnvResize = event => {
     clearTimeout(Runtime.timeid);

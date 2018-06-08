@@ -279,8 +279,7 @@ export default class Pano extends PubSubAble {
      */
     onResize() {
         const camera = this.getCamera();
-        const root = this.getRoot();
-        const size =  this.size = Util.calcRenderSize(root);
+        const size =  this.size = Util.calcRenderSize(this.getRoot());
 
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
