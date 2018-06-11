@@ -46,32 +46,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
 /******/ 		}
 /******/ 	};
 /******/
 /******/ 	// define __esModule on exports
 /******/ 	__webpack_require__.r = function(exports) {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
 /******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/
-/******/ 	// create a fake namespace object
-/******/ 	// mode & 1: value is a module id, require it
-/******/ 	// mode & 2: merge all properties of value into the ns
-/******/ 	// mode & 4: return value when already ns object
-/******/ 	// mode & 8|1: behave like require
-/******/ 	__webpack_require__.t = function(value, mode) {
-/******/ 		if(mode & 1) value = __webpack_require__(value);
-/******/ 		if(mode & 8) return value;
-/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
-/******/ 		var ns = Object.create(null);
-/******/ 		__webpack_require__.r(ns);
-/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
-/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
-/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -57393,27 +57378,19 @@ var Text = /** @class */ (function (_super) {
         ctx.fillStyle = opts.color;
         // 阴影
         if (opts.shadow) {
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 0;
             ctx.shadowBlur = 6;
         }
         var text = opts.text;
-        var wrap = opts.wrap;
-        if (wrap && text.length > wrap) {
-            var limit = Math.min(text.length, wrap * 2);
-            ctx.beginPath();
-            ctx.fillText(text.substring(0, wrap), width / 2, height / 2 - 8);
-            ctx.closePath();
-            ctx.beginPath();
-            ctx.fillText(text.substring(4, limit), width / 2, height / 2 + 33);
-            ctx.closePath();
+        var limit = opts.limit;
+        if (limit !== void 0 && limit < text.length) {
+            text = text.substring(0, limit - 1) + '...';
         }
-        else {
-            ctx.beginPath();
-            ctx.fillText(text, width / 2, height / 2 + 10);
-            ctx.closePath();
-        }
+        ctx.beginPath();
+        ctx.fillText(text, width / 2, height / 2 + 10);
+        ctx.closePath();
         // 描边
         if (opts.strokecolor) {
             ctx.beginPath();
@@ -58137,8 +58114,8 @@ var Thru = /** @class */ (function (_super) {
                     name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
                     rotate: true, emissive: '#787878', envMap: texture, hide: true, cloudimg: opts.img
                 }, pano);
-                var text = new _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]({ text: item.setName, fontsize: 32, hide: true,
-                    x: pos.x, y: pos.y - 140, z: pos.z, shadow: true });
+                var text = new _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]({ text: item.setName, fontsize: 24, width: 512, hide: true,
+                    x: pos.x, y: pos.y - 131, z: pos.z, limit: 6, shadow: true });
                 hole.addBy(pano);
                 text.addBy(pano);
                 group.push(hole.getPlastic());

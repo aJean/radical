@@ -82,28 +82,23 @@ export default class Text extends Plastic {
         ctx.fillStyle = opts.color;
         // 阴影
         if (opts.shadow) {
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 0;
             ctx.shadowBlur = 6;
         }
         
-        const text = opts.text;
-        const wrap = opts.wrap;
-        if (wrap && text.length > wrap) {
-            const limit = Math.min(text.length, wrap * 2);
+        let text = opts.text;
+        const limit = opts.limit;
 
-            ctx.beginPath();
-            ctx.fillText(text.substring(0, wrap), width / 2, height / 2 - 8);
-            ctx.closePath();
-            ctx.beginPath();
-            ctx.fillText(text.substring(4, limit), width / 2, height / 2 + 33);
-            ctx.closePath();
-        } else {
-            ctx.beginPath();
-            ctx.fillText(text, width / 2, height / 2 + 10);
-            ctx.closePath();
+        if (limit !== void 0 && limit < text.length) {
+            text = text.substring(0, limit - 1) + '...';
         }
+
+        ctx.beginPath();
+        ctx.fillText(text, width / 2, height / 2 + 10);
+        ctx.closePath();
+
         // 描边
         if (opts.strokecolor) {
             ctx.beginPath();
