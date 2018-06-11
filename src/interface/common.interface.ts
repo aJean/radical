@@ -1,5 +1,5 @@
 import Topic from '../core/topic';
-import * as PubSub from 'pubsub-js';
+import PubSub from '../core/pubsub';
 
 /**
  * @file 通用接口

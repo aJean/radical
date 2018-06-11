@@ -96,39 +96,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ({
 
-/***/ "../../../../usr/local/lib/node_modules/webpack/buildin/module.js":
-/*!***********************************!*\
-  !*** (webpack)/buildin/module.js ***!
-  \***********************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = function(module) {
-	if (!module.webpackPolyfill) {
-		module.deprecate = function() {};
-		module.paths = [];
-		// module.parent = undefined by default
-		if (!module.children) module.children = [];
-		Object.defineProperty(module, "loaded", {
-			enumerable: true,
-			get: function() {
-				return module.l;
-			}
-		});
-		Object.defineProperty(module, "id", {
-			enumerable: true,
-			get: function() {
-				return module.i;
-			}
-		});
-		module.webpackPolyfill = 1;
-	}
-	return module;
-};
-
-
-/***/ }),
-
 /***/ "./node_modules/crypto-js/aes.js":
 /*!***************************************!*\
   !*** ./node_modules/crypto-js/aes.js ***!
@@ -6806,294 +6773,6 @@ module.exports = function(module) {
 	return CryptoJS;
 
 }));
-
-/***/ }),
-
-/***/ "./node_modules/pubsub-js/src/pubsub.js":
-/*!**********************************************!*\
-  !*** ./node_modules/pubsub-js/src/pubsub.js ***!
-  \**********************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(module) {/*
-Copyright (c) 2010,2011,2012,2013,2014 Morgan Roderick http://roderick.dk
-License: MIT - http://mrgnrdrck.mit-license.org
-
-https://github.com/mroderick/PubSubJS
-*/
-(function (root, factory){
-    'use strict';
-
-    var PubSub = {};
-    root.PubSub = PubSub;
-
-    var define = root.define;
-
-    factory(PubSub);
-
-    // AMD support
-    if (typeof define === 'function' && define.amd){
-        define(function() { return PubSub; });
-
-        // CommonJS and Node.js module support
-    } else if (true){
-        if (module !== undefined && module.exports) {
-            exports = module.exports = PubSub; // Node.js specific `module.exports`
-        }
-        exports.PubSub = PubSub; // CommonJS module 1.1.1 spec
-        module.exports = exports = PubSub; // CommonJS
-    }
-
-}(( typeof window === 'object' && window ) || this, function (PubSub){
-    'use strict';
-
-    var messages = {},
-        lastUid = -1;
-
-    function hasKeys(obj){
-        var key;
-
-        for (key in obj){
-            if ( obj.hasOwnProperty(key) ){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-	 *	Returns a function that throws the passed exception, for use as argument for setTimeout
-	 *	@param { Object } ex An Error object
-	 */
-    function throwException( ex ){
-        return function reThrowException(){
-            throw ex;
-        };
-    }
-
-    function callSubscriberWithDelayedExceptions( subscriber, message, data ){
-        try {
-            subscriber( message, data );
-        } catch( ex ){
-            setTimeout( throwException( ex ), 0);
-        }
-    }
-
-    function callSubscriberWithImmediateExceptions( subscriber, message, data ){
-        subscriber( message, data );
-    }
-
-    function deliverMessage( originalMessage, matchedMessage, data, immediateExceptions ){
-        var subscribers = messages[matchedMessage],
-            callSubscriber = immediateExceptions ? callSubscriberWithImmediateExceptions : callSubscriberWithDelayedExceptions,
-            s;
-
-        if ( !messages.hasOwnProperty( matchedMessage ) ) {
-            return;
-        }
-
-        for (s in subscribers){
-            if ( subscribers.hasOwnProperty(s)){
-                callSubscriber( subscribers[s], originalMessage, data );
-            }
-        }
-    }
-
-    function createDeliveryFunction( message, data, immediateExceptions ){
-        return function deliverNamespaced(){
-            var topic = String( message ),
-                position = topic.lastIndexOf( '.' );
-
-            // deliver the message as it is now
-            deliverMessage(message, message, data, immediateExceptions);
-
-            // trim the hierarchy and deliver message to each level
-            while( position !== -1 ){
-                topic = topic.substr( 0, position );
-                position = topic.lastIndexOf('.');
-                deliverMessage( message, topic, data, immediateExceptions );
-            }
-        };
-    }
-
-    function messageHasSubscribers( message ){
-        var topic = String( message ),
-            found = Boolean(messages.hasOwnProperty( topic ) && hasKeys(messages[topic])),
-            position = topic.lastIndexOf( '.' );
-
-        while ( !found && position !== -1 ){
-            topic = topic.substr( 0, position );
-            position = topic.lastIndexOf( '.' );
-            found = Boolean(messages.hasOwnProperty( topic ) && hasKeys(messages[topic]));
-        }
-
-        return found;
-    }
-
-    function publish( message, data, sync, immediateExceptions ){
-        var deliver = createDeliveryFunction( message, data, immediateExceptions ),
-            hasSubscribers = messageHasSubscribers( message );
-
-        if ( !hasSubscribers ){
-            return false;
-        }
-
-        if ( sync === true ){
-            deliver();
-        } else {
-            setTimeout( deliver, 0 );
-        }
-        return true;
-    }
-
-    /**
-	 *	PubSub.publish( message[, data] ) -> Boolean
-	 *	- message (String): The message to publish
-	 *	- data: The data to pass to subscribers
-	 *	Publishes the the message, passing the data to it's subscribers
-	**/
-    PubSub.publish = function( message, data ){
-        return publish( message, data, false, PubSub.immediateExceptions );
-    };
-
-    /**
-	 *	PubSub.publishSync( message[, data] ) -> Boolean
-	 *	- message (String): The message to publish
-	 *	- data: The data to pass to subscribers
-	 *	Publishes the the message synchronously, passing the data to it's subscribers
-	**/
-    PubSub.publishSync = function( message, data ){
-        return publish( message, data, true, PubSub.immediateExceptions );
-    };
-
-    /**
-	 *	PubSub.subscribe( message, func ) -> String
-	 *	- message (String): The message to subscribe to
-	 *	- func (Function): The function to call when a new message is published
-	 *	Subscribes the passed function to the passed message. Every returned token is unique and should be stored if
-	 *	you need to unsubscribe
-	**/
-    PubSub.subscribe = function( message, func ){
-        if ( typeof func !== 'function'){
-            return false;
-        }
-
-        // message is not registered yet
-        if ( !messages.hasOwnProperty( message ) ){
-            messages[message] = {};
-        }
-
-        // forcing token as String, to allow for future expansions without breaking usage
-        // and allow for easy use as key names for the 'messages' object
-        var token = 'uid_' + String(++lastUid);
-        messages[message][token] = func;
-
-        // return token for unsubscribing
-        return token;
-    };
-
-    /**
-	 *	PubSub.subscribeOnce( message, func ) -> PubSub
-	 *	- message (String): The message to subscribe to
-	 *	- func (Function): The function to call when a new message is published
-	 *	Subscribes the passed function to the passed message once
-	**/
-    PubSub.subscribeOnce = function( message, func ){
-        var token = PubSub.subscribe( message, function(){
-            // before func apply, unsubscribe message
-            PubSub.unsubscribe( token );
-            func.apply( this, arguments );
-        });
-        return PubSub;
-    };
-
-    /* Public: Clears all subscriptions
-	 */
-    PubSub.clearAllSubscriptions = function clearAllSubscriptions(){
-        messages = {};
-    };
-
-    /*Public: Clear subscriptions by the topic
-	*/
-    PubSub.clearSubscriptions = function clearSubscriptions(topic){
-        var m;
-        for (m in messages){
-            if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0){
-                delete messages[m];
-            }
-        }
-    };
-
-    /* Public: removes subscriptions.
-	 * When passed a token, removes a specific subscription.
-	 * When passed a function, removes all subscriptions for that function
-	 * When passed a topic, removes all subscriptions for that topic (hierarchy)
-	 *
-	 * value - A token, function or topic to unsubscribe.
-	 *
-	 * Examples
-	 *
-	 *		// Example 1 - unsubscribing with a token
-	 *		var token = PubSub.subscribe('mytopic', myFunc);
-	 *		PubSub.unsubscribe(token);
-	 *
-	 *		// Example 2 - unsubscribing with a function
-	 *		PubSub.unsubscribe(myFunc);
-	 *
-	 *		// Example 3 - unsubscribing a topic
-	 *		PubSub.unsubscribe('mytopic');
-	 */
-    PubSub.unsubscribe = function(value){
-        var descendantTopicExists = function(topic) {
-                var m;
-                for ( m in messages ){
-                    if ( messages.hasOwnProperty(m) && m.indexOf(topic) === 0 ){
-                        // a descendant of the topic exists:
-                        return true;
-                    }
-                }
-
-                return false;
-            },
-            isTopic    = typeof value === 'string' && ( messages.hasOwnProperty(value) || descendantTopicExists(value) ),
-            isToken    = !isTopic && typeof value === 'string',
-            isFunction = typeof value === 'function',
-            result = false,
-            m, message, t;
-
-        if (isTopic){
-            PubSub.clearSubscriptions(value);
-            return;
-        }
-
-        for ( m in messages ){
-            if ( messages.hasOwnProperty( m ) ){
-                message = messages[m];
-
-                if ( isToken && message[value] ){
-                    delete message[value];
-                    result = value;
-                    // tokens are unique, so we can just stop here
-                    break;
-                }
-
-                if (isFunction) {
-                    for ( t in message ){
-                        if (message.hasOwnProperty(t) && message[t] === value){
-                            delete message[t];
-                            result = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        return result;
-    };
-}));
-
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../../../../usr/local/lib/node_modules/webpack/buildin/module.js */ "../../../../usr/local/lib/node_modules/webpack/buildin/module.js")(module)))
 
 /***/ }),
 
@@ -53521,6 +53200,225 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/core/pubsub.ts":
+/*!****************************!*\
+  !*** ./src/core/pubsub.ts ***!
+  \****************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/**
+ * @file pubsub - ts
+ */
+var PubSub = {};
+var messages = {};
+var lastUid = -1;
+function hasKeys(obj) {
+    var key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            return true;
+        }
+    }
+    return false;
+}
+/**
+ *	Returns a function that throws the passed exception, for use as argument for setTimeout
+    *	@param { Object } ex An Error object
+    */
+function throwException(ex) {
+    return function reThrowException() {
+        throw ex;
+    };
+}
+function callSubscriberWithDelayedExceptions(subscriber, message, data) {
+    try {
+        subscriber(message, data);
+    }
+    catch (ex) {
+        setTimeout(throwException(ex), 0);
+    }
+}
+function callSubscriberWithImmediateExceptions(subscriber, message, data) {
+    subscriber(message, data);
+}
+function deliverMessage(originalMessage, matchedMessage, data, immediateExceptions) {
+    var subscribers = messages[matchedMessage], callSubscriber = immediateExceptions ? callSubscriberWithImmediateExceptions : callSubscriberWithDelayedExceptions, s;
+    if (!messages.hasOwnProperty(matchedMessage)) {
+        return;
+    }
+    for (s in subscribers) {
+        if (subscribers.hasOwnProperty(s)) {
+            callSubscriber(subscribers[s], originalMessage, data);
+        }
+    }
+}
+function createDeliveryFunction(message, data, immediateExceptions) {
+    return function deliverNamespaced() {
+        var topic = String(message), position = topic.lastIndexOf('.');
+        // deliver the message as it is now
+        deliverMessage(message, message, data, immediateExceptions);
+        // trim the hierarchy and deliver message to each level
+        while (position !== -1) {
+            topic = topic.substr(0, position);
+            position = topic.lastIndexOf('.');
+            deliverMessage(message, topic, data, immediateExceptions);
+        }
+    };
+}
+function messageHasSubscribers(message) {
+    var topic = String(message), found = Boolean(messages.hasOwnProperty(topic) && hasKeys(messages[topic])), position = topic.lastIndexOf('.');
+    while (!found && position !== -1) {
+        topic = topic.substr(0, position);
+        position = topic.lastIndexOf('.');
+        found = Boolean(messages.hasOwnProperty(topic) && hasKeys(messages[topic]));
+    }
+    return found;
+}
+function publish(message, data, sync, immediateExceptions) {
+    var deliver = createDeliveryFunction(message, data, immediateExceptions), hasSubscribers = messageHasSubscribers(message);
+    if (!hasSubscribers) {
+        return false;
+    }
+    if (sync === true) {
+        deliver();
+    }
+    else {
+        setTimeout(deliver, 0);
+    }
+    return true;
+}
+/**
+ *	PubSub.publish( message[, data] ) -> Boolean
+    *	- message (String): The message to publish
+    *	- data: The data to pass to subscribers
+    *	Publishes the the message, passing the data to it's subscribers
+    **/
+PubSub.publish = function (message, data) {
+    return publish(message, data, false, PubSub.immediateExceptions);
+};
+/**
+ *	PubSub.publishSync( message[, data] ) -> Boolean
+    *	- message (String): The message to publish
+    *	- data: The data to pass to subscribers
+    *	Publishes the the message synchronously, passing the data to it's subscribers
+    **/
+PubSub.publishSync = function (message, data) {
+    return publish(message, data, true, PubSub.immediateExceptions);
+};
+/**
+ *	PubSub.subscribe( message, func ) -> String
+    *	- message (String): The message to subscribe to
+    *	- func (Function): The function to call when a new message is published
+    *	Subscribes the passed function to the passed message. Every returned token is unique and should be stored if
+    *	you need to unsubscribe
+    **/
+PubSub.subscribe = function (message, func) {
+    if (typeof func !== 'function') {
+        return false;
+    }
+    // message is not registered yet
+    if (!messages.hasOwnProperty(message)) {
+        messages[message] = {};
+    }
+    // forcing token as String, to allow for future expansions without breaking usage
+    // and allow for easy use as key names for the 'messages' object
+    var token = 'uid_' + String(++lastUid);
+    messages[message][token] = func;
+    // return token for unsubscribing
+    return token;
+};
+/**
+ *	PubSub.subscribeOnce( message, func ) -> PubSub
+    *	- message (String): The message to subscribe to
+    *	- func (Function): The function to call when a new message is published
+    *	Subscribes the passed function to the passed message once
+    **/
+PubSub.subscribeOnce = function (message, func) {
+    var token = PubSub.subscribe(message, function () {
+        // before func apply, unsubscribe message
+        PubSub.unsubscribe(token);
+        func.apply(this, arguments);
+    });
+    return PubSub;
+};
+/* Public: Clears all subscriptions
+    */
+PubSub.clearAllSubscriptions = function clearAllSubscriptions() {
+    messages = {};
+};
+/*Public: Clear subscriptions by the topic
+    */
+PubSub.clearSubscriptions = function clearSubscriptions(topic) {
+    var m;
+    for (m in messages) {
+        if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0) {
+            delete messages[m];
+        }
+    }
+};
+/* Public: removes subscriptions.
+    * When passed a token, removes a specific subscription.
+    * When passed a function, removes all subscriptions for that function
+    * When passed a topic, removes all subscriptions for that topic (hierarchy)
+    *
+    * value - A token, function or topic to unsubscribe.
+    *
+    * Examples
+    *
+    *		// Example 1 - unsubscribing with a token
+    *		var token = PubSub.subscribe('mytopic', myFunc);
+    *		PubSub.unsubscribe(token);
+    *
+    *		// Example 2 - unsubscribing with a function
+    *		PubSub.unsubscribe(myFunc);
+    *
+    *		// Example 3 - unsubscribing a topic
+    *		PubSub.unsubscribe('mytopic');
+    */
+PubSub.unsubscribe = function (value) {
+    var descendantTopicExists = function (topic) {
+        var m;
+        for (m in messages) {
+            if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0) {
+                // a descendant of the topic exists:
+                return true;
+            }
+        }
+        return false;
+    }, isTopic = typeof value === 'string' && (messages.hasOwnProperty(value) || descendantTopicExists(value)), isToken = !isTopic && typeof value === 'string', isFunction = typeof value === 'function', result = false, m, message, t;
+    if (isTopic) {
+        PubSub.clearSubscriptions(value);
+        return;
+    }
+    for (m in messages) {
+        if (messages.hasOwnProperty(m)) {
+            message = messages[m];
+            if (isToken && message[value]) {
+                delete message[value];
+                result = value;
+                // tokens are unique, so we can just stop here
+                break;
+            }
+            if (isFunction) {
+                for (t in message) {
+                    if (message.hasOwnProperty(t) && message[t] === value) {
+                        delete message[t];
+                        result = true;
+                    }
+                }
+            }
+        }
+    }
+    return result;
+};
+/* harmony default export */ __webpack_exports__["default"] = (PubSub);
+
+
+/***/ }),
+
 /***/ "./src/core/topic.ts":
 /*!***************************!*\
   !*** ./src/core/topic.ts ***!
@@ -53886,8 +53784,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_polyfill__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./core/polyfill */ "./src/core/polyfill.ts");
 /* harmony import */ var _runtime_pano_runtime__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./runtime/pano.runtime */ "./src/runtime/pano.runtime.ts");
 /* harmony import */ var _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
-/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
-/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var _core_pubsub__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./core/pubsub */ "./src/core/pubsub.ts");
 
 
 
@@ -53920,7 +53817,7 @@ Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_5__["default"])();
      * @param {Object} data
      */
     publish: function (topic, data) {
-        pubsub_js__WEBPACK_IMPORTED_MODULE_8__["publish"](topic, data);
+        _core_pubsub__WEBPACK_IMPORTED_MODULE_8__["default"].publish(topic, data);
     }
 });
 
@@ -53937,8 +53834,7 @@ Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_5__["default"])();
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core/topic */ "./src/core/topic.ts");
-/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
-/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _core_pubsub__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/pubsub */ "./src/core/pubsub.ts");
 
 
 /**
@@ -53950,19 +53846,19 @@ var PubSubAble = /** @class */ (function () {
         this.Topic = _core_topic__WEBPACK_IMPORTED_MODULE_0__["default"];
     }
     PubSubAble.prototype.subscribe = function (topic, fn) {
-        this.subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_1__["subscribe"](topic, fn));
+        this.subtokens.push(_core_pubsub__WEBPACK_IMPORTED_MODULE_1__["default"].subscribe(topic, fn));
     };
     PubSubAble.prototype.publish = function (topic, data) {
-        pubsub_js__WEBPACK_IMPORTED_MODULE_1__["publish"](topic, data);
+        _core_pubsub__WEBPACK_IMPORTED_MODULE_1__["default"].publish(topic, data);
     };
     PubSubAble.prototype.publishSync = function (topic, data) {
-        pubsub_js__WEBPACK_IMPORTED_MODULE_1__["publishSync"](topic, data);
+        _core_pubsub__WEBPACK_IMPORTED_MODULE_1__["default"].publishSync(topic, data);
     };
     PubSubAble.prototype.clean = function () {
-        pubsub_js__WEBPACK_IMPORTED_MODULE_1__["clearAllSubscriptions"]();
+        _core_pubsub__WEBPACK_IMPORTED_MODULE_1__["default"].clearAllSubscriptions();
     };
     PubSubAble.prototype.dispose = function () {
-        this.subtokens.forEach(function (token) { return pubsub_js__WEBPACK_IMPORTED_MODULE_1__["unsubscribe"](token); });
+        this.subtokens.forEach(function (token) { return _core_pubsub__WEBPACK_IMPORTED_MODULE_1__["default"].unsubscribe(token); });
     };
     return PubSubAble;
 }());
@@ -54150,8 +54046,7 @@ var AnimationFly = /** @class */ (function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
-/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _core_pubsub__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/pubsub */ "./src/core/pubsub.ts");
 /* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
 /* harmony import */ var _fly_animation__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./fly.animation */ "./src/pano/animations/fly.animation.ts");
 
@@ -54174,8 +54069,8 @@ var Timeline = /** @class */ (function () {
             var fly = new _fly_animation__WEBPACK_IMPORTED_MODULE_2__["default"](camera, opts.fly);
             this.lines.push(fly);
         }
-        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_0__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].SCENE.INIT, function () { return _this.onTimeInit(); }));
-        subtokens.push(pubsub_js__WEBPACK_IMPORTED_MODULE_0__["subscribe"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].RENDER.PROCESS, function () { return _this.onTimeChange(); }));
+        subtokens.push(_core_pubsub__WEBPACK_IMPORTED_MODULE_0__["default"].subscribe(_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].SCENE.INIT, function () { return _this.onTimeInit(); }));
+        subtokens.push(_core_pubsub__WEBPACK_IMPORTED_MODULE_0__["default"].subscribe(_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].RENDER.PROCESS, function () { return _this.onTimeChange(); }));
     };
     Timeline.onTimeInit = function () {
         var lines = this.lines;
@@ -54189,7 +54084,7 @@ var Timeline = /** @class */ (function () {
         }
         lines.forEach(function (anim, i) {
             if (anim.isEnd()) {
-                pubsub_js__WEBPACK_IMPORTED_MODULE_0__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].ANIMATION.END, anim);
+                _core_pubsub__WEBPACK_IMPORTED_MODULE_0__["default"].publish(_core_topic__WEBPACK_IMPORTED_MODULE_1__["default"].ANIMATION.END, anim);
                 lines.splice(i, 1);
             }
             else {
@@ -54198,7 +54093,7 @@ var Timeline = /** @class */ (function () {
         });
     };
     Timeline.onTimeEnd = function () {
-        this.subtokens.forEach(function (token) { return pubsub_js__WEBPACK_IMPORTED_MODULE_0__["unsubscribe"](token); });
+        this.subtokens.forEach(function (token) { return _core_pubsub__WEBPACK_IMPORTED_MODULE_0__["default"].unsubscribe(token); });
         this.pano.noTimeline();
     };
     Timeline.lines = [];
@@ -54485,8 +54380,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 /* harmony import */ var _core_topic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
-/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
-/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _core_pubsub__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/pubsub */ "./src/core/pubsub.ts");
 
 
 
@@ -54857,7 +54751,7 @@ function OrbitControl(camera, domElement, pano) {
             //TODO: prevent to dispatch click
             var pano_1 = scope.pano;
             var end = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToSphere({ x: 0, y: 0 }, scope.camera);
-            pubsub_js__WEBPACK_IMPORTED_MODULE_3__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_2__["default"].UI.DRAG, { start: _rotatestart, end: end, pano: pano_1 });
+            _core_pubsub__WEBPACK_IMPORTED_MODULE_3__["default"].publish(_core_topic__WEBPACK_IMPORTED_MODULE_2__["default"].UI.DRAG, { start: _rotatestart, end: end, pano: pano_1 });
         }
         _rotatestart = null;
     }
@@ -54906,7 +54800,7 @@ function OrbitControl(camera, domElement, pano) {
             y: -(event.touches[0].pageY + dy / 2) / size.height * 2 + 1
         }, scope.camera);
         // center of tow fingers
-        pubsub_js__WEBPACK_IMPORTED_MODULE_3__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_2__["default"].UI.ZOOM, { location: location, pano: pano });
+        _core_pubsub__WEBPACK_IMPORTED_MODULE_3__["default"].publish(_core_topic__WEBPACK_IMPORTED_MODULE_2__["default"].UI.ZOOM, { location: location, pano: pano });
     }
     function handleTouchStartPan(event) {
         panStart.set(event.touches[0].pageX, event.touches[0].pageY);
@@ -54952,7 +54846,7 @@ function OrbitControl(camera, domElement, pano) {
         if (_rotatestart) {
             var pano_2 = scope.pano;
             var end = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToSphere({ x: 0, y: 0 }, scope.camera);
-            pubsub_js__WEBPACK_IMPORTED_MODULE_3__["publish"](_core_topic__WEBPACK_IMPORTED_MODULE_2__["default"].UI.DRAG, { start: _rotatestart, end: end, pano: pano_2 });
+            _core_pubsub__WEBPACK_IMPORTED_MODULE_3__["default"].publish(_core_topic__WEBPACK_IMPORTED_MODULE_2__["default"].UI.DRAG, { start: _rotatestart, end: end, pano: pano_2 });
         }
         _rotatestart = null;
     }
@@ -56597,13 +56491,13 @@ var Pano = /** @class */ (function (_super) {
     Pano.prototype.dispose = function () {
         cancelAnimationFrame(this.reqid);
         this.stopControl();
-        _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].cleanup(null, this.scene);
         this.skyBox.dispose();
         this.webgl.dispose();
-        this.root.innerHTML = '';
+        this.pluginList.forEach(function (plugin) { return plugin.dispose(); });
         this.publish(this.Topic.RENDER.DISPOSE, this);
         // delete all subscribes
         _super.prototype.dispose.call(this);
+        _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].cleanup(null, this.scene);
     };
     return Pano;
 }(_interface_common_interface__WEBPACK_IMPORTED_MODULE_9__["default"]));
@@ -56904,6 +56798,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _plastic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./plastic */ "./src/pano/plastic/plastic.ts");
 /* harmony import */ var _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../plastic/text.plastic */ "./src/pano/plastic/text.plastic.ts");
 /* harmony import */ var _shader_plastic_shader__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../shader/plastic.shader */ "./src/shader/plastic.shader.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -56914,6 +56809,7 @@ var __extends = (undefined && undefined.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+
 
 
 
@@ -56930,15 +56826,15 @@ var defaultOpts = {
     widthSegments: 40,
     heightSegments: 40,
     opacity: 1,
-    shadow: false,
-    visible: true
+    cloudimg: '../assets/cloud.png',
+    shadow: false
 };
 var Inradius = /** @class */ (function (_super) {
     __extends(Inradius, _super);
     function Inradius(opts, pano) {
         var _this = _super.call(this) || this;
         _this.pano = pano;
-        _this.opts = Object.assign({}, defaultOpts, opts);
+        _this.opts = _core_util__WEBPACK_IMPORTED_MODULE_5__["default"].assign({}, defaultOpts, opts);
         _this.create();
         if (opts.rotate) {
             _this.subscribe(_this.Topic.RENDER.PROCESS, function () { return _this.addRotate(); });
@@ -56987,9 +56883,11 @@ var Inradius = /** @class */ (function (_super) {
         if (opts.position) {
             this.setPosition(opts.position.x, opts.position.y, opts.position.z);
         }
+        if (opts.hide) {
+            this.hide();
+        }
         var target = this.wrap || this.plastic;
         target.name = opts.name;
-        target.visible = opts.visible;
         target.instance = this;
         // target.castShadow = opts.shadow;
     };
@@ -57000,7 +56898,7 @@ var Inradius = /** @class */ (function (_super) {
         var mask = this.wrap = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["SphereGeometry"](this.opts.radius, 40, 40), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
             color: '#000',
             transparent: true,
-            opacity: 0.2,
+            opacity: 0.1,
             depthTest: false
         }));
         mask.add(sphere);
@@ -57010,7 +56908,7 @@ var Inradius = /** @class */ (function (_super) {
      */
     Inradius.prototype.createCloud = function (sphere) {
         var cloud = this.wrap = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](new three__WEBPACK_IMPORTED_MODULE_0__["SphereGeometry"](this.opts.radius, 40, 40), new three__WEBPACK_IMPORTED_MODULE_0__["MeshBasicMaterial"]({
-            map: new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load('../assets/cloud.png'),
+            map: new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]().load(this.opts.cloudimg),
             transparent: true,
             depthTest: false
         }));
@@ -57243,6 +57141,9 @@ var Plastic = /** @class */ (function (_super) {
             .start(['opacity'])
             : (material.opacity = num);
     };
+    Plastic.prototype.lookAt = function (position) {
+        this.getPlastic().lookAt(position);
+    };
     Plastic.prototype.show = function () {
         this.getPlastic().visible = true;
     };
@@ -57260,7 +57161,7 @@ var Plastic = /** @class */ (function (_super) {
         material.map && material.map.dispose();
         material.envMap && material.envMap.dispose();
         material.dispose();
-        plastic.parent.remove(plastic);
+        plastic.parent && plastic.parent.remove(plastic);
         _super.prototype.dispose.call(this);
     };
     return Plastic;
@@ -57498,18 +57399,28 @@ var Text = /** @class */ (function (_super) {
             ctx.shadowBlur = 6;
         }
         var text = opts.text;
-        if (text.length > 8) {
-            ctx.fillText(text.substring(0, 7), width / 2, height / 2 - 8);
-            ctx.fillText(text.substring(7), width / 2, height / 2 + 33);
+        var wrap = opts.wrap;
+        if (wrap && text.length > wrap) {
+            var limit = Math.min(text.length, wrap * 2);
+            ctx.beginPath();
+            ctx.fillText(text.substring(0, wrap), width / 2, height / 2 - 8);
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.fillText(text.substring(4, limit), width / 2, height / 2 + 33);
+            ctx.closePath();
         }
         else {
+            ctx.beginPath();
             ctx.fillText(text, width / 2, height / 2 + 10);
+            ctx.closePath();
         }
         // 描边
         if (opts.strokecolor) {
+            ctx.beginPath();
             ctx.lineWidth = 1;
             ctx.strokeStyle = opts.strokecolor;
             ctx.strokeText(opts.text, width / 2, height / 2 + 10, 200);
+            ctx.closePath();
         }
     };
     Text.prototype.rotate = function (rad) {
@@ -58106,12 +58017,12 @@ var Rotate = /** @class */ (function (_super) {
     Rotate.prototype.dispose = function () {
         var canvas = this.pano.getCanvas();
         try {
-            _super.prototype.dispose.call(this);
-            this.tween.stop();
             canvas.removeEventListener('touchstart', this.onDisturb);
             canvas.removeEventListener('mousedown', this.onDisturb);
             canvas.removeEventListener('touchend', this.onRecover);
             canvas.removeEventListener('mouseup', this.onRecover);
+            _super.prototype.dispose.call(this);
+            this.tween.stop();
         }
         catch (e) { }
     };
@@ -58132,11 +58043,12 @@ var Rotate = /** @class */ (function (_super) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _interface_common_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../interface/common.interface */ "./src/interface/common.interface.ts");
-/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
-/* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
-/* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
-/* harmony import */ var _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../plastic/light.plastic */ "./src/pano/plastic/light.plastic.ts");
+/* harmony import */ var _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../plastic/text.plastic */ "./src/pano/plastic/text.plastic.ts");
+/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+/* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
+/* harmony import */ var _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../plastic/light.plastic */ "./src/pano/plastic/light.plastic.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -58153,6 +58065,7 @@ var __extends = (undefined && undefined.__extends) || (function () {
 
 
 
+
 /**
  * @file 星际穿越 plugin
  * 管理穿越点个数, 数据拉取, 展示策略
@@ -58162,7 +58075,7 @@ var defaultOpts = {
     lazy: 3000,
     surl: null
 };
-var loader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_3__["default"]();
+var loader = new _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_4__["default"]();
 var Thru = /** @class */ (function (_super) {
     __extends(Thru, _super);
     function Thru(pano, opts) {
@@ -58171,10 +58084,11 @@ var Thru = /** @class */ (function (_super) {
         _this.timeid = 0;
         _this.group = [];
         _this.objs = [];
+        _this.texts = [];
         _this.lights = [];
         _this.pano = pano;
         _this.camera = pano.getCamera();
-        _this.opts = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].assign({}, defaultOpts, opts);
+        _this.opts = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].assign({}, defaultOpts, opts);
         _this.onCanvasClick = _this.onCanvasClick.bind(_this);
         var webgl = pano.webgl;
         var Topic = _this.Topic;
@@ -58201,7 +58115,7 @@ var Thru = /** @class */ (function (_super) {
      * 使用唯一点光源避免互相干扰
      */
     Thru.prototype.createLights = function () {
-        var light = new _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_5__["default"]({ type: 2 });
+        var light = new _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_6__["default"]({ intensity: 0.3, type: 2 });
         light.addBy(this.pano);
         this.lights.push(light);
     };
@@ -58214,18 +58128,22 @@ var Thru = /** @class */ (function (_super) {
         var opts = this.opts;
         var group = this.group;
         var objs = this.objs;
-        var lights = this.lights;
+        var texts = this.texts;
         var radius = opts.radius;
         list.forEach(function (item, i) {
             item.setName && loader.loadTexture(item.image).then(function (texture) {
                 var pos = _this.getVector(i);
-                var hole = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_4__["default"]({
-                    name: i, shadow: true, position: pos, radius: radius, type: 'mask', data: item,
-                    emissive: '#787878', envMap: texture, visible: false, text: item.setName
+                var hole = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_5__["default"]({
+                    name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
+                    rotate: true, emissive: '#787878', envMap: texture, hide: true, cloudimg: opts.img
                 }, pano);
+                var text = new _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]({ text: item.setName, fontsize: 32, hide: true,
+                    x: pos.x, y: pos.y - 140, z: pos.z, shadow: true });
                 hole.addBy(pano);
+                text.addBy(pano);
                 group.push(hole.getPlastic());
                 objs.push(hole);
+                texts.push(text);
             });
         });
     };
@@ -58236,7 +58154,7 @@ var Thru = /** @class */ (function (_super) {
         var lng = Math.random() * 60 - 30;
         var lat = Math.random() * 30;
         lng += i * 90;
-        return _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].calcSphereToWorld(lng, lat);
+        return _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].calcSphereToWorld(lng, lat);
     };
     /**
      * lazy 显示穿越点
@@ -58256,9 +58174,13 @@ var Thru = /** @class */ (function (_super) {
         var pano = this.pano;
         var camera = this.camera;
         this.active = true;
-        this.group.forEach(function (item, i) {
-            item.lookAt(camera.position);
-            item.visible = true;
+        this.objs.forEach(function (obj, i) {
+            obj.lookAt(camera.position);
+            obj.show();
+        });
+        this.texts.forEach(function (text, i) {
+            text.lookAt(camera.position);
+            text.show();
         });
     };
     /**
@@ -58267,8 +58189,9 @@ var Thru = /** @class */ (function (_super) {
     Thru.prototype.hide = function () {
         clearTimeout(this.timeid);
         this.active = false;
-        if (this.group.length) {
-            this.group.forEach(function (item) { return item.visible = false; });
+        if (this.objs.length) {
+            this.objs.forEach(function (obj) { return obj.hide(); });
+            this.texts.forEach(function (text) { return text.hide(); });
         }
     };
     /**
@@ -58299,7 +58222,7 @@ var Thru = /** @class */ (function (_super) {
         var surl = this.opts.surl;
         var oldscene = pano.currentData;
         if (group.length) {
-            var intersects = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].intersect(pos, group, pano.getCamera());
+            var intersects = _core_util__WEBPACK_IMPORTED_MODULE_3__["default"].intersect(pos, group, pano.getCamera());
             if (intersects) {
                 this.active = false;
                 var obj = intersects[0].object;
@@ -58320,11 +58243,10 @@ var Thru = /** @class */ (function (_super) {
                             pos_1.z += pos_1.z > 0 ? 50 : -50;
                             // lock gyro control
                             pano.gyro && pano.gyro.makeEnable(false);
-                            new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](lookTarget).to(pos_1).effect('quintEaseIn', 1000)
+                            new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"](lookTarget).to(pos_1).effect('quintEaseIn', 1000)
                                 .start(['x', 'y', 'z'])
                                 .complete(function () {
-                                instance_1.hideText();
-                                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__["default"](camera.position).to(instance_1.getPosition())
+                                new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"](camera.position).to(instance_1.getPosition())
                                     .effect('quadEaseOut', 1000)
                                     .start(['x', 'y', 'z'])
                                     .complete(function () {
@@ -58354,13 +58276,15 @@ var Thru = /** @class */ (function (_super) {
     Thru.prototype.cleanup = function () {
         var _this = this;
         var objs = this.objs;
+        var texts = this.texts;
         objs.forEach(function (obj) { return obj.removeBy(_this.pano); });
+        texts.forEach(function (text) { return text.removeBy(_this.pano); });
         objs.length = 0;
+        texts.length = 0;
         this.group.length = 0;
     };
     Thru.prototype.dispose = function () {
         var pano = this.pano;
-        var webgl = pano.webgl;
         this.cleanup();
         this.lights.forEach(function (light) { return light.removeBy(pano); });
         _super.prototype.dispose.call(this);
@@ -58527,8 +58451,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pano_plugins_helper_plugin__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../pano/plugins/helper.plugin */ "./src/pano/plugins/helper.plugin.ts");
 /* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
-/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
-/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_11__);
+/* harmony import */ var _core_pubsub__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../core/pubsub */ "./src/core/pubsub.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -58666,7 +58589,7 @@ var Runtime = /** @class */ (function () {
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
-                                    pubsub_js__WEBPACK_IMPORTED_MODULE_11__["subscribe"](name_1, events[name_1]);
+                                    _core_pubsub__WEBPACK_IMPORTED_MODULE_11__["default"].subscribe(name_1, events[name_1]);
                                 }
                             }
                             if (source['animation']) {
@@ -58756,8 +58679,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vr_divider_vr__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../vr/divider.vr */ "./src/vr/divider.vr.ts");
 /* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
 /* harmony import */ var _core_external__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../core/external */ "./src/core/external.ts");
-/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! pubsub-js */ "./node_modules/pubsub-js/src/pubsub.js");
-/* harmony import */ var pubsub_js__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(pubsub_js__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var _core_pubsub__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../core/pubsub */ "./src/core/pubsub.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -58863,7 +58785,7 @@ var Runtime = /** @class */ (function () {
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
-                                    pubsub_js__WEBPACK_IMPORTED_MODULE_6__["subscribe"](name_1, events[name_1]);
+                                    _core_pubsub__WEBPACK_IMPORTED_MODULE_6__["default"].subscribe(name_1, events[name_1]);
                                 }
                             }
                             // 开场动画
@@ -59851,7 +59773,7 @@ var VPano = /** @class */ (function (_super) {
      */
     VPano.prototype.enter = function () {
         this.state = 1;
-        this.publish(this.Topic.VR.ENTER, this);
+        this.publish(this.Topic.VR.ENTER, { pano: this });
         return this.display.requestPresent([{ source: this.webgl.domElement }]);
     };
     /**
@@ -59859,7 +59781,7 @@ var VPano = /** @class */ (function (_super) {
      */
     VPano.prototype.exit = function () {
         this.state = 0;
-        this.publish(this.Topic.VR.EXIT, this);
+        this.publish(this.Topic.VR.EXIT, { pano: this });
         return this.display.exitPresent();
     };
     return VPano;

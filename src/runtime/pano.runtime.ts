@@ -9,7 +9,7 @@ import Media from '../pano/plugins/media.plugin';
 import Helper from '../pano/plugins/helper.plugin';
 import Pano from '../pano/pano';
 import Log from '../core/log';
-import * as PubSub from 'pubsub-js';
+import PubSub from '../core/pubsub';
 
 /**
  * @file vr pano runtime

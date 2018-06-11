@@ -73,7 +73,7 @@ export default class VPano extends Pano {
      */
     enter() {
         this.state = 1;
-        this.publish(this.Topic.VR.ENTER, this);
+        this.publish(this.Topic.VR.ENTER, {pano: this});
 
         return this.display.requestPresent([{source: this.webgl.domElement}]);
     }
@@ -83,7 +83,7 @@ export default class VPano extends Pano {
      */
     exit() {
         this.state = 0;
-        this.publish(this.Topic.VR.EXIT, this);
+        this.publish(this.Topic.VR.EXIT, {pano: this});
 
         return this.display.exitPresent();
     }

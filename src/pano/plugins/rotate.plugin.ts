@@ -82,13 +82,13 @@ export default class Rotate extends PubSubAble {
         const canvas = this.pano.getCanvas();
 
         try {
-            super.dispose();
-            this.tween.stop();
-            
             canvas.removeEventListener('touchstart', this.onDisturb);
             canvas.removeEventListener('mousedown', this.onDisturb);
             canvas.removeEventListener('touchend', this.onRecover);
             canvas.removeEventListener('mouseup', this.onRecover);
+            
+            super.dispose();
+            this.tween.stop();
         } catch (e) {}
     }
 }

@@ -1,5 +1,5 @@
-import { TextureLoader, MeshBasicMaterial, CircleGeometry, CanvasTexture, Mesh, Vector3 } from 'three';
 import PubSubAble from '../../interface/common.interface';
+import Text from '../plastic/text.plastic';
 import Tween from '../animations/tween.animation';
 import Util from '../../core/util';
 import Loader from '../loaders/resource.loader';
@@ -27,6 +27,7 @@ export default class Thru extends PubSubAble {
     timeid = 0;
     group = [];
     objs = [];
+    texts = [];
     lights = [];
 
     constructor(pano, opts) {
@@ -66,7 +67,7 @@ export default class Thru extends PubSubAble {
      * 使用唯一点光源避免互相干扰
      */
     createLights() {
-        const light = new Light({type: 2});
+        const light = new Light({intensity: 0.3, type: 2});
 
         light.addBy(this.pano);
         this.lights.push(light);
@@ -80,20 +81,24 @@ export default class Thru extends PubSubAble {
         const opts = this.opts;
         const group = this.group;
         const objs = this.objs;
-        const lights = this.lights;
+        const texts = this.texts;
         const radius = opts.radius;
 
         list.forEach((item, i) => {
             item.setName && loader.loadTexture(item.image).then(texture => {
                 const pos = this.getVector(i);              
                 const hole = new Inradius({
-                    name: i, shadow: true, position: pos, radius: radius, type: 'mask', data: item,
-                    emissive: '#787878', envMap: texture, visible: false, text: item.setName
+                    name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
+                    rotate: true, emissive: '#787878', envMap: texture, hide: true, cloudimg: opts.img
                 }, pano);
+                const text = new Text({text: item.setName, fontsize: 32, hide: true,
+                    x: pos.x, y: pos.y - 140, z: pos.z, shadow: true});
                 hole.addBy(pano);
+                text.addBy(pano);
 
                 group.push(hole.getPlastic());
                 objs.push(hole);
+                texts.push(text);
             });
         });
     }
@@ -128,9 +133,13 @@ export default class Thru extends PubSubAble {
         const camera = this.camera;
 
         this.active = true;        
-        this.group.forEach((item, i) => {
-            item.lookAt(camera.position);
-            item.visible = true;
+        this.objs.forEach((obj, i) => {
+            obj.lookAt(camera.position);
+            obj.show();
+        });
+        this.texts.forEach((text, i) => {
+            text.lookAt(camera.position);
+            text.show();
         });
     }
 
@@ -141,8 +150,9 @@ export default class Thru extends PubSubAble {
         clearTimeout(this.timeid);
         this.active = false;
 
-        if (this.group.length) {
-            this.group.forEach(item => item.visible = false);
+        if (this.objs.length) {
+            this.objs.forEach(obj => obj.hide());
+            this.texts.forEach(text => text.hide());
         }
     }
 
@@ -205,7 +215,6 @@ export default class Thru extends PubSubAble {
                                 new Tween(lookTarget).to(pos).effect('quintEaseIn', 1000)
                                     .start(['x', 'y', 'z'])
                                     .complete(() => {
-                                        instance.hideText();                                  
                                         new Tween(camera.position).to(instance.getPosition())
                                             .effect('quadEaseOut', 1000)
                                             .start(['x', 'y', 'z'])
@@ -236,15 +245,17 @@ export default class Thru extends PubSubAble {
      */
     cleanup() {
         const objs = this.objs;
+        const texts = this.texts;
 
         objs.forEach(obj => obj.removeBy(this.pano));
+        texts.forEach(text => text.removeBy(this.pano));
         objs.length = 0;
+        texts.length = 0;
         this.group.length = 0;
     }
 
     dispose() {
         const pano = this.pano;
-        const webgl = pano.webgl;
 
         this.cleanup();
         this.lights.forEach(light => light.removeBy(pano));

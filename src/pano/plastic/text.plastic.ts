@@ -89,17 +89,28 @@ export default class Text extends Plastic {
         }
         
         const text = opts.text;
-        if (text.length > 8) {
-            ctx.fillText(text.substring(0, 7), width / 2, height / 2 - 8);
-            ctx.fillText(text.substring(7), width / 2, height / 2 + 33);
+        const wrap = opts.wrap;
+        if (wrap && text.length > wrap) {
+            const limit = Math.min(text.length, wrap * 2);
+
+            ctx.beginPath();
+            ctx.fillText(text.substring(0, wrap), width / 2, height / 2 - 8);
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.fillText(text.substring(4, limit), width / 2, height / 2 + 33);
+            ctx.closePath();
         } else {
+            ctx.beginPath();
             ctx.fillText(text, width / 2, height / 2 + 10);
+            ctx.closePath();
         }
         // 描边
         if (opts.strokecolor) {
+            ctx.beginPath();
             ctx.lineWidth = 1;
             ctx.strokeStyle = opts.strokecolor;
             ctx.strokeText(opts.text, width / 2, height / 2 + 10, 200);
+            ctx.closePath();
         }
     }
     

@@ -20,11 +20,9 @@
   "dependencies": {
     "@types/crypto-js": "^3.1.40",
     "@types/es6-shim": "^0.31.37",
-    "@types/pubsub-js": "^1.5.18",
     "@types/three": "^0.91.14",
     "@types/webvr-api": "0.0.33",
     "crypto-js": "^3.1.9-1",
-    "pubsub-js": "^1.6.0",
     "three": "^0.91.0"
   },
   "devDependencies": {

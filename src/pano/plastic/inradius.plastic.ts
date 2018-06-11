@@ -3,6 +3,7 @@ import Tween from '../animations/tween.animation';
 import Plastic from './plastic';
 import Text from '../plastic/text.plastic';
 import Shader from '../../shader/plastic.shader';
+import Util from '../../core/util';
 
 /**
  * @file 内切球
@@ -16,8 +17,8 @@ const defaultOpts = {
     widthSegments: 40,
     heightSegments: 40,
     opacity: 1,
-    shadow: false,
-    visible: true
+    cloudimg: '../assets/cloud.png',
+    shadow: false
 };
 export default class Inradius extends Plastic {
     wrap: any;
@@ -27,7 +28,7 @@ export default class Inradius extends Plastic {
         super();
 
         this.pano = pano;
-        this.opts = Object.assign({}, defaultOpts, opts);
+        this.opts = Util.assign({}, defaultOpts, opts);
         this.create();
 
         if (opts.rotate) {
@@ -84,9 +85,12 @@ export default class Inradius extends Plastic {
             this.setPosition(opts.position.x, opts.position.y, opts.position.z);
         }
 
+        if (opts.hide) {
+            this.hide();
+        }
+
         const target = this.wrap || this.plastic;
         target.name = opts.name;
-        target.visible = opts.visible;
         target.instance = this;
         // target.castShadow = opts.shadow;
     }
@@ -100,7 +104,7 @@ export default class Inradius extends Plastic {
             new MeshBasicMaterial({
                 color: '#000',
                 transparent: true,
-                opacity: 0.2,
+                opacity: 0.1,
                 depthTest: false
             })
         );
@@ -114,7 +118,7 @@ export default class Inradius extends Plastic {
         const cloud = this.wrap = new Mesh(
             new SphereGeometry(this.opts.radius, 40, 40),
             new MeshBasicMaterial({
-                map: new TextureLoader().load('../assets/cloud.png'),
+                map: new TextureLoader().load(this.opts.cloudimg),
                 transparent: true,
                 depthTest: false
             })

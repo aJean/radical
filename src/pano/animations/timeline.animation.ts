@@ -1,4 +1,4 @@
-import * as PubSub from 'pubsub-js';
+import PubSub from '../../core/pubsub';
 import Topic from '../../core/topic';
 import AnimationFly from './fly.animation';
 

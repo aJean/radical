@@ -56,6 +56,10 @@ export default abstract class Plastic extends PubSubAble {
             : (material.opacity = num);
     }
 
+    lookAt(position) {
+        this.getPlastic().lookAt(position);
+    }
+
     show() {
         this.getPlastic().visible = true;
     }
@@ -76,7 +80,7 @@ export default abstract class Plastic extends PubSubAble {
         material.map && material.map.dispose();
         material.envMap && material.envMap.dispose();
         material.dispose();
-        plastic.parent.remove(plastic);
+        plastic.parent && plastic.parent.remove(plastic);
 
         super.dispose();
     }

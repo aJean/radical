@@ -4,7 +4,7 @@ import VPano from '../vr/pano.vr';
 import Divider from '../vr/divider.vr';
 import Timeline from '../pano/animations/timeline.animation';
 import External from '../core/external';
-import * as PubSub from 'pubsub-js';
+import PubSub from '../core/pubsub';
 
 /**
  * @file wev vr runtime

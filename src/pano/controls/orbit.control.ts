@@ -1,7 +1,7 @@
 import {Vector3, Vector2, MOUSE, Spherical, EventDispatcher, Quaternion, PerspectiveCamera, OrthographicCamera} from 'three';
 import Util from '../../core/util';
 import Topic from '../../core/topic';
-import * as PubSub from 'pubsub-js';
+import PubSub from '../../core/pubsub';
 
 /**
  * @file 全景相机控制器

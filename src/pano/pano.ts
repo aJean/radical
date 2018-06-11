@@ -480,14 +480,13 @@ export default class Pano extends PubSubAble {
         cancelAnimationFrame(this.reqid);
         
         this.stopControl();
-        Util.cleanup(null, this.scene);
-
         this.skyBox.dispose();
         this.webgl.dispose();
-        this.root.innerHTML = '';
+        this.pluginList.forEach(plugin => plugin.dispose());
 
         this.publish(this.Topic.RENDER.DISPOSE, this);
         // delete all subscribes
         super.dispose();
+        Util.cleanup(null, this.scene);
     }
 }

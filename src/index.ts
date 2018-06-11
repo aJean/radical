@@ -6,7 +6,7 @@ import '../styles/vr.style.less';
 import polyfill from './core/polyfill';
 import PRuntime from './runtime/pano.runtime';
 import VRuntime from './runtime/vr.runtime';
-import * as PubSub from 'pubsub-js';
+import PubSub from './core/pubsub';
 
 /**
  * @file bxl lib
