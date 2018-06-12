@@ -6,9 +6,9 @@ import {PerspectiveCamera, Vector3, Euler, Quaternion, Spherical, Math as TMath,
 
 export default class GyroControl {
     orbit: any;
+    oribtcamera: any;
     onDeviceOrientationChange: any;
     onScreenOrientationChange: any;
-    oribtcamera: any;
     camera: any;
     enabled = false;
     deviceOrien: any = {};
@@ -25,9 +25,9 @@ export default class GyroControl {
     constructor(camera, orbit) {
         camera.rotation.reorder('YXZ');
 
+        this.orbit = orbit;
         this.oribtcamera = camera;
         this.camera = camera.clone();
-        this.orbit = orbit;
         this.onDeviceOrientationChange = event => this.deviceOrien = event;
         this.onScreenOrientationChange = event => this.screenOrien = Number(window.orientation) || 0;
     }
@@ -123,8 +123,10 @@ export default class GyroControl {
      * 重置 gyro 和 orbit 控制器
      */
     reset() {
-        this.orbit.reset();
-        this.lastSpherical = null;
+        this.orbit.setAzimuthalAngle(Math.PI);
+        // this.orbit.reset();
         this.camera.copy(this.oribtcamera);
+        this.lastSpherical = null;
+        this.enabled = true;
     }
 }

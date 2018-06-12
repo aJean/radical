@@ -46,17 +46,32 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
 /******/ 		}
 /******/ 	};
 /******/
 /******/ 	// define __esModule on exports
 /******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
 /******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -54259,9 +54274,9 @@ var GyroControl = /** @class */ (function () {
         this.q1 = new three__WEBPACK_IMPORTED_MODULE_0__["Quaternion"](-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
         this.spherical = new three__WEBPACK_IMPORTED_MODULE_0__["Spherical"]();
         camera.rotation.reorder('YXZ');
+        this.orbit = orbit;
         this.oribtcamera = camera;
         this.camera = camera.clone();
-        this.orbit = orbit;
         this.onDeviceOrientationChange = function (event) { return _this.deviceOrien = event; };
         this.onScreenOrientationChange = function (event) { return _this.screenOrien = Number(window.orientation) || 0; };
     }
@@ -54342,9 +54357,11 @@ var GyroControl = /** @class */ (function () {
      * 重置 gyro 和 orbit 控制器
      */
     GyroControl.prototype.reset = function () {
-        this.orbit.reset();
-        this.lastSpherical = null;
+        this.orbit.setAzimuthalAngle(Math.PI);
+        // this.orbit.reset();
         this.camera.copy(this.oribtcamera);
+        this.lastSpherical = null;
+        this.enabled = true;
     };
     return GyroControl;
 }());
@@ -54478,8 +54495,14 @@ function OrbitControl(camera, domElement, pano) {
     this.getPolarAngle = function () {
         return spherical.phi;
     };
+    this.setPolarAngle = function (phi) {
+        spherical.phi = phi;
+    };
     this.getAzimuthalAngle = function () {
         return spherical.theta;
+    };
+    this.setAzimuthalAngle = function (theta) {
+        spherical.theta = theta;
     };
     this.saveState = function () {
         scope.target0.copy(scope.target);
@@ -56267,6 +56290,13 @@ var Pano = /** @class */ (function (_super) {
         setTimeout(function () { return _this.publish(Topic.SCENE.ATTACH, publishdata); }, 100);
     };
     /**
+     * 悄然替换
+     * @param {Object} texture
+     */
+    Pano.prototype.replaceSlient = function (texture) {
+        this.skyBox.setMap(texture);
+    };
+    /**
      * 动画效果切换场景贴图
      * @param {Object} texture 场景原图纹理
      */
@@ -56276,7 +56306,6 @@ var Pano = /** @class */ (function (_super) {
         var Topic = this.Topic;
         this.publish(Topic.SCENE.ATTACHSTART, publishdata);
         var skyBox = this.skyBox;
-        var oldMap = skyBox.getMap();
         var newBox = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__["default"]({ envMap: texture, opacity: 0 });
         newBox.addTo(this.scene);
         newBox.fadeIn(this, function () {
@@ -56424,12 +56453,31 @@ var Pano = /** @class */ (function (_super) {
      */
     Pano.prototype.enterNext = function (data) {
         var _this = this;
-        return myLoader.loadTexture(data.bxlPath || data.texPath)
-            .then(function (texture) {
-            _this.currentData = data;
-            _this.resetEnv(data);
-            _this.opts.sceneTrans ? _this.replaceAnim(texture) : _this.replaceTexture(texture);
-        }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e); });
+        var path = data.imgPath;
+        // preTrans defeate sceneTrans
+        if (this.opts.preTrans && path) {
+            myLoader.loadTexture(path, 'canvas')
+                .then(function (texture) {
+                _this.currentData = data;
+                _this.resetEnv(data);
+                _this.replaceTexture(texture);
+                // 清晰图
+                return myLoader.loadTexture(data.bxlPath || data.texPath)
+                    .then(function (texture) {
+                    if (_this.currentData == data) {
+                        _this.replaceSlient(texture);
+                    }
+                });
+            }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e); });
+        }
+        else {
+            myLoader.loadTexture(data.bxlPath || data.texPath)
+                .then(function (texture) {
+                _this.currentData = data;
+                _this.resetEnv(data);
+                _this.opts.sceneTrans ? _this.replaceAnim(texture) : _this.replaceTexture(texture);
+            }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e); });
+        }
     };
     /**
      * enter with thru
@@ -57484,6 +57532,110 @@ var Helper = /** @class */ (function (_super) {
 
 /***/ }),
 
+/***/ "./src/pano/plugins/indicator.plugin.ts":
+/*!**********************************************!*\
+  !*** ./src/pano/plugins/indicator.plugin.ts ***!
+  \**********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _interface_ui_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../interface/ui.interface */ "./src/interface/ui.interface.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+
+
+/**
+ * @file 旋转指示器
+ */
+var Indicator = /** @class */ (function (_super) {
+    __extends(Indicator, _super);
+    function Indicator(pano) {
+        var _this = _super.call(this) || this;
+        _this.lock = false;
+        _this.pano = pano;
+        _this.theta = pano.getLook().lng;
+        _this.azimuthal = Math.PI;
+        var Topic = _this.Topic;
+        _this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.LOAD, _this.createDom.bind(_this));
+        return _this;
+    }
+    Indicator.prototype.createDom = function () {
+        var element = this.element = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="pano-indicator"></div>');
+        this.setContainer();
+        this.subscribe(this.Topic.RENDER.PROCESS, this.update.bind(this));
+        element.addEventListener('click', this.reset.bind(this));
+        element.addEventListener('webkitTransitionEnd', this.end.bind(this));
+        this.setTheta(this.pano.getLook().lng);
+    };
+    Indicator.prototype.setContainer = function () {
+        this.pano.getRoot().appendChild(this.element);
+    };
+    Indicator.prototype.calcTheta = function (theta) {
+        return theta > 0 ? 180 - theta : -(180 + theta);
+    };
+    /**
+     * 设置方位角度
+     */
+    Indicator.prototype.setTheta = function (theta) {
+        this.theta = theta;
+        theta = this.calcTheta(theta);
+        _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].styleElement(this.element, { webkitTransform: "rotate(" + theta + "deg)" });
+    };
+    Indicator.prototype.update = function () {
+        var pano = this.pano;
+        var theta = pano.getLook().lng;
+        if (!this.lock && theta != this.theta) {
+            this.setTheta(theta);
+        }
+    };
+    /**
+     * 将方位角恢复到 Math.PI
+     */
+    Indicator.prototype.reset = function (event) {
+        var _this = this;
+        event.preventDefault();
+        event.stopPropagation();
+        var pano = this.pano;
+        pano.gyro && pano.gyro.makeEnable(false);
+        var orbit = pano.getControl();
+        var azimuthal = orbit.getAzimuthalAngle();
+        var target = { azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal) };
+        this.lock = true;
+        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ azimuthal: azimuthal }).to(target).effect('linear', 500)
+            .start(['azimuthal']).process(function (newval, oldval) {
+            orbit.rotateLeft(oldval - newval);
+            _this.setTheta(newval * 180 / Math.PI);
+        }).complete(function () { return _this.end(); });
+    };
+    Indicator.prototype.end = function () {
+        var pano = this.pano;
+        this.lock = false;
+        this.setTheta(this.theta = 180);
+        pano.gyro && pano.gyro.reset();
+    };
+    Indicator.prototype.dispose = function () {
+        _super.prototype.dispose.call(this);
+    };
+    return Indicator;
+}(_interface_ui_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
+/* harmony default export */ __webpack_exports__["default"] = (Indicator);
+
+
+/***/ }),
+
 /***/ "./src/pano/plugins/info.plugin.ts":
 /*!*****************************************!*\
   !*** ./src/pano/plugins/info.plugin.ts ***!
@@ -58420,15 +58572,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 /* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
 /* harmony import */ var _pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../pano/plugins/info.plugin */ "./src/pano/plugins/info.plugin.ts");
-/* harmony import */ var _pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../pano/plugins/rotate.plugin */ "./src/pano/plugins/rotate.plugin.ts");
-/* harmony import */ var _pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/plugins/multiple.plugin */ "./src/pano/plugins/multiple.plugin.ts");
-/* harmony import */ var _pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../pano/plugins/wormhole.plugin */ "./src/pano/plugins/wormhole.plugin.ts");
-/* harmony import */ var _pano_plugins_thru_plugin__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../pano/plugins/thru.plugin */ "./src/pano/plugins/thru.plugin.ts");
-/* harmony import */ var _pano_plugins_media_plugin__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../pano/plugins/media.plugin */ "./src/pano/plugins/media.plugin.ts");
-/* harmony import */ var _pano_plugins_helper_plugin__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../pano/plugins/helper.plugin */ "./src/pano/plugins/helper.plugin.ts");
-/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
-/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
-/* harmony import */ var _core_pubsub__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../core/pubsub */ "./src/core/pubsub.ts");
+/* harmony import */ var _pano_plugins_indicator_plugin__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../pano/plugins/indicator.plugin */ "./src/pano/plugins/indicator.plugin.ts");
+/* harmony import */ var _pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/plugins/rotate.plugin */ "./src/pano/plugins/rotate.plugin.ts");
+/* harmony import */ var _pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../pano/plugins/multiple.plugin */ "./src/pano/plugins/multiple.plugin.ts");
+/* harmony import */ var _pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../pano/plugins/wormhole.plugin */ "./src/pano/plugins/wormhole.plugin.ts");
+/* harmony import */ var _pano_plugins_thru_plugin__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../pano/plugins/thru.plugin */ "./src/pano/plugins/thru.plugin.ts");
+/* harmony import */ var _pano_plugins_media_plugin__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../pano/plugins/media.plugin */ "./src/pano/plugins/media.plugin.ts");
+/* harmony import */ var _pano_plugins_helper_plugin__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../pano/plugins/helper.plugin */ "./src/pano/plugins/helper.plugin.ts");
+/* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+/* harmony import */ var _core_pubsub__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../core/pubsub */ "./src/core/pubsub.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -58464,6 +58617,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+
 
 
 
@@ -58540,7 +58694,7 @@ var Runtime = /** @class */ (function () {
         }
         var ref = el.getAttribute('ref') || "pano_" + this.uid++;
         el.setAttribute('ref', ref);
-        return this.instanceMap[ref] = new _pano_pano__WEBPACK_IMPORTED_MODULE_9__["default"](el, source);
+        return this.instanceMap[ref] = new _pano_pano__WEBPACK_IMPORTED_MODULE_10__["default"](el, source);
     };
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
@@ -58559,14 +58713,14 @@ var Runtime = /** @class */ (function () {
                     case 3:
                         source = _a;
                         if (!(source && source['sceneGroup'])) {
-                            return [2 /*return*/, _core_log__WEBPACK_IMPORTED_MODULE_10__["default"].output('load source error')];
+                            return [2 /*return*/, _core_log__WEBPACK_IMPORTED_MODULE_11__["default"].output('load source error')];
                         }
                         try {
                             pano = this.createRef(el, source);
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
-                                    _core_pubsub__WEBPACK_IMPORTED_MODULE_11__["default"].subscribe(name_1, events[name_1]);
+                                    _core_pubsub__WEBPACK_IMPORTED_MODULE_12__["default"].subscribe(name_1, events[name_1]);
                                 }
                             }
                             if (source['animation']) {
@@ -58576,25 +58730,28 @@ var Runtime = /** @class */ (function () {
                                 pano.noTimeline();
                             }
                             if (source['rotate']) {
-                                pano.addPlugin(_pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_3__["default"], source['rotate']);
+                                pano.addPlugin(_pano_plugins_rotate_plugin__WEBPACK_IMPORTED_MODULE_4__["default"], source['rotate']);
                             }
                             if (source['multiScene']) {
-                                pano.addPlugin(_pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_4__["default"], source['sceneGroup']);
+                                pano.addPlugin(_pano_plugins_multiple_plugin__WEBPACK_IMPORTED_MODULE_5__["default"], source['sceneGroup']);
                             }
                             if (source['info'] !== false) {
                                 pano.addPlugin(_pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_2__["default"]);
                             }
+                            if (source['indicator'] !== false) {
+                                pano.addPlugin(_pano_plugins_indicator_plugin__WEBPACK_IMPORTED_MODULE_3__["default"]);
+                            }
                             if (source['wormhole']) {
-                                pano.addPlugin(_pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_5__["default"], source['wormhole']);
+                                pano.addPlugin(_pano_plugins_wormhole_plugin__WEBPACK_IMPORTED_MODULE_6__["default"], source['wormhole']);
                             }
                             if (source['thru']) {
-                                pano.addPlugin(_pano_plugins_thru_plugin__WEBPACK_IMPORTED_MODULE_6__["default"], source['thru']);
+                                pano.addPlugin(_pano_plugins_thru_plugin__WEBPACK_IMPORTED_MODULE_7__["default"], source['thru']);
                             }
                             if (source['media']) {
-                                pano.addPlugin(_pano_plugins_media_plugin__WEBPACK_IMPORTED_MODULE_7__["default"], source['media']);
+                                pano.addPlugin(_pano_plugins_media_plugin__WEBPACK_IMPORTED_MODULE_8__["default"], source['media']);
                             }
                             if (source['helper']) {
-                                pano.addPlugin(_pano_plugins_helper_plugin__WEBPACK_IMPORTED_MODULE_8__["default"], source['helper']);
+                                pano.addPlugin(_pano_plugins_helper_plugin__WEBPACK_IMPORTED_MODULE_9__["default"], source['helper']);
                             }
                             // add to env queue listeners
                             EnvQueue.add(pano.onResize, pano);
@@ -58653,10 +58810,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pano_loaders_resource_loader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
 /* harmony import */ var _vr_pano_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vr/pano.vr */ "./src/vr/pano.vr.ts");
-/* harmony import */ var _vr_divider_vr__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../vr/divider.vr */ "./src/vr/divider.vr.ts");
-/* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
-/* harmony import */ var _core_external__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../core/external */ "./src/core/external.ts");
-/* harmony import */ var _core_pubsub__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../core/pubsub */ "./src/core/pubsub.ts");
+/* harmony import */ var _pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../pano/plugins/info.plugin */ "./src/pano/plugins/info.plugin.ts");
+/* harmony import */ var _pano_plugins_indicator_plugin__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/plugins/indicator.plugin */ "./src/pano/plugins/indicator.plugin.ts");
+/* harmony import */ var _vr_divider_vr__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../vr/divider.vr */ "./src/vr/divider.vr.ts");
+/* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
+/* harmony import */ var _core_external__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/external */ "./src/core/external.ts");
+/* harmony import */ var _core_pubsub__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/pubsub */ "./src/core/pubsub.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -58692,6 +58851,8 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+
+
 
 
 
@@ -58762,23 +58923,31 @@ var Runtime = /** @class */ (function () {
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
-                                    _core_pubsub__WEBPACK_IMPORTED_MODULE_6__["default"].subscribe(name_1, events[name_1]);
+                                    _core_pubsub__WEBPACK_IMPORTED_MODULE_8__["default"].subscribe(name_1, events[name_1]);
                                 }
                             }
                             // 开场动画
                             if (source['animation']) {
-                                _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_4__["default"].install(source['animation'], vpano_1);
+                                _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_6__["default"].install(source['animation'], vpano_1);
                             }
                             else {
                                 vpano_1.noTimeline();
                             }
+                            // 版权信息
+                            if (source['info'] !== false) {
+                                vpano_1.addPlugin(_pano_plugins_info_plugin__WEBPACK_IMPORTED_MODULE_3__["default"]);
+                            }
+                            // 旋转指示
+                            if (source['indicator'] !== false) {
+                                vpano_1.addPlugin(_pano_plugins_indicator_plugin__WEBPACK_IMPORTED_MODULE_4__["default"]);
+                            }
                             // webvr ui divider
                             if (source['vr']) {
-                                vpano_1.addPlugin(_vr_divider_vr__WEBPACK_IMPORTED_MODULE_3__["default"], source['vr']);
+                                vpano_1.addPlugin(_vr_divider_vr__WEBPACK_IMPORTED_MODULE_5__["default"], source['vr']);
                             }
                             // business plugins
                             if (source['plugins']) {
-                                source['plugins'].forEach(function (plugin) { return vpano_1.addPlugin(plugin.class, plugin.opts, _core_external__WEBPACK_IMPORTED_MODULE_5__["default"]); });
+                                source['plugins'].forEach(function (plugin) { return vpano_1.addPlugin(plugin.class, plugin.opts, _core_external__WEBPACK_IMPORTED_MODULE_7__["default"]); });
                             }
                             EnvQueue.add(vpano_1.onResize, vpano_1);
                             vpano_1.run();

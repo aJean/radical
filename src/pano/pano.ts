@@ -1,4 +1,4 @@
-import {WebGLRenderer, Scene, PerspectiveCamera, Vector3, PCFSoftShadowMap, Math as TMath} from 'three';
+import {WebGLRenderer, Scene, PerspectiveCamera, PCFSoftShadowMap} from 'three';
 import OrbitControl from './controls/orbit.control';
 import GyroControl from './controls/gyro.control';
 import ResourceLoader from './loaders/resource.loader';
@@ -238,6 +238,14 @@ export default class Pano extends PubSubAble {
     }
 
     /**
+     * 悄然替换
+     * @param {Object} texture
+     */
+    replaceSlient(texture) {
+        this.skyBox.setMap(texture);
+    }
+
+    /**
      * 动画效果切换场景贴图
      * @param {Object} texture 场景原图纹理
      */
@@ -248,7 +256,6 @@ export default class Pano extends PubSubAble {
         this.publish(Topic.SCENE.ATTACHSTART, publishdata);
         
         const skyBox = this.skyBox;
-        const oldMap = skyBox.getMap();
         const newBox = new Inradius({envMap: texture, opacity: 0});
 
         newBox.addTo(this.scene);
@@ -420,12 +427,30 @@ export default class Pano extends PubSubAble {
      * @param {Object} data scene data
      */
     enterNext(data) {
-        return myLoader.loadTexture(data.bxlPath || data.texPath)
-            .then(texture => {
-                this.currentData = data;
-                this.resetEnv(data);
-                this.opts.sceneTrans ? this.replaceAnim(texture) : this.replaceTexture(texture);
-            }).catch(e => Log.output(e));
+        const path = data.imgPath;
+        // preTrans defeate sceneTrans
+        if (this.opts.preTrans && path) {
+            myLoader.loadTexture(path, 'canvas')
+                .then(texture => {
+                    this.currentData = data;
+                    this.resetEnv(data);
+                    this.replaceTexture(texture);
+                    // 清晰图
+                    return myLoader.loadTexture(data.bxlPath || data.texPath)
+                        .then(texture => {
+                            if (this.currentData == data) {
+                                this.replaceSlient(texture);
+                            }
+                        })
+                }).catch(e => Log.output(e));
+        } else {
+            myLoader.loadTexture(data.bxlPath || data.texPath)
+                .then(texture => {
+                    this.currentData = data;
+                    this.resetEnv(data);
+                    this.opts.sceneTrans ? this.replaceAnim(texture) : this.replaceTexture(texture);
+                }).catch(e => Log.output(e));
+        }
     }
 
     /**

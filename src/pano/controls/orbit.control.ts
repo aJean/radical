@@ -115,9 +115,17 @@ function OrbitControl(camera, domElement, pano) {
         return spherical.phi;
     };
 
+    this.setPolarAngle = function (phi) {
+        spherical.phi = phi;
+    };
+
     this.getAzimuthalAngle = function () {
         return spherical.theta;
     };
+
+    this.setAzimuthalAngle = function(theta) {
+        spherical.theta = theta;
+    }
 
     this.saveState = function () {
         scope.target0.copy(scope.target);

@@ -1,6 +1,7 @@
 import ResourceLoader from '../pano/loaders/resource.loader';
 import Timeline from '../pano/animations/timeline.animation';
 import Info from '../pano/plugins/info.plugin';
+import Indicator from '../pano/plugins/indicator.plugin';
 import Rotate from '../pano/plugins/rotate.plugin';
 import Multiple from '../pano/plugins/multiple.plugin';
 import Wormhole from '../pano/plugins/wormhole.plugin';
@@ -123,6 +124,10 @@ abstract class Runtime {
     
             if (source['info'] !== false) {
                 pano.addPlugin(Info);
+            }
+
+            if (source['indicator'] !== false) {
+                pano.addPlugin(Indicator);
             }
     
             if (source['wormhole']) {

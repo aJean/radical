@@ -6,8 +6,6 @@ import Util from '../../core/util';
  */
 
 export default class Info extends PluggableUI {
-    element: any;
-    container: any;
     pano: any;
     
     constructor(pano) {

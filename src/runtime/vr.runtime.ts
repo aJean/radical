@@ -1,6 +1,8 @@
 import ResourceLoader from '../pano/loaders/resource.loader';
 import Log from '../core/log';
 import VPano from '../vr/pano.vr';
+import Info from '../pano/plugins/info.plugin';
+import Indicator from '../pano/plugins/indicator.plugin';
 import Divider from '../vr/divider.vr';
 import Timeline from '../pano/animations/timeline.animation';
 import External from '../core/external';
@@ -71,6 +73,14 @@ export default abstract class Runtime {
                 Timeline.install(source['animation'], vpano);
             } else {
                 vpano.noTimeline();
+            }
+            // 版权信息
+            if (source['info'] !== false) {
+                vpano.addPlugin(Info);
+            }
+            // 旋转指示
+            if (source['indicator'] !== false) {
+                vpano.addPlugin(Indicator);
             }
             // webvr ui divider
             if (source['vr']) {

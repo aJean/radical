@@ -4,7 +4,8 @@
     "multiScene": true,
     "pano": {
         "fovTrans": true,
-        "sceneTrans": true
+        "sceneTrans": true,
+        "preTrans": false
     },
     "sceneGroup": [{
         "info": {
@@ -16,8 +17,8 @@
         "imgPath": "../assets/scene0/scene0.jpg",
         "thumbPath": "../assets/scene0/thumb0.jpg",
         "fov": 90,
-        "lng": -180,
-        "lat": 120,
+        "lng": 180,
+        "lat": 90,
         "overlays": [{
             "id": "id1",
             "type": "dom",
