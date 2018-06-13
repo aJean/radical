@@ -1,5 +1,5 @@
 import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
-import {IPluggableOverlay} from '../../interface/overlay.interface';
+import PluggableOverlay from '../../interface/overlay.interface';
 import Popup from '../ui/popup.ui';
 import Util from '../../core/util';
 
@@ -14,18 +14,18 @@ const defaultOpts = {
     loop: false,
     auto: false
 };
-export default class videoOverlay implements IPluggableOverlay {
+export default class videoOverlay extends PluggableOverlay {
     pano: any;
-    data: any;
-    particle: any;
     video: any;
     popup: Popup;
     type = "video";
 
     constructor(data, pano) {
+        super();
+
         this.pano = pano;
         this.data = Object.assign({}, defaultOpts, data);
-        this.particle = this.create();
+        this.create();
     }
 
     create() {
@@ -50,14 +50,12 @@ export default class videoOverlay implements IPluggableOverlay {
         });
 
         const plane = new PlaneGeometry(data.width, data.height);
-        const planeMesh = new Mesh(plane, material);
+        const planeMesh = this.particle = new Mesh(plane, material);
 
         planeMesh.position.set(location.x, location.y, location.z);
         planeMesh.lookAt(this.pano.getCamera().position);
         planeMesh.name = data.id;
         planeMesh['instance'] = this;
-
-        return planeMesh;
     }
 
     update() {}
@@ -80,21 +78,8 @@ export default class videoOverlay implements IPluggableOverlay {
         this.video.pause();
     }
 
-    show() {
-        this.particle.visible = true;
-    }
-
-    hide() {
-        this.particle.visible = false;
-    }
-
     dispose() {
-        const particle = this.particle;
-
-        delete particle['instance'];
-        particle.geometry.dispose();
-        particle.material.map.dispose();
-        particle.material.dispose();
+        super.dispose();
 
         this.video.pause();
         this.popup.dispose();

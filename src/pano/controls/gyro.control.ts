@@ -124,7 +124,7 @@ export default class GyroControl {
      */
     reset() {
         this.orbit.setAzimuthalAngle(Math.PI);
-        // this.orbit.reset();
+        this.orbit.setPolarAngle(Math.PI / 2);
         this.camera.copy(this.oribtcamera);
         this.lastSpherical = null;
         this.enabled = true;

@@ -1,5 +1,5 @@
 import { Mesh, CircleGeometry, MeshBasicMaterial, DoubleSide, CanvasTexture } from 'three';
-import Plastic from '../plastic/plastic';
+import Plastic from '../../interface/plastic.interface';
 import Tween from '../animations/tween.animation';
 
 /**

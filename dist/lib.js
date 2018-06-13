@@ -53824,9 +53824,142 @@ Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_5__["default"])();
 
 /***/ }),
 
-/***/ "./src/interface/common.interface.ts":
+/***/ "./src/interface/overlay.interface.ts":
+/*!********************************************!*\
+  !*** ./src/interface/overlay.interface.ts ***!
+  \********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/**
+ * @file overlay interface defintation
+ */
+var PluggableOverlay = /** @class */ (function () {
+    function PluggableOverlay() {
+    }
+    PluggableOverlay.prototype.show = function () {
+        this.particle.visible = true;
+    };
+    PluggableOverlay.prototype.hide = function () {
+        this.particle.visible = false;
+    };
+    PluggableOverlay.prototype.dispose = function () {
+        var particle = this.particle;
+        delete particle['instance'];
+        particle.geometry.dispose();
+        particle.material.map.dispose();
+        particle.material.dispose();
+    };
+    return PluggableOverlay;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (PluggableOverlay);
+
+
+/***/ }),
+
+/***/ "./src/interface/plastic.interface.ts":
+/*!********************************************!*\
+  !*** ./src/interface/plastic.interface.ts ***!
+  \********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _pano_animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../pano/animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
+/* harmony import */ var _pubsub_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./pubsub.interface */ "./src/interface/pubsub.interface.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+
+/**
+ * @file 内置物体材质抽象类
+ */
+var Plastic = /** @class */ (function (_super) {
+    __extends(Plastic, _super);
+    function Plastic() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    /**
+     * 重新这个方法可以改变行为
+     */
+    Plastic.prototype.getPlastic = function () {
+        return this.plastic;
+    };
+    Plastic.prototype.setPosition = function (x, y, z) {
+        this.getPlastic().position.set(x, y, z);
+    };
+    /**
+     * 外部动画会用到
+     */
+    Plastic.prototype.getPosition = function () {
+        return this.getPlastic().position;
+    };
+    Plastic.prototype.addTo = function (obj) {
+        if (obj instanceof Plastic) {
+            obj = obj.plastic;
+        }
+        obj.add(this.getPlastic());
+    };
+    Plastic.prototype.addBy = function (pano) {
+        pano.addSceneObject(this.getPlastic());
+    };
+    Plastic.prototype.removeBy = function (pano) {
+        pano.removeSceneObject(this.getPlastic());
+        this.dispose();
+    };
+    /**
+     * 设置透明度
+     */
+    Plastic.prototype.setOpacity = function (num, useanim) {
+        var material = this.plastic.material;
+        useanim ? new _pano_animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"](material).to({ opacity: num }).effect('backOut', 500)
+            .start(['opacity'])
+            : (material.opacity = num);
+    };
+    Plastic.prototype.lookAt = function (position) {
+        this.getPlastic().lookAt(position);
+    };
+    Plastic.prototype.show = function () {
+        this.getPlastic().visible = true;
+    };
+    Plastic.prototype.hide = function () {
+        this.getPlastic().visible = false;
+    };
+    /**
+     * 子类必须调用 super.dispose()
+     */
+    Plastic.prototype.dispose = function () {
+        var plastic = this.plastic;
+        var material = plastic.material;
+        delete plastic.data;
+        plastic.geometry.dispose();
+        material.map && material.map.dispose();
+        material.envMap && material.envMap.dispose();
+        material.dispose();
+        plastic.parent && plastic.parent.remove(plastic);
+        _super.prototype.dispose.call(this);
+    };
+    return Plastic;
+}(_pubsub_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
+/* harmony default export */ __webpack_exports__["default"] = (Plastic);
+
+
+/***/ }),
+
+/***/ "./src/interface/pubsub.interface.ts":
 /*!*******************************************!*\
-  !*** ./src/interface/common.interface.ts ***!
+  !*** ./src/interface/pubsub.interface.ts ***!
   \*******************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
@@ -53876,7 +54009,7 @@ var PubSubAble = /** @class */ (function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _common_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./common.interface */ "./src/interface/common.interface.ts");
+/* harmony import */ var _pubsub_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./pubsub.interface */ "./src/interface/pubsub.interface.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -53911,7 +54044,7 @@ var PluggableUI = /** @class */ (function (_super) {
         _super.prototype.dispose.call(this);
     };
     return PluggableUI;
-}(_common_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
+}(_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (PluggableUI);
 
 
@@ -54114,7 +54247,7 @@ var Timeline = /** @class */ (function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _interface_common_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../interface/common.interface */ "./src/interface/common.interface.ts");
+/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -54240,7 +54373,7 @@ var Tween = /** @class */ (function (_super) {
         }
     };
     return Tween;
-}(_interface_common_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
+}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Tween);
 
 
@@ -54358,7 +54491,7 @@ var GyroControl = /** @class */ (function () {
      */
     GyroControl.prototype.reset = function () {
         this.orbit.setAzimuthalAngle(Math.PI);
-        // this.orbit.reset();
+        this.orbit.setPolarAngle(Math.PI / 2);
         this.camera.copy(this.oribtcamera);
         this.lastSpherical = null;
         this.enabled = true;
@@ -55357,6 +55490,18 @@ var DomOverlay = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _interface_overlay_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../interface/overlay.interface */ "./src/interface/overlay.interface.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
 
 /**
  * @file 全景序列帧控制器
@@ -55368,21 +55513,23 @@ var defaultOpts = {
     auto: true,
     inverval: 60
 };
-var FrameOverlay = /** @class */ (function () {
+var FrameOverlay = /** @class */ (function (_super) {
+    __extends(FrameOverlay, _super);
     function FrameOverlay(data) {
-        this.textures = [];
-        this.index = 0;
-        this.enable = true;
-        this.finished = false;
-        this.lastTime = Date.now();
-        this.type = "frame";
-        this.data = Object.assign({}, defaultOpts, data);
-        this.particle = this.create();
+        var _this = _super.call(this) || this;
+        _this.textures = [];
+        _this.index = 0;
+        _this.enable = true;
+        _this.finished = false;
+        _this.lastTime = Date.now();
+        _this.type = "frame";
+        _this.data = Object.assign({}, defaultOpts, data);
+        _this.create();
+        return _this;
     }
     FrameOverlay.prototype.loadTextures = function () {
         var loader = new three__WEBPACK_IMPORTED_MODULE_0__["TextureLoader"]();
         var data = this.data;
-        var count = data.count;
         var url = data.imgPath;
         var limit = this.limit = data.count;
         for (var i = 1; i <= limit; i++) {
@@ -55399,7 +55546,7 @@ var FrameOverlay = /** @class */ (function () {
             depthTest: false
         });
         var plane = new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](data.width, data.height);
-        var mesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](plane, material);
+        var mesh = this.particle = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](plane, material);
         mesh.position.set(location.x, location.y, location.z);
         mesh.renderOrder = 100;
         if (data.rx) {
@@ -55408,7 +55555,6 @@ var FrameOverlay = /** @class */ (function () {
         else {
             mesh.lookAt(data.lookat);
         }
-        return mesh;
     };
     FrameOverlay.prototype.update = function () {
         if (!this.enable || !this.particle.visible) {
@@ -55450,17 +55596,8 @@ var FrameOverlay = /** @class */ (function () {
     FrameOverlay.prototype.play = function () {
         this.enable = true;
     };
-    FrameOverlay.prototype.hide = function () {
-        this.particle.visible = false;
-    };
-    FrameOverlay.prototype.show = function () {
-        this.particle.visible = true;
-    };
-    FrameOverlay.prototype.dispose = function () {
-        this.particle.geometry.dispose();
-    };
     return FrameOverlay;
-}());
+}(_interface_overlay_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (FrameOverlay);
 
 
@@ -55476,17 +55613,36 @@ var FrameOverlay = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _interface_overlay_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../interface/overlay.interface */ "./src/interface/overlay.interface.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
 
 /**
  * @file mesh overlay, static return three mesh object
  * @todo normalization object
  */
-var MeshOverlay = /** @class */ (function () {
+var defaultOpts = {
+    width: 80,
+    height: 80
+};
+var MeshOverlay = /** @class */ (function (_super) {
+    __extends(MeshOverlay, _super);
     function MeshOverlay(data, vector) {
-        this.type = "mesh";
-        this.data = data;
-        this.particle = this.create();
-        vector && this.particle.lookAt(vector);
+        var _this = _super.call(this) || this;
+        _this.type = "mesh";
+        _this.data = Object.assign({}, defaultOpts, data);
+        _this.create();
+        vector && _this.particle.lookAt(vector);
+        return _this;
     }
     MeshOverlay.prototype.create = function () {
         var data = this.data;
@@ -55496,28 +55652,14 @@ var MeshOverlay = /** @class */ (function () {
             transparent: true
         });
         var plane = new three__WEBPACK_IMPORTED_MODULE_0__["PlaneGeometry"](data.width, data.height);
-        var planeMesh = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](plane, material);
+        var planeMesh = this.particle = new three__WEBPACK_IMPORTED_MODULE_0__["Mesh"](plane, material);
         planeMesh.position.set(data.location.x, data.location.y, data.location.z);
         planeMesh.name = data.id;
         planeMesh['instance'] = this;
-        return planeMesh;
     };
     MeshOverlay.prototype.update = function () { };
-    MeshOverlay.prototype.show = function () {
-        this.particle.visible = true;
-    };
-    MeshOverlay.prototype.hide = function () {
-        this.particle.visible = false;
-    };
-    MeshOverlay.prototype.dispose = function () {
-        var particle = this.particle;
-        delete particle['instance'];
-        particle.geometry.dispose();
-        particle.material.map.dispose();
-        particle.material.dispose();
-    };
     return MeshOverlay;
-}());
+}(_interface_overlay_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (MeshOverlay);
 
 
@@ -55539,7 +55681,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _frame_overlay__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./frame.overlay */ "./src/pano/overlays/frame.overlay.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
-/* harmony import */ var _interface_common_interface__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../interface/common.interface */ "./src/interface/common.interface.ts");
+/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -55892,7 +56034,7 @@ var Overlays = /** @class */ (function (_super) {
         this.pluginFuncs = [];
     };
     return Overlays;
-}(_interface_common_interface__WEBPACK_IMPORTED_MODULE_7__["default"]));
+}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_7__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Overlays);
 
 
@@ -55908,6 +56050,18 @@ var Overlays = /** @class */ (function (_super) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _interface_overlay_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../interface/overlay.interface */ "./src/interface/overlay.interface.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
 
 /**
  * @file 雨雪特效 overlay
@@ -55923,11 +56077,14 @@ var defaultOpts = {
 function calcPos() {
     return Math.random() * 1400 - 700;
 }
-var SpriteOverlay = /** @class */ (function () {
+var SpriteOverlay = /** @class */ (function (_super) {
+    __extends(SpriteOverlay, _super);
     function SpriteOverlay(data) {
-        this.type = 'sprite';
-        this.data = Object.assign({}, defaultOpts, data);
-        this.particle = this.create();
+        var _this = _super.call(this) || this;
+        _this.type = 'sprite';
+        _this.data = Object.assign({}, defaultOpts, data);
+        _this.create();
+        return _this;
     }
     SpriteOverlay.prototype.create = function () {
         var data = this.data;
@@ -55946,7 +56103,7 @@ var SpriteOverlay = /** @class */ (function () {
             side: three__WEBPACK_IMPORTED_MODULE_0__["DoubleSide"]
         });
         material.color.setRGB(data.colorR, data.colorG, data.colorB);
-        return new three__WEBPACK_IMPORTED_MODULE_0__["Points"](geometry, material);
+        this.particle = new three__WEBPACK_IMPORTED_MODULE_0__["Points"](geometry, material);
     };
     SpriteOverlay.prototype.update = function () {
         if (!this.particle.visible) {
@@ -55968,19 +56125,8 @@ var SpriteOverlay = /** @class */ (function () {
     SpriteOverlay.prototype.isEnd = function () {
         return false;
     };
-    SpriteOverlay.prototype.show = function () {
-        this.particle.visible = true;
-    };
-    SpriteOverlay.prototype.hide = function () {
-        this.particle.visible = false;
-    };
-    SpriteOverlay.prototype.dispose = function () {
-        var particle = this.particle;
-        particle.geometry.dispose();
-        particle.material.dispose();
-    };
     return SpriteOverlay;
-}());
+}(_interface_overlay_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
 var snowTexture = 'data:image/png;base64,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';
 var rainTexture = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAACXBIWXMAAAsTAAALEwEAmpwYAAAKTWlDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjanVN3WJP3Fj7f92UPVkLY8LGXbIEAIiOsCMgQWaIQkgBhhBASQMWFiApWFBURnEhVxILVCkidiOKgKLhnQYqIWotVXDjuH9yntX167+3t+9f7vOec5/zOec8PgBESJpHmomoAOVKFPDrYH49PSMTJvYACFUjgBCAQ5svCZwXFAADwA3l4fnSwP/wBr28AAgBw1S4kEsfh/4O6UCZXACCRAOAiEucLAZBSAMguVMgUAMgYALBTs2QKAJQAAGx5fEIiAKoNAOz0ST4FANipk9wXANiiHKkIAI0BAJkoRyQCQLsAYFWBUiwCwMIAoKxAIi4EwK4BgFm2MkcCgL0FAHaOWJAPQGAAgJlCLMwAIDgCAEMeE80DIEwDoDDSv+CpX3CFuEgBAMDLlc2XS9IzFLiV0Bp38vDg4iHiwmyxQmEXKRBmCeQinJebIxNI5wNMzgwAABr50cH+OD+Q5+bk4eZm52zv9MWi/mvwbyI+IfHf/ryMAgQAEE7P79pf5eXWA3DHAbB1v2upWwDaVgBo3/ldM9sJoFoK0Hr5i3k4/EAenqFQyDwdHAoLC+0lYqG9MOOLPv8z4W/gi372/EAe/tt68ABxmkCZrcCjg/1xYW52rlKO58sEQjFu9+cj/seFf/2OKdHiNLFcLBWK8ViJuFAiTcd5uVKRRCHJleIS6X8y8R+W/QmTdw0ArIZPwE62B7XLbMB+7gECiw5Y0nYAQH7zLYwaC5EAEGc0Mnn3AACTv/mPQCsBAM2XpOMAALzoGFyolBdMxggAAESggSqwQQcMwRSswA6cwR28wBcCYQZEQAwkwDwQQgbkgBwKoRiWQRlUwDrYBLWwAxqgEZrhELTBMTgN5+ASXIHrcBcGYBiewhi8hgkEQcgIE2EhOogRYo7YIs4IF5mOBCJhSDSSgKQg6YgUUSLFyHKkAqlCapFdSCPyLXIUOY1cQPqQ28ggMor8irxHMZSBslED1AJ1QLmoHxqKxqBz0XQ0D12AlqJr0Rq0Hj2AtqKn0UvodXQAfYqOY4DRMQ5mjNlhXIyHRWCJWBomxxZj5Vg1Vo81Yx1YN3YVG8CeYe8IJAKLgBPsCF6EEMJsgpCQR1hMWEOoJewjtBK6CFcJg4Qxwicik6hPtCV6EvnEeGI6sZBYRqwm7iEeIZ4lXicOE1+TSCQOyZLkTgohJZAySQtJa0jbSC2kU6Q+0hBpnEwm65Btyd7kCLKArCCXkbeQD5BPkvvJw+S3FDrFiOJMCaIkUqSUEko1ZT/lBKWfMkKZoKpRzame1AiqiDqfWkltoHZQL1OHqRM0dZolzZsWQ8ukLaPV0JppZ2n3aC/pdLoJ3YMeRZfQl9Jr6Afp5+mD9HcMDYYNg8dIYigZaxl7GacYtxkvmUymBdOXmchUMNcyG5lnmA+Yb1VYKvYqfBWRyhKVOpVWlX6V56pUVXNVP9V5qgtUq1UPq15WfaZGVbNQ46kJ1Bar1akdVbupNq7OUndSj1DPUV+jvl/9gvpjDbKGhUaghkijVGO3xhmNIRbGMmXxWELWclYD6yxrmE1iW7L57Ex2Bfsbdi97TFNDc6pmrGaRZp3mcc0BDsax4PA52ZxKziHODc57LQMtPy2x1mqtZq1+rTfaetq+2mLtcu0W7eva73VwnUCdLJ31Om0693UJuja6UbqFutt1z+o+02PreekJ9cr1Dund0Uf1bfSj9Rfq79bv0R83MDQINpAZbDE4Y/DMkGPoa5hpuNHwhOGoEctoupHEaKPRSaMnuCbuh2fjNXgXPmasbxxirDTeZdxrPGFiaTLbpMSkxeS+Kc2Ua5pmutG003TMzMgs3KzYrMnsjjnVnGueYb7ZvNv8jYWlRZzFSos2i8eW2pZ8ywWWTZb3rJhWPlZ5VvVW16xJ1lzrLOtt1ldsUBtXmwybOpvLtqitm63Edptt3xTiFI8p0in1U27aMez87ArsmuwG7Tn2YfYl9m32zx3MHBId1jt0O3xydHXMdmxwvOuk4TTDqcSpw+lXZxtnoXOd8zUXpkuQyxKXdpcXU22niqdun3rLleUa7rrStdP1o5u7m9yt2W3U3cw9xX2r+00umxvJXcM970H08PdY4nHM452nm6fC85DnL152Xlle+70eT7OcJp7WMG3I28Rb4L3Le2A6Pj1l+s7pAz7GPgKfep+Hvqa+It89viN+1n6Zfgf8nvs7+sv9j/i/4XnyFvFOBWABwQHlAb2BGoGzA2sDHwSZBKUHNQWNBbsGLww+FUIMCQ1ZH3KTb8AX8hv5YzPcZyya0RXKCJ0VWhv6MMwmTB7WEY6GzwjfEH5vpvlM6cy2CIjgR2yIuB9pGZkX+X0UKSoyqi7qUbRTdHF09yzWrORZ+2e9jvGPqYy5O9tqtnJ2Z6xqbFJsY+ybuIC4qriBeIf4RfGXEnQTJAntieTE2MQ9ieNzAudsmjOc5JpUlnRjruXcorkX5unOy553PFk1WZB8OIWYEpeyP+WDIEJQLxhP5aduTR0T8oSbhU9FvqKNolGxt7hKPJLmnVaV9jjdO31D+miGT0Z1xjMJT1IreZEZkrkj801WRNberM/ZcdktOZSclJyjUg1plrQr1zC3KLdPZisrkw3keeZtyhuTh8r35CP5c/PbFWyFTNGjtFKuUA4WTC+oK3hbGFt4uEi9SFrUM99m/ur5IwuCFny9kLBQuLCz2Lh4WfHgIr9FuxYji1MXdy4xXVK6ZHhp8NJ9y2jLspb9UOJYUlXyannc8o5Sg9KlpUMrglc0lamUycturvRauWMVYZVkVe9ql9VbVn8qF5VfrHCsqK74sEa45uJXTl/VfPV5bdra3kq3yu3rSOuk626s91m/r0q9akHV0IbwDa0b8Y3lG19tSt50oXpq9Y7NtM3KzQM1YTXtW8y2rNvyoTaj9nqdf13LVv2tq7e+2Sba1r/dd3vzDoMdFTve75TsvLUreFdrvUV99W7S7oLdjxpiG7q/5n7duEd3T8Wej3ulewf2Re/ranRvbNyvv7+yCW1SNo0eSDpw5ZuAb9qb7Zp3tXBaKg7CQeXBJ9+mfHvjUOihzsPcw83fmX+39QjrSHkr0jq/dawto22gPaG97+iMo50dXh1Hvrf/fu8x42N1xzWPV56gnSg98fnkgpPjp2Snnp1OPz3Umdx590z8mWtdUV29Z0PPnj8XdO5Mt1/3yfPe549d8Lxw9CL3Ytslt0utPa49R35w/eFIr1tv62X3y+1XPK509E3rO9Hv03/6asDVc9f41y5dn3m978bsG7duJt0cuCW69fh29u0XdwruTNxdeo94r/y+2v3qB/oP6n+0/rFlwG3g+GDAYM/DWQ/vDgmHnv6U/9OH4dJHzEfVI0YjjY+dHx8bDRq98mTOk+GnsqcTz8p+Vv9563Or59/94vtLz1j82PAL+YvPv655qfNy76uprzrHI8cfvM55PfGm/K3O233vuO+638e9H5ko/ED+UPPR+mPHp9BP9z7nfP78L/eE8/sl0p8zAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAACXUSURBVHja7J1JrG3bdZb/f8y19z7FrV5hv8J2YkLsmEBsxSmIEFGi2DhSACkCQaCTQtBCQtCIlAYgN0AgoTQQooMiIdGNFFCCFBQUEFEcOQo4lROIHWziOHmV3/O7xSn2XmvN8dOYc6619rnXEXRg+TI+6/pW577G3Gf+c8wxx/gHJSEIgv8/sViCIAgBCIIgBCAIghCAIAhCAIIgCAEIgiAEIAiCEIAgCEIAgiAIAQiCIAQgCIIQgCAIQgCCIAgBCIIgBCAIghCAIAhCAIIgCAEIgiAEIAiCEIAgCEIAgiAIAQiCIAQgCIIQgCAIQgCCIAgBCIIgBCAIghCAIAhCAIIgCAEIgiAEIAiC/126WIKnE5L43u/9XnzsYx/Dq6++ih//8R/Hxz72MXzpjTfwa7/+6/iej3yUP/Pv/o1+7md/GcCzuHrmEjxk7PsBnjPGt16BndyBjT2659+D/Nbv4eV3vYT/st0CEgDg49/93bHQIQDB2nF3AMDbX/4y/uSHPsg7zzynv/v3/wE//YU/RDo/sZxFA1yAL/5RLFwIQPA0bP5bt27hh3/oB/HCy+/iR77/L6XzkzvbB1cPb7/x1sUt3j29jXHcpp7DAFwTeCDiYbr9zLWyHAohCAEIvkoR3DN2uy1+8Ef+BvOtZ05deueD60dfL/HrDHqPD/l5H/Ntz7Cc85Xkb0L+BZ7e/h3D+Bnmszfh3sdahgAEX2W8/NL78B3f9QP44sNX7SKlZzbZP2jAnzbaN2Xqa7OP7xzzeHscxs0wjnR35ayDxGtn/n1a+pVuk36enX8KZm8bGYsaAhB8tZCHjO3Jafesnz7LpD+TOnyfKX0oC+/ysT8bx3zaD+NmGDM8Z7q7SMCBLOAFuD7gGj8k+E929174mT3wVoYQMhACEKycv/xXfgDf8MEPp8vDW7eN+NbOur8K6ttyzu/o+/HsMGY7jNnG0ZndIQAgIABGSwA2gk4d+k4M+Xma8pcu9dPPntmDsatfGIQABOvkR3/s7+G1R2N3tb/447uT3Z8X9W0++ouHfjzrh5HDMDLnDJfKzgcBEcaWPQABS4KfufxPHfL4N09s8/pzY/6FvdkeijjgaSAKgZ5SHrz9BvdXb99i4ocpfOsw5Hce+vF0GDPHMTNnh3t50pdUfq7/lih1BPXKTxAbuD6Qc/5Iznrh7MEV7j74cixyCECwVu4/fKCUdG9j/CZB7855PB3GwfKYmd3hcgACpxv9HNMfCUH5TQJ4BuDDcHsvDElRJxACEKyXi0eXHLy/B88vQjqTkNwF9xFyb8V80KL2h4v/n/+QMAEGP5HwEjS+OGzPuqu7L8ciRw4gWK2yG3j16Pr26ba/e3rWbUWRAFvID6j8hgBZQn4vRz2gVu3L8jVmyAamLp0LelbcmG/PYpFDAILVfrCj8Sofzi5PLs+SJUOXWO71BmO981NIIJAItc2PKSUIgDVakHY0Z1Iah8MtuLM7jLHIIQDBWrl6dG39dnPy8OHFjmY8PT8HLSGlBIJIdDgMqqc/62OA0WBmSFb+TBRAETQM+4NpHHejH9I4DLHIIQDBWnkz0VIeOz9cd5vrzrouabM9YeoSEhOgkv6hlf8zI4yGrktIlurPJQmYOeJ6P2Lsewjs1I92uNzHIocABGvl+d12+NL+4MyZfd/zcNgTSNjVUz6lBKSy6ZMZUjJ0XYeu22DXJWxSApNByDgcevSHC7iLUuY4Qu9/79fGIocABGtlVDaAJglDP9rh0MPQAXJ03QbsiI11SIlIKWHTJWy3G2w2W2ybABiQnRhKuG+Cw6HUj5fpA+9/KRY5BCBYKxd7GU0bCcklDMMIs740/deXPxoA62A25f9LAtAMSAaaIBkkA0VBoFwJAK73h1jkp4CoA3hKydgLNEjAqOzZHTlnZM8Y84h+HNCPA8ZxRPYM9wyvBUIulepABwSBEMpjoJIAntrGf/kXPhWLHAIQrBWNI0BuBHVwwF1wqWxwd/hYf3ZHqQysm74UCpRf1+6gWkGALBgy7ED3+xavACEAwXrvdud3aok/OwdYQn+fT3nMAgBvG36Sj+kHW/uvkwJ2Tk+mTl0+j0UOAQhW+8Emtm6fDVwmzRFAO+Wh4+0+JQEmHRBMVhsFBeSc3H1DT9hiF4v8NBwUsQRPJ8NwCrDfEVZDep9CfMknZ99px6ts+KkKUKVEOJc7QP0SR85KKR3ALuoAIgIIVstZuvAM2wuSE7W+v0UBOj71F4E/Fm3BjnryQ4ALnmVIZuqvh3OPV4AQgGC15JzMyEQyQWCeooCWA7gR+i/UgLVBqPy6qEd5A0THnHH7uef0qd/8dCxyCECw2iuAOhHaSdq0pzx3QNPOL9cAI4snQIsSWghAls2vdgUgHEoJ3I2nZ/jpn//5WOQQgGCt9GYkfAuiK/tYc3yv1gM8pwGWp35JB6j1DoNWEgKEuQPdsB/t9q07scghAMFa6byX04TazNdO+OOLf236tRYFtBQgIZUEoETIy/kPA2nE9dtv5r/2wz8SixwCEKw2B3B5CcJGAHb03Md6n29mYC0QmE0AFk+Bs0eQADicOWeedZ3edRqGIE/FQRFL8HTy3PkZ35QjgeN88M9PfyRLC3Aq/f+0owKA8lWtGrAqgIkglPenJzzcCwEIAQjWGwFAAhxic/bAYvMvft0iARE2WYSW5J/XLgD3Kh8SaAZdjdDldSxyXAGC1QrAhkY3QNXqvwmAdBzh1/jfWtafgFz1IaAIgmy+G7jkScTOUyxyRADBWtmPvcguA3JpmfHndPK39P9x+D9HCK0/oNUCsZiJ2DD2OPRRCRgCEKwXzy7rnILzsSyfpuQf1TwAysaXNNUAlDoAlNLhKhsOV7cVtqcxGSgEIFgt/R7kiVBcgeYTfe4BWN4DptsBjiYAu9dygUkcBFHb7DofYmJ4CECwWtLO4KRBxdEXEliP+/Yi0MZ/tR6AMhtgTvgto4VSI2jM7thst7i9PY1FfgqIJOBTSk4bUCJYHgRElqKeup/LX7WLwTwgrPT95ClfoKlxiIAcJOwA4S3FeOCIAILVMnbArgckpGXV7xT421e4CdSQv90JJE4VhATRyfz+ruP9uxEBRAQQrJYXhl6ZnLv86xVgecU/rgomyss/j/MEiyuDzCFmnT7c+Du+EI5AEQEEq+X+dgvbS2B5BWh3/VIeVN76+djhz9r4OwsEWyQA1K5AszPucW4xGiwEIFhvaLcfUraNTac5AcJqfz+O3v514ybweFFwVY5yn7AHyflamILGFSBYL5uT23D3rnzGizNd9UPXkzY8F5u+tQ97bQQqf+/uNOy45b1Y5BCAYK1cPhw8GXwq6MH8nr9MBKjG+VzUCC3Hg7cvUn0+UDL3/n4eH34uFjmuAMFaYc4SzMni6/HY39fEAKsj0PLe3/Z9E4xZGwTI/ITUGaISMAQgWC39HetOR99McV496Y+1QE/4M0xFQVNAsBABl3dn3Ul36+Q0kgAhAMF6QwCqHuyaNv/ymF+EBU86y0vIr/Jl3iIDAib62HHYb2ONIwcQrJVbwwGlDRCJPM74qzUCLkYD8GYIgDJJaBoXhvb1xJiv8nX/RixyCECwVnZi1rzFp43dOgCXLkF87C2Acy+AAK8Owqr+ggRlUQkcV4BgxTkAKFmr6XUBiVMS4GgmkOrs36PJgKp1/8ULjOScHJRsv+ns+sw8VjkigGCtH2zqysbHstNnHvfdAv2SKuDR0yCrZ+A0MFRTOxAgGVMidiexyCEAwVrRaZdby4/maz1oLDmAxavAk0aEqRYItJ/bf8QIHz371XU4AsUVIFgth0d7GDeCZICOXgCoNvgDkycAMHsAtl9PUT8xVQMyC+O9W/niubuxyBEBBGvlxBNBNxBqd/lFX28d+Y1F2I/paVDQlP33yQ+wFgx1yU7fvm8v/I/fjUUOAQjWissNCy+fmzG+Hc0BO34GXEYBtnggMAAOdalL3flJ5ADiChCsWdspFk+fmzo/ZfWPBGMuGGxtwHMScB4tTiCPPo79dYwHDwEIVgvlTqT6AKjZEICL0t6201kl4kbB0NQDUJ8EzQiQ46knP80RAYQABKtFygDMyru/LY51PMEZuNqE16EhrFHC9HLA8nIgEiZtLlKyL1kXdQAhAMFqBeC0S8okqXx8nv9RYQMXFwgrFmG1fbjND8hAOjffPJMUd4Cn4aIYS/CUXgGQRyQ5wPTETb7I7JdqwGX0gNkToDUDqSQKCBs3Qr4TpcAhAMF66V2ieAWoP97dk0IcFQEdG4SW+v92Y8BcRQwC+yzmfY41jitAsFpO+gH77a4nNBjL1p0MPtrTXz3iRdWTQFOeoHgGHncJlPFhfvlou9WXTnexyBEBBKuNAF56EfS8FzDq5js/WSr76xWAmn2B62jAKgelWtCk1huQTbwadhtcxFyAEIBgvWyvroC6tW+++x898d3MHVTjEC6sgpqBOGkE5Mkz0hC24CEAwWq5PjsFNJboH7M50CQCbG2/x+HB8UwQzrbB7bqQ0mZzdc1br7waixwCEKz2gz30AM0EpVL5M7f8FqNPHQ0EKZt/9gqXvF4BWH7dwgKJMiM2kT4KAQjWCwVQjjrXR1ORzzwSdO701ZQbaFHANCGo+gWUwiCCcplDO21ijUMAgrXi57eh0Q1Q1zZ+cwiVVEaDEQtRwKLyb/Hfqe+Aqsc/LNn+/pf19u98OhY5BCBYK3deu4JSSmzBvh3tccBmezAtxwQtgwgUx6DpqwjSmIgOyPEK8DQQF7mnlGED8ICu2X7J55tBO9Nv0nIAWngItukA7eLgY8+7d1/i8+ffGLWAEQEEa0V2AJyQRGiKA7CcBqBWB7DIB0yTgOvG18Iz3F2UkmgX5Mn/jEUOAQjWyispIUEimZYVfUcnf0kPlm3O4zvANAuAsyMIy6jQdHKy8xfvPRuLHAIQrJV7j/Zw0qUyHWQeAjIP/FwODJm2f50XOBmJSqVZqNwlKEgdNzjb3Y5FDgEI1srmagckpbkK8Eb3Dxfv/tNNX9Mk4GlqMFisw42ASwbYxSXsi3+YYpFDAILVCsD2LbjKLi+9QJp+qKb/2URgMf7rOBwAREFiHS4CpdTpOj9Irx8+E4v8FBCvAE8p6fw21IvT2/9iZxOcrL5ZhwQu7/rAbBo6RQD1t67M003SbhfPgCEAwWrZlnbe/MTOn5uegHUAyPRK0H4tLYIBAjBPhD/UNr/1iLHIcQUI1sr12MFKv69NPf6tHUALow/No8Cw0AmvSUJO/cGCQQA7f8cp+XP/8h/FIocABKsVgIcdYN6RnJp6tUwC+nT4QyiW35hOfCKZFVGogwGKQQggydhtN2IkAUMAgvXyDoAOSaotwTyu9OXC8w+Lp8EyAxzuXv+e1TGYAGikJ25PdbHvY41DAIK1cns8IDtHABTrCHByGvmt5YiwNi2YpTqwzQxjGQY6G4iSLnJ865XXxn/6D/9xLHIIQLBWtLsNmlvd7TieD1htwDQ/A9qUHNB0JRCEZv6vYhIqg/lw3fNDH/pgLHIIQLBWsjIoplbiM1n9TAe/MKUHsKwRKsJgmGcBLOYDmrKndMoOMRckBCBYcQTQ78Fki+d/VqMPTOG/ptwAjwuBCGQ5ah0R3AF6eRh0qjvdbdIfvPpKLHIIQLDaD/b0DHD5bPK7GPs1mXyWLkEtsv+YqgQJtYEg00sBajlwGn/7Nz8XixwCEKyVIQHIcx+QFp1/rca/RARzDcDSGGTZDbiYEGCA0SGc3I3hoCEAwWpJjy6gZDtM1b7zqY8qCM0STPVuMBUMetv8ZS5YGxNebxCdp8329155PRY5BCBYK7e6joLyFAIclfzy8U+emK4BJfwX3AV3wtvzIMo0obPzc/7kv/6JWOQQgGCtXBjFkgOQ2rCPKfTXVOBzszrIFzkBVPWgHJTDXRiofAIfbu9iNFgIQLBaRizmeYrgzd6dZvQBLMp8fSoPriMAQJU/L0oCwpF6OnqPyUAhAMFqkTtEJpTh3lN4f+QAvqj/bwd+yweoCoLD6xghQe4iZeq5OdvdikUOAQjWCt+8BhMT2T5jVqef+gqwDP+bG7COpwSRhNEmC3EjJQfuP3yz+zs/9qOxyCEAwXoVYIDEsRX/tA3fhn5OFuB1s7dXAbG9ALQogVNkIIKij72s//Zv/nCscQhAsFZu3dqg1PJRtjjRYbW7j4RnXzz5YcoaTJGCVC3Bqjh4JgUMVL4aohswBCBYLRd5C5NbO9Mnww/NUX/pB/LJ/HfKHzRT0FovLJQkYPlPWafDuDWPuSAhAMFqGW5tSNCE6Qn/aPjH1BjgAL7CXq5bvw4Xd4hyGKxL7O4/eBCLHAIQrJVNSellLl7656fA49eAuRFothAlAGaU6l+USkKKBDicbrv+P3ziF2ORQwCCtXKv28DlGcXebzEWfDL3qBtfi7C/lPzaNEm4uANb/dcuGXz0vTh+24cjCRgCEKyWvu/bkS+CoM2JPqGMBz+uCZhrA8rGB5jqXIAqCAQcsOSXh/SBd78nFjkEIFgr1/shEexaxK+l918z+azvg/Of1r9rb4bVNagZh2R3KLulLqUHF5exyCEAwVoZ0qmXjn4Y2jNeu9svfP7wRyTzJa/PgtUWnAYk6vR0o0/811+JRQ4BCNbK6eYgAbk6+9cP28rJz/LJm9k8AYisswBaIxBh1uzABVmtInL6SAwPlGORQwCCteLDCElJJQo4+rQNVk7z5WkP1cQgF3+C2gE03SFcwPZ6n7ff8U3fHIscAhCslavcJSN3ANKy5Xd2/wHM5t8/1hk8OYCUX1RDEYOJ6seTd9+5G4scAhCsl5whZFVT33k8uKrTb233bfm+lhAkj0QBQKsVhCODTuxOt+N//8x/iyUOAQjWymgAwGzz9L+Fv181B7H5CRA13J9DhdYFzMUfGWRwM+aH14dY5BCAYK3ctV0StNUUyC9MPomjScHLqJ+L6aGtdLgUBhGQDK5NArs3L65jkUMAgtVeAAY3UN3NHMCR/YeX0p5y+OtYDdovc7MCEmAQqc6JLbv41gkBCFbL7nTjgjlJL+E/jkaAl7E/mhRhmhm4eDRoNQMtfpADLvj++jp/9Nu/NRY5BCBYbwQwZhZrQJsMQebdPh3xulELNCUBWbwCSy9Q+b3RRHAEbNx2m1jkEIBgrUiJpKx5gEmGyfBrnvZbE4MOd6+dwpyaBbmcKeQEXBTQuSN5Dj+AEIBgvSQliNs6BRBLPxC2KcBeOgC9ugVNTUBg7QKsQ0Lr1BCnRGHnybeeYjhoCECwWjZMzfW7FvHUgp6a0ZemueFTa/DcAgwks1ZAAKfaUHGCzC2eCEIAgtXigjy34R7T6O+bycBpa7dqIB2H/mzDBb3FDX2W9WkTOYAQgGC17A9ZpXKH9dyvm73agTV/gKUUGO1GbqC8AmZXnRQsA5B2qcPnv/AHscghAMFaGYfDRuKOkJFeN7WBLMnAMi2oTP6ZYwFNVoFAnR5WzT9dgugQcbrbpJPf+J3PxCKHAASr/WA3nUjUWV/WIv3yzk/N7kCch4GgJv9arwCaTZhUBoQWawG5DLvNeSxyCECw2ghAeYDYA1Az/aQwRQDN/nPJclrQNEWYtUrQc00EqAd9HD0cgUIAgtUyqCep5WRw0PjYvX/e/PNIsKYGJfdXxoTXv6MEmiW/fuONWOQQgGCt3Dm7tRVwSsimF4DmC0hOo8KfJAZtOlAZFVa+wt0BiTRsRNvuDzEdOAQgWC3ddpsJZonlNc/Kj6YFX4lkNkUK06RgLSICUNfX1/bRP/c9scghAMFauXrjoQsYSeRqDD7tfE6RwLEa8DF1aIYhbVYgRNcw5KF/+V0vxyKHAARr5eTOeSv/TWwbGH4U5tdCwCd4gc2C0MqFq604RdJy4qY6jgchAMEKGd0TxC3BNDf22Gz+xydcBWp5sB3rQGkEmicGb3cnXffp3/p0LHIIQLBWDtcHA0VJeUrsA5M1mNmcAmQdFNKKhabBwHWQqOZqIQHgZtOlz372s7HIIQDBWhHhcviyzkcLEagVQMdhgM1NQ9PM8JoMVJsyBoyXV9f5Ix/9aCxyCECw2g82pZ7UqBr3z1eAObE3TQBoIcIUKtikCz4XBjczUTml07OzWOQQgGC1H+zGE2QbFfv/cpjzyPtnvhZw+RJQuwJrIGC0SSjq1GCjC7ttdAOGAASrJSl1okggC6XLz8ipx38qBCJmv8A2P3D6M2uJv3qtECCk3XaXfukTvxSLHAIQrJWTTRrKXMDi9TNd981AM9jcIDy1/lIsHcSzQtR+gDZPoDgD5HH0l158IRY5BCBYK2J2QAMXt/3S748nPgESzSDUUZqFmj9QvQ0QMJEE871nNf6zf/5SLHIIQLBWHjy4ZDH3kWiLgR9HHQBHViFtflD7q2oT1joJq204pavr8/Qd3/4zscghAMFqP1iedjIaBDZTD0NaFPRwavctG15HVYEtOdheA4shiEQxJdDe3sdkoBCAYLXszjeikESYFl7/RpuuArSFBZhZtQTkfAHQPBykNAeRApgS+YcP32KscghAsFYoB3yE4GxhvBlgc/3f8ZDAKXsALF8H2ld7Kw70sR8v8ze+9CMxGCAEIFgrW5y4S0k1rG+3eyNLPZA1XyAeDwq1NiKsiMHsD1i+zgE79OJHvyvWOAQgWC1ZfUdaYnX0oM3PedSNwh8+Pj20VQ7OxUMCKBq4OdmcdL/0yV+IRX4KiJ7Op1XZmVgn+5nqKDCrEYCZFfNPGuba/yN74KNx4tZyACgDRDKE7XYXixwRQLBarjnUQN6mBz4r4f/CKfDo9C/Pfl6rActVwL2WBXudMgp6StTb99+ONQ4BCNbKwBEQVa7tmseAqZz+j7EcHnijSkjLgiDA4clN8QgQAhCslgQYqA2gEuljfgq8ucGbV2C77pf8n9CuDs0PEC4YsQW1Pb91KxQgBCBYrQCcdKm4AZVTf9r7esz1D/D62EcW17A2R4A4yg3IBIc6SWl3chKLHAIQrBU6JBVzby0m/GCaBKzFvb/5f2i6/6s+D3JyDppGjI9m1r/11ptRBxACEKyVw/BoFGzkIpvPFto/NiF4eepzOv2noeA1VoAICu7uSkyxyCEAwVrJxb5jKu1ZBPzVHJiPdQXejAxsUSnIliMgkme3d7/8rljkp4CoA3hKkbglsZkO77bvrT4HLlx/6uSP+g+PLhKlXsBmR2GKHanN28qxyBEBBOtNAsirm0992FMp/dW069Eygu2Rj4tcQPEH0Owk3KaKQxrHrHe+8GKscQhAsOIPNoMYWTt7VAt6pgP/WANK8r9VBddnP2pZJjwlC/vsuX/fs8/FIocABKv9YGUG4aRYftTsPxbuv1x2A9ZhIFPab7oBwJtPQDURo2lzAk+/eH4aixwCEKyV3r1jGwvmi00tTc6/WrzxO9Cy/Ee5f2uFQy1n4Oxk3eb0lVejECgEIFgrw9h7C/dlbe9rrvRd5PxKuH/8rL8UAYCgTf0BstTx0euvRx1ACECwVjZjN4rat9NbQBkHxsWmJo98AOcLQU0YotUPONhswWCj57HX170nFjkEIFgtZ5DJfDL+FCA93gHYXgGOPEGqR8ByepiMgBFGZdv1fvitr401DgEIVv7JPsLC9Uvy6S4/VQa2U741/KA9CFZzcMfkEFymAnALdNuTh9EOHAIQrJbkqeT0BTg1Pe/NXUGYpgXNW37xFIj6dDi5BLPmAN2GcWMvvvzrscghAMFaqSO91fwAywkuWLv7sxT3tF+3mwEXhQJtUIi0yAuII6F8fx/fOiEAwXo/WC8jgY5TfDx2/mqFgsvI4MbrgFRVoVQKuQGg6LsuXgFDAILV4gY4kYA24rvYfZVBYc3nj4uJQagzATD1CTVvQNVsoChzonPDLim6AUMAghV/sAYDrdX1Tyagi3Lf8vEvegWnlH+xATdyvhK0AYEQk+Xtq6/cjUUOAQhWnAUo7v71pNfkB4BFElDzaPD6d+3387t/2fyJqs8CPBDpQPxB3AFCAILVXgE0qcB04desDTUrMF/6S4SwuP/XpGGLBnIRjJHACChbOo9KwBCAYK1sUoJUzADl816ltae/Rea/PvHpxpCg0vwDCHnOF5AJsNPN5lEscghAsFb+wvf8WVxd77k47msgIDgWzYCLKwNvGIYKqI1EVtTBRUkJYkp2Hd87IQDBWjk92UESIcDMph3Pr/ih89geDCX0l9jGizR5GB3ep809j1UOAQhWyid/7bew225blg9mrM1AVvKATRDaDxxPB1t+h6j+zwEHOVLOxJgLEAIQrJbPfv73sNt0c3hfj3Ut7v3Tq4Bw4+Z/5BVSvktEGo1wJTnt1vkQAhACEKyV7XYLrz5A00Zv23tZ/HPTGXj6uboE1ULAMjVcIxKSkbv7Hvs/BCBY/+crzqYfwM2pYI8JwNQheFT/X64HLiUTHMkHf/MscgAhAMFqKU99uTQEcDrdKc5OvzftQHj871VHgpOCmcAEgBhdxJ1711ELHAIQrJU65COVvVzLeutYsDYdSI/dDXB0F2jDQKqhiBLplJlZSvTLKAQKAQjWGwD4dNIDKjP+rIwL1RPGgy9vApN1QD39i6AQLiPIBEd3OD+L750QgGC1AlBK921y+31C0H9TAuYJAO1JkJBxygO06QKJ4IMhbgAhAMFqGTIAcLBp+kdrCf4/u0awPP5D9JZZGA/j0H/Ln/iamA0WAhCslXc9fxc5u2mq+W21/AKWdQDLDd++VvVCYM0cqMYNLoCSy3y7HyIHEAIQrJXn792Cq9z2rW5gK4ZgpatXenLlX7v/s5z+hFoeoNgBAZvNJm0+8/orcQcIAQjWytX1dfH8kyADaOl47Fe99x8VAra/pyYfwJYTKLVDBoluEOExGiwEIFgtv/vZ38UmdRIJmiEZkDpDSh2qUxgAPyoFtvkuUMSBhC++VQyCiSTT0D16EIv8FNDFEjylyl46AEvmDoSlhG3XIaUE0kB7cilveQIkDGqmIvDSCiQvjYE5D+7jC89EEjAigGC1qMbytcDPSKRk6MxKV+DRF97oC5AmG0CoDAfJLkpAZobyyO3zz8f3TghAsFq+4f3wfnC08d6qTgBmi/mATzz/J2GgtzyAA6KqO4CjI4fX34xuoBCAYK3weg8z1Jp+IhlhBqTJ/p9YzAD5Cv8R1S1fXw1cgNO7lIYv3X8zFjkEIFgr/ughYOYAnUzF5tsMKVlp7f2KDiDzzaD0DeRiI+Yi6E5q5Kj9dbeJHEAIQLBWds8+B88Ouo8mIaVi8GlmoJUKH2pqGroRBgiiwGoH5i4I2d0hB3EgNt/4le8RQQhA8P+a9OqrQNfRiEwrjUFd8wasKQF/0rFfhWAyDm7zAQTzMmgkmbH70v23QwBCAIK1opwBqXdgnBqAaACXSUAdb3tpjghaNWDtIfCsagqCQ/bhcOfenSgFDgEI1srVfg8Ye4KjnAASUMYElNdBPX6ALxOC9PJU6AJyFpwuzz6a40DY4er6OgQgBCBYK2dnZ6BLIo2sPQAC5F5CerbCYAe8/JhyAeXVD9mJ7MKoETm7AMGZzcjN/S/HFSAEIFgt5+fncMBJLw/6Vt7ziTLsQy64OzwLrvLjOBoQBmX0w4BxyMg5c5RjlGNwSYoAIAQgWC3/9qd+Cue3b2UhDbQESwkgkLPDs0Nef9Se/6k6gKU+YMyOQ3/Avh+qCLh7HlxZY5eH/avPvzcWOQQgWCvf/0M/hKvLiyEljDTAPaMfRvTDiGEcMWZNMwOZimegsXw7uDsOQ4/9dY/rwwH9OMKZDQ5K2g8c/Z1vvDdCgKeAaAZ6StlvOxg4QnTPjjw6Dv1QIgB58QfcdGjjw40JdCF7xmEoG//R5TX2+z36fkQeHV7qBnrodMTwswA+HAsdAhCskt9/AJ3Z6C4N2XE4DBAcOTsEIFkCQXQpY/QRHAxZQp9H7Ic9LvcHXO8P2Pc98piRx0yHS4LMD7I/9vWL6SJBCECwKq4OxPYcLnIY+qyLwzW36qAs0IDOujrvzzHkAcYDkIE+D9gPA4ahR98POPQDhnGESy7HADIzD5n33hmbPwQgWO0H+wwg4AHIi9GHfHF53XV9AmHokmHTlYx+P46lPwC12d8zxuzI4zjnDDzDPUvknsJDdd1h89rrscghAMFaoXWQ+xclfU7A+9T3aRhJs4RN10FyuAujjbM/gAhH/fMxY8h58VoAEngTht+EeEAfAUAIQLBa7mDAFfD5veM/EviQpK9BptGqr49njJZrc1CbCCy4A3BHltBtNtgmQ9/3cPGhkb8M4VM7DcMt38cihwAEa+VEPXrgWtj8e4jvF/TXBd3tkDYGILswaABGTBEAYeX/jTg72eHs5ASPrvfIwoHEJwX9lFt6NWfCFYWAIQDBmu8AzRLw88r6CTg2IL7Px/xy2p50284wKBeTIBiMCRsaNtsNtpstYMDDi0d48Ojyyl2fIPkvbp9uPnEbYyY6mM5jjUMAgrWyPxwwwAEfRdqnyd0/yfAvZtpfvNhfvm+33d3ebNNmt91xYwkQ0W0JZeD+xUN/dHF9Nfr4Chz/CYZ/JcOvfvG3fyMrj7G4T9M5ETXdTycf//jHa1gv0DrunvsaHYA7gn9Ywnca9S0iXibtmZRwLhkgDIA/cuo1ir8BpE+kTp8k8FrOB3z8b/8t+pinb5j43okIIFgpZq3KW4BRQge/vnxodvmfcXrvV93xDggvZtc7s+s2JQB+SePbgl41pVdPhvv3+wSk288AmTg7O9PFw0exuCEAwVdfrAdg7CHbw4iHV9RDdv65F9ThQSaRsraeMO7vYsAInF7Ahj00ArgdCb+4AgRB8PRFirEEQRACEARBCEAQBCEAQRCEAARBEAIQBEEIQBAEIQBBEIQABEEQAhAEQQhAEAQhAEEQhAAEQRACEARBCEAQBCEAQRCEAARBEAIQBEEIQBAEIQBBEIQABEEQAhAEwf8l/tcAZjK0OHhqV0UAAAAASUVORK5CYII=';
 /* harmony default export */ __webpack_exports__["default"] = (SpriteOverlay);
@@ -56006,7 +56152,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
-/* harmony import */ var _interface_common_interface__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../interface/common.interface */ "./src/interface/common.interface.ts");
+/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -56136,14 +56282,10 @@ var Pano = /** @class */ (function (_super) {
      * @param data
      */
     Pano.prototype.resetEnv = function (data) {
-        // 开启陀螺仪模式忽略场景自身参数
-        if (this.gyro) {
-            return;
-        }
         var fov = data.fov || this.opts.fov;
         var camera = this.camera;
         // look at angle
-        if (data.lng !== void 0) {
+        if (!this.gyro && data.lng !== void 0) {
             this.setLook(data.lng, data.lat);
         }
         // scene fov        
@@ -56533,7 +56675,7 @@ var Pano = /** @class */ (function (_super) {
         _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].cleanup(null, this.scene);
     };
     return Pano;
-}(_interface_common_interface__WEBPACK_IMPORTED_MODULE_9__["default"]));
+}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_9__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Pano);
 
 
@@ -56549,7 +56691,7 @@ var Pano = /** @class */ (function (_super) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _plastic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./plastic */ "./src/pano/plastic/plastic.ts");
+/* harmony import */ var _interface_plastic_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../interface/plastic.interface */ "./src/interface/plastic.interface.ts");
 /* harmony import */ var _vr_assets_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../vr/assets.vr */ "./src/vr/assets.vr.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -56659,7 +56801,7 @@ var Button = /** @class */ (function (_super) {
         _super.prototype.dispose.call(this);
     };
     return Button;
-}(_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]));
+}(_interface_plastic_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Button);
 
 
@@ -56675,7 +56817,7 @@ var Button = /** @class */ (function (_super) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _plastic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./plastic */ "./src/pano/plastic/plastic.ts");
+/* harmony import */ var _interface_plastic_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../interface/plastic.interface */ "./src/interface/plastic.interface.ts");
 /* harmony import */ var _vr_assets_vr__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../vr/assets.vr */ "./src/vr/assets.vr.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -56811,7 +56953,7 @@ var Icon = /** @class */ (function (_super) {
         _super.prototype.dispose.call(this);
     };
     return Icon;
-}(_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]));
+}(_interface_plastic_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Icon);
 
 
@@ -56828,7 +56970,7 @@ var Icon = /** @class */ (function (_super) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
-/* harmony import */ var _plastic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./plastic */ "./src/pano/plastic/plastic.ts");
+/* harmony import */ var _interface_plastic_interface__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../interface/plastic.interface */ "./src/interface/plastic.interface.ts");
 /* harmony import */ var _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../plastic/text.plastic */ "./src/pano/plastic/text.plastic.ts");
 /* harmony import */ var _shader_plastic_shader__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../shader/plastic.shader */ "./src/shader/plastic.shader.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
@@ -57025,7 +57167,7 @@ var Inradius = /** @class */ (function (_super) {
         _super.prototype.dispose.call(this);
     };
     return Inradius;
-}(_plastic__WEBPACK_IMPORTED_MODULE_2__["default"]));
+}(_interface_plastic_interface__WEBPACK_IMPORTED_MODULE_2__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Inradius);
 
 
@@ -57041,7 +57183,7 @@ var Inradius = /** @class */ (function (_super) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _plastic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./plastic */ "./src/pano/plastic/plastic.ts");
+/* harmony import */ var _interface_plastic_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../interface/plastic.interface */ "./src/interface/plastic.interface.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -57100,106 +57242,8 @@ var Light = /** @class */ (function (_super) {
         this.helper && pano.addSceneObject(this.helper);
     };
     return Light;
-}(_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]));
+}(_interface_plastic_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Light);
-
-
-/***/ }),
-
-/***/ "./src/pano/plastic/plastic.ts":
-/*!*************************************!*\
-  !*** ./src/pano/plastic/plastic.ts ***!
-  \*************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
-/* harmony import */ var _interface_common_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../interface/common.interface */ "./src/interface/common.interface.ts");
-var __extends = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-
-
-/**
- * @file 内置物体材质抽象类
- */
-var Plastic = /** @class */ (function (_super) {
-    __extends(Plastic, _super);
-    function Plastic() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    /**
-     * 重新这个方法可以改变行为
-     */
-    Plastic.prototype.getPlastic = function () {
-        return this.plastic;
-    };
-    Plastic.prototype.setPosition = function (x, y, z) {
-        this.getPlastic().position.set(x, y, z);
-    };
-    /**
-     * 外部动画会用到
-     */
-    Plastic.prototype.getPosition = function () {
-        return this.getPlastic().position;
-    };
-    Plastic.prototype.addTo = function (obj) {
-        if (obj instanceof Plastic) {
-            obj = obj.plastic;
-        }
-        obj.add(this.getPlastic());
-    };
-    Plastic.prototype.addBy = function (pano) {
-        pano.addSceneObject(this.getPlastic());
-    };
-    Plastic.prototype.removeBy = function (pano) {
-        pano.removeSceneObject(this.getPlastic());
-        this.dispose();
-    };
-    /**
-     * 设置透明度
-     */
-    Plastic.prototype.setOpacity = function (num, useanim) {
-        var material = this.plastic.material;
-        useanim ? new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__["default"](material).to({ opacity: num }).effect('backOut', 500)
-            .start(['opacity'])
-            : (material.opacity = num);
-    };
-    Plastic.prototype.lookAt = function (position) {
-        this.getPlastic().lookAt(position);
-    };
-    Plastic.prototype.show = function () {
-        this.getPlastic().visible = true;
-    };
-    Plastic.prototype.hide = function () {
-        this.getPlastic().visible = false;
-    };
-    /**
-     * 子类必须调用 super.dispose()
-     */
-    Plastic.prototype.dispose = function () {
-        var plastic = this.plastic;
-        var material = plastic.material;
-        delete plastic.data;
-        plastic.geometry.dispose();
-        material.map && material.map.dispose();
-        material.envMap && material.envMap.dispose();
-        material.dispose();
-        plastic.parent && plastic.parent.remove(plastic);
-        _super.prototype.dispose.call(this);
-    };
-    return Plastic;
-}(_interface_common_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
-/* harmony default export */ __webpack_exports__["default"] = (Plastic);
 
 
 /***/ }),
@@ -57214,7 +57258,7 @@ var Plastic = /** @class */ (function (_super) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _plastic_plastic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../plastic/plastic */ "./src/pano/plastic/plastic.ts");
+/* harmony import */ var _interface_plastic_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../interface/plastic.interface */ "./src/interface/plastic.interface.ts");
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -57328,7 +57372,7 @@ var Point = /** @class */ (function (_super) {
         delete this.plastic['wrapper'];
     };
     return Point;
-}(_plastic_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]));
+}(_interface_plastic_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Point);
 
 
@@ -57344,7 +57388,7 @@ var Point = /** @class */ (function (_super) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _plastic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./plastic */ "./src/pano/plastic/plastic.ts");
+/* harmony import */ var _interface_plastic_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../interface/plastic.interface */ "./src/interface/plastic.interface.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -57464,7 +57508,7 @@ var Text = /** @class */ (function (_super) {
         _super.prototype.dispose.call(this);
     };
     return Text;
-}(_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]));
+}(_interface_plastic_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Text);
 
 
@@ -57564,10 +57608,11 @@ var Indicator = /** @class */ (function (_super) {
     __extends(Indicator, _super);
     function Indicator(pano) {
         var _this = _super.call(this) || this;
+        _this.azimuthal = Math.PI;
+        _this.polar = Math.PI / 2;
         _this.lock = false;
         _this.pano = pano;
         _this.theta = pano.getLook().lng;
-        _this.azimuthal = Math.PI;
         var Topic = _this.Topic;
         _this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.LOAD, _this.createDom.bind(_this));
         return _this;
@@ -57612,8 +57657,13 @@ var Indicator = /** @class */ (function (_super) {
         pano.gyro && pano.gyro.makeEnable(false);
         var orbit = pano.getControl();
         var azimuthal = orbit.getAzimuthalAngle();
+        var polar = orbit.getPolarAngle();
         var target = { azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal) };
         this.lock = true;
+        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ polar: polar }).to({ polar: this.polar }).effect('linear', 400)
+            .start(['polar']).process(function (newval, oldval) {
+            orbit.rotateUp(oldval - newval);
+        });
         new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ azimuthal: azimuthal }).to(target).effect('linear', 500)
             .start(['azimuthal']).process(function (newval, oldval) {
             orbit.rotateLeft(oldval - newval);
@@ -57622,9 +57672,9 @@ var Indicator = /** @class */ (function (_super) {
     };
     Indicator.prototype.end = function () {
         var pano = this.pano;
+        pano.gyro && pano.gyro.reset();
         this.lock = false;
         this.setTheta(this.theta = 180);
-        pano.gyro && pano.gyro.reset();
     };
     Indicator.prototype.dispose = function () {
         _super.prototype.dispose.call(this);
@@ -58066,7 +58116,7 @@ var Multiple = /** @class */ (function (_super) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
-/* harmony import */ var _interface_common_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../interface/common.interface */ "./src/interface/common.interface.ts");
+/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -58156,7 +58206,7 @@ var Rotate = /** @class */ (function (_super) {
         catch (e) { }
     };
     return Rotate;
-}(_interface_common_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
+}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Rotate);
 
 
@@ -58171,7 +58221,7 @@ var Rotate = /** @class */ (function (_super) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _interface_common_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../interface/common.interface */ "./src/interface/common.interface.ts");
+/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
 /* harmony import */ var _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../plastic/text.plastic */ "./src/pano/plastic/text.plastic.ts");
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
@@ -58420,7 +58470,7 @@ var Thru = /** @class */ (function (_super) {
         pano.overlays.reMoveJudgeFunc(this.jdid);
     };
     return Thru;
-}(_interface_common_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
+}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Thru);
 
 
@@ -58441,7 +58491,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../plastic/light.plastic */ "./src/pano/plastic/light.plastic.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
-/* harmony import */ var _interface_common_interface__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../interface/common.interface */ "./src/interface/common.interface.ts");
+/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -58455,7 +58505,6 @@ var __extends = (undefined && undefined.__extends) || (function () {
 
 
 
-// 聚光灯
 
 
 
@@ -58554,7 +58603,7 @@ var Wormhole = /** @class */ (function (_super) {
         _super.prototype.dispose.call(this);
     };
     return Wormhole;
-}(_interface_common_interface__WEBPACK_IMPORTED_MODULE_6__["default"]));
+}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_6__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Wormhole);
 
 
@@ -59059,7 +59108,7 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var _interface_common_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../interface/common.interface */ "./src/interface/common.interface.ts");
+/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
 /* harmony import */ var _pano_plastic_text_plastic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../pano/plastic/text.plastic */ "./src/pano/plastic/text.plastic.ts");
 /* harmony import */ var _pano_plastic_button_plastic__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../pano/plastic/button.plastic */ "./src/pano/plastic/button.plastic.ts");
 /* harmony import */ var _pano_plastic_icon_plastic__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../pano/plastic/icon.plastic */ "./src/pano/plastic/icon.plastic.ts");
@@ -59462,7 +59511,7 @@ var Divider = /** @class */ (function (_super) {
         root.removeChild(this.enterBtn);
     };
     return Divider;
-}(_interface_common_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
+}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Divider);
 ;
 

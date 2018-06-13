@@ -1,4 +1,4 @@
-import PubSubAble from './common.interface';
+import PubSubAble from './pubsub.interface';
 
 /**
  * @file ui interface defintation 

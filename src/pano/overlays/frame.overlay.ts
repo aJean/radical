@@ -1,5 +1,5 @@
 import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
-import {IPluggableOverlay} from '../../interface/overlay.interface';
+import PluggableOverlay from '../../interface/overlay.interface';
 
 /**
  * @file 全景序列帧控制器
@@ -12,27 +12,25 @@ const defaultOpts = {
     auto: true,
     inverval: 60
 };
-
-export default class FrameOverlay implements IPluggableOverlay {
+export default class FrameOverlay extends PluggableOverlay {
     textures = [];
-    data: any;
     limit: number;
     index = 0;
-    particle: any;
     enable = true;
     finished = false;
     lastTime = Date.now();
     type = "frame";
 
     constructor(data) {
+        super();
+
         this.data = Object.assign({}, defaultOpts, data);
-        this.particle = this.create();
+        this.create();
     }
 
     loadTextures() {
         const loader = new TextureLoader();
         const data = this.data;
-        const count = data.count;
         const url = data.imgPath;
         const limit = this.limit = data.count;
 
@@ -52,7 +50,7 @@ export default class FrameOverlay implements IPluggableOverlay {
             depthTest: false
         });
         const plane = new PlaneGeometry(data.width, data.height);
-        const mesh = new Mesh(plane, material);
+        const mesh = this.particle = new Mesh(plane, material);
         
         mesh.position.set(location.x, location.y, location.z);
         mesh.renderOrder = 100;
@@ -62,8 +60,6 @@ export default class FrameOverlay implements IPluggableOverlay {
         } else {
             mesh.lookAt(data.lookat);
         }
-
-        return mesh;
     }
 
     update() {
@@ -110,17 +106,5 @@ export default class FrameOverlay implements IPluggableOverlay {
 
     play() {
         this.enable = true;
-    }
-
-    hide() {
-        this.particle.visible = false;
-    }
-
-    show() {
-        this.particle.visible = true;
-    }
-
-    dispose() {
-        this.particle.geometry.dispose();
     }
 }

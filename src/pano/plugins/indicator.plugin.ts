@@ -9,7 +9,8 @@ import Tween from '../animations/tween.animation';
 export default class Indicator extends PluggableUI {
     pano: any;
     theta: any;
-    azimuthal: any;
+    azimuthal = Math.PI;
+    polar = Math.PI / 2;
     lock = false;
     
     constructor(pano) {
@@ -17,7 +18,6 @@ export default class Indicator extends PluggableUI {
 
         this.pano = pano;
         this.theta = pano.getLook().lng;
-        this.azimuthal = Math.PI;
 
         const Topic = this.Topic;
         this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.LOAD, this.createDom.bind(this));
@@ -70,9 +70,15 @@ export default class Indicator extends PluggableUI {
 
         const orbit = pano.getControl();
         const azimuthal = orbit.getAzimuthalAngle();
+        const polar = orbit.getPolarAngle();
         const target = {azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal)};
 
         this.lock = true;
+        new Tween({polar}).to({polar: this.polar}).effect('linear', 400)
+            .start(['polar']).process((newval, oldval) => {
+                orbit.rotateUp(oldval - newval);
+            });
+
         new Tween({azimuthal}).to(target).effect('linear', 500)
             .start(['azimuthal']).process((newval, oldval) => {
                 orbit.rotateLeft(oldval - newval);
@@ -83,9 +89,9 @@ export default class Indicator extends PluggableUI {
     end() {
         const pano = this.pano;
 
+        pano.gyro && pano.gyro.reset();
         this.lock = false;
         this.setTheta(this.theta = 180);
-        pano.gyro && pano.gyro.reset();
     }
 
     dispose() {

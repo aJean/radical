@@ -1,4 +1,4 @@
-import PubSubAble from '../../interface/common.interface';
+import PubSubAble from '../../interface/pubsub.interface';
 import Text from '../plastic/text.plastic';
 import Tween from '../animations/tween.animation';
 import Util from '../../core/util';

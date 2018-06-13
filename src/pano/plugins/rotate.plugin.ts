@@ -1,5 +1,5 @@
 import Tween from '../animations/tween.animation';
-import PubSubAble from '../../interface/common.interface';
+import PubSubAble from '../../interface/pubsub.interface';
 
 /**
  * @file 漫游插件

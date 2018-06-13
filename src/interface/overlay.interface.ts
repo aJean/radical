@@ -16,6 +16,29 @@ export interface IPluggableOverlay {
     dispose(): void;
 }
 
-export default class PluggableOverlay {
+export default abstract class PluggableOverlay implements IPluggableOverlay {
+    type: string;
+    particle: any;
+    data: any;
 
+    abstract create();
+
+    abstract update(x?: number, y?: number): void;
+
+    show() {
+        this.particle.visible = true;
+    }
+
+    hide() {
+        this.particle.visible = false;
+    }
+
+    dispose() {
+        const particle = this.particle;
+
+        delete particle['instance'];
+        particle.geometry.dispose();
+        particle.material.map.dispose();
+        particle.material.dispose();
+    }
 }

@@ -1,19 +1,23 @@
 import {TextureLoader, MeshBasicMaterial, PlaneGeometry, Mesh} from 'three';
-import {IPluggableOverlay} from '../../interface/overlay.interface';
+import PluggableOverlay from '../../interface/overlay.interface';
 
 /**
  * @file mesh overlay, static return three mesh object
  * @todo normalization object
  */
 
-export default class MeshOverlay implements IPluggableOverlay {
-    data: any;
-    particle: any;
+const defaultOpts = {
+    width: 80,
+    height: 80
+};
+export default class MeshOverlay extends PluggableOverlay {
     type = "mesh";
 
-    constructor (data, vector?) {
-        this.data = data;
-        this.particle = this.create();
+    constructor(data, vector?) {
+        super();
+
+        this.data = Object.assign({}, defaultOpts, data);
+        this.create();
         vector && this.particle.lookAt(vector);
     }
 
@@ -25,31 +29,12 @@ export default class MeshOverlay implements IPluggableOverlay {
             transparent: true
         });
         const plane = new PlaneGeometry(data.width, data.height);
-        const planeMesh = new Mesh(plane, material);
+        const planeMesh = this.particle = new Mesh(plane, material);
 
         planeMesh.position.set(data.location.x, data.location.y, data.location.z);
         planeMesh.name = data.id;
         planeMesh['instance'] = this;
-
-        return planeMesh;
     }
 
     update() {}
-
-    show() {
-        this.particle.visible = true;
-    }
-
-    hide() {
-        this.particle.visible = false;
-    }
-
-    dispose() {
-        const particle = this.particle;
-
-        delete particle['instance'];
-        particle.geometry.dispose();
-        particle.material.map.dispose();
-        particle.material.dispose();
-    }
 }

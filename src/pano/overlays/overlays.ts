@@ -5,7 +5,7 @@ import SpriteOverlay from './sprite.overlay';
 import FrameOverlay from './frame.overlay';
 import Util from '../../core/util';
 import Log from '../../core/log';
-import PubSubAble from '../../interface/common.interface';
+import PubSubAble from '../../interface/pubsub.interface';
 
 /**
  * @file 管理所有场景下的覆盖物

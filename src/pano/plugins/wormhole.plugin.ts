@@ -1,14 +1,12 @@
 import { Texture } from 'three';
 import ResourceLoader from '../loaders/resource.loader';
 import Tween from '../animations/tween.animation';
-import Pano from '../pano';
 import Inradius from '../plastic/inradius.plastic';
-// 聚光灯
 import Light from '../plastic/light.plastic';
 import Shadow from '../plastic/shadow.plastic';
 import Log from '../../core/log';
 import Util from '../../core/util';
-import PubSubAble from '../../interface/common.interface';
+import PubSubAble from '../../interface/pubsub.interface';
 
 /**
  * @file wormhole space through effection
@@ -18,7 +16,7 @@ import PubSubAble from '../../interface/common.interface';
 
 const myLoader = new ResourceLoader();
 export default class Wormhole extends PubSubAble {
-    pano: Pano;
+    pano: any;
     onDetect: Function;
     data: any;
     pos: any;
@@ -29,7 +27,7 @@ export default class Wormhole extends PubSubAble {
     shadow: Shadow;
     direction = true;
 
-    constructor(pano: Pano, data) {
+    constructor(pano, data) {
         super();
 
         this.data = data;

@@ -44,8 +44,6 @@
             "type": "mesh",
             "actionType": "link",
             "img": "./chirst.jpg",
-            "width": 50,
-            "height": 50,
             "linkUrl": "http://www.baidu.com",
             "location": {
                 "lng": 180,

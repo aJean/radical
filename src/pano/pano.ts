@@ -7,7 +7,7 @@ import Overlays from './overlays/overlays';
 import Inradius from './plastic/inradius.plastic';
 import Log from '../core/log';
 import Util from '../core/util';
-import PubSubAble from '../interface/common.interface';
+import PubSubAble from '../interface/pubsub.interface';
 
 /**
  * @file 全景渲染
@@ -83,16 +83,11 @@ export default class Pano extends PubSubAble {
      * @param data 
      */
     resetEnv(data) {
-        // 开启陀螺仪模式忽略场景自身参数
-        if (this.gyro) {
-            return;
-        }
-
         const fov = data.fov || this.opts.fov;
         const camera = this.camera;
         
         // look at angle
-        if (data.lng !== void 0) {
+        if (!this.gyro && data.lng !== void 0) {
             this.setLook(data.lng, data.lat);
         }
         // scene fov        

@@ -1,6 +1,5 @@
 import { PlaneGeometry, MeshBasicMaterial, Mesh, CanvasTexture, DoubleSide } from 'three';
-import Plastic from './plastic';
-import Tween from '../animations/tween.animation';
+import Plastic from '../../interface/plastic.interface';
 
 /**
  * @file 文字形状

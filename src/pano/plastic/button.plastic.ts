@@ -1,5 +1,5 @@
 import { PlaneGeometry, MeshBasicMaterial, Mesh, CanvasTexture, DoubleSide, Texture, TextureLoader } from 'three';
-import Plastic from './plastic';
+import Plastic from '../../interface/plastic.interface';
 import Assets from '../../vr/assets.vr';
 
 /**

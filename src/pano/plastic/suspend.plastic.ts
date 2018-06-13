@@ -2,8 +2,7 @@ import { Scene, Mesh, SphereGeometry, MeshBasicMaterial, CubeReflectionMapping, 
 import ResourceLoader from '../loaders/resource.loader';
 import Log from '../../core/log';
 import Util from '../../core/util';
-import Tween from '../animations/tween.animation';
-import Plastic from './plastic';
+import Plastic from '../../interface/plastic.interface';
 
 /**
  * @file 悬浮球

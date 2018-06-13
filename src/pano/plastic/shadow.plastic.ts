@@ -1,5 +1,5 @@
 import { PlaneGeometry, ShadowMaterial, Mesh, DoubleSide } from 'three';
-import Plastic from './plastic';
+import Plastic from '../../interface/plastic.interface';
 
 /**
  * @file 阴影接收平面, 首先要有光

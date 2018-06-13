@@ -1,5 +1,5 @@
-import Tween from '../animations/tween.animation';
-import PubSubAble from '../../interface/common.interface';
+import Tween from '../pano/animations/tween.animation';
+import PubSubAble from './pubsub.interface';
 
 /**
  * @file 内置物体材质抽象类

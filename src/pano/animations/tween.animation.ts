@@ -1,4 +1,4 @@
-import PubSubAble from '../../interface/common.interface';
+import PubSubAble from '../../interface/pubsub.interface';
 import Log from '../../core/log';
 
 /**

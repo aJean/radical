@@ -1,5 +1,5 @@
 import {Geometry, TextureLoader, PointsMaterial, Vector3, AdditiveBlending, DoubleSide, Points} from 'three';
-import {IPluggableOverlay} from '../../interface/overlay.interface';
+import PluggableOverlay from '../../interface/overlay.interface';
 
 /**
  * @file 雨雪特效 overlay
@@ -18,14 +18,15 @@ function calcPos() {
     return Math.random() * 1400 - 700;
 }
 
-class SpriteOverlay implements IPluggableOverlay {
-    data: any;
+class SpriteOverlay extends PluggableOverlay {
     particle: Points;
     type = 'sprite';
 
     constructor(data) {
+        super();
+
         this.data = Object.assign({}, defaultOpts, data);
-        this.particle = this.create();
+        this.create();
     }
 
     create() {
@@ -48,7 +49,7 @@ class SpriteOverlay implements IPluggableOverlay {
         });
         material.color.setRGB(data.colorR, data.colorG, data.colorB);
 
-        return new Points(geometry, material);
+        this.particle = new Points(geometry, material);
     }
 
     update() {
@@ -75,21 +76,6 @@ class SpriteOverlay implements IPluggableOverlay {
 
     isEnd() {
         return false;
-    }
-
-    show() {
-        this.particle.visible = true;
-    }
-
-    hide() {
-        this.particle.visible = false;
-    }
-
-    dispose() {
-        const particle = this.particle;
-
-        particle.geometry.dispose();
-        particle.material.dispose();
     }
 }
 

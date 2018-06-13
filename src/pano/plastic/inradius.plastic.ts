@@ -1,6 +1,6 @@
 import { BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending } from 'three';
 import Tween from '../animations/tween.animation';
-import Plastic from './plastic';
+import Plastic from '../../interface/plastic.interface';
 import Text from '../plastic/text.plastic';
 import Shader from '../../shader/plastic.shader';
 import Util from '../../core/util';

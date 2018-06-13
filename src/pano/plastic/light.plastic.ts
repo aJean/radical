@@ -1,5 +1,5 @@
 import { SpotLight, DirectionalLight, PointLight, CameraHelper } from 'three';
-import Plastic from './plastic';
+import Plastic from '../../interface/plastic.interface';
 
 /**
  * @file 光源
