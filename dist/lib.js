@@ -54467,7 +54467,7 @@ var GyroControl = /** @class */ (function () {
         // landscape or vertical
         var orient = this.screenOrien ? three__WEBPACK_IMPORTED_MODULE_0__["Math"].degToRad(this.screenOrien) : 0;
         if (alpha === 0 && beta === 0 && gamma === 0 && orient === 0) {
-            return;
+            return this.orbit.update();
         }
         // 不是每次都会更新, lead to state will not be STATE.NONE
         this.calcQuaternion(alpha.toFixed(5), beta.toFixed(5), gamma.toFixed(5), orient);
@@ -54490,8 +54490,7 @@ var GyroControl = /** @class */ (function () {
      * 重置 gyro 和 orbit 控制器
      */
     GyroControl.prototype.reset = function () {
-        this.orbit.setAzimuthalAngle(Math.PI);
-        this.orbit.setPolarAngle(Math.PI / 2);
+        this.orbit.reset();
         this.camera.copy(this.oribtcamera);
         this.lastSpherical = null;
         this.enabled = true;
@@ -56339,7 +56338,7 @@ var Pano = /** @class */ (function (_super) {
         });
     };
     /**
-     * 在渲染帧中更新控制器
+     * 在渲染帧中更新控制器, 开场动画时刻 freeze
      */
     Pano.prototype.updateControl = function () {
         var control = this.gyro || this.orbit;
@@ -57653,18 +57652,18 @@ var Indicator = /** @class */ (function (_super) {
         var _this = this;
         event.preventDefault();
         event.stopPropagation();
+        this.lock = true;
         var pano = this.pano;
-        pano.gyro && pano.gyro.makeEnable(false);
         var orbit = pano.getControl();
         var azimuthal = orbit.getAzimuthalAngle();
         var polar = orbit.getPolarAngle();
         var target = { azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal) };
-        this.lock = true;
-        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ polar: polar }).to({ polar: this.polar }).effect('linear', 400)
+        pano.gyro && pano.gyro.makeEnable(false);
+        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ polar: polar }).to({ polar: this.polar }).effect('quadEaseOut', 400)
             .start(['polar']).process(function (newval, oldval) {
             orbit.rotateUp(oldval - newval);
         });
-        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ azimuthal: azimuthal }).to(target).effect('linear', 500)
+        new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__["default"]({ azimuthal: azimuthal }).to(target).effect('quadEaseOut', 500)
             .start(['azimuthal']).process(function (newval, oldval) {
             orbit.rotateLeft(oldval - newval);
             _this.setTheta(newval * 180 / Math.PI);

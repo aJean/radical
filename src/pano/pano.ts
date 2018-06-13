@@ -128,7 +128,7 @@ export default class Pano extends PubSubAble {
     }
 
     /**
-     * 在渲染帧中更新控制器
+     * 在渲染帧中更新控制器, 开场动画时刻 freeze
      */
     updateControl() {
         const control = this.gyro || this.orbit;

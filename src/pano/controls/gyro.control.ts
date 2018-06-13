@@ -96,7 +96,7 @@ export default class GyroControl {
         const orient = this.screenOrien ? TMath.degToRad(this.screenOrien) : 0;
 
         if (alpha === 0 && beta === 0 && gamma === 0 && orient === 0) {
-            return;
+            return this.orbit.update();
         }
 
         // 不是每次都会更新, lead to state will not be STATE.NONE
@@ -123,8 +123,7 @@ export default class GyroControl {
      * 重置 gyro 和 orbit 控制器
      */
     reset() {
-        this.orbit.setAzimuthalAngle(Math.PI);
-        this.orbit.setPolarAngle(Math.PI / 2);
+        this.orbit.reset();
         this.camera.copy(this.oribtcamera);
         this.lastSpherical = null;
         this.enabled = true;
