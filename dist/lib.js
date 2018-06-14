@@ -53673,22 +53673,19 @@ var composeKey = function (part) { return ('skt1wins' + part); };
     },
     /**
      * 计算画布大小
-     * @param {HTMLElement} elem 容器元素
      * @param {Object} opts 配置参数
      */
-    calcRenderSize: function (elem, opts) {
+    calcRenderSize: function (opts) {
         var winWidth = window.innerWidth;
         var winHeight = document.documentElement.clientHeight;
         var width = winWidth;
         var height = winHeight;
-        if (opts && opts.width) {
+        if (opts && opts.width && opts.height) {
             width = /%$/.test(opts.width) ? (parseInt(opts.width) / 100 * winWidth) : parseInt(opts.width);
-        }
-        if (opts && opts.height) {
             height = /%$/.test(opts.height) ? (parseInt(opts.height) / 100 * winHeight) : parseInt(opts.height);
+            // 横屏但是获取尺寸出现异常
         }
-        // 横屏但是获取尺寸出现异常
-        if (Math.abs(window.orientation) == 90 && width <= height) {
+        else if (Math.abs(window.orientation) == 90 && width <= height) {
             width = screen.height;
         }
         return { width: width, height: height, aspect: width / height };
@@ -56255,7 +56252,7 @@ var Pano = /** @class */ (function (_super) {
     Pano.prototype.initEnv = function (data) {
         var opts = this.opts;
         var container = opts.el;
-        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].calcRenderSize(container, opts);
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].calcRenderSize(opts);
         var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].createElement("<div class=\"pano-root\"></div>");
         var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
         webgl.autoClear = true;
@@ -56472,7 +56469,7 @@ var Pano = /** @class */ (function (_super) {
      */
     Pano.prototype.onResize = function () {
         var camera = this.getCamera();
-        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].calcRenderSize(this.getRoot());
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].calcRenderSize(this.opts);
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.webgl.setSize(size.width, size.height);
@@ -59937,8 +59934,7 @@ var VPano = /** @class */ (function (_super) {
     };
     VPano.prototype.onResize = function () {
         var camera = this.getCamera();
-        var root = this.getRoot();
-        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].calcRenderSize(root);
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_2__["default"].calcRenderSize(this.opts);
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.effectRender.setSize(size.width, size.height);

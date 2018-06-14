@@ -199,26 +199,20 @@ export default {
 
     /**
      * 计算画布大小
-     * @param {HTMLElement} elem 容器元素
      * @param {Object} opts 配置参数
      */
-    calcRenderSize(elem, opts?) {
+    calcRenderSize(opts?) {
         const winWidth = window.innerWidth;
         const winHeight = document.documentElement.clientHeight;
 
         let width = winWidth;
         let height = winHeight;
 
-        if (opts && opts.width) {
+        if (opts && opts.width && opts.height) {
             width = /%$/.test(opts.width) ? (parseInt(opts.width) / 100 * winWidth) : parseInt(opts.width);
-        }
-
-        if (opts && opts.height) {
             height = /%$/.test(opts.height) ? (parseInt(opts.height) / 100 * winHeight) : parseInt(opts.height);
-        }
-
         // 横屏但是获取尺寸出现异常
-        if (Math.abs(<number>window.orientation) == 90 && width <= height) {
+        } else if (Math.abs(<number>window.orientation) == 90 && width <= height) {
             width = screen.height;
         }
 

@@ -37,8 +37,7 @@ export default class VPano extends Pano {
 
     onResize() {
         const camera = this.getCamera();
-        const root = this.getRoot();
-        const size = this.size = Util.calcRenderSize(root);
+        const size = this.size = Util.calcRenderSize(this.opts);
 
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();

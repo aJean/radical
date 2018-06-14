@@ -55,7 +55,7 @@ export default class Pano extends PubSubAble {
     initEnv(data) {
         const opts = this.opts;
         const container = opts.el;
-        const size = this.size = Util.calcRenderSize(container, opts);
+        const size = this.size = Util.calcRenderSize(opts);
         const root = this.root = Util.createElement(`<div class="pano-root"></div>`);
         const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});
 
@@ -281,7 +281,7 @@ export default class Pano extends PubSubAble {
      */
     onResize() {
         const camera = this.getCamera();
-        const size =  this.size = Util.calcRenderSize(this.getRoot());
+        const size =  this.size = Util.calcRenderSize(this.opts);
 
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
