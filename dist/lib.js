@@ -53467,7 +53467,9 @@ __webpack_require__.r(__webpack_exports__);
         MULTIPLEACTIVE: 'multiple-active',
         DRAG: 'pano-drag',
         ZOOM: 'pano-zoom',
-        IMMERSION: 'pano-immersion'
+        IMMERSION: 'pano-immersion',
+        INDICATORSTART: 'indicator-start',
+        INDICATOREND: 'indicator-end'
     },
     // star through
     THRU: {
@@ -54473,7 +54475,7 @@ var GyroControl = /** @class */ (function () {
         var gamma = this.deviceOrien.gamma ? three__WEBPACK_IMPORTED_MODULE_0__["Math"].degToRad(this.deviceOrien.gamma) : 0;
         // landscape or vertical
         var orient = this.screenOrien ? three__WEBPACK_IMPORTED_MODULE_0__["Math"].degToRad(this.screenOrien) : 0;
-        if (alpha === 0 && beta === 0 && gamma === 0 && orient === 0) {
+        if (alpha === 0 && beta === 0 && gamma === 0) {
             return this.orbit.update();
         }
         // 不是每次都会更新, lead to state will not be STATE.NONE
@@ -54648,6 +54650,7 @@ function OrbitControl(camera, domElement, pano) {
         scope.position0.copy(scope.camera.position);
         scope.zoom0 = scope.camera.zoom;
     };
+    /* flag: 星际穿越到背面 */
     this.reset = function (flag) {
         if (flag === void 0) { flag = true; }
         scope.target.copy(flag ? scope.target0 : new three__WEBPACK_IMPORTED_MODULE_0__["Vector3"](0, 0, -1));
@@ -55270,6 +55273,128 @@ var BaseLoader = /** @class */ (function () {
     return BaseLoader;
 }());
 /* harmony default export */ __webpack_exports__["default"] = (BaseLoader);
+
+
+/***/ }),
+
+/***/ "./src/pano/loaders/hdm.loader.ts":
+/*!****************************************!*\
+  !*** ./src/pano/loaders/hdm.loader.ts ***!
+  \****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+
+/**
+ * @file 高清全景加载器
+ *       中心点坐标 -> uv 贴图 -> 资源图 -> canvas 区域块 -> needsUpdate = true
+ */
+var HDMLoader = /** @class */ (function (_super) {
+    __extends(HDMLoader, _super);
+    function HDMLoader(pano, opts) {
+        var _this = _super.call(this) || this;
+        _this.pano = pano;
+        _this.subscribe(pano.frozen ? _this.Topic.SCENE.READY : _this.Topic.SCENE.LOAD, _this.init.bind(_this));
+        return _this;
+    }
+    HDMLoader.prototype.init = function () {
+        this.subscribe(this.Topic.RENDER.PROCESS, this.update.bind(this));
+    };
+    HDMLoader.prototype.update = function () {
+        var pano = this.pano;
+        var pos = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToWorld({ x: 0, y: 0 }, pano.getCamera(), 1000);
+        console.log(pos);
+    };
+    /**
+     * 计算世界坐标到 uv 坐标
+     */
+    HDMLoader.prototype.calcuv = function (x, y, z) {
+        var absX = Math.abs(x);
+        var absY = Math.abs(y);
+        var absZ = Math.abs(z);
+        var isXPositive = x > 0 ? 1 : 0;
+        var isYPositive = y > 0 ? 1 : 0;
+        var isZPositive = z > 0 ? 1 : 0;
+        var maxAxis;
+        var uc;
+        var vc;
+        var index;
+        // +x left
+        if (isXPositive && absX >= absY && absX >= absZ) {
+            // u (0 to 1) goes from +z to -z
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absX;
+            uc = -z;
+            vc = y;
+            index = 0;
+        }
+        // -x right
+        if (!isXPositive && absX >= absY && absX >= absZ) {
+            // u (0 to 1) goes from -z to +z
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absX;
+            uc = z;
+            vc = y;
+            index = 1;
+        }
+        // +y up
+        if (isYPositive && absY >= absX && absY >= absZ) {
+            // u (0 to 1) goes from -x to +x
+            // v (0 to 1) goes from +z to -z
+            maxAxis = absY;
+            uc = x;
+            vc = -z;
+            index = 2;
+        }
+        // -y down
+        if (!isYPositive && absY >= absX && absY >= absZ) {
+            // u (0 to 1) goes from -x to +x
+            // v (0 to 1) goes from -z to +z
+            maxAxis = absY;
+            uc = x;
+            vc = z;
+            index = 3;
+        }
+        // +z back
+        if (isZPositive && absZ >= absX && absZ >= absY) {
+            // u (0 to 1) goes from -x to +x
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absZ;
+            uc = x;
+            vc = y;
+            index = 4;
+        }
+        // -z front
+        if (!isZPositive && absZ >= absX && absZ >= absY) {
+            // u (0 to 1) goes from +x to -x
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absZ;
+            uc = -x;
+            vc = y;
+            index = 5;
+        }
+        // Convert range from -1 to 1 to 0 to 1
+        var u = 0.5 * (uc / maxAxis + 1);
+        var v = 0.5 * (vc / maxAxis + 1);
+    };
+    return HDMLoader;
+}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
+/* harmony default export */ __webpack_exports__["default"] = (HDMLoader);
 
 
 /***/ }),
@@ -56153,12 +56278,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _controls_orbit_control__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controls/orbit.control */ "./src/pano/controls/orbit.control.ts");
 /* harmony import */ var _controls_gyro_control__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./controls/gyro.control */ "./src/pano/controls/gyro.control.ts");
 /* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
-/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
-/* harmony import */ var _overlays_overlays__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./overlays/overlays */ "./src/pano/overlays/overlays.ts");
-/* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
-/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
-/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
+/* harmony import */ var _loaders_hdm_loader__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./loaders/hdm.loader */ "./src/pano/loaders/hdm.loader.ts");
+/* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
+/* harmony import */ var _overlays_overlays__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./overlays/overlays */ "./src/pano/overlays/overlays.ts");
+/* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
+/* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
+/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -56222,6 +56348,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
 
 
 
+
 /**
  * @file 全景渲染
  */
@@ -56249,7 +56376,7 @@ var Pano = /** @class */ (function (_super) {
         _this.currentData = null;
         _this.frozen = true;
         _this.pluginList = [];
-        var data = _this.currentData = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].findScene(source);
+        var data = _this.currentData = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].findScene(source);
         _this.opts = Object.assign({ el: el }, defaultOpts, source['pano']);
         _this.source = source;
         _this.initEnv(data);
@@ -56262,8 +56389,8 @@ var Pano = /** @class */ (function (_super) {
     Pano.prototype.initEnv = function (data) {
         var opts = this.opts;
         var container = opts.el;
-        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].calcRenderSize(opts);
-        var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].createElement("<div class=\"pano-root\"></div>");
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(opts);
+        var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].createElement("<div class=\"pano-root\"></div>");
         var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
@@ -56279,9 +56406,14 @@ var Pano = /** @class */ (function (_super) {
             this.setLook(data.lng, data.lat);
             orbit.update();
         }
-        opts.gyro && (this.gyro = new _controls_gyro_control__WEBPACK_IMPORTED_MODULE_2__["default"](this.camera, orbit));
+        if (opts.gyro) {
+            this.gyro = new _controls_gyro_control__WEBPACK_IMPORTED_MODULE_2__["default"](this.camera, orbit);
+        }
+        if (opts.hdm) {
+            new _loaders_hdm_loader__WEBPACK_IMPORTED_MODULE_4__["default"](this, opts.hdm);
+        }
         // all overlays manager
-        this.overlays = new _overlays_overlays__WEBPACK_IMPORTED_MODULE_5__["default"](this, this.source['sceneGroup']);
+        this.overlays = new _overlays_overlays__WEBPACK_IMPORTED_MODULE_6__["default"](this, this.source['sceneGroup']);
     };
     /**
      * 重置场景的 fov, lookat
@@ -56321,7 +56453,7 @@ var Pano = /** @class */ (function (_super) {
                         return [4 /*yield*/, myLoader.loadTexture(data.imgPath, 'canvas')];
                     case 2:
                         img = _a.sent();
-                        skyBox = this.skyBox = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__["default"]({ envMap: img });
+                        skyBox = this.skyBox = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_7__["default"]({ envMap: img });
                         publishdata_1 = { scene: data, pano: this };
                         skyBox.addTo(this.scene);
                         this.publishSync(Topic.SCENE.INIT, publishdata_1);
@@ -56330,14 +56462,14 @@ var Pano = /** @class */ (function (_super) {
                                 .then(function (texture) {
                                 _this.skyBox.setMap(texture);
                                 _this.publishSync(Topic.SCENE.LOAD, publishdata_1);
-                            }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e); })];
+                            }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output(e); })];
                     case 3:
                         _a.sent();
                         this.animate();
                         return [3 /*break*/, 5];
                     case 4:
                         e_1 = _a.sent();
-                        _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e_1);
+                        _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output(e_1);
                         return [3 /*break*/, 5];
                     case 5: return [2 /*return*/];
                 }
@@ -56393,7 +56525,7 @@ var Pano = /** @class */ (function (_super) {
     Pano.prototype.setFov = function (fov, duration) {
         var camera = this.getCamera();
         if (this.opts.fovTrans) {
-            new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_4__["default"](camera).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
+            new _animations_tween_animation__WEBPACK_IMPORTED_MODULE_5__["default"](camera).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
                 .start(['fov']).process(function () { return camera.updateProjectionMatrix(); });
         }
         else {
@@ -56454,7 +56586,7 @@ var Pano = /** @class */ (function (_super) {
         var Topic = this.Topic;
         this.publish(Topic.SCENE.ATTACHSTART, publishdata);
         var skyBox = this.skyBox;
-        var newBox = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_6__["default"]({ envMap: texture, opacity: 0 });
+        var newBox = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_7__["default"]({ envMap: texture, opacity: 0 });
         newBox.addTo(this.scene);
         newBox.fadeIn(this, function () {
             skyBox.setMap(texture);
@@ -56479,7 +56611,7 @@ var Pano = /** @class */ (function (_super) {
      */
     Pano.prototype.onResize = function () {
         var camera = this.getCamera();
-        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].calcRenderSize(this.opts);
+        var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(this.opts);
         camera.aspect = size.aspect;
         camera.updateProjectionMatrix();
         this.webgl.setSize(size.width, size.height);
@@ -56616,7 +56748,7 @@ var Pano = /** @class */ (function (_super) {
                         _this.replaceSlient(texture);
                     }
                 });
-            }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e); });
+            }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output(e); });
         }
         else {
             myLoader.loadTexture(data.bxlPath || data.texPath)
@@ -56624,7 +56756,7 @@ var Pano = /** @class */ (function (_super) {
                 _this.currentData = data;
                 _this.resetEnv(data);
                 _this.opts.sceneTrans ? _this.replaceAnim(texture) : _this.replaceTexture(texture);
-            }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_7__["default"].output(e); });
+            }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output(e); });
         }
     };
     /**
@@ -56678,10 +56810,10 @@ var Pano = /** @class */ (function (_super) {
         this.publish(this.Topic.RENDER.DISPOSE, this);
         // delete all subscribes
         _super.prototype.dispose.call(this);
-        _core_util__WEBPACK_IMPORTED_MODULE_8__["default"].cleanup(null, this.scene);
+        _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].cleanup(null, this.scene);
     };
     return Pano;
-}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_9__["default"]));
+}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_10__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Pano);
 
 
@@ -57614,31 +57746,33 @@ var Indicator = /** @class */ (function (_super) {
         _this.polar = Math.PI / 2;
         _this.lock = false;
         _this.pano = pano;
-        _this.theta = pano.getLook().lng;
-        var Topic = _this.Topic;
-        _this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.LOAD, _this.createDom.bind(_this));
+        _this.subscribe(pano.frozen ? _this.Topic.SCENE.READY : _this.Topic.SCENE.LOAD, _this.createDom.bind(_this));
         return _this;
     }
     Indicator.prototype.createDom = function () {
         var pano = this.pano;
         var element = this.element = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="pano-indicator"></div>');
         this.setContainer(pano.getRoot());
+        this.setTheta(this.theta = pano.getLook().lng);
         this.subscribe(this.Topic.RENDER.PROCESS, this.update.bind(this));
+        this.subscribe(this.Topic.VR.ENTER, this.hide.bind(this));
+        this.subscribe(this.Topic.VR.EXIT, this.show.bind(this));
         element.addEventListener('click', this.reset.bind(this));
-        element.addEventListener('webkitTransitionEnd', this.end.bind(this));
-        this.setTheta(pano.getLook().lng);
     };
     Indicator.prototype.calcTheta = function (theta) {
         return theta > 0 ? 180 - theta : -(180 + theta);
     };
     /**
-     * 设置方位角度
+     * 设置指示器的方位角度
      */
     Indicator.prototype.setTheta = function (theta) {
         this.theta = theta;
-        theta = this.calcTheta(theta);
-        _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].styleElement(this.element, { webkitTransform: "rotate(" + theta + "deg)" });
+        var angel = this.calcTheta(theta);
+        _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].styleElement(this.element, { webkitTransform: "rotate(" + angel + "deg)" });
     };
+    /**
+     * 更新指示器方位角度
+     */
     Indicator.prototype.update = function () {
         var pano = this.pano;
         var theta = pano.getLook().lng;
@@ -57647,13 +57781,14 @@ var Indicator = /** @class */ (function (_super) {
         }
     };
     /**
-     * 将方位角恢复到 Math.PI
+     * 恢复到初始值
      */
     Indicator.prototype.reset = function (event) {
         var _this = this;
         event.preventDefault();
         event.stopPropagation();
         this.lock = true;
+        this.publish(this.Topic.UI.INDICATORSTART, { pano: this.pano });
         var pano = this.pano;
         var orbit = pano.getControl();
         var azimuthal = orbit.getAzimuthalAngle();
@@ -57670,11 +57805,14 @@ var Indicator = /** @class */ (function (_super) {
             _this.setTheta(newval * 180 / Math.PI);
         }).complete(function () { return _this.end(); });
     };
+    /**
+     * 恢复 control
+     */
     Indicator.prototype.end = function () {
-        var pano = this.pano;
-        pano.gyro && pano.gyro.reset();
+        this.pano.resetControl();
         this.lock = false;
         this.setTheta(this.theta = 180);
+        this.publish(this.Topic.UI.INDICATOREND, { pano: this.pano });
     };
     Indicator.prototype.dispose = function () {
         _super.prototype.dispose.call(this);
@@ -58140,6 +58278,8 @@ var Rotate = /** @class */ (function (_super) {
             canvas.addEventListener('touchend', _this.onRecover);
             canvas.addEventListener('mouseup', _this.onRecover);
         });
+        _this.subscribe(Topic.UI.INDICATORSTART, _this.onDisturb);
+        _this.subscribe(Topic.UI.INDICATOREND, _this.onRecover);
         _this.subscribe(Topic.SCENE.ATTACHSTART, function () { return pano.setRotate(false); });
         _this.subscribe(Topic.SCENE.ATTACH, function () { return pano.setRotate(true); });
         return _this;

@@ -36,6 +36,8 @@ export default class Rotate extends PubSubAble {
             canvas.addEventListener('touchend', this.onRecover);
             canvas.addEventListener('mouseup', this.onRecover);
         });
+        this.subscribe(Topic.UI.INDICATORSTART, this.onDisturb);
+        this.subscribe(Topic.UI.INDICATOREND, this.onRecover);
         this.subscribe(Topic.SCENE.ATTACHSTART, () => pano.setRotate(false));
         this.subscribe(Topic.SCENE.ATTACH, () => pano.setRotate(true));
     }

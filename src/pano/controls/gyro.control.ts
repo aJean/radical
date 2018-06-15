@@ -95,7 +95,7 @@ export default class GyroControl {
         // landscape or vertical
         const orient = this.screenOrien ? TMath.degToRad(this.screenOrien) : 0;
 
-        if (alpha === 0 && beta === 0 && gamma === 0 && orient === 0) {
+        if (alpha === 0 && beta === 0 && gamma === 0) {
             return this.orbit.update();
         }
 

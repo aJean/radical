@@ -2,6 +2,7 @@ import {WebGLRenderer, Scene, PerspectiveCamera, PCFSoftShadowMap} from 'three';
 import OrbitControl from './controls/orbit.control';
 import GyroControl from './controls/gyro.control';
 import ResourceLoader from './loaders/resource.loader';
+import HDMLoader from './loaders/hdm.loader';
 import Tween from './animations/tween.animation';
 import Overlays from './overlays/overlays';
 import Inradius from './plastic/inradius.plastic';
@@ -62,6 +63,7 @@ export default class Pano extends PubSubAble {
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(size.width, size.height);
+
         root.appendChild(webgl.domElement);
         container.appendChild(root);
         this.scene = new Scene();
@@ -73,7 +75,15 @@ export default class Pano extends PubSubAble {
             this.setLook(data.lng, data.lat);
             orbit.update();
         }
-        opts.gyro && (this.gyro = new GyroControl(this.camera, orbit));        
+
+        if (opts.gyro) {
+            this.gyro = new GyroControl(this.camera, orbit);
+        }
+
+        if (opts.hdm) {
+            new HDMLoader(this, opts.hdm);
+        }
+        
         // all overlays manager
         this.overlays = new Overlays(this, this.source['sceneGroup']);
     }

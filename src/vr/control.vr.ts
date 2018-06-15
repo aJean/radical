@@ -1,4 +1,4 @@
-import {Spherical, Quaternion, Matrix4, Vector3} from 'three';
+import {Spherical, Matrix4, Vector3} from 'three';
 import Log from '../core/log';
 
 /**

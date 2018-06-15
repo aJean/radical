@@ -1,5 +1,5 @@
-import {Group, Vector3, Raycaster, CanvasTexture, DoubleSide, Mesh, PlaneGeometry, MeshBasicMaterial, 
-    TextureLoader, CircleGeometry, Geometry, Line, LineBasicMaterial} from 'three';
+import {Group, Vector3, Raycaster, DoubleSide, Mesh, PlaneGeometry, MeshBasicMaterial, 
+    TextureLoader  , Geometry, Line, LineBasicMaterial} from 'three';
 import PubSubAble from '../interface/pubsub.interface';
 import Text from '../pano/plastic/text.plastic';
 import Button from '../pano/plastic/button.plastic';

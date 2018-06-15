@@ -38,7 +38,9 @@ export default {
         MULTIPLEACTIVE: 'multiple-active',
         DRAG: 'pano-drag',
         ZOOM: 'pano-zoom',
-        IMMERSION: 'pano-immersion'
+        IMMERSION: 'pano-immersion',
+        INDICATORSTART: 'indicator-start',
+        INDICATOREND: 'indicator-end'
     },
     // star through
     THRU: {
