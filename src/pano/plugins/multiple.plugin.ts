@@ -21,11 +21,12 @@ export default class Multiple extends PluggableUI {
         this.pano = pano;
         this.data = data;
         this.create();
+        this.setContainer(pano.getRoot());
         this.bindEvent();
     }
 
     create() {
-        const root = this.element = Util.createElement('<div class="pano-multiplescene"></div>');
+        const element = this.element = Util.createElement('<div class="pano-multiplescene"></div>');
         const outer = this.outer = Util.createElement('<div class="pano-multiplescene-outer"></div>');
         const inner = this.inner = Util.createElement('<div class="pano-multiplescene-inner"></div>');
         
@@ -37,14 +38,11 @@ export default class Multiple extends PluggableUI {
         }).join('');
 
         outer.appendChild(inner);
-        root.appendChild(outer);
+        element.appendChild(outer);
         this.setActive(inner.childNodes[0]);
-        // add to pano root
-        this.setContainer(this.pano.getRoot());
     }
 
     bindEvent() {
-        const pano = this.pano;
         const inner = this.inner;
         const Topic = this.Topic;
 
@@ -61,11 +59,6 @@ export default class Multiple extends PluggableUI {
         // 重新渲染场景列表
         this.subscribe(Topic.SCENE.RESET, this.onReset.bind(this));
         this.subscribe(Topic.UI.PANOCLICK, this.onToggle.bind(this));
-    }
-
-    setContainer(container) {
-        this.container = container;
-        container.appendChild(this.element);
     }
 
     onClickHandle(e) {
@@ -161,13 +154,10 @@ export default class Multiple extends PluggableUI {
     }
 
     dispose() {
-        const pano = this.pano;
         const inner = this.inner;
 
         inner.removeEventListener('click', this.onClickHandle);
         inner.removeEventListener('mousewheel', this.onWheelHandle);
-        this.element.innerHTML = '';
-        this.container.removeChild(this.element);
 
         super.dispose();
     }

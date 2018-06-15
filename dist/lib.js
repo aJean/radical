@@ -46,17 +46,32 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
 /******/ 		}
 /******/ 	};
 /******/
 /******/ 	// define __esModule on exports
 /******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
 /******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -53923,13 +53938,20 @@ var Plastic = /** @class */ (function (_super) {
      */
     Plastic.prototype.dispose = function () {
         var plastic = this.plastic;
+        var geometry = plastic.geometry;
         var material = plastic.material;
         delete plastic.data;
-        plastic.geometry.dispose();
-        material.map && material.map.dispose();
-        material.envMap && material.envMap.dispose();
-        material.dispose();
-        plastic.parent && plastic.parent.remove(plastic);
+        if (geometry) {
+            geometry.dispose();
+        }
+        if (material) {
+            material.map && material.map.dispose();
+            material.envMap && material.envMap.dispose();
+            material.dispose();
+        }
+        if (plastic.parent) {
+            plastic.parent.remove(plastic);
+        }
         _super.prototype.dispose.call(this);
     };
     return Plastic;
@@ -54011,7 +54033,10 @@ var PluggableUI = /** @class */ (function (_super) {
     PluggableUI.prototype.getElement = function () {
         return this.element;
     };
-    PluggableUI.prototype.setContainer = function (container) { };
+    PluggableUI.prototype.setContainer = function (container) {
+        this.container = container;
+        container.appendChild(this.element);
+    };
     PluggableUI.prototype.detachContainer = function () {
         this.container.removeChild(this.element);
     };
@@ -57528,13 +57553,9 @@ var Helper = /** @class */ (function (_super) {
         _this.pano = pano;
         _this.subscribe(_this.Topic.RENDER.PROCESS, function () { return _this.update(); });
         var circle = _this.element = _core_util__WEBPACK_IMPORTED_MODULE_0__["default"].createElement('<div style="position:absolute;width:10px;height:10px;background:#fff;border-radius:10px;z-index:99;border:2px solid red;"></div>');
-        _this.setContainer();
+        _this.setContainer(pano.getRoot());
         return _this;
     }
-    Helper.prototype.setContainer = function () {
-        var container = this.container = this.pano.getRoot();
-        container.appendChild(this.element);
-    };
     Helper.prototype.update = function () {
         var pano = this.pano;
         var pos = this.pano.getLook();
@@ -57599,15 +57620,13 @@ var Indicator = /** @class */ (function (_super) {
         return _this;
     }
     Indicator.prototype.createDom = function () {
+        var pano = this.pano;
         var element = this.element = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="pano-indicator"></div>');
-        this.setContainer();
+        this.setContainer(pano.getRoot());
         this.subscribe(this.Topic.RENDER.PROCESS, this.update.bind(this));
         element.addEventListener('click', this.reset.bind(this));
         element.addEventListener('webkitTransitionEnd', this.end.bind(this));
-        this.setTheta(this.pano.getLook().lng);
-    };
-    Indicator.prototype.setContainer = function () {
-        this.pano.getRoot().appendChild(this.element);
+        this.setTheta(pano.getLook().lng);
     };
     Indicator.prototype.calcTheta = function (theta) {
         return theta > 0 ? 180 - theta : -(180 + theta);
@@ -57699,12 +57718,10 @@ var Info = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.pano = pano;
         _this.createDom(pano.currentData);
+        _this.setContainer(pano.getRoot());
         _this.subscribe(_this.Topic.SCENE.ATTACH, _this.renderDom.bind(_this));
         return _this;
     }
-    Info.prototype.setContainer = function () {
-        this.pano.getRoot().appendChild(this.element);
-    };
     Info.prototype.createDom = function (data) {
         var info = data.info;
         var element = this.element = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="pano-info"></div>');
@@ -57712,7 +57729,6 @@ var Info = /** @class */ (function (_super) {
             element.innerHTML = info.logo ? "<img src=\"" + info.logo + "\" width=\"70\">" : '';
             element.innerHTML += "<div class=\"pano-info-name\">" + info.author + "</div>";
         }
-        this.setContainer();
     };
     Info.prototype.renderDom = function (topic, payload) {
         var info = payload.scene.info;
@@ -57781,7 +57797,7 @@ var Media = /** @class */ (function (_super) {
         _this.pano = pano;
         _this.opts = Object.assign({}, defaultOpts, opts);
         _this.create();
-        _this.setContainer();
+        _this.setContainer(pano.getRoot());
         _this.bindEvent();
         return _this;
     }
@@ -57828,9 +57844,6 @@ var Media = /** @class */ (function (_super) {
             radius: 1900
         });
         inradius.addBy(this.pano);
-    };
-    Media.prototype.setContainer = function () {
-        this.pano.getRoot().appendChild(this.element);
     };
     Media.prototype.bindEvent = function () {
         var _this = this;
@@ -57961,24 +57974,22 @@ var Multiple = /** @class */ (function (_super) {
         _this.pano = pano;
         _this.data = data;
         _this.create();
+        _this.setContainer(pano.getRoot());
         _this.bindEvent();
         return _this;
     }
     Multiple.prototype.create = function () {
-        var root = this.element = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="pano-multiplescene"></div>');
+        var element = this.element = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="pano-multiplescene"></div>');
         var outer = this.outer = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="pano-multiplescene-outer"></div>');
         var inner = this.inner = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="pano-multiplescene-inner"></div>');
         inner.innerHTML = this.data.map(function (item, i) {
             return "<div class=\"pano-multiplescene-item\" data-id=\"" + i + "\">\n                <img src=\"" + item.thumbPath + "\" class=\"pano-multiplescene-img\">\n                <span class=\"pano-multiplescene-name\">" + item.name + "</span>\n            </div>";
         }).join('');
         outer.appendChild(inner);
-        root.appendChild(outer);
+        element.appendChild(outer);
         this.setActive(inner.childNodes[0]);
-        // add to pano root
-        this.setContainer(this.pano.getRoot());
     };
     Multiple.prototype.bindEvent = function () {
-        var pano = this.pano;
         var inner = this.inner;
         var Topic = this.Topic;
         this.onClickHandle = this.onClickHandle.bind(this);
@@ -57993,10 +58004,6 @@ var Multiple = /** @class */ (function (_super) {
         // 重新渲染场景列表
         this.subscribe(Topic.SCENE.RESET, this.onReset.bind(this));
         this.subscribe(Topic.UI.PANOCLICK, this.onToggle.bind(this));
-    };
-    Multiple.prototype.setContainer = function (container) {
-        this.container = container;
-        container.appendChild(this.element);
     };
     Multiple.prototype.onClickHandle = function (e) {
         e.preventDefault();
@@ -58072,12 +58079,9 @@ var Multiple = /** @class */ (function (_super) {
         this.publish(this.Topic.UI.IMMERSION, { should: should });
     };
     Multiple.prototype.dispose = function () {
-        var pano = this.pano;
         var inner = this.inner;
         inner.removeEventListener('click', this.onClickHandle);
         inner.removeEventListener('mousewheel', this.onWheelHandle);
-        this.element.innerHTML = '';
-        this.container.removeChild(this.element);
         _super.prototype.dispose.call(this);
     };
     return Multiple;

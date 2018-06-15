@@ -15,12 +15,7 @@ export default class Helper extends PluggableUI {
         this.subscribe(this.Topic.RENDER.PROCESS, () => this.update());
 
         const circle = this.element = Util.createElement('<div style="position:absolute;width:10px;height:10px;background:#fff;border-radius:10px;z-index:99;border:2px solid red;"></div>');
-        this.setContainer();
-    }
-
-    setContainer() {
-        const container = this.container = this.pano.getRoot()
-        container.appendChild(this.element);
+        this.setContainer(pano.getRoot());
     }
 
     update() {

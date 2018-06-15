@@ -34,7 +34,7 @@ export default class Media extends PluggableUI {
         this.opts = Object.assign({}, defaultOpts, opts);
 
         this.create();
-        this.setContainer();
+        this.setContainer(pano.getRoot());
         this.bindEvent();
     }
 
@@ -88,10 +88,6 @@ export default class Media extends PluggableUI {
             visible: false,
             radius: 1900});
         inradius.addBy(this.pano);
-    }
-
-    setContainer() {
-        this.pano.getRoot().appendChild(this.element);
     }
 
     bindEvent() {

@@ -24,16 +24,14 @@ export default class Indicator extends PluggableUI {
     }
 
     createDom() {
+        const pano = this.pano;
         const element: any = this.element = Util.createElement('<div class="pano-indicator"></div>');
-        this.setContainer();
+
+        this.setContainer(pano.getRoot());
         this.subscribe(this.Topic.RENDER.PROCESS, this.update.bind(this));
         element.addEventListener('click', this.reset.bind(this));
         element.addEventListener('webkitTransitionEnd', this.end.bind(this));
-        this.setTheta(this.pano.getLook().lng); 
-    }
-
-    setContainer() {
-        this.pano.getRoot().appendChild(this.element);
+        this.setTheta(pano.getLook().lng); 
     }
 
     calcTheta(theta) {

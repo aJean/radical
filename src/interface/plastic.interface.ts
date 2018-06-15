@@ -73,14 +73,24 @@ export default abstract class Plastic extends PubSubAble {
      */
     dispose() {
         const plastic = this.plastic;
+        const geometry = plastic.geometry;
         const material = plastic.material;
 
         delete plastic.data;
-        plastic.geometry.dispose();
-        material.map && material.map.dispose();
-        material.envMap && material.envMap.dispose();
-        material.dispose();
-        plastic.parent && plastic.parent.remove(plastic);
+
+        if (geometry) {
+            geometry.dispose();
+        }
+
+        if (material) {
+            material.map && material.map.dispose();
+            material.envMap && material.envMap.dispose();
+            material.dispose();
+        }
+
+        if (plastic.parent) {
+            plastic.parent.remove(plastic);
+        }
 
         super.dispose();
     }

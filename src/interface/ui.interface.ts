@@ -27,7 +27,10 @@ export default class PluggableUI extends PubSubAble implements IPluggableUI {
         return this.element;
     }
 
-    setContainer(container: HTMLElement) {}
+    setContainer(container: HTMLElement) {
+        this.container = container;
+        container.appendChild(this.element);
+    }
 
     detachContainer() {
         this.container.removeChild(this.element);

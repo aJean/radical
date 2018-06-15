@@ -13,11 +13,8 @@ export default class Info extends PluggableUI {
 
         this.pano = pano;
         this.createDom(pano.currentData);
+        this.setContainer(pano.getRoot());
         this.subscribe(this.Topic.SCENE.ATTACH, this.renderDom.bind(this));
-    }
-
-    setContainer() {
-        this.pano.getRoot().appendChild(this.element);
     }
 
     createDom(data) {
@@ -28,8 +25,6 @@ export default class Info extends PluggableUI {
             element.innerHTML = info.logo ? `<img src="${info.logo}" width="70">` : '';
             element.innerHTML += `<div class="pano-info-name">${info.author}</div>`;
         }
-
-        this.setContainer();
     }
 
     renderDom(topic, payload) {
