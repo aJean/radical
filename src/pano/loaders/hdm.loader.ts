@@ -8,6 +8,7 @@ import Util from '../../core/util';
 
 export default class HDMLoader extends PubSubAble {
     pano: any;
+    records = {};
 
     constructor(pano, opts?) {
         super();
@@ -22,9 +23,55 @@ export default class HDMLoader extends PubSubAble {
 
     update() {
         const pano = this.pano;
-        const pos = Util.calcScreenToWorld({x: 0, y: 0}, pano.getCamera(), 1000);
+        const target = pano.skyBox.getPlastic();
+        const intersects = Util.intersect({x: 0, y: 0}, [target], pano.getCamera());
 
-        console.log(pos)
+        if (intersects) {
+            const point = intersects[0].point;
+            this.addToRecords(point);
+        }
+        
+    }
+
+    addToRecords(point) {
+        const records = this.records;
+        const data = this.calcuv(point.x, point.y, point.z);
+        const index = data.index;
+        
+        // console.log(data)
+        if (!records[index]) {
+            records[index] = data;
+            this.draw(data);
+        }
+    }
+
+    /**
+     * 根据 uv 坐标在原图上绘制
+     * @param data 
+     */
+    draw(data) {
+        const plastic = this.pano.skyBox.getPlastic();
+        const texture = plastic.material.envMap;
+        const img = texture.image[data.index];
+        const width = img.width;
+        const height = img.height;
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext("2d");
+        canvas.width = width;
+        canvas.height = height;
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#1c86d1';
+        ctx.arc(data.u * width, height - data.v * height, 100, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.closePath();
+
+        texture.needsUpdate = true;
+        texture.image[data.index] = canvas;
     }
 
     /**
@@ -43,16 +90,6 @@ export default class HDMLoader extends PubSubAble {
         let uc;
         let vc;
         let index;
-  
-        // +x left
-        if (isXPositive && absX >= absY && absX >= absZ) {
-            // u (0 to 1) goes from +z to -z
-            // v (0 to 1) goes from -y to +y
-            maxAxis = absX;
-            uc = -z;
-            vc = y;
-            index = 0;
-        }
 
         // -x right
         if (!isXPositive && absX >= absY && absX >= absZ) {
@@ -60,6 +97,16 @@ export default class HDMLoader extends PubSubAble {
             // v (0 to 1) goes from -y to +y
             maxAxis = absX;
             uc = z;
+            vc = y;
+            index = 0;
+        }
+  
+        // +x left
+        if (isXPositive && absX >= absY && absX >= absZ) {
+            // u (0 to 1) goes from +z to -z
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absX;
+            uc = -z;
             vc = y;
             index = 1;
         }
@@ -84,7 +131,7 @@ export default class HDMLoader extends PubSubAble {
             index = 3;
         }
 
-        // +z back
+        // +z front
         if (isZPositive && absZ >= absX && absZ >= absY) {
             // u (0 to 1) goes from -x to +x
             // v (0 to 1) goes from -y to +y
@@ -94,7 +141,7 @@ export default class HDMLoader extends PubSubAble {
             index = 4;
         }
 
-        // -z front
+        // -z back
         if (!isZPositive && absZ >= absX && absZ >= absY) {
             // u (0 to 1) goes from +x to -x
             // v (0 to 1) goes from -y to +y
@@ -105,7 +152,9 @@ export default class HDMLoader extends PubSubAble {
         }
 
         // Convert range from -1 to 1 to 0 to 1
-        const u = 0.5 * (uc / maxAxis + 1);
-        const v = 0.5 * (vc / maxAxis + 1);
+        const u = (0.5 * (uc / maxAxis + 1)).toFixed(3);
+        const v = (0.5 * (vc / maxAxis + 1)).toFixed(3);
+
+        return {u, v, index};
     }
 }

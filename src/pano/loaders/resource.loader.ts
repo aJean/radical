@@ -42,6 +42,7 @@ class ResourceLoader extends BaseLoader {
 
     /**
      * 加载 6 张复合顺序和命名的图
+     * attach order: right -> left -> up -> down -> front -> back
      * @param {string} url 
      */
     loadImage(url) {
@@ -98,7 +99,6 @@ function cutCanvas(url, timeout?) {
                 subImage['idx'] = i;
                 subImage.onload = function () {
                     count++;
-                    // attach order: right -> left -> up -> down -> front -> back
                     switch (this['idx']) {
                         case 0:
                             texture.images[1] = this;

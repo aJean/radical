@@ -46,32 +46,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
 /******/ 		}
 /******/ 	};
 /******/
 /******/ 	// define __esModule on exports
 /******/ 	__webpack_require__.r = function(exports) {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
 /******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/
-/******/ 	// create a fake namespace object
-/******/ 	// mode & 1: value is a module id, require it
-/******/ 	// mode & 2: merge all properties of value into the ns
-/******/ 	// mode & 4: return value when already ns object
-/******/ 	// mode & 8|1: behave like require
-/******/ 	__webpack_require__.t = function(value, mode) {
-/******/ 		if(mode & 1) value = __webpack_require__(value);
-/******/ 		if(mode & 8) return value;
-/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
-/******/ 		var ns = Object.create(null);
-/******/ 		__webpack_require__.r(ns);
-/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
-/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
-/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -55308,6 +55293,7 @@ var HDMLoader = /** @class */ (function (_super) {
     __extends(HDMLoader, _super);
     function HDMLoader(pano, opts) {
         var _this = _super.call(this) || this;
+        _this.records = {};
         _this.pano = pano;
         _this.subscribe(pano.frozen ? _this.Topic.SCENE.READY : _this.Topic.SCENE.LOAD, _this.init.bind(_this));
         return _this;
@@ -55317,8 +55303,46 @@ var HDMLoader = /** @class */ (function (_super) {
     };
     HDMLoader.prototype.update = function () {
         var pano = this.pano;
-        var pos = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].calcScreenToWorld({ x: 0, y: 0 }, pano.getCamera(), 1000);
-        console.log(pos);
+        var target = pano.skyBox.getPlastic();
+        var intersects = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].intersect({ x: 0, y: 0 }, [target], pano.getCamera());
+        if (intersects) {
+            var point = intersects[0].point;
+            this.addToRecords(point);
+        }
+    };
+    HDMLoader.prototype.addToRecords = function (point) {
+        var records = this.records;
+        var data = this.calcuv(point.x, point.y, point.z);
+        var index = data.index;
+        // console.log(data)
+        if (!records[index]) {
+            records[index] = data;
+            this.draw(data);
+        }
+    };
+    /**
+     * 根据 uv 坐标在原图上绘制
+     * @param data
+     */
+    HDMLoader.prototype.draw = function (data) {
+        var plastic = this.pano.skyBox.getPlastic();
+        var texture = plastic.material.envMap;
+        var img = texture.image[data.index];
+        var width = img.width;
+        var height = img.height;
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext("2d");
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#1c86d1';
+        ctx.arc(data.u * width, height - data.v * height, 100, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.closePath();
+        texture.needsUpdate = true;
+        texture.image[data.index] = canvas;
     };
     /**
      * 计算世界坐标到 uv 坐标
@@ -55334,21 +55358,21 @@ var HDMLoader = /** @class */ (function (_super) {
         var uc;
         var vc;
         var index;
-        // +x left
-        if (isXPositive && absX >= absY && absX >= absZ) {
-            // u (0 to 1) goes from +z to -z
-            // v (0 to 1) goes from -y to +y
-            maxAxis = absX;
-            uc = -z;
-            vc = y;
-            index = 0;
-        }
         // -x right
         if (!isXPositive && absX >= absY && absX >= absZ) {
             // u (0 to 1) goes from -z to +z
             // v (0 to 1) goes from -y to +y
             maxAxis = absX;
             uc = z;
+            vc = y;
+            index = 0;
+        }
+        // +x left
+        if (isXPositive && absX >= absY && absX >= absZ) {
+            // u (0 to 1) goes from +z to -z
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absX;
+            uc = -z;
             vc = y;
             index = 1;
         }
@@ -55370,7 +55394,7 @@ var HDMLoader = /** @class */ (function (_super) {
             vc = z;
             index = 3;
         }
-        // +z back
+        // +z front
         if (isZPositive && absZ >= absX && absZ >= absY) {
             // u (0 to 1) goes from -x to +x
             // v (0 to 1) goes from -y to +y
@@ -55379,7 +55403,7 @@ var HDMLoader = /** @class */ (function (_super) {
             vc = y;
             index = 4;
         }
-        // -z front
+        // -z back
         if (!isZPositive && absZ >= absX && absZ >= absY) {
             // u (0 to 1) goes from +x to -x
             // v (0 to 1) goes from -y to +y
@@ -55389,8 +55413,9 @@ var HDMLoader = /** @class */ (function (_super) {
             index = 5;
         }
         // Convert range from -1 to 1 to 0 to 1
-        var u = 0.5 * (uc / maxAxis + 1);
-        var v = 0.5 * (vc / maxAxis + 1);
+        var u = (0.5 * (uc / maxAxis + 1)).toFixed(3);
+        var v = (0.5 * (vc / maxAxis + 1)).toFixed(3);
+        return { u: u, v: v, index: index };
     };
     return HDMLoader;
 }(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
@@ -55461,6 +55486,7 @@ var ResourceLoader = /** @class */ (function (_super) {
     };
     /**
      * 加载 6 张复合顺序和命名的图
+     * attach order: right -> left -> up -> down -> front -> back
      * @param {string} url
      */
     ResourceLoader.prototype.loadImage = function (url) {
@@ -55514,7 +55540,6 @@ function cutCanvas(url, timeout) {
                 subImage['idx'] = i;
                 subImage.onload = function () {
                     count++;
-                    // attach order: right -> left -> up -> down -> front -> back
                     switch (this['idx']) {
                         case 0:
                             texture.images[1] = this;
