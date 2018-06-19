@@ -29,11 +29,13 @@ export default class HDMonitor extends PubSubAble {
         const target = pano.skyBox.getPlastic();
         const intersects = Util.intersect({x: 0, y: 0}, [target], camera);
 
-        if (intersects && camera.fov < 70) {
+        if (intersects && camera.fov < 60) {
             const point = intersects[0].point;
             const data = HDAnalyse.analyse(point, this.level, pano.skyBox.getMap());
-            const img = HDStore.getHDPicture('../assets/hdmap/' + data.path);
-            console.log(img)
+            const p = HDStore.getHDPicture('../assets/hdmap/' + data.path);
+            if (p) {
+                p.then(hdimg => this.draw(hdimg, data));
+            }
         }
     }
 
@@ -41,9 +43,8 @@ export default class HDMonitor extends PubSubAble {
      * 根据 uv 坐标在原图上绘制
      * @param data 
      */
-    draw(data) {
-        const plastic = this.pano.skyBox.getPlastic();
-        const texture = plastic.material.envMap;
+    draw(hdimg, data) {
+        const texture = this.pano.skyBox.getMap();
         const img = texture.image[data.index];
         const width = img.width;
         const height = img.height;
@@ -54,17 +55,15 @@ export default class HDMonitor extends PubSubAble {
         canvas.height = height;
 
         ctx.drawImage(img, 0, 0, width, height);
-
         ctx.beginPath();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#1c86d1';
-        ctx.arc(data.u * width, height - data.v * height, 100, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.drawImage(hdimg, data.x, data.y, data.w, data.h);
         ctx.closePath();
 
         texture.needsUpdate = true;
         texture.image[data.index] = canvas;
     }
 
-    
+    dispose() {
+        super.dispose();
+    }
 }

@@ -55,7 +55,7 @@ export default class Indicator extends PluggableUI {
         const theta = pano.getLook().lng;
 
         if (!this.lock && theta != this.theta) {
-           this.setTheta(theta)
+           this.setTheta(theta);
         }
     }
 

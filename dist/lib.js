@@ -55229,7 +55229,7 @@ var HDAnalyse = /** @class */ (function () {
     HDAnalyse.calclayer = function (data, img, level) {
         var width = img.width;
         var height = img.height;
-        var u = data.u * width;
+        var u = width - data.u * width;
         var v = height - data.v * height;
         var w = width / 2;
         var h = height / 2;
@@ -55246,6 +55246,7 @@ var HDAnalyse = /** @class */ (function () {
             y = h;
         }
         return {
+            index: data.index,
             path: this.getName(data.index, row, column),
             x: x, y: y, w: w, h: h
         };
@@ -55378,24 +55379,26 @@ var HDMonitor = /** @class */ (function (_super) {
         this.subscribe(this.Topic.RENDER.PROCESS, this.update.bind(this));
     };
     HDMonitor.prototype.update = function () {
+        var _this = this;
         var pano = this.pano;
         var camera = pano.getCamera();
         var target = pano.skyBox.getPlastic();
         var intersects = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].intersect({ x: 0, y: 0 }, [target], camera);
-        if (intersects && camera.fov < 70) {
+        if (intersects && camera.fov < 60) {
             var point = intersects[0].point;
-            var data = _analyse_hdmap__WEBPACK_IMPORTED_MODULE_2__["default"].analyse(point, this.level, pano.skyBox.getMap());
-            var img = _store_hdmap__WEBPACK_IMPORTED_MODULE_3__["default"].getHDPicture('../assets/hdmap/' + data.path);
-            console.log(img);
+            var data_1 = _analyse_hdmap__WEBPACK_IMPORTED_MODULE_2__["default"].analyse(point, this.level, pano.skyBox.getMap());
+            var p = _store_hdmap__WEBPACK_IMPORTED_MODULE_3__["default"].getHDPicture('../assets/hdmap/' + data_1.path);
+            if (p) {
+                p.then(function (hdimg) { return _this.draw(hdimg, data_1); });
+            }
         }
     };
     /**
      * 根据 uv 坐标在原图上绘制
      * @param data
      */
-    HDMonitor.prototype.draw = function (data) {
-        var plastic = this.pano.skyBox.getPlastic();
-        var texture = plastic.material.envMap;
+    HDMonitor.prototype.draw = function (hdimg, data) {
+        var texture = this.pano.skyBox.getMap();
         var img = texture.image[data.index];
         var width = img.width;
         var height = img.height;
@@ -55405,13 +55408,13 @@ var HDMonitor = /** @class */ (function (_super) {
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
         ctx.beginPath();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#1c86d1';
-        ctx.arc(data.u * width, height - data.v * height, 100, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.drawImage(hdimg, data.x, data.y, data.w, data.h);
         ctx.closePath();
         texture.needsUpdate = true;
         texture.image[data.index] = canvas;
+    };
+    HDMonitor.prototype.dispose = function () {
+        _super.prototype.dispose.call(this);
     };
     return HDMonitor;
 }(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
@@ -55442,13 +55445,16 @@ var HDStore = /** @class */ (function () {
         var img = new Image();
         img.src = url;
         this.hdmap[url] = img;
-        return img;
+        return new Promise(function (resolve, reject) {
+            img.onload = function () { return resolve(img); };
+            img.onerror = function () { return reject(); };
+        });
     };
     HDStore.getHDPictureByKey = function (key) {
-        return this.hdmap[key];
+        return Promise.resolve(this.hdmap[key]);
     };
     HDStore.getStore = function () {
-        return this.hdmap;
+        return Promise.resolve(this.hdmap);
     };
     HDStore.hdmap = {};
     return HDStore;

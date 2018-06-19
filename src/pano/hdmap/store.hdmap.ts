@@ -14,14 +14,17 @@ export default abstract class HDStore {
         img.src = url;
 
         this.hdmap[url] = img;
-        return img;
+        return new Promise(function(resolve, reject) {
+            img.onload = () => resolve(img);
+            img.onerror = () => reject();
+        });
     }
 
     static getHDPictureByKey(key) {
-        return this.hdmap[key];
+        return Promise.resolve(this.hdmap[key]);
     }
 
     static getStore() {
-        return this.hdmap;
+        return Promise.resolve(this.hdmap);
     }
 }

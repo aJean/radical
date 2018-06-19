@@ -18,7 +18,7 @@ export default abstract class HDAnalyse {
     static calclayer(data, img, level) {
         const width = img.width;
         const height = img.height;
-        const u = data.u * width;
+        const u = width - data.u * width;
         const v = height - data.v * height;
         const w = width / 2;
         const h = height / 2;
@@ -38,6 +38,7 @@ export default abstract class HDAnalyse {
         }
 
         return {
+            index: data.index,
             path: this.getName(data.index, row, column),
             x, y, w, h
         };
