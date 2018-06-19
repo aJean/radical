@@ -2,7 +2,7 @@ import {WebGLRenderer, Scene, PerspectiveCamera, PCFSoftShadowMap} from 'three';
 import OrbitControl from './controls/orbit.control';
 import GyroControl from './controls/gyro.control';
 import ResourceLoader from './loaders/resource.loader';
-import HDMLoader from './loaders/hdm.loader';
+import HDMonitor from './hdmap/monitor.hdmap';
 import Tween from './animations/tween.animation';
 import Overlays from './overlays/overlays';
 import Inradius from './plastic/inradius.plastic';
@@ -81,7 +81,7 @@ export default class Pano extends PubSubAble {
         }
 
         if (opts.hdm) {
-            new HDMLoader(this, opts.hdm);
+            new HDMonitor(this, opts.hdm);
         }
         
         // all overlays manager

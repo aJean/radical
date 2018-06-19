@@ -1,83 +1,52 @@
-import PubSubAble from '../../interface/pubsub.interface';
-import Util from '../../core/util';
-
 /**
- * @file 高清全景加载器
- *       中心点坐标 -> uv 贴图 -> 资源图 -> canvas 区域块 -> needsUpdate = true
+ * @file 高清资源分析器
+ * @todo 函数式
  */
 
-export default class HDMLoader extends PubSubAble {
-    pano: any;
-    records = {};
-
-    constructor(pano, opts?) {
-        super();
-
-        this.pano = pano;
-        this.subscribe(pano.frozen ? this.Topic.SCENE.READY : this.Topic.SCENE.LOAD, this.init.bind(this));
-    }
-
-    init() {
-        this.subscribe(this.Topic.RENDER.PROCESS, this.update.bind(this));
-    }
-
-    update() {
-        const pano = this.pano;
-        const target = pano.skyBox.getPlastic();
-        const intersects = Util.intersect({x: 0, y: 0}, [target], pano.getCamera());
-
-        if (intersects) {
-            const point = intersects[0].point;
-            this.addToRecords(point);
-        }
-        
-    }
-
-    addToRecords(point) {
-        const records = this.records;
+const order = ['r', 'l', 'u', 'd', 'f', 'b'];
+export default abstract class HDAnalyse {
+    static analyse(point, level, texture) {
         const data = this.calcuv(point.x, point.y, point.z);
-        const index = data.index;
-        
-        // console.log(data)
-        if (!records[index]) {
-            records[index] = data;
-            this.draw(data);
-        }
+        const img = texture.image[data.index];
+
+        return this.calclayer(data, img, level);
     }
 
     /**
-     * 根据 uv 坐标在原图上绘制
-     * @param data 
+     * 计算图层
      */
-    draw(data) {
-        const plastic = this.pano.skyBox.getPlastic();
-        const texture = plastic.material.envMap;
-        const img = texture.image[data.index];
+    static calclayer(data, img, level) {
         const width = img.width;
         const height = img.height;
+        const u = data.u * width;
+        const v = height - data.v * height;
+        const w = width / 2;
+        const h = height / 2;
+        let row = 1;
+        let column = 1;
+        let x = 0;
+        let y = 0;
 
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext("2d");
-        canvas.width = width;
-        canvas.height = height;
+        if (u > w) {
+            column = 2;
+            x = w;
+        } 
+         
+        if (v > h) {
+            row = 2;
+            y = h;
+        }
 
-        ctx.drawImage(img, 0, 0, width, height);
-
-        ctx.beginPath();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#1c86d1';
-        ctx.arc(data.u * width, height - data.v * height, 100, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.closePath();
-
-        texture.needsUpdate = true;
-        texture.image[data.index] = canvas;
+        return {
+            path: this.getName(data.index, row, column),
+            x, y, w, h
+        };
     }
 
     /**
      * 计算世界坐标到 uv 坐标
      */
-    calcuv(x, y, z) {
+    static calcuv(x, y, z) {
         const absX = Math.abs(x);
         const absY = Math.abs(y);
         const absZ = Math.abs(z);
@@ -152,9 +121,14 @@ export default class HDMLoader extends PubSubAble {
         }
 
         // Convert range from -1 to 1 to 0 to 1
-        const u = (0.5 * (uc / maxAxis + 1)).toFixed(3);
-        const v = (0.5 * (vc / maxAxis + 1)).toFixed(3);
+        const u = 0.5 * (uc / maxAxis + 1);
+        const v = 0.5 * (vc / maxAxis + 1);
 
         return {u, v, index};
+    }
+
+    static getName(i, row, column) {
+        const dir = order[i];
+        return `hd_${dir}/l1/${row}/l1_${dir}_${row}_${column}.jpg`;
     }
 }

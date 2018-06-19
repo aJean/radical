@@ -91,8 +91,8 @@ export default class Thru extends PubSubAble {
                     name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
                     rotate: true, emissive: '#787878', envMap: texture, hide: true, cloudimg: opts.img
                 }, pano);
-                const text = new Text({text: item.setName, fontsize: 24, width: 512, hide: true,
-                    x: pos.x, y: pos.y - 131, z: pos.z, limit: 6, shadow: true});
+                const text = new Text({text: item.setName, fontsize: 40, width: 512, hide: true,
+                    x: pos.x, y: pos.y - 141, z: pos.z, limit: 6, shadow: true});
                 hole.addBy(pano);
                 text.addBy(pano);
 

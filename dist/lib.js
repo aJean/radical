@@ -46,17 +46,32 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
 /******/ 		}
 /******/ 	};
 /******/
 /******/ 	// define __esModule on exports
 /******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
 /******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -55186,6 +55201,263 @@ OrbitControl.prototype.constructor = OrbitControl;
 
 /***/ }),
 
+/***/ "./src/pano/hdmap/analyse.hdmap.ts":
+/*!*****************************************!*\
+  !*** ./src/pano/hdmap/analyse.hdmap.ts ***!
+  \*****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/**
+ * @file 高清资源分析器
+ * @todo 函数式
+ */
+var order = ['r', 'l', 'u', 'd', 'f', 'b'];
+var HDAnalyse = /** @class */ (function () {
+    function HDAnalyse() {
+    }
+    HDAnalyse.analyse = function (point, level, texture) {
+        var data = this.calcuv(point.x, point.y, point.z);
+        var img = texture.image[data.index];
+        return this.calclayer(data, img, level);
+    };
+    /**
+     * 计算图层
+     */
+    HDAnalyse.calclayer = function (data, img, level) {
+        var width = img.width;
+        var height = img.height;
+        var u = data.u * width;
+        var v = height - data.v * height;
+        var w = width / 2;
+        var h = height / 2;
+        var row = 1;
+        var column = 1;
+        var x = 0;
+        var y = 0;
+        if (u > w) {
+            column = 2;
+            x = w;
+        }
+        if (v > h) {
+            row = 2;
+            y = h;
+        }
+        return {
+            path: this.getName(data.index, row, column),
+            x: x, y: y, w: w, h: h
+        };
+    };
+    /**
+     * 计算世界坐标到 uv 坐标
+     */
+    HDAnalyse.calcuv = function (x, y, z) {
+        var absX = Math.abs(x);
+        var absY = Math.abs(y);
+        var absZ = Math.abs(z);
+        var isXPositive = x > 0 ? 1 : 0;
+        var isYPositive = y > 0 ? 1 : 0;
+        var isZPositive = z > 0 ? 1 : 0;
+        var maxAxis;
+        var uc;
+        var vc;
+        var index;
+        // -x right
+        if (!isXPositive && absX >= absY && absX >= absZ) {
+            // u (0 to 1) goes from -z to +z
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absX;
+            uc = z;
+            vc = y;
+            index = 0;
+        }
+        // +x left
+        if (isXPositive && absX >= absY && absX >= absZ) {
+            // u (0 to 1) goes from +z to -z
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absX;
+            uc = -z;
+            vc = y;
+            index = 1;
+        }
+        // +y up
+        if (isYPositive && absY >= absX && absY >= absZ) {
+            // u (0 to 1) goes from -x to +x
+            // v (0 to 1) goes from +z to -z
+            maxAxis = absY;
+            uc = x;
+            vc = -z;
+            index = 2;
+        }
+        // -y down
+        if (!isYPositive && absY >= absX && absY >= absZ) {
+            // u (0 to 1) goes from -x to +x
+            // v (0 to 1) goes from -z to +z
+            maxAxis = absY;
+            uc = x;
+            vc = z;
+            index = 3;
+        }
+        // +z front
+        if (isZPositive && absZ >= absX && absZ >= absY) {
+            // u (0 to 1) goes from -x to +x
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absZ;
+            uc = x;
+            vc = y;
+            index = 4;
+        }
+        // -z back
+        if (!isZPositive && absZ >= absX && absZ >= absY) {
+            // u (0 to 1) goes from +x to -x
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absZ;
+            uc = -x;
+            vc = y;
+            index = 5;
+        }
+        // Convert range from -1 to 1 to 0 to 1
+        var u = 0.5 * (uc / maxAxis + 1);
+        var v = 0.5 * (vc / maxAxis + 1);
+        return { u: u, v: v, index: index };
+    };
+    HDAnalyse.getName = function (i, row, column) {
+        var dir = order[i];
+        return "hd_" + dir + "/l1/" + row + "/l1_" + dir + "_" + row + "_" + column + ".jpg";
+    };
+    return HDAnalyse;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (HDAnalyse);
+
+
+/***/ }),
+
+/***/ "./src/pano/hdmap/monitor.hdmap.ts":
+/*!*****************************************!*\
+  !*** ./src/pano/hdmap/monitor.hdmap.ts ***!
+  \*****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
+/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/* harmony import */ var _analyse_hdmap__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./analyse.hdmap */ "./src/pano/hdmap/analyse.hdmap.ts");
+/* harmony import */ var _store_hdmap__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./store.hdmap */ "./src/pano/hdmap/store.hdmap.ts");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+
+
+
+/**
+ * @file 高清全景监控器
+ *       中心点坐标 -> uv 贴图 -> 资源图 -> canvas 区域块 -> needsUpdate = true
+ */
+var HDMonitor = /** @class */ (function (_super) {
+    __extends(HDMonitor, _super);
+    function HDMonitor(pano, opts) {
+        var _this = _super.call(this) || this;
+        _this.level = 2;
+        _this.pano = pano;
+        _this.subscribe(pano.frozen ? _this.Topic.SCENE.READY : _this.Topic.SCENE.LOAD, _this.init.bind(_this));
+        return _this;
+    }
+    HDMonitor.prototype.init = function () {
+        this.subscribe(this.Topic.RENDER.PROCESS, this.update.bind(this));
+    };
+    HDMonitor.prototype.update = function () {
+        var pano = this.pano;
+        var camera = pano.getCamera();
+        var target = pano.skyBox.getPlastic();
+        var intersects = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].intersect({ x: 0, y: 0 }, [target], camera);
+        if (intersects && camera.fov < 70) {
+            var point = intersects[0].point;
+            var data = _analyse_hdmap__WEBPACK_IMPORTED_MODULE_2__["default"].analyse(point, this.level, pano.skyBox.getMap());
+            var img = _store_hdmap__WEBPACK_IMPORTED_MODULE_3__["default"].getHDPicture('../assets/hdmap/' + data.path);
+            console.log(img);
+        }
+    };
+    /**
+     * 根据 uv 坐标在原图上绘制
+     * @param data
+     */
+    HDMonitor.prototype.draw = function (data) {
+        var plastic = this.pano.skyBox.getPlastic();
+        var texture = plastic.material.envMap;
+        var img = texture.image[data.index];
+        var width = img.width;
+        var height = img.height;
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext("2d");
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#1c86d1';
+        ctx.arc(data.u * width, height - data.v * height, 100, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.closePath();
+        texture.needsUpdate = true;
+        texture.image[data.index] = canvas;
+    };
+    return HDMonitor;
+}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
+/* harmony default export */ __webpack_exports__["default"] = (HDMonitor);
+
+
+/***/ }),
+
+/***/ "./src/pano/hdmap/store.hdmap.ts":
+/*!***************************************!*\
+  !*** ./src/pano/hdmap/store.hdmap.ts ***!
+  \***************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/**
+ * @file 高清图存储
+ */
+var HDStore = /** @class */ (function () {
+    function HDStore() {
+    }
+    HDStore.getHDPicture = function (url) {
+        if (this.hdmap[url]) {
+            return false;
+        }
+        var img = new Image();
+        img.src = url;
+        this.hdmap[url] = img;
+        return img;
+    };
+    HDStore.getHDPictureByKey = function (key) {
+        return this.hdmap[key];
+    };
+    HDStore.getStore = function () {
+        return this.hdmap;
+    };
+    HDStore.hdmap = {};
+    return HDStore;
+}());
+/* harmony default export */ __webpack_exports__["default"] = (HDStore);
+
+
+/***/ }),
+
 /***/ "./src/pano/loaders/base.loader.ts":
 /*!*****************************************!*\
   !*** ./src/pano/loaders/base.loader.ts ***!
@@ -55258,168 +55530,6 @@ var BaseLoader = /** @class */ (function () {
     return BaseLoader;
 }());
 /* harmony default export */ __webpack_exports__["default"] = (BaseLoader);
-
-
-/***/ }),
-
-/***/ "./src/pano/loaders/hdm.loader.ts":
-/*!****************************************!*\
-  !*** ./src/pano/loaders/hdm.loader.ts ***!
-  \****************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
-/* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
-var __extends = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-
-
-/**
- * @file 高清全景加载器
- *       中心点坐标 -> uv 贴图 -> 资源图 -> canvas 区域块 -> needsUpdate = true
- */
-var HDMLoader = /** @class */ (function (_super) {
-    __extends(HDMLoader, _super);
-    function HDMLoader(pano, opts) {
-        var _this = _super.call(this) || this;
-        _this.records = {};
-        _this.pano = pano;
-        _this.subscribe(pano.frozen ? _this.Topic.SCENE.READY : _this.Topic.SCENE.LOAD, _this.init.bind(_this));
-        return _this;
-    }
-    HDMLoader.prototype.init = function () {
-        this.subscribe(this.Topic.RENDER.PROCESS, this.update.bind(this));
-    };
-    HDMLoader.prototype.update = function () {
-        var pano = this.pano;
-        var target = pano.skyBox.getPlastic();
-        var intersects = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].intersect({ x: 0, y: 0 }, [target], pano.getCamera());
-        if (intersects) {
-            var point = intersects[0].point;
-            this.addToRecords(point);
-        }
-    };
-    HDMLoader.prototype.addToRecords = function (point) {
-        var records = this.records;
-        var data = this.calcuv(point.x, point.y, point.z);
-        var index = data.index;
-        // console.log(data)
-        if (!records[index]) {
-            records[index] = data;
-            this.draw(data);
-        }
-    };
-    /**
-     * 根据 uv 坐标在原图上绘制
-     * @param data
-     */
-    HDMLoader.prototype.draw = function (data) {
-        var plastic = this.pano.skyBox.getPlastic();
-        var texture = plastic.material.envMap;
-        var img = texture.image[data.index];
-        var width = img.width;
-        var height = img.height;
-        var canvas = document.createElement('canvas');
-        var ctx = canvas.getContext("2d");
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
-        ctx.beginPath();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#1c86d1';
-        ctx.arc(data.u * width, height - data.v * height, 100, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.closePath();
-        texture.needsUpdate = true;
-        texture.image[data.index] = canvas;
-    };
-    /**
-     * 计算世界坐标到 uv 坐标
-     */
-    HDMLoader.prototype.calcuv = function (x, y, z) {
-        var absX = Math.abs(x);
-        var absY = Math.abs(y);
-        var absZ = Math.abs(z);
-        var isXPositive = x > 0 ? 1 : 0;
-        var isYPositive = y > 0 ? 1 : 0;
-        var isZPositive = z > 0 ? 1 : 0;
-        var maxAxis;
-        var uc;
-        var vc;
-        var index;
-        // -x right
-        if (!isXPositive && absX >= absY && absX >= absZ) {
-            // u (0 to 1) goes from -z to +z
-            // v (0 to 1) goes from -y to +y
-            maxAxis = absX;
-            uc = z;
-            vc = y;
-            index = 0;
-        }
-        // +x left
-        if (isXPositive && absX >= absY && absX >= absZ) {
-            // u (0 to 1) goes from +z to -z
-            // v (0 to 1) goes from -y to +y
-            maxAxis = absX;
-            uc = -z;
-            vc = y;
-            index = 1;
-        }
-        // +y up
-        if (isYPositive && absY >= absX && absY >= absZ) {
-            // u (0 to 1) goes from -x to +x
-            // v (0 to 1) goes from +z to -z
-            maxAxis = absY;
-            uc = x;
-            vc = -z;
-            index = 2;
-        }
-        // -y down
-        if (!isYPositive && absY >= absX && absY >= absZ) {
-            // u (0 to 1) goes from -x to +x
-            // v (0 to 1) goes from -z to +z
-            maxAxis = absY;
-            uc = x;
-            vc = z;
-            index = 3;
-        }
-        // +z front
-        if (isZPositive && absZ >= absX && absZ >= absY) {
-            // u (0 to 1) goes from -x to +x
-            // v (0 to 1) goes from -y to +y
-            maxAxis = absZ;
-            uc = x;
-            vc = y;
-            index = 4;
-        }
-        // -z back
-        if (!isZPositive && absZ >= absX && absZ >= absY) {
-            // u (0 to 1) goes from +x to -x
-            // v (0 to 1) goes from -y to +y
-            maxAxis = absZ;
-            uc = -x;
-            vc = y;
-            index = 5;
-        }
-        // Convert range from -1 to 1 to 0 to 1
-        var u = (0.5 * (uc / maxAxis + 1)).toFixed(3);
-        var v = (0.5 * (vc / maxAxis + 1)).toFixed(3);
-        return { u: u, v: v, index: index };
-    };
-    return HDMLoader;
-}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
-/* harmony default export */ __webpack_exports__["default"] = (HDMLoader);
 
 
 /***/ }),
@@ -56303,7 +56413,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _controls_orbit_control__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controls/orbit.control */ "./src/pano/controls/orbit.control.ts");
 /* harmony import */ var _controls_gyro_control__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./controls/gyro.control */ "./src/pano/controls/gyro.control.ts");
 /* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
-/* harmony import */ var _loaders_hdm_loader__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./loaders/hdm.loader */ "./src/pano/loaders/hdm.loader.ts");
+/* harmony import */ var _hdmap_monitor_hdmap__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./hdmap/monitor.hdmap */ "./src/pano/hdmap/monitor.hdmap.ts");
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 /* harmony import */ var _overlays_overlays__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./overlays/overlays */ "./src/pano/overlays/overlays.ts");
 /* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
@@ -56435,7 +56545,7 @@ var Pano = /** @class */ (function (_super) {
             this.gyro = new _controls_gyro_control__WEBPACK_IMPORTED_MODULE_2__["default"](this.camera, orbit);
         }
         if (opts.hdm) {
-            new _loaders_hdm_loader__WEBPACK_IMPORTED_MODULE_4__["default"](this, opts.hdm);
+            new _hdmap_monitor_hdmap__WEBPACK_IMPORTED_MODULE_4__["default"](this, opts.hdm);
         }
         // all overlays manager
         this.overlays = new _overlays_overlays__WEBPACK_IMPORTED_MODULE_6__["default"](this, this.source['sceneGroup']);
@@ -58466,8 +58576,8 @@ var Thru = /** @class */ (function (_super) {
                     name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
                     rotate: true, emissive: '#787878', envMap: texture, hide: true, cloudimg: opts.img
                 }, pano);
-                var text = new _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]({ text: item.setName, fontsize: 24, width: 512, hide: true,
-                    x: pos.x, y: pos.y - 131, z: pos.z, limit: 6, shadow: true });
+                var text = new _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]({ text: item.setName, fontsize: 40, width: 512, hide: true,
+                    x: pos.x, y: pos.y - 141, z: pos.z, limit: 6, shadow: true });
                 hole.addBy(pano);
                 text.addBy(pano);
                 group.push(hole.getPlastic());
