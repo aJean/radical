@@ -5,34 +5,36 @@
 
 const order = ['r', 'l', 'u', 'd', 'f', 'b'];
 export default abstract class HDAnalyse {
-    static analyse(point, level, texture) {
+    static analyse(point, level) {
         const data = this.calcuv(point.x, point.y, point.z);
-        const img = texture.image[data.index];
 
-        return this.calclayer(data, img, level);
+        return this.calclayer(data, level);
     }
 
     /**
-     * 计算图层
+     * 计算图层, uv 原点在坐下, 对应到 backside 贴图为右下
      */
-    static calclayer(data, img, level) {
-        const width = img.width;
-        const height = img.height;
-        const u = width - data.u * width;
-        const v = height - data.v * height;
-        const w = width / 2;
-        const h = height / 2;
+    static calclayer(data, level) {
+        // level 2
+        const size = this.calcsize(level);
+        const fw = size.fw;
+        const fh = size.fh;
+        const w = size.w;
+        const h = size.h;
+        const u = fw - data.u * fw;
+        const v = fh - data.v * fh;
+
         let row = 1;
         let column = 1;
         let x = 0;
         let y = 0;
 
-        if (u > w) {
+        if (u >= w) {
             column = 2;
             x = w;
         } 
          
-        if (v > h) {
+        if (v >= h) {
             row = 2;
             y = h;
         }
@@ -40,8 +42,23 @@ export default abstract class HDAnalyse {
         return {
             index: data.index,
             path: this.getName(data.index, row, column),
-            x, y, w, h
+            x, y, w, h, fw, fh
         };
+    }
+
+    /**
+     * 计算栅格尺寸
+     * @param {number} level 层级 
+     */
+    static calcsize(level) {
+        switch (level) {
+            case 2:
+                // 512 * 4 
+                return {fw: 1024, fh: 1024, w: 512, h: 512};
+            case 3:
+                // 512 * 25
+                return {fw: 2560, fh: 2560, w: 512, h: 512}
+        }
     }
 
     /**

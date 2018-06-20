@@ -55218,38 +55218,53 @@ var order = ['r', 'l', 'u', 'd', 'f', 'b'];
 var HDAnalyse = /** @class */ (function () {
     function HDAnalyse() {
     }
-    HDAnalyse.analyse = function (point, level, texture) {
+    HDAnalyse.analyse = function (point, level) {
         var data = this.calcuv(point.x, point.y, point.z);
-        var img = texture.image[data.index];
-        return this.calclayer(data, img, level);
+        return this.calclayer(data, level);
     };
     /**
-     * 计算图层
+     * 计算图层, uv 原点在坐下, 对应到 backside 贴图为右下
      */
-    HDAnalyse.calclayer = function (data, img, level) {
-        var width = img.width;
-        var height = img.height;
-        var u = width - data.u * width;
-        var v = height - data.v * height;
-        var w = width / 2;
-        var h = height / 2;
+    HDAnalyse.calclayer = function (data, level) {
+        // level 2
+        var size = this.calcsize(level);
+        var fw = size.fw;
+        var fh = size.fh;
+        var w = size.w;
+        var h = size.h;
+        var u = fw - data.u * fw;
+        var v = fh - data.v * fh;
         var row = 1;
         var column = 1;
         var x = 0;
         var y = 0;
-        if (u > w) {
+        if (u >= w) {
             column = 2;
             x = w;
         }
-        if (v > h) {
+        if (v >= h) {
             row = 2;
             y = h;
         }
         return {
             index: data.index,
             path: this.getName(data.index, row, column),
-            x: x, y: y, w: w, h: h
+            x: x, y: y, w: w, h: h, fw: fw, fh: fh
         };
+    };
+    /**
+     * 计算栅格尺寸
+     * @param {number} level 层级
+     */
+    HDAnalyse.calcsize = function (level) {
+        switch (level) {
+            case 2:
+                // 512 * 4 
+                return { fw: 1024, fh: 1024, w: 512, h: 512 };
+            case 3:
+                // 512 * 25
+                return { fw: 2560, fh: 2560, w: 512, h: 512 };
+        }
     };
     /**
      * 计算世界坐标到 uv 坐标
@@ -55386,7 +55401,7 @@ var HDMonitor = /** @class */ (function (_super) {
         var intersects = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].intersect({ x: 0, y: 0 }, [target], camera);
         if (intersects && camera.fov < 60) {
             var point = intersects[0].point;
-            var data_1 = _analyse_hdmap__WEBPACK_IMPORTED_MODULE_2__["default"].analyse(point, this.level, pano.skyBox.getMap());
+            var data_1 = _analyse_hdmap__WEBPACK_IMPORTED_MODULE_2__["default"].analyse(point, this.level);
             var p = _store_hdmap__WEBPACK_IMPORTED_MODULE_3__["default"].getHDPicture('../assets/hdmap/' + data_1.path);
             if (p) {
                 p.then(function (hdimg) { return _this.draw(hdimg, data_1); });
@@ -55395,23 +55410,42 @@ var HDMonitor = /** @class */ (function (_super) {
     };
     /**
      * 根据 uv 坐标在原图上绘制
-     * @param data
+     * @param {Object} data 绘制信息
      */
     HDMonitor.prototype.draw = function (hdimg, data) {
         var texture = this.pano.skyBox.getMap();
-        var img = texture.image[data.index];
-        var width = img.width;
-        var height = img.height;
-        var canvas = document.createElement('canvas');
-        var ctx = canvas.getContext("2d");
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
-        ctx.beginPath();
-        ctx.drawImage(hdimg, data.x, data.y, data.w, data.h);
-        ctx.closePath();
-        texture.needsUpdate = true;
-        texture.image[data.index] = canvas;
+        var obj = texture.image[data.index];
+        var fw = data.fw;
+        var fh = data.fh;
+        // 初次绘制将 img 替换为 canvas
+        if (obj.src) {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext("2d");
+            canvas.width = fw;
+            canvas.height = fh;
+            ctx.drawImage(obj, 0, 0, fw, fh);
+            ctx.beginPath();
+            ctx.drawImage(hdimg, data.x, data.y, data.w, data.h);
+            this.text(ctx, 'ready', data.x, data.y);
+            ctx.closePath();
+            texture.needsUpdate = true;
+            texture.image[data.index] = canvas;
+        }
+        else {
+            var ctx = obj.getContext("2d");
+            texture.needsUpdate = true;
+            ctx.beginPath();
+            ctx.drawImage(hdimg, data.x, data.y, data.w, data.h);
+            this.text(ctx, 'ready', data.x, data.y);
+            ctx.closePath();
+        }
+    };
+    HDMonitor.prototype.text = function (ctx, str, x, y) {
+        ctx.lineWidth = 2;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff';
+        ctx.font = 'normal 300 40px Arial';
+        ctx.fillText(str, x + 256, y + 256);
     };
     HDMonitor.prototype.dispose = function () {
         _super.prototype.dispose.call(this);
