@@ -5,6 +5,7 @@ import Util from '../../core/util';
 import Loader from '../loaders/resource.loader';
 import Inradius from '../plastic/inradius.plastic';
 import Light from '../plastic/light.plastic';
+import Analyse from '../hdmap/analyse.hdmap';
 
 /**
  * @file 星际穿越 plugin
@@ -83,16 +84,23 @@ export default class Thru extends PubSubAble {
         const objs = this.objs;
         const texts = this.texts;
         const radius = opts.radius;
+        // TODO: 注意右侧的球文字间距需要处理
+        const poss = [Analyse.calcWorld(4, 0.59375, 0.695906433),
+            Analyse.calcWorld(5, 0.703125, 0.664717349),
+            Analyse.calcWorld(1, 0.375, 0.859649123)];
 
         list.forEach((item, i) => {
             item.setName && loader.loadTexture(item.image).then(texture => {
-                const pos = this.getVector(i);              
+                // const pos = this.getVector(i);
+                
+                const pos = poss[i];
+                const interpolat = i == 2 ? 161 : 141;
                 const hole = new Inradius({
                     name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
                     rotate: true, emissive: '#787878', envMap: texture, hide: true, cloudimg: opts.img
                 }, pano);
                 const text = new Text({text: item.setName, fontsize: 40, width: 512, hide: true,
-                    x: pos.x, y: pos.y - 141, z: pos.z, limit: 6, shadow: true});
+                    x: pos.x, y: pos.y - interpolat, z: pos.z, limit: 6, shadow: true});
                 hole.addBy(pano);
                 text.addBy(pano);
 

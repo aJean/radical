@@ -6,21 +6,22 @@
 const order = ['r', 'l', 'u', 'd', 'f', 'b'];
 export default abstract class HDAnalyse {
     static analyse(point, level) {
-        const data = this.calcuv(point.x, point.y, point.z);
-
-        return this.calclayer(data, level);
+        const data = this.calcUV(point.x, point.y, point.z);
+console.log(data)
+        return this.calcLayer(data, level);
     }
 
     /**
-     * 计算图层, uv 原点在坐下, 对应到 backside 贴图为右下
+     * 计算图层, uv 原点在左下, 对应到 backside 贴图为右下
      */
-    static calclayer(data, level) {
+    static calcLayer(data, level) {
         // level 2
-        const size = this.calcsize(level);
+        const size = this.calcSize(level);
         const fw = size.fw;
         const fh = size.fh;
         const w = size.w;
         const h = size.h;
+        // 像素坐标左上是原点
         const u = fw - data.u * fw;
         const v = fh - data.v * fh;
 
@@ -41,7 +42,7 @@ export default abstract class HDAnalyse {
 
         return {
             index: data.index,
-            path: this.getName(data.index, row, column),
+            path: this.calcPath(data.index, row, column),
             x, y, w, h, fw, fh
         };
     }
@@ -50,7 +51,7 @@ export default abstract class HDAnalyse {
      * 计算栅格尺寸
      * @param {number} level 层级 
      */
-    static calcsize(level) {
+    static calcSize(level) {
         switch (level) {
             case 2:
                 // 512 * 4 
@@ -64,7 +65,7 @@ export default abstract class HDAnalyse {
     /**
      * 计算世界坐标到 uv 坐标
      */
-    static calcuv(x, y, z) {
+    static calcUV(x, y, z) {
         const absX = Math.abs(x);
         const absY = Math.abs(y);
         const absZ = Math.abs(z);
@@ -145,7 +146,66 @@ export default abstract class HDAnalyse {
         return {u, v, index};
     }
 
-    static getName(i, row, column) {
+    /**
+     * uv 坐标转换为世界坐标
+     * @param {number} index 图片编号
+     * @param {number} u 
+     * @param {number} v 
+     */
+    static calcWorld(index, u, v) {
+        // convert range 0 to 1 to -1 to 1
+        const uc = 2 * u - 1;
+        const vc = 2 * v - 1;
+        let x;
+        let y;
+        let z;
+
+        switch (index) {
+            // POSITIVE X
+            case 0: 
+                x = 1;
+                y = vc;
+                z = -uc;
+                break;
+            // NEGATIVE X
+            case 1:
+                x = -1;
+                y = vc;
+                z = uc;
+                break;
+            // POSITIVE Y
+            case 2:
+                x = uc;
+                y = 1;
+                z = -vc;
+                break;
+            // NEGATIVE Y
+            case 3:
+                x = uc;
+                y = -1;
+                z = vc;
+                break;
+            // POSITIVE Z
+            case 4:
+                x = uc;
+                y = vc;
+                z = 1;
+                break;
+            // NEGATIVE Z
+            case 5:
+                x = -uc;
+                y = vc;
+                z = -1;
+            break;
+        }
+
+        return {x: x * 1000, y: y * 1000, z: z * 1000};
+    }
+
+    /**
+     * 获取高清图的路径
+     */
+    static calcPath(i, row, column) {
         const dir = order[i];
         return `hd_${dir}/l1/${row}/l1_${dir}_${row}_${column}.jpg`;
     }

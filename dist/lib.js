@@ -55219,19 +55219,21 @@ var HDAnalyse = /** @class */ (function () {
     function HDAnalyse() {
     }
     HDAnalyse.analyse = function (point, level) {
-        var data = this.calcuv(point.x, point.y, point.z);
-        return this.calclayer(data, level);
+        var data = this.calcUV(point.x, point.y, point.z);
+        console.log(data);
+        return this.calcLayer(data, level);
     };
     /**
-     * 计算图层, uv 原点在坐下, 对应到 backside 贴图为右下
+     * 计算图层, uv 原点在左下, 对应到 backside 贴图为右下
      */
-    HDAnalyse.calclayer = function (data, level) {
+    HDAnalyse.calcLayer = function (data, level) {
         // level 2
-        var size = this.calcsize(level);
+        var size = this.calcSize(level);
         var fw = size.fw;
         var fh = size.fh;
         var w = size.w;
         var h = size.h;
+        // 像素坐标左上是原点
         var u = fw - data.u * fw;
         var v = fh - data.v * fh;
         var row = 1;
@@ -55248,7 +55250,7 @@ var HDAnalyse = /** @class */ (function () {
         }
         return {
             index: data.index,
-            path: this.getName(data.index, row, column),
+            path: this.calcPath(data.index, row, column),
             x: x, y: y, w: w, h: h, fw: fw, fh: fh
         };
     };
@@ -55256,7 +55258,7 @@ var HDAnalyse = /** @class */ (function () {
      * 计算栅格尺寸
      * @param {number} level 层级
      */
-    HDAnalyse.calcsize = function (level) {
+    HDAnalyse.calcSize = function (level) {
         switch (level) {
             case 2:
                 // 512 * 4 
@@ -55269,7 +55271,7 @@ var HDAnalyse = /** @class */ (function () {
     /**
      * 计算世界坐标到 uv 坐标
      */
-    HDAnalyse.calcuv = function (x, y, z) {
+    HDAnalyse.calcUV = function (x, y, z) {
         var absX = Math.abs(x);
         var absY = Math.abs(y);
         var absZ = Math.abs(z);
@@ -55339,7 +55341,63 @@ var HDAnalyse = /** @class */ (function () {
         var v = 0.5 * (vc / maxAxis + 1);
         return { u: u, v: v, index: index };
     };
-    HDAnalyse.getName = function (i, row, column) {
+    /**
+     * uv 坐标转换为世界坐标
+     * @param {number} index 图片编号
+     * @param {number} u
+     * @param {number} v
+     */
+    HDAnalyse.calcWorld = function (index, u, v) {
+        // convert range 0 to 1 to -1 to 1
+        var uc = 2 * u - 1;
+        var vc = 2 * v - 1;
+        var x;
+        var y;
+        var z;
+        switch (index) {
+            // POSITIVE X
+            case 0:
+                x = 1;
+                y = vc;
+                z = -uc;
+                break;
+            // NEGATIVE X
+            case 1:
+                x = -1;
+                y = vc;
+                z = uc;
+                break;
+            // POSITIVE Y
+            case 2:
+                x = uc;
+                y = 1;
+                z = -vc;
+                break;
+            // NEGATIVE Y
+            case 3:
+                x = uc;
+                y = -1;
+                z = vc;
+                break;
+            // POSITIVE Z
+            case 4:
+                x = uc;
+                y = vc;
+                z = 1;
+                break;
+            // NEGATIVE Z
+            case 5:
+                x = -uc;
+                y = vc;
+                z = -1;
+                break;
+        }
+        return { x: x * 1000, y: y * 1000, z: z * 1000 };
+    };
+    /**
+     * 获取高清图的路径
+     */
+    HDAnalyse.calcPath = function (i, row, column) {
         var dir = order[i];
         return "hd_" + dir + "/l1/" + row + "/l1_" + dir + "_" + row + "_" + column + ".jpg";
     };
@@ -58536,6 +58594,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _loaders_resource_loader__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 /* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
 /* harmony import */ var _plastic_light_plastic__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../plastic/light.plastic */ "./src/pano/plastic/light.plastic.ts");
+/* harmony import */ var _hdmap_analyse_hdmap__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../hdmap/analyse.hdmap */ "./src/pano/hdmap/analyse.hdmap.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -58546,6 +58605,7 @@ var __extends = (undefined && undefined.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+
 
 
 
@@ -58610,22 +58670,27 @@ var Thru = /** @class */ (function (_super) {
      * 创建穿越点
      */
     Thru.prototype.create = function (list) {
-        var _this = this;
         var pano = this.pano;
         var opts = this.opts;
         var group = this.group;
         var objs = this.objs;
         var texts = this.texts;
         var radius = opts.radius;
+        // TODO: 注意右侧的球文字间距需要处理
+        var poss = [_hdmap_analyse_hdmap__WEBPACK_IMPORTED_MODULE_7__["default"].calcWorld(4, 0.59375, 0.695906433),
+            _hdmap_analyse_hdmap__WEBPACK_IMPORTED_MODULE_7__["default"].calcWorld(5, 0.703125, 0.664717349),
+            _hdmap_analyse_hdmap__WEBPACK_IMPORTED_MODULE_7__["default"].calcWorld(1, 0.375, 0.859649123)];
         list.forEach(function (item, i) {
             item.setName && loader.loadTexture(item.image).then(function (texture) {
-                var pos = _this.getVector(i);
+                // const pos = this.getVector(i);
+                var pos = poss[i];
+                var interpolat = i == 2 ? 161 : 141;
                 var hole = new _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_5__["default"]({
                     name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
                     rotate: true, emissive: '#787878', envMap: texture, hide: true, cloudimg: opts.img
                 }, pano);
                 var text = new _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__["default"]({ text: item.setName, fontsize: 40, width: 512, hide: true,
-                    x: pos.x, y: pos.y - 141, z: pos.z, limit: 6, shadow: true });
+                    x: pos.x, y: pos.y - interpolat, z: pos.z, limit: 6, shadow: true });
                 hole.addBy(pano);
                 text.addBy(pano);
                 group.push(hole.getPlastic());
