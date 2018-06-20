@@ -29,7 +29,7 @@ export default class HDMonitor extends PubSubAble {
         const target = pano.skyBox.getPlastic();
         const intersects = Util.intersect({x: 0, y: 0}, [target], camera);
 
-        if (intersects && camera.fov < 60) {
+        if (intersects) {
             const point = intersects[0].point;
             const data = HDAnalyse.analyse(point, this.level);
             const p = HDStore.getHDPicture('../assets/hdmap/' + data.path);

@@ -5,6 +5,10 @@
 export default abstract class HDStore {
     static hdmap = {};
 
+    /**
+     * 加载高清图片
+     * @param {string} url 
+     */
     static getHDPicture(url) {
         if (this.hdmap[url]) {
             return false;
@@ -20,6 +24,10 @@ export default abstract class HDStore {
         });
     }
 
+    /**
+     * 获取已经加载过的图片
+     * @param {string} key 
+     */
     static getHDPictureByKey(key) {
         return Promise.resolve(this.hdmap[key]);
     }

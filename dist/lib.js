@@ -55399,7 +55399,7 @@ var HDMonitor = /** @class */ (function (_super) {
         var camera = pano.getCamera();
         var target = pano.skyBox.getPlastic();
         var intersects = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].intersect({ x: 0, y: 0 }, [target], camera);
-        if (intersects && camera.fov < 60) {
+        if (intersects) {
             var point = intersects[0].point;
             var data_1 = _analyse_hdmap__WEBPACK_IMPORTED_MODULE_2__["default"].analyse(point, this.level);
             var p = _store_hdmap__WEBPACK_IMPORTED_MODULE_3__["default"].getHDPicture('../assets/hdmap/' + data_1.path);
@@ -55472,6 +55472,10 @@ __webpack_require__.r(__webpack_exports__);
 var HDStore = /** @class */ (function () {
     function HDStore() {
     }
+    /**
+     * 加载高清图片
+     * @param {string} url
+     */
     HDStore.getHDPicture = function (url) {
         if (this.hdmap[url]) {
             return false;
@@ -55484,6 +55488,10 @@ var HDStore = /** @class */ (function () {
             img.onerror = function () { return reject(); };
         });
     };
+    /**
+     * 获取已经加载过的图片
+     * @param {string} key
+     */
     HDStore.getHDPictureByKey = function (key) {
         return Promise.resolve(this.hdmap[key]);
     };
