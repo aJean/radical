@@ -1,4 +1,4 @@
-import PubSubAble from '../../interface/pubsub.interface';
+import History from '../../interface/history.interface';
 import Text from '../plastic/text.plastic';
 import Tween from '../animations/tween.animation';
 import Util from '../../core/util';
@@ -18,9 +18,9 @@ const defaultOpts = {
     surl: null
 };
 const loader = new Loader();
-export default class Thru extends PubSubAble {
+export default class Thru extends History {
     opts: any;
-    jdid: any;
+    judgeid: any;
     list: any;
     camera: any;
     pano: any;
@@ -38,18 +38,18 @@ export default class Thru extends PubSubAble {
         this.camera = pano.getCamera();
         this.opts = Util.assign({}, defaultOpts, opts);
         this.onCanvasClick = this.onCanvasClick.bind(this);
-        
-        const webgl = pano.webgl;
-        const Topic = this.Topic;
 
         // common lights
         this.createLights();
 
+        const Topic = this.Topic;
         this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT, this.load.bind(this));
         this.subscribe(Topic.SCENE.ATTACHSTART, this.onSceneChange.bind(this));
         this.subscribe(Topic.SCENE.ATTACH, this.load.bind(this));
         this.subscribe(Topic.UI.IMMERSION, this.onToggle.bind(this));
-        this.jdid = pano.overlays.addJudgeFunc(this.onCanvasClick.bind(this));
+        this.judgeid = pano.overlays.addJudgeFunc(this.onCanvasClick.bind(this));
+        // init scene id
+        this.initState({id: pano.currentData.id});
     }
 
     load(topic, payload) {
@@ -91,10 +91,8 @@ export default class Thru extends PubSubAble {
 
         list.forEach((item, i) => {
             item.setName && loader.loadTexture(item.image).then(texture => {
-                // const pos = this.getVector(i);
-                
-                const pos = poss[i];
-                const interpolat = i == 2 ? 161 : 141;
+                const pos = this.getVector(i);
+                const interpolat = 141;
                 const hole = new Inradius({
                     name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
                     rotate: true, emissive: '#787878', envMap: texture, hide: true, cloudimg: opts.img
@@ -137,15 +135,14 @@ export default class Thru extends PubSubAble {
      * 显示穿越点
      */
     show() {
-        const pano = this.pano;
         const camera = this.camera;
 
         this.active = true;        
-        this.objs.forEach((obj, i) => {
+        this.objs.forEach(obj => {
             obj.lookAt(camera.position);
             obj.show();
         });
-        this.texts.forEach((text, i) => {
+        this.texts.forEach(text => {
             text.lookAt(camera.position);
             text.show();
         });
@@ -207,6 +204,7 @@ export default class Thru extends PubSubAble {
                 if (data) {
                     const id = data.sceneId;
                     const sid = data.setId;
+
                     loader.fetchUrl(`${surl}&setid=${sid}&sceneid=${id}`)
                         .then(res => {
                             const data = res.data;
@@ -215,12 +213,15 @@ export default class Thru extends PubSubAble {
 
                             if (sceneGroup) {
                                 const scene = sceneGroup.find(item => item.id == id);
-                                const lookTarget = pano.getLookAtTarget();
+                                const ctarget = pano.getLookAtTarget();
                                 const pos = instance.getPosition().clone();
-                                pos.z += pos.z > 0 ? 50 : -50;
+                                const flag = pos.z > 0;
+
                                 // lock gyro control
                                 pano.gyro && pano.gyro.makeEnable(false);
-                                new Tween(lookTarget).to(pos).effect('quintEaseIn', 1000)
+                                pos.z += flag ? 50 : -50;
+
+                                new Tween(ctarget).to(pos).effect('quintEaseIn', 1000)
                                     .start(['x', 'y', 'z'])
                                     .complete(() => {
                                         new Tween(camera.position).to(instance.getPosition())
@@ -230,16 +231,17 @@ export default class Thru extends PubSubAble {
                                                 this.publish(this.Topic.THRU.CHANGE, {data, scene: oldscene, pano});
                                                 this.active = true;
                                                 pano.enterThru(scene, instance.getMap());
-                                                this.cleanup(); 
-                                                pano.getControl().reset(pos.z > 0);
+                                                this.cleanup();
+                                                pano.getControl().reset(flag);
                                                 pano.supplyOverlayScenes(sceneGroup);
                                                 pano.gyro && pano.gyro.makeEnable(true);
+                                                // record scene id
+                                                this.pushState({id});
                                             });
                                     });
                             }
                         }).catch(e => {
                             this.active = true;
-                            // release gyro control
                             pano.gyro && pano.gyro.makeEnable(true);
                         });
                 }
@@ -262,12 +264,32 @@ export default class Thru extends PubSubAble {
         this.group.length = 0;
     }
 
+
+    /**
+     * 处理星际后退, 会发请求获取场景 group
+     */
+    onPopstate() {
+        const pano = this.pano;
+        const state = this.popState();
+        
+        if (!state) {
+            history.back();
+        } else if (state.id != pano.currentData.id) {
+            const id = state.id;
+            const scene = pano.overlays.findScene(id);
+            
+            pano.enterNext(scene);
+            loader.fetchUrl(`${this.opts.surl}&setid=${scene.setId}&sceneid=${scene.id}`)
+                .then(res => this.publish(this.Topic.THRU.BACK, {id, scenes: res.data.sceneGroup}));
+        }
+    }
+
     dispose() {
         const pano = this.pano;
 
         this.cleanup();
         this.lights.forEach(light => light.removeBy(pano));
         super.dispose();
-        pano.overlays.reMoveJudgeFunc(this.jdid);
+        pano.overlays.reMoveJudgeFunc(this.judgeid);
     }
 }

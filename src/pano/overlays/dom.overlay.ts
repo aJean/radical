@@ -45,12 +45,29 @@ export default class DomOverlay implements IPluggableOverlay {
         data.y = y;
     }
 
+    /**
+     * 用于进入沉浸态
+     */
     hide() {
+        this.elem.style.visibility = 'hidden';
+    }
+
+    /**
+     * 用于退出沉浸态
+     */
+    show() {
+        this.elem.style.visibility = 'visible';
+    }
+
+    /**
+     * 用于在 z > 1 时移出文档流
+     */
+    out() {
         this.elem.style.display = 'none';
     }
 
-    show() {
-        this.elem.style.display = 'block';
+    in(state) {
+        this.elem.style.display = state || 'block';
     }
 
     dispose() {}

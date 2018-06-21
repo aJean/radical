@@ -45,12 +45,13 @@ export default class Overlays extends PubSubAble {
         this.list = list;
 
         const Topic = this.Topic;
+
         this.subscribe(Topic.SCENE.INIT, this.init.bind(this));
         this.subscribe(Topic.SCENE.ATTACHSTART, this.removeOverlays.bind(this));
-        // per scene change
         this.subscribe(Topic.SCENE.ATTACH, this.init.bind(this));
         this.subscribe(Topic.RENDER.PROCESS, this.updateOverlays.bind(this));
-
+        this.subscribe(Topic.UI.IMMERSION, this.onToggle.bind(this));
+        // detect click event
         pano.getCanvas().addEventListener('click', this.onCanvasHandle.bind(this));
     }
 
@@ -88,23 +89,27 @@ export default class Overlays extends PubSubAble {
         return cache;
     }
 
-    findScene(id) {
-        return this.list.find(item => item.id == id);
-    }
-
     /**
      * 增加场景数据, 用于图集切换
-     * @param {Array} scenes 场景数据
+     * @param {Array} scenes 要增加的场景数据
      */
     addScenes(scenes) {
         this.list = scenes.concat(this.list);
     }
 
     /** 
-     * 获取场景列表
+     * 获取场景列表, 整个 pano 中所有加载的 sceneGroup
      */
     getScenes() {
         return this.list;
+    }
+
+    /**
+     * 根据 id 获取场景数据
+     * @param {any} id 
+     */
+    findScene(id) {
+        return this.list.find(item => item.id == id);
     }
 
     /**
@@ -137,7 +142,7 @@ export default class Overlays extends PubSubAble {
 
         // z > 1 is backside
         if (position.z > 1) {
-            item.hide();
+            item.out();
         } else {
             const x = Math.floor(position.x * width + width);
             const y = Math.floor(-position.y * height + height);
@@ -266,6 +271,14 @@ export default class Overlays extends PubSubAble {
     }
 
     /**
+     * 沉浸态切换
+     */
+    onToggle(topic, payload) {
+        const cache = this.getCurrent(this.cid);
+        payload.should ? this.showOverlays(cache) : this.hideOverlays(cache);
+    }
+
+    /**
      * 删除特定的 dom overlay
      * @param {Object} data 
      */
@@ -309,10 +322,14 @@ export default class Overlays extends PubSubAble {
      * @param {Object} data 缓存数据 
      * @param {boolean} isclean 是否清除
      */
-    hideOverlays(data, isclean) {
+    hideOverlays(data, isclean = false) {
         const pano = this.pano;
 
         if (data) {
+            if (isclean && data.detects.children) {
+                data.detects.remove(...data.detects.children);
+            }
+
             data.domGroup.forEach(item => {
                 item.hide();
                 if (isclean) {
@@ -328,12 +345,6 @@ export default class Overlays extends PubSubAble {
                     pano.removeSceneObject(item.particle);
                 }
             });
-
-            if (isclean && data.detects.children) {
-                data.detects.remove(...data.detects.children);
-                pano.removeSceneObject(data.detects);
-            }
-
         }
     }
 

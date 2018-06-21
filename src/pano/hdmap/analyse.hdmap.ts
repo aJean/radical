@@ -7,7 +7,6 @@ const order = ['r', 'l', 'u', 'd', 'f', 'b'];
 export default abstract class HDAnalyse {
     static analyse(point, level) {
         const data = this.calcUV(point.x, point.y, point.z);
-console.log(data)
         return this.calcLayer(data, level);
     }
 
@@ -21,24 +20,17 @@ console.log(data)
         const fh = size.fh;
         const w = size.w;
         const h = size.h;
+        const phases = size.phases;
         // 像素坐标左上是原点
         const u = fw - data.u * fw;
         const v = fh - data.v * fh;
 
-        let row = 1;
-        let column = 1;
-        let x = 0;
-        let y = 0;
-
-        if (u >= w) {
-            column = 2;
-            x = w;
-        } 
-         
-        if (v >= h) {
-            row = 2;
-            y = h;
-        }
+        // 计算 uv 坐标在分段中的位置
+        const column = phases.length - phases.findIndex(phase => u >= phase);
+        const row = phases.length - phases.findIndex(phase => v >= phase);
+        // draw start point
+        const x = (column - 1) * w;
+        const y = (row - 1) * h;
 
         return {
             index: data.index,
@@ -54,11 +46,19 @@ console.log(data)
     static calcSize(level) {
         switch (level) {
             case 2:
-                // 512 * 4 
-                return {fw: 1024, fh: 1024, w: 512, h: 512};
+                // 512 * 4
+                return {
+                    fw: 1024, fh: 1024,
+                    w: 512, h: 512,
+                    phases: [512, 0]
+                };
             case 3:
                 // 512 * 25
-                return {fw: 2560, fh: 2560, w: 512, h: 512}
+                return {
+                    fw: 2560, fh: 2560,
+                    w: 512, h: 512,
+                    phases: [2048, 1536, 1024, 512, 0]
+                };
         }
     }
 

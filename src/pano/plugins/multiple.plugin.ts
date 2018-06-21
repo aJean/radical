@@ -31,7 +31,7 @@ export default class Multiple extends PluggableUI {
         const inner = this.inner = Util.createElement('<div class="pano-multiplescene-inner"></div>');
         
         inner.innerHTML = this.data.map((item, i) => {
-            return `<div class="pano-multiplescene-item" data-id="${i}">
+            return `<div class="pano-multiplescene-item" data-id="${i}" data-scene="${item.id}">
                 <img src="${item.thumbPath}" class="pano-multiplescene-img">
                 <span class="pano-multiplescene-name">${item.name}</span>
             </div>`;
@@ -58,6 +58,8 @@ export default class Multiple extends PluggableUI {
         this.subscribe(Topic.SCENE.ATTACH, this.onEnable.bind(this));
         // 重新渲染场景列表
         this.subscribe(Topic.SCENE.RESET, this.onReset.bind(this));
+        this.subscribe(Topic.THRU.BACK, this.onReset.bind(this));
+        // 点击进入沉浸态
         this.subscribe(Topic.UI.PANOCLICK, this.onToggle.bind(this));
     }
 
@@ -114,14 +116,20 @@ export default class Multiple extends PluggableUI {
         const scenes = this.data = payload.scenes;
 
         inner.innerHTML = scenes.map((item, i) => {
-            return `<div class="pano-multiplescene-item" data-id="${i}">
+            return `<div class="pano-multiplescene-item" data-id="${i}" data-scene="${item.id}">
                 <img src="${item.thumbPath}" class="pano-multiplescene-img">
                 <span class="pano-multiplescene-name">${item.name}</span>
             </div>`;
         }).join('');
 
-        outer.scrollLeft = 0;
-        this.setActive(inner.childNodes[0]);
+        if (payload.id) {
+            const node = inner.querySelector(`div[data-scene="${payload.id}"]`);
+            outer.scrollLeft = Math.max(0, node.offsetLeft - 20);
+            this.setActive(node);
+        } else {
+            outer.scrollLeft = 0;
+            this.setActive(inner.childNodes[0]);
+        }
     }
 
     findParent(node, cls) {

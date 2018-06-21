@@ -45,7 +45,8 @@ export default {
     // star through
     THRU: {
         SHOW: 'thru-show',
-        CHANGE: 'thru-change'
+        CHANGE: 'thru-change',
+        BACK: 'thru-back'
     },
     // animation
     ANIMATION: {
