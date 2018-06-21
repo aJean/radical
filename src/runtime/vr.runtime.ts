@@ -6,7 +6,6 @@ import Indicator from '../pano/plugins/indicator.plugin';
 import Divider from '../vr/divider.vr';
 import Timeline from '../pano/animations/timeline.animation';
 import External from '../core/external';
-import PubSub from '../core/pubsub';
 
 /**
  * @file wev vr runtime
@@ -65,7 +64,7 @@ export default abstract class Runtime {
             // 用户订阅事件
             if (events) {
                 for (let name in events) {
-                    PubSub.subscribe(name, events[name]);
+                    vpano.subscribe(name, events[name]);
                 }
             }
             // 开场动画

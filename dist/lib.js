@@ -53811,6 +53811,9 @@ Object(_core_polyfill__WEBPACK_IMPORTED_MODULE_5__["default"])();
     startVR: function (url, el, events) {
         _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_7__["default"].start(url, el, events);
     },
+    disposeVR: function (ref) {
+        _runtime_vr_runtime__WEBPACK_IMPORTED_MODULE_7__["default"].releaseInstance(ref);
+    },
     /**
      * 业务方发布事件
      * @param {string} topic
@@ -59117,7 +59120,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pano_plugins_helper_plugin__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../pano/plugins/helper.plugin */ "./src/pano/plugins/helper.plugin.ts");
 /* harmony import */ var _pano_pano__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
-/* harmony import */ var _core_pubsub__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../core/pubsub */ "./src/core/pubsub.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -59153,7 +59155,6 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-
 
 
 
@@ -59256,7 +59257,7 @@ var Runtime = /** @class */ (function () {
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
-                                    _core_pubsub__WEBPACK_IMPORTED_MODULE_12__["default"].subscribe(name_1, events[name_1]);
+                                    pano.subscribe(name_1, events[name_1]);
                                 }
                             }
                             if (source['animation']) {
@@ -59351,7 +59352,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vr_divider_vr__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../vr/divider.vr */ "./src/vr/divider.vr.ts");
 /* harmony import */ var _pano_animations_timeline_animation__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
 /* harmony import */ var _core_external__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/external */ "./src/core/external.ts");
-/* harmony import */ var _core_pubsub__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/pubsub */ "./src/core/pubsub.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -59387,7 +59387,6 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-
 
 
 
@@ -59459,7 +59458,7 @@ var Runtime = /** @class */ (function () {
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
-                                    _core_pubsub__WEBPACK_IMPORTED_MODULE_8__["default"].subscribe(name_1, events[name_1]);
+                                    vpano_1.subscribe(name_1, events[name_1]);
                                 }
                             }
                             // 开场动画

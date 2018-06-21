@@ -31,7 +31,11 @@
                 }]
             };
             
-            bxl.startPano(json, '#test');
+            bxl.startPano(json, '#test', {
+                'scene-create': function() {
+                    console.log(1)
+                }
+            });
         </script>
     </body>
 </html>
