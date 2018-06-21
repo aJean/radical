@@ -30,6 +30,10 @@ export default {
         VRuntime.start(url, el, events);
     },
 
+    disposeVR(ref: string) {
+        VRuntime.releaseInstance(ref);
+    },
+
     /**
      * 业务方发布事件
      * @param {string} topic 
