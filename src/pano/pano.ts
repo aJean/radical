@@ -8,10 +8,10 @@ import Overlays from './overlays/overlays';
 import Inradius from './plastic/inradius.plastic';
 import Log from '../core/log';
 import Util from '../core/util';
-import PubSubAble from '../interface/pubsub.interface';
+import History from '../interface/history.interface';
 
 /**
- * @file 全景渲染
+ * @file 全景渲染 & 历史记录
  */
 
 const defaultOpts = {
@@ -22,7 +22,7 @@ const defaultOpts = {
     sceneTrans: false
 };
 const myLoader = new ResourceLoader();
-export default class Pano extends PubSubAble {
+export default class Pano extends History {
     overlays: Overlays;
     source: any;
     size: any;
@@ -42,20 +42,19 @@ export default class Pano extends PubSubAble {
     constructor(el, source) {
         super();
 
-        const data = this.currentData = Util.findScene(source);
-
+        this.currentData = Util.findScene(source);
         this.opts = Object.assign({el}, defaultOpts, source['pano']);
         this.source = source;
-        this.initEnv(data);
+
+        this.initEnv();
     }
 
     /**
      * 初始化环境, 创建 webgl, scene, camera
-     * @param {Object} data 全景参数 
      */
-    initEnv(data) {
+    initEnv() {
         const opts = this.opts;
-        const container = opts.el;
+        const data = this.currentData;
         const size = this.size = Util.calcRenderSize(opts);
         const root = this.root = Util.createElement(`<div class="pano-root"></div>`);
         const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});
@@ -63,9 +62,10 @@ export default class Pano extends PubSubAble {
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(size.width, size.height);
-
+        // dom
         root.appendChild(webgl.domElement);
-        container.appendChild(root);
+        opts.el.appendChild(root);
+        // scene camera
         this.scene = new Scene();
         this.camera = new PerspectiveCamera(data.fov || opts.fov, size.aspect, 0.1, 10000);
         // create control
@@ -83,6 +83,10 @@ export default class Pano extends PubSubAble {
         if (opts.hdm) {
             new HDMonitor(this, opts.hdm);
         }
+
+        if (opts.history) {
+            this.initState({id: data.id});
+        }
         
         // all overlays manager
         this.overlays = new Overlays(this, this.source['sceneGroup']);
@@ -94,14 +98,15 @@ export default class Pano extends PubSubAble {
      */
     resetEnv(data) {
         const fov = data.fov || this.opts.fov;
-        const camera = this.camera;
-        
+
+        // set current scene data
+        this.currentData = data;
         // look at angle
         if (!this.gyro && data.lng !== void 0) {
             this.setLook(data.lng, data.lat);
         }
         // scene fov        
-        if (fov != camera.fov) {
+        if (fov != this.camera.fov) {
             this.setFov(fov);
         }
     }
@@ -298,6 +303,36 @@ export default class Pano extends PubSubAble {
         this.webgl.setSize(size.width, size.height);
     }
 
+    pushState(state) {
+        if (!this.opts.history) {
+            return;
+        }
+
+        super.pushState(state);
+    }
+
+    /**
+     * 处理场景后退, 会发请求获取场景 group
+     */
+    onPopstate() {
+        if (!this.opts.history) {
+            return;
+        }
+
+        const state = this.popState();
+
+        if (!state) {
+            history.back();
+        } else if (state.id != this.currentData.id) {
+            const id = state.id;
+            const scene = this.overlays.findScene(id);
+            
+            this.enterNext(scene);
+            myLoader.fetchUrl(`https://image.baidu.com/img/image/quanjing/bxlpanoinfo?sf=1&setid=${scene.setId}`)
+                .then(res => this.publish(this.Topic.THRU.BACK, {id, scenes: res.data.sceneGroup}));
+        }
+    }
+
     /**
      * 获取相机
      */
@@ -430,30 +465,30 @@ export default class Pano extends PubSubAble {
     /**
      * internal enter next scene
      * @param {Object} data scene data
+     * @param {string} from which plugin call
      */
-    enterNext(data) {
+    enterNext(data, from?) {
         const path = data.imgPath;
-        // preTrans defeate sceneTrans
-        if (this.opts.preTrans && path) {
+        const opts = this.opts;
+
+        // positive direction add history state
+        from && this.pushState({id: data.id});
+
+        // preTrans defeates sceneTrans
+        if (opts.preTrans && path) {
             myLoader.loadTexture(path, 'canvas')
                 .then(texture => {
-                    this.currentData = data;
                     this.resetEnv(data);
                     this.replaceTexture(texture);
                     // 清晰图
                     return myLoader.loadTexture(data.bxlPath || data.texPath)
-                        .then(texture => {
-                            if (this.currentData == data) {
-                                this.replaceSlient(texture);
-                            }
-                        })
+                        .then(texture => this.currentData == data && this.replaceSlient(texture));
                 }).catch(e => Log.output(e));
         } else {
             myLoader.loadTexture(data.bxlPath || data.texPath)
                 .then(texture => {
-                    this.currentData = data;
                     this.resetEnv(data);
-                    this.opts.sceneTrans ? this.replaceAnim(texture) : this.replaceTexture(texture);
+                    opts.sceneTrans ? this.replaceAnim(texture) : this.replaceTexture(texture);
                 }).catch(e => Log.output(e));
         }
     }
@@ -461,11 +496,13 @@ export default class Pano extends PubSubAble {
     /**
      * enter with thru
      * @param {Object} data scene data
+     * @param {Object} texture skybox texture to replace
      */
     enterThru(data, texture) {
-        this.currentData = data;
         this.resetEnv(data);
         this.replaceTexture(texture);
+        // positive direction add history state
+        this.pushState({id: data.id});
     }
 
     /** 

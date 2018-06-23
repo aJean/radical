@@ -46,32 +46,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
 /******/ 		}
 /******/ 	};
 /******/
 /******/ 	// define __esModule on exports
 /******/ 	__webpack_require__.r = function(exports) {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
 /******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/
-/******/ 	// create a fake namespace object
-/******/ 	// mode & 1: value is a module id, require it
-/******/ 	// mode & 2: merge all properties of value into the ns
-/******/ 	// mode & 4: return value when already ns object
-/******/ 	// mode & 8|1: behave like require
-/******/ 	__webpack_require__.t = function(value, mode) {
-/******/ 		if(mode & 1) value = __webpack_require__(value);
-/******/ 		if(mode & 8) return value;
-/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
-/******/ 		var ns = Object.create(null);
-/******/ 		__webpack_require__.r(ns);
-/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
-/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
-/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -56613,7 +56598,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _plastic_inradius_plastic__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
 /* harmony import */ var _core_log__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
-/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
+/* harmony import */ var _interface_history_interface__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../interface/history.interface */ "./src/interface/history.interface.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -56679,7 +56664,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
 
 
 /**
- * @file 全景渲染
+ * @file 全景渲染 & 历史记录
  */
 var defaultOpts = {
     gyro: false,
@@ -56705,27 +56690,28 @@ var Pano = /** @class */ (function (_super) {
         _this.currentData = null;
         _this.frozen = true;
         _this.pluginList = [];
-        var data = _this.currentData = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].findScene(source);
+        _this.currentData = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].findScene(source);
         _this.opts = Object.assign({ el: el }, defaultOpts, source['pano']);
         _this.source = source;
-        _this.initEnv(data);
+        _this.initEnv();
         return _this;
     }
     /**
      * 初始化环境, 创建 webgl, scene, camera
-     * @param {Object} data 全景参数
      */
-    Pano.prototype.initEnv = function (data) {
+    Pano.prototype.initEnv = function () {
         var opts = this.opts;
-        var container = opts.el;
+        var data = this.currentData;
         var size = this.size = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].calcRenderSize(opts);
         var root = this.root = _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].createElement("<div class=\"pano-root\"></div>");
         var webgl = this.webgl = new three__WEBPACK_IMPORTED_MODULE_0__["WebGLRenderer"]({ alpha: true, antialias: true });
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
         webgl.setSize(size.width, size.height);
+        // dom
         root.appendChild(webgl.domElement);
-        container.appendChild(root);
+        opts.el.appendChild(root);
+        // scene camera
         this.scene = new three__WEBPACK_IMPORTED_MODULE_0__["Scene"]();
         this.camera = new three__WEBPACK_IMPORTED_MODULE_0__["PerspectiveCamera"](data.fov || opts.fov, size.aspect, 0.1, 10000);
         // create control
@@ -56741,6 +56727,9 @@ var Pano = /** @class */ (function (_super) {
         if (opts.hdm) {
             new _hdmap_monitor_hdmap__WEBPACK_IMPORTED_MODULE_4__["default"](this, opts.hdm);
         }
+        if (opts.history) {
+            this.initState({ id: data.id });
+        }
         // all overlays manager
         this.overlays = new _overlays_overlays__WEBPACK_IMPORTED_MODULE_6__["default"](this, this.source['sceneGroup']);
     };
@@ -56750,13 +56739,14 @@ var Pano = /** @class */ (function (_super) {
      */
     Pano.prototype.resetEnv = function (data) {
         var fov = data.fov || this.opts.fov;
-        var camera = this.camera;
+        // set current scene data
+        this.currentData = data;
         // look at angle
         if (!this.gyro && data.lng !== void 0) {
             this.setLook(data.lng, data.lat);
         }
         // scene fov        
-        if (fov != camera.fov) {
+        if (fov != this.camera.fov) {
             this.setFov(fov);
         }
     };
@@ -56945,6 +56935,32 @@ var Pano = /** @class */ (function (_super) {
         camera.updateProjectionMatrix();
         this.webgl.setSize(size.width, size.height);
     };
+    Pano.prototype.pushState = function (state) {
+        if (!this.opts.history) {
+            return;
+        }
+        _super.prototype.pushState.call(this, state);
+    };
+    /**
+     * 处理场景后退, 会发请求获取场景 group
+     */
+    Pano.prototype.onPopstate = function () {
+        var _this = this;
+        if (!this.opts.history) {
+            return;
+        }
+        var state = this.popState();
+        if (!state) {
+            history.back();
+        }
+        else if (state.id != this.currentData.id) {
+            var id_1 = state.id;
+            var scene_1 = this.overlays.findScene(id_1);
+            this.enterNext(scene_1);
+            myLoader.fetchUrl("https://image.baidu.com/img/image/quanjing/bxlpanoinfo?sf=1&setid=" + scene_1.setId)
+                .then(function (res) { return _this.publish(_this.Topic.THRU.BACK, { id: id_1, scenes: res.data.sceneGroup }); });
+        }
+    };
     /**
      * 获取相机
      */
@@ -57059,43 +57075,43 @@ var Pano = /** @class */ (function (_super) {
     /**
      * internal enter next scene
      * @param {Object} data scene data
+     * @param {string} from which plugin call
      */
-    Pano.prototype.enterNext = function (data) {
+    Pano.prototype.enterNext = function (data, from) {
         var _this = this;
         var path = data.imgPath;
-        // preTrans defeate sceneTrans
-        if (this.opts.preTrans && path) {
+        var opts = this.opts;
+        // positive direction add history state
+        from && this.pushState({ id: data.id });
+        // preTrans defeates sceneTrans
+        if (opts.preTrans && path) {
             myLoader.loadTexture(path, 'canvas')
                 .then(function (texture) {
-                _this.currentData = data;
                 _this.resetEnv(data);
                 _this.replaceTexture(texture);
                 // 清晰图
                 return myLoader.loadTexture(data.bxlPath || data.texPath)
-                    .then(function (texture) {
-                    if (_this.currentData == data) {
-                        _this.replaceSlient(texture);
-                    }
-                });
+                    .then(function (texture) { return _this.currentData == data && _this.replaceSlient(texture); });
             }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output(e); });
         }
         else {
             myLoader.loadTexture(data.bxlPath || data.texPath)
                 .then(function (texture) {
-                _this.currentData = data;
                 _this.resetEnv(data);
-                _this.opts.sceneTrans ? _this.replaceAnim(texture) : _this.replaceTexture(texture);
+                opts.sceneTrans ? _this.replaceAnim(texture) : _this.replaceTexture(texture);
             }).catch(function (e) { return _core_log__WEBPACK_IMPORTED_MODULE_8__["default"].output(e); });
         }
     };
     /**
      * enter with thru
      * @param {Object} data scene data
+     * @param {Object} texture skybox texture to replace
      */
     Pano.prototype.enterThru = function (data, texture) {
-        this.currentData = data;
         this.resetEnv(data);
         this.replaceTexture(texture);
+        // positive direction add history state
+        this.pushState({ id: data.id });
     };
     /**
      * 启动控制器
@@ -57142,7 +57158,7 @@ var Pano = /** @class */ (function (_super) {
         _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].cleanup(null, this.scene);
     };
     return Pano;
-}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_10__["default"]));
+}(_interface_history_interface__WEBPACK_IMPORTED_MODULE_10__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Pano);
 
 
@@ -58481,7 +58497,7 @@ var Multiple = /** @class */ (function (_super) {
             var id = node.getAttribute('data-id');
             var scene_1 = this.data[id];
             if (scene_1) {
-                this.pano.enterNext(scene_1);
+                this.pano.enterNext(scene_1, 'multiple');
                 this.setActive(node);
             }
         }
@@ -58503,7 +58519,7 @@ var Multiple = /** @class */ (function (_super) {
         var index = scenes.indexOf(scene);
         var node = this.inner.querySelector("div[data-id=\"" + index + "\"]");
         if (scene && node) {
-            this.pano.enterNext(scene);
+            this.pano.enterNext(scene, 'multiple');
             this.setActive(node);
         }
     };
@@ -58684,7 +58700,7 @@ var Rotate = /** @class */ (function (_super) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _interface_history_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../interface/history.interface */ "./src/interface/history.interface.ts");
+/* harmony import */ var _interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
 /* harmony import */ var _plastic_text_plastic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../plastic/text.plastic */ "./src/pano/plastic/text.plastic.ts");
 /* harmony import */ var _animations_tween_animation__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 /* harmony import */ var _core_util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
@@ -58742,8 +58758,6 @@ var Thru = /** @class */ (function (_super) {
         _this.subscribe(Topic.SCENE.ATTACH, _this.load.bind(_this));
         _this.subscribe(Topic.UI.IMMERSION, _this.onToggle.bind(_this));
         _this.judgeid = pano.overlays.addJudgeFunc(_this.onCanvasClick.bind(_this));
-        // init scene id
-        _this.initState({ id: pano.currentData.id });
         return _this;
     }
     Thru.prototype.load = function (topic, payload) {
@@ -58907,8 +58921,6 @@ var Thru = /** @class */ (function (_super) {
                                     pano.getControl().reset(flag_1);
                                     pano.supplyOverlayScenes(sceneGroup);
                                     pano.gyro && pano.gyro.makeEnable(true);
-                                    // record scene id
-                                    _this.pushState({ id: id_1 });
                                 });
                             });
                         }
@@ -58934,24 +58946,6 @@ var Thru = /** @class */ (function (_super) {
         texts.length = 0;
         this.group.length = 0;
     };
-    /**
-     * 处理星际后退, 会发请求获取场景 group
-     */
-    Thru.prototype.onPopstate = function () {
-        var _this = this;
-        var pano = this.pano;
-        var state = this.popState();
-        if (!state) {
-            history.back();
-        }
-        else if (state.id != pano.currentData.id) {
-            var id_2 = state.id;
-            var scene_2 = pano.overlays.findScene(id_2);
-            pano.enterNext(scene_2);
-            loader.fetchUrl(this.opts.surl + "&setid=" + scene_2.setId + "&sceneid=" + scene_2.id)
-                .then(function (res) { return _this.publish(_this.Topic.THRU.BACK, { id: id_2, scenes: res.data.sceneGroup }); });
-        }
-    };
     Thru.prototype.dispose = function () {
         var pano = this.pano;
         this.cleanup();
@@ -58960,7 +58954,7 @@ var Thru = /** @class */ (function (_super) {
         pano.overlays.reMoveJudgeFunc(this.judgeid);
     };
     return Thru;
-}(_interface_history_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
+}(_interface_pubsub_interface__WEBPACK_IMPORTED_MODULE_0__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Thru);
 
 

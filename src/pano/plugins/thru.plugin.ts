@@ -1,4 +1,4 @@
-import History from '../../interface/history.interface';
+import PubSubAble from '../../interface/pubsub.interface';
 import Text from '../plastic/text.plastic';
 import Tween from '../animations/tween.animation';
 import Util from '../../core/util';
@@ -18,7 +18,7 @@ const defaultOpts = {
     surl: null
 };
 const loader = new Loader();
-export default class Thru extends History {
+export default class Thru extends PubSubAble {
     opts: any;
     judgeid: any;
     list: any;
@@ -48,8 +48,6 @@ export default class Thru extends History {
         this.subscribe(Topic.SCENE.ATTACH, this.load.bind(this));
         this.subscribe(Topic.UI.IMMERSION, this.onToggle.bind(this));
         this.judgeid = pano.overlays.addJudgeFunc(this.onCanvasClick.bind(this));
-        // init scene id
-        this.initState({id: pano.currentData.id});
     }
 
     load(topic, payload) {
@@ -235,8 +233,6 @@ export default class Thru extends History {
                                                 pano.getControl().reset(flag);
                                                 pano.supplyOverlayScenes(sceneGroup);
                                                 pano.gyro && pano.gyro.makeEnable(true);
-                                                // record scene id
-                                                this.pushState({id});
                                             });
                                     });
                             }
@@ -262,26 +258,6 @@ export default class Thru extends History {
         objs.length = 0;
         texts.length = 0;
         this.group.length = 0;
-    }
-
-
-    /**
-     * 处理星际后退, 会发请求获取场景 group
-     */
-    onPopstate() {
-        const pano = this.pano;
-        const state = this.popState();
-        
-        if (!state) {
-            history.back();
-        } else if (state.id != pano.currentData.id) {
-            const id = state.id;
-            const scene = pano.overlays.findScene(id);
-            
-            pano.enterNext(scene);
-            loader.fetchUrl(`${this.opts.surl}&setid=${scene.setId}&sceneid=${scene.id}`)
-                .then(res => this.publish(this.Topic.THRU.BACK, {id, scenes: res.data.sceneGroup}));
-        }
     }
 
     dispose() {
