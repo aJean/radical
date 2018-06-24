@@ -193,14 +193,14 @@ export default class Inradius extends Plastic {
         target.rotation.z += 0.01;
     }
 
-    fadeIn(pano, onComplete) {
+    fadeIn(onComplete) {
         const material = this.plastic.material;
 
         new Tween(material).to({ opacity: 1 }).effect('linear', 1000)
             .start(['opacity']).complete(onComplete);
     }
 
-    fadeOut(pano, onComplete) {
+    fadeOut(onComplete) {
         const material = this.plastic.material;
 
         new Tween(material).to({ opacity: 0 }).effect('linear', 1000)

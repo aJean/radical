@@ -57,7 +57,7 @@ export default class Pano extends History {
         const data = this.currentData;
         const size = this.size = Util.calcRenderSize(opts);
         const root = this.root = Util.createElement(`<div class="pano-root"></div>`);
-        const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true});
+        const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true, precision: 'highp'});
 
         webgl.autoClear = true;
         webgl.setPixelRatio(window.devicePixelRatio);
@@ -269,7 +269,7 @@ export default class Pano extends History {
         const newBox = new Inradius({envMap: texture, opacity: 0});
 
         newBox.addTo(this.scene);
-        newBox.fadeIn(this, () => {
+        newBox.fadeIn(() => {
             skyBox.setMap(texture);
             newBox.dispose();
             this.publish(Topic.SCENE.ATTACH, publishdata);

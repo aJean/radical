@@ -7,14 +7,10 @@ const order = ['r', 'l', 'u', 'd', 'f', 'b'];
 export default abstract class HDAnalyse {
     static analyse(point, level) {
         const data = this.calcUV(point.x, point.y, point.z);
-        return this.calcLayer(data, level);
+        return this.calcLayers(data, level);
     }
 
-    /**
-     * 计算图层, uv 原点在左下, 对应到 backside 贴图为右下
-     */
-    static calcLayer(data, level) {
-        // level 2
+    static calcProp(data, level) {
         const size = this.calcSize(level);
         const fw = size.fw;
         const fh = size.fh;
@@ -32,11 +28,43 @@ export default abstract class HDAnalyse {
         const x = (column - 1) * w;
         const y = (row - 1) * h;
 
-        return {
+        return {x, y, column, row, fw, fh, w, h};
+    }
+
+    /**
+     * 计算图层, uv 原点在左下, 对应到 backside 贴图为右下
+     */
+    static calcLayer(data, level) {
+        const prop = this.calcProp(data, level);
+
+        return [{
             index: data.index,
-            path: this.calcPath(data.index, row, column),
-            x, y, w, h, fw, fh
-        };
+            path: this.calcPath(data.index, prop.row, prop.column, level),
+            x: prop.x, y: prop.y, w: prop.w, h: prop.h,
+            fw: prop.fw, fh: prop.fh
+        }];
+    }
+
+    /**
+     * 按列计算图层
+     */
+    static calcLayers(data, level) {
+        const prop = this.calcProp(data, level);
+        const ret = [];
+
+        for (let i = 1; i < 6; i++) {
+            prop.row = i;
+            prop.y = (i - 1) * prop.h;
+
+            ret.push({
+                index: data.index,
+                path: this.calcPath(data.index, prop.row, prop.column, level),
+                x: prop.x, y: prop.y, w: prop.w, h: prop.h,
+                fw: prop.fw, fh: prop.fh
+            });
+        }
+
+        return ret;
     }
 
     /**
@@ -205,8 +233,9 @@ export default abstract class HDAnalyse {
     /**
      * 获取高清图的路径
      */
-    static calcPath(i, row, column) {
+    static calcPath(i, row, column, level) {
+        level = level == 2 ? 'l1' : 'l2'; 
         const dir = order[i];
-        return `hd_${dir}/l1/${row}/l1_${dir}_${row}_${column}.jpg`;
+        return `hd_${dir}/${level}/${row}/${level}_${dir}_${row}_${column}.jpg`;
     }
 }

@@ -1,3 +1,4 @@
+import {LinearFilter, ClampToEdgeWrapping, Math} from 'three';
 import PubSubAble from '../../interface/pubsub.interface';
 import Util from '../../core/util';
 import HDAnalyse from './analyse.hdmap';
@@ -10,7 +11,7 @@ import HDStore from './store.hdmap';
 
 export default class HDMonitor extends PubSubAble {
     pano: any;
-    level = 2;
+    level = 3;
 
     constructor(pano, opts?) {
         super();
@@ -31,11 +32,14 @@ export default class HDMonitor extends PubSubAble {
 
         if (intersects) {
             const point = intersects[0].point;
-            const data = HDAnalyse.analyse(point, this.level);
-            const p = HDStore.getHDPicture('../assets/hdmap/' + data.path);
-            if (p) {
-                p.then(hdimg => this.draw(hdimg, data));
-            }
+            const ret = HDAnalyse.analyse(point, this.level);
+
+            ret.forEach(data => {
+                const p = HDStore.getHDPicture('../assets/hdmap/' + data.path);
+                if (p) {
+                    p.then(hdimg => this.draw(hdimg, data));
+                }
+            });
         }
     }
 
@@ -45,30 +49,34 @@ export default class HDMonitor extends PubSubAble {
      */
     draw(hdimg, data) {
         const texture = this.pano.skyBox.getMap();
-        const obj = texture.image[data.index];
         const fw = data.fw;
         const fh = data.fh;
-        // 初次绘制将 img 替换为 canvas
-        if (obj.src) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext("2d");
-            canvas.width = fw;
-            canvas.height = fh;
-            ctx.drawImage(obj, 0, 0, fw, fh);
-            ctx.beginPath();
-            ctx.drawImage(hdimg, data.x, data.y, data.w, data.h);
-            this.text(ctx, 'ready', data.x, data.y);
-            ctx.closePath();
-            texture.needsUpdate = true;
-            texture.image[data.index] = canvas;
-        } else {
-            const ctx = obj.getContext("2d");
-            texture.needsUpdate = true;
-            ctx.beginPath();
-            ctx.drawImage(hdimg, data.x, data.y, data.w, data.h);
-            this.text(ctx, 'ready', data.x, data.y);
-            ctx.closePath();
+
+        texture.needsUpdate = true;
+
+        if (!texture.replaceCanvas) {
+            console.log(2)
+            texture.replaceCanvas = true;
+            texture.generateMipmaps = false;
+            texture.wrapS = texture.wrapT = ClampToEdgeWrapping;
+            texture.minFilter = LinearFilter;
+            texture.image.forEach((img, i) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext("2d");
+                canvas.width = fw;
+                canvas.height = fh;
+                ctx.drawImage(img, 0, 0, fw, fh);
+                texture.image[i] = canvas;
+            });
         }
+
+        const obj = texture.image[data.index];
+        const ctx = obj.getContext("2d");
+
+        ctx.beginPath();
+        ctx.drawImage(hdimg, data.x, data.y, data.w, data.h);
+        this.text(ctx, 'ready', data.x, data.y);
+        ctx.closePath();
     }
 
     text(ctx, str, x, y) {
