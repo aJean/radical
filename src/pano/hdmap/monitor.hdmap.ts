@@ -55,7 +55,6 @@ export default class HDMonitor extends PubSubAble {
         texture.needsUpdate = true;
 
         if (!texture.replaceCanvas) {
-            console.log(2)
             texture.replaceCanvas = true;
             texture.generateMipmaps = false;
             texture.wrapS = texture.wrapT = ClampToEdgeWrapping;
@@ -65,6 +64,8 @@ export default class HDMonitor extends PubSubAble {
                 const ctx = canvas.getContext("2d");
                 canvas.width = fw;
                 canvas.height = fh;
+                canvas.style.width = fw;
+                canvas.style.height = fh;
                 ctx.drawImage(img, 0, 0, fw, fh);
                 texture.image[i] = canvas;
             });
