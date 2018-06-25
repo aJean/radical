@@ -56992,7 +56992,6 @@ var Pano = /** @class */ (function (_super) {
             return;
         }
         var state = this.popState();
-        console.log(state);
         if (!state) {
             history.back();
         }
@@ -57001,7 +57000,10 @@ var Pano = /** @class */ (function (_super) {
             var scene_1 = this.overlays.findScene(id_1);
             this.enterNext(scene_1);
             myLoader.fetchUrl("https://image.baidu.com/img/image/quanjing/bxlpanoinfo?sf=1&setid=" + scene_1.setId)
-                .then(function (res) { return _this.publish(_this.Topic.THRU.BACK, { id: id_1, scenes: res.data.sceneGroup }); });
+                .then(function (res) {
+                var data = res.data;
+                _this.publish(_this.Topic.THRU.BACK, { id: id_1, scene: scene_1, scenes: data.sceneGroup, data: data });
+            });
         }
     };
     /**

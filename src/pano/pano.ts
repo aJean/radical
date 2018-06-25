@@ -320,7 +320,7 @@ export default class Pano extends History {
         }
 
         const state = this.popState();
-console.log(state)
+
         if (!state) {
             history.back();
         } else if (state.id != this.currentData.id) {
@@ -329,7 +329,10 @@ console.log(state)
             
             this.enterNext(scene);
             myLoader.fetchUrl(`https://image.baidu.com/img/image/quanjing/bxlpanoinfo?sf=1&setid=${scene.setId}`)
-                .then(res => this.publish(this.Topic.THRU.BACK, {id, scenes: res.data.sceneGroup}));
+                .then(res => {
+                    const data = res.data;
+                    this.publish(this.Topic.THRU.BACK, {id, scene, scenes: data.sceneGroup, data});
+                });
         }
     }
 
