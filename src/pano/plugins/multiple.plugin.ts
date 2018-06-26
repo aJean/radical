@@ -72,7 +72,7 @@ export default class Multiple extends PluggableUI {
             const scene = this.data[id];
 
             if (scene) {
-                this.pano.enterNext(scene, 'multiple');
+                this.pano.enterNext(scene);
                 this.setActive(node);
             }
         }
@@ -97,7 +97,7 @@ export default class Multiple extends PluggableUI {
         const node = this.inner.querySelector(`div[data-id="${index}"]`);
 
         if (scene && node) {
-            this.pano.enterNext(scene, 'multiple');
+            this.pano.enterNext(scene);
             this.setActive(node);
         }
     }

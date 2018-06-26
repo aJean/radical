@@ -53756,6 +53756,18 @@ var composeKey = function (part) { return ('skt1wins' + part); };
         catch (e) {
             return false;
         }
+    },
+    /**
+     * history func
+     */
+    makeHref: function (href, setid) {
+        if (/xrkey/.test(href)) {
+            href = href.replace(/xrkey=[^&?]*/, "xrkey=" + setid);
+        }
+        else {
+            href += location.search ? "&xrkey=" + setid : "?xrkey=" + setid;
+        }
+        return href;
     }
 });
 
@@ -53859,12 +53871,20 @@ var History = /** @class */ (function (_super) {
         window.addEventListener('popstate', _this.onPopstate);
         return _this;
     }
-    History.prototype.initState = function (state) {
-        this.pushState(state);
+    History.prototype.initState = function (state, url) {
+        this.pushState(state, url);
     };
-    History.prototype.pushState = function (state) {
+    History.prototype.pushState = function (state, url) {
+        if (url === void 0) { url = location.href; }
         try {
-            history.pushState(state, null, location.href);
+            history.pushState(state, null, url);
+        }
+        catch (e) { }
+    };
+    History.prototype.replaceState = function (state, url) {
+        if (url === void 0) { url = location.href; }
+        try {
+            history.replaceState(state, null, url);
         }
         catch (e) { }
     };
@@ -56770,7 +56790,7 @@ var Pano = /** @class */ (function (_super) {
             new _hdmap_monitor_hdmap__WEBPACK_IMPORTED_MODULE_4__["default"](this, opts.hdm);
         }
         if (opts.history) {
-            this.initState({ id: data.id });
+            this.initState({ id: data.id }, _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].makeHref(location.href, data.setId));
         }
         // all overlays manager
         this.overlays = new _overlays_overlays__WEBPACK_IMPORTED_MODULE_6__["default"](this, this.source['sceneGroup']);
@@ -56977,11 +56997,23 @@ var Pano = /** @class */ (function (_super) {
         camera.updateProjectionMatrix();
         this.webgl.setSize(size.width, size.height);
     };
-    Pano.prototype.pushState = function (state) {
+    /**
+     * 增加历史纪录
+     */
+    Pano.prototype.pushState = function (state, url) {
         if (!this.opts.history) {
             return;
         }
-        _super.prototype.pushState.call(this, state);
+        _super.prototype.pushState.call(this, state, url);
+    };
+    /**
+     * 修改历史纪录
+     */
+    Pano.prototype.replaceState = function (state, url) {
+        if (!this.opts.history) {
+            return;
+        }
+        _super.prototype.replaceState.call(this, state, url);
     };
     /**
      * 处理场景后退, 会发请求获取场景 group
@@ -56992,10 +57024,10 @@ var Pano = /** @class */ (function (_super) {
             return;
         }
         var state = this.popState();
-        if (!state || state.atomPageId) {
-            history.back();
+        if (!state || state.atomPageId || state.id == this.currentData.id) {
+            location.assign(document.referrer || 'about:blank');
         }
-        else if (state.id != this.currentData.id) {
+        else if (state.id) {
             var id_1 = state.id;
             var scene_1 = this.overlays.findScene(id_1);
             this.enterNext(scene_1);
@@ -57120,14 +57152,12 @@ var Pano = /** @class */ (function (_super) {
     /**
      * internal enter next scene
      * @param {Object} data scene data
-     * @param {string} from which plugin call
      */
-    Pano.prototype.enterNext = function (data, from) {
+    Pano.prototype.enterNext = function (data) {
         var _this = this;
         var path = data.imgPath;
         var opts = this.opts;
-        // positive direction add history state
-        from && this.pushState({ id: data.id });
+        this.replaceState({ id: data.id });
         // preTrans defeates sceneTrans
         if (opts.preTrans && path) {
             myLoader.loadTexture(path, 'canvas')
@@ -57153,10 +57183,10 @@ var Pano = /** @class */ (function (_super) {
      * @param {Object} texture skybox texture to replace
      */
     Pano.prototype.enterThru = function (data, texture) {
+        // positive direction add history state
+        this.pushState({ id: data.id }, _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].makeHref(location.href, data.setId));
         this.resetEnv(data);
         this.replaceTexture(texture);
-        // positive direction add history state
-        this.pushState({ id: data.id });
     };
     /**
      * 启动控制器
@@ -58542,7 +58572,7 @@ var Multiple = /** @class */ (function (_super) {
             var id = node.getAttribute('data-id');
             var scene_1 = this.data[id];
             if (scene_1) {
-                this.pano.enterNext(scene_1, 'multiple');
+                this.pano.enterNext(scene_1);
                 this.setActive(node);
             }
         }
@@ -58564,7 +58594,7 @@ var Multiple = /** @class */ (function (_super) {
         var index = scenes.indexOf(scene);
         var node = this.inner.querySelector("div[data-id=\"" + index + "\"]");
         if (scene && node) {
-            this.pano.enterNext(scene, 'multiple');
+            this.pano.enterNext(scene);
             this.setActive(node);
         }
     };

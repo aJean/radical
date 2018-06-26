@@ -285,5 +285,18 @@ export default {
 		} catch ( e ) {
 			return false;
 		}
-	}
+    },
+    
+    /**
+     * history func
+     */
+    makeHref(href, setid) {
+        if (/xrkey/.test(href)) {
+            href = href.replace(/xrkey=[^&?]*/, `xrkey=${setid}`);
+        } else {
+            href += location.search ? `&xrkey=${setid}` : `?xrkey=${setid}`;
+        }
+    
+        return href;
+    }
 };

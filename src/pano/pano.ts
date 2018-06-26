@@ -85,7 +85,7 @@ export default class Pano extends History {
         }
 
         if (opts.history) {
-            this.initState({id: data.id});
+            this.initState({id: data.id}, Util.makeHref(location.href, data.setId));
         }
         
         // all overlays manager
@@ -303,12 +303,26 @@ export default class Pano extends History {
         this.webgl.setSize(size.width, size.height);
     }
 
-    pushState(state) {
+    /**
+     * 增加历史纪录
+     */
+    pushState(state, url?) {
         if (!this.opts.history) {
             return;
         }
 
-        super.pushState(state);
+        super.pushState(state, url);
+    }
+
+    /**
+     * 修改历史纪录
+     */
+    replaceState(state, url?) {
+        if (!this.opts.history) {
+            return;
+        }
+
+        super.replaceState(state, url);
     }
 
     /**
@@ -321,9 +335,9 @@ export default class Pano extends History {
 
         const state = this.popState();
 
-        if (!state || state.atomPageId) {
-            history.back();
-        } else if (state.id != this.currentData.id) {
+        if (!state || state.atomPageId || state.id == this.currentData.id) {
+            location.assign(document.referrer || 'about:blank');
+        } else if (state.id) {
             const id = state.id;
             const scene = this.overlays.findScene(id);
             
@@ -468,14 +482,12 @@ export default class Pano extends History {
     /**
      * internal enter next scene
      * @param {Object} data scene data
-     * @param {string} from which plugin call
      */
-    enterNext(data, from?) {
+    enterNext(data) {
         const path = data.imgPath;
         const opts = this.opts;
 
-        // positive direction add history state
-        from && this.pushState({id: data.id});
+        this.replaceState({id: data.id});
 
         // preTrans defeates sceneTrans
         if (opts.preTrans && path) {
@@ -502,10 +514,10 @@ export default class Pano extends History {
      * @param {Object} texture skybox texture to replace
      */
     enterThru(data, texture) {
+        // positive direction add history state
+        this.pushState({id: data.id}, Util.makeHref(location.href, data.setId));
         this.resetEnv(data);
         this.replaceTexture(texture);
-        // positive direction add history state
-        this.pushState({id: data.id});
     }
 
     /** 

@@ -12,13 +12,19 @@ export default abstract class History extends PubSubAble {
         window.addEventListener('popstate', this.onPopstate);
     }
 
-    initState(state) {
-        this.pushState(state);
+    initState(state, url?) {
+        this.pushState(state, url);
     }
 
-    pushState(state) {
+    pushState(state, url = location.href) {
         try {
-            history.pushState(state, null, location.href);
+            history.pushState(state, null, url);
+        } catch (e) {}
+    }
+
+    replaceState(state, url = location.href) {
+        try {
+            history.replaceState(state, null, url);
         } catch (e) {}
     }
 
