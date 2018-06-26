@@ -1,4 +1,4 @@
-import {PerspectiveCamera, Vector3, Euler, Quaternion, Spherical, Math as TMath, Camera} from 'three';
+import {Vector3, Euler, Quaternion, Spherical, Math as TMath, Camera} from 'three';
 
 /**
  * @file gyro control
