@@ -56992,7 +56992,7 @@ var Pano = /** @class */ (function (_super) {
             return;
         }
         var state = this.popState();
-        if (!state) {
+        if (!state || state.atomPageId) {
             history.back();
         }
         else if (state.id != this.currentData.id) {

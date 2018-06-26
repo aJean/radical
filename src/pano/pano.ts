@@ -321,7 +321,7 @@ export default class Pano extends History {
 
         const state = this.popState();
 
-        if (!state) {
+        if (!state || state.atomPageId) {
             history.back();
         } else if (state.id != this.currentData.id) {
             const id = state.id;
