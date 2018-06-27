@@ -53760,12 +53760,18 @@ var composeKey = function (part) { return ('skt1wins' + part); };
     /**
      * history func
      */
-    makeHref: function (href, setid) {
+    makeHref: function (href, data) {
         if (/xrkey/.test(href)) {
-            href = href.replace(/xrkey=[^&?]*/, "xrkey=" + setid);
+            href = href.replace(/xrkey=[^&?]*/, "xrkey=" + data.setId);
+            if (/sceneid/.test(href)) {
+                href = href.replace(/sceneid=[^&?]*/, "sceneid=" + data.id);
+            }
+            else {
+                href += "&sceneid=" + data.id;
+            }
         }
         else {
-            href += location.search ? "&xrkey=" + setid : "?xrkey=" + setid;
+            href += (location.search ? '&' : '?') + ("xrkey=" + data.setId + "&sceneid=" + data.id);
         }
         return href;
     }
@@ -56790,7 +56796,7 @@ var Pano = /** @class */ (function (_super) {
             new _hdmap_monitor_hdmap__WEBPACK_IMPORTED_MODULE_4__["default"](this, opts.hdm);
         }
         if (opts.history) {
-            this.initState({ id: data.id }, _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].makeHref(location.href, data.setId));
+            this.initState({ id: data.id }, _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].makeHref(location.href, data));
         }
         // all overlays manager
         this.overlays = new _overlays_overlays__WEBPACK_IMPORTED_MODULE_6__["default"](this, this.source['sceneGroup']);
@@ -57157,7 +57163,8 @@ var Pano = /** @class */ (function (_super) {
         var _this = this;
         var path = data.imgPath;
         var opts = this.opts;
-        this.replaceState({ id: data.id });
+        // replace history
+        this.replaceState({ id: data.id }, _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].makeHref(location.href, data));
         // preTrans defeates sceneTrans
         if (opts.preTrans && path) {
             myLoader.loadTexture(path, 'canvas')
@@ -57184,7 +57191,7 @@ var Pano = /** @class */ (function (_super) {
      */
     Pano.prototype.enterThru = function (data, texture) {
         // positive direction add history state
-        this.pushState({ id: data.id }, _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].makeHref(location.href, data.setId));
+        this.pushState({ id: data.id }, _core_util__WEBPACK_IMPORTED_MODULE_9__["default"].makeHref(location.href, data));
         this.resetEnv(data);
         this.replaceTexture(texture);
     };
@@ -58039,7 +58046,7 @@ var Text = /** @class */ (function (_super) {
             text = text.substring(0, limit - 1) + '...';
         }
         ctx.beginPath();
-        ctx.fillText(text, width / 2, height / 2 + 10);
+        ctx.fillText(text, width / 2, height / 2 + 10, opts.width);
         ctx.closePath();
         // 描边
         if (opts.strokecolor) {
@@ -58537,6 +58544,7 @@ var Multiple = /** @class */ (function (_super) {
         return _this;
     }
     Multiple.prototype.create = function () {
+        var _this = this;
         var element = this.element = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="pano-multiplescene"></div>');
         var outer = this.outer = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="pano-multiplescene-outer"></div>');
         var inner = this.inner = _core_util__WEBPACK_IMPORTED_MODULE_1__["default"].createElement('<div class="pano-multiplescene-inner"></div>');
@@ -58545,7 +58553,9 @@ var Multiple = /** @class */ (function (_super) {
         }).join('');
         outer.appendChild(inner);
         element.appendChild(outer);
-        this.setActive(inner.childNodes[0]);
+        var node = inner.querySelector("div[data-scene=\"" + this.pano.currentData.id + "\"]");
+        this.setActive(node);
+        setTimeout(function () { return _this.setScrollLeft(node); }, 0);
     };
     Multiple.prototype.bindEvent = function () {
         var inner = this.inner;
@@ -58606,19 +58616,19 @@ var Multiple = /** @class */ (function (_super) {
     };
     Multiple.prototype.onReset = function (topic, payload) {
         var inner = this.inner;
-        var outer = this.outer;
         var scenes = this.data = payload.scenes;
         inner.innerHTML = scenes.map(function (item, i) {
             return "<div class=\"pano-multiplescene-item\" data-id=\"" + i + "\" data-scene=\"" + item.id + "\">\n                <img src=\"" + item.thumbPath + "\" class=\"pano-multiplescene-img\">\n                <span class=\"pano-multiplescene-name\">" + item.name + "</span>\n            </div>";
         }).join('');
         if (payload.id) {
             var node = inner.querySelector("div[data-scene=\"" + payload.id + "\"]");
-            outer.scrollLeft = Math.max(0, node.offsetLeft - 20);
             this.setActive(node);
+            this.setScrollLeft(node);
         }
         else {
-            outer.scrollLeft = 0;
-            this.setActive(inner.childNodes[0]);
+            var node = inner.childNodes[0];
+            this.setActive(node);
+            this.setScrollLeft(node);
         }
     };
     Multiple.prototype.findParent = function (node, cls) {
@@ -58630,7 +58640,17 @@ var Multiple = /** @class */ (function (_super) {
         }
     };
     /**
+     * 设置滚动距离, 结合 setActive 实现列表缩略图定位
+     * @param {HTMLElement} node
+     */
+    Multiple.prototype.setScrollLeft = function (node) {
+        var outer = this.outer;
+        var left = node.offsetLeft;
+        outer.scrollLeft = left > 100 ? left - 20 : 0;
+    };
+    /**
      * 设置选中场景
+     * @param {HTMLElement} node
      */
     Multiple.prototype.setActive = function (node) {
         if (this.activeItem) {
@@ -58640,6 +58660,9 @@ var Multiple = /** @class */ (function (_super) {
         node.className += ' active';
         this.activeItem = node;
     };
+    /**
+     * 沉浸态切换
+     */
     Multiple.prototype.onToggle = function () {
         var should = this.element.style.display == 'none';
         should ? this.show() : this.hide();

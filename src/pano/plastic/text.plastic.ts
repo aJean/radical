@@ -95,7 +95,7 @@ export default class Text extends Plastic {
         }
 
         ctx.beginPath();
-        ctx.fillText(text, width / 2, height / 2 + 10);
+        ctx.fillText(text, width / 2, height / 2 + 10, opts.width);
         ctx.closePath();
 
         // 描边

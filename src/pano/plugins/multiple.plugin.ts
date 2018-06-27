@@ -39,7 +39,10 @@ export default class Multiple extends PluggableUI {
 
         outer.appendChild(inner);
         element.appendChild(outer);
-        this.setActive(inner.childNodes[0]);
+
+        const node = inner.querySelector(`div[data-scene="${this.pano.currentData.id}"]`);
+        this.setActive(node);
+        setTimeout(() => this.setScrollLeft(node), 0);
     }
 
     bindEvent() {
@@ -112,7 +115,6 @@ export default class Multiple extends PluggableUI {
 
     onReset(topic, payload) {
         const inner = this.inner;
-        const outer = this.outer;
         const scenes = this.data = payload.scenes;
 
         inner.innerHTML = scenes.map((item, i) => {
@@ -124,11 +126,12 @@ export default class Multiple extends PluggableUI {
 
         if (payload.id) {
             const node = inner.querySelector(`div[data-scene="${payload.id}"]`);
-            outer.scrollLeft = Math.max(0, node.offsetLeft - 20);
             this.setActive(node);
+            this.setScrollLeft(node);
         } else {
-            outer.scrollLeft = 0;
-            this.setActive(inner.childNodes[0]);
+            const node = inner.childNodes[0];
+            this.setActive(node);
+            this.setScrollLeft(node);
         }
     }
 
@@ -143,7 +146,19 @@ export default class Multiple extends PluggableUI {
     }
 
     /**
+     * 设置滚动距离, 结合 setActive 实现列表缩略图定位
+     * @param {HTMLElement} node
+     */
+    setScrollLeft(node) {
+        const outer = this.outer;
+        const left = node.offsetLeft;
+
+        outer.scrollLeft = left > 100 ? left - 20 : 0;
+    }
+
+    /**
      * 设置选中场景
+     * @param {HTMLElement} node 
      */
     setActive(node) {
         if (this.activeItem) {
@@ -155,6 +170,9 @@ export default class Multiple extends PluggableUI {
         this.activeItem = node;
     }
 
+    /**
+     * 沉浸态切换
+     */
     onToggle() {
         const should = this.element.style.display == 'none';
         should ? this.show() : this.hide();

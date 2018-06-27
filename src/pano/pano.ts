@@ -85,7 +85,7 @@ export default class Pano extends History {
         }
 
         if (opts.history) {
-            this.initState({id: data.id}, Util.makeHref(location.href, data.setId));
+            this.initState({id: data.id}, Util.makeHref(location.href, data));
         }
         
         // all overlays manager
@@ -486,8 +486,8 @@ export default class Pano extends History {
     enterNext(data) {
         const path = data.imgPath;
         const opts = this.opts;
-
-        this.replaceState({id: data.id});
+        // replace history
+        this.replaceState({id: data.id}, Util.makeHref(location.href, data));
 
         // preTrans defeates sceneTrans
         if (opts.preTrans && path) {
@@ -515,7 +515,7 @@ export default class Pano extends History {
      */
     enterThru(data, texture) {
         // positive direction add history state
-        this.pushState({id: data.id}, Util.makeHref(location.href, data.setId));
+        this.pushState({id: data.id}, Util.makeHref(location.href, data));
         this.resetEnv(data);
         this.replaceTexture(texture);
     }

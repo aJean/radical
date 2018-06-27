@@ -13,11 +13,13 @@
         <script src="../assets/zepto.js"></script>
         <script src="../../dist/lib.js"></script>
         <script>
-            const ret = /xrkey=([^;]*)/g.exec(location.search);
-            const setid = ret ? ret[1] : '14757014946023377241';
+            const ret1 = /xrkey=([^;]*)/g.exec(location.search);
+            const setid = ret1 ? ret1[1] : '14757014946023377241';
+            const ret2 = /sceneid=([^;]*)/g.exec(location.search);
+            const id = ret2 ? ret2[1] : null;
 
             $.ajax({
-                url: `https://image.baidu.com/img/image/quanjing/bxlpanoinfo?setid=${setid}&sf=1`,
+                url: `https://image.baidu.com/img/image/quanjing/bxlpanoinfo?setid=${setid}&sceneid=${id}&sf=1`,
                 success: function(res) {
                     const data = res.data;
                     

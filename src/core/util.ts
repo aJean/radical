@@ -290,13 +290,18 @@ export default {
     /**
      * history func
      */
-    makeHref(href, setid) {
+    makeHref(href, data) {
         if (/xrkey/.test(href)) {
-            href = href.replace(/xrkey=[^&?]*/, `xrkey=${setid}`);
+            href = href.replace(/xrkey=[^&?]*/, `xrkey=${data.setId}`);
+            if (/sceneid/.test(href)) {
+                href = href.replace(/sceneid=[^&?]*/, `sceneid=${data.id}`);
+            } else {
+                href += `&sceneid=${data.id}`;
+            }
         } else {
-            href += location.search ? `&xrkey=${setid}` : `?xrkey=${setid}`;
+            href += (location.search ? '&' : '?')+ `xrkey=${data.setId}&sceneid=${data.id}`;
         }
-    
+
         return href;
     }
 };
