@@ -336,7 +336,7 @@ export default class Pano extends History {
         const state = this.popState();
 
         if (!state || state.atomPageId || state.id == this.currentData.id) {
-            location.assign(document.referrer || 'about:blank');
+            location.replace(document.referrer || 'about:blank');
         } else if (state.id) {
             const id = state.id;
             const scene = this.overlays.findScene(id);

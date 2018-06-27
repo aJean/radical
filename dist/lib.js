@@ -57031,7 +57031,7 @@ var Pano = /** @class */ (function (_super) {
         }
         var state = this.popState();
         if (!state || state.atomPageId || state.id == this.currentData.id) {
-            location.assign(document.referrer || 'about:blank');
+            location.replace(document.referrer || 'about:blank');
         }
         else if (state.id) {
             var id_1 = state.id;
