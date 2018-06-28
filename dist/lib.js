@@ -56533,8 +56533,6 @@ var HDMonitor = /** @class */ (function (_super) {
         if (intersects) {
             var point = intersects[0].point;
             var ret = analyse_hdmap_1.default.analyse(point, this.getLevel(camera.fov));
-            console.log(this.getLevel(camera.fov));
-            console.log(ret);
             ret.forEach(function (data) {
                 var p = store_hdmap_1.default.getHDPicture('../assets/hdmap/' + data.path);
                 if (p) {

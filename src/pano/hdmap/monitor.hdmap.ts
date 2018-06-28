@@ -37,8 +37,6 @@ export default class HDMonitor extends PubSubAble {
         if (intersects) {
             const point = intersects[0].point;
             const ret = HDAnalyse.analyse(point, this.getLevel(camera.fov));
-            console.log(this.getLevel(camera.fov))
-            console.log(ret)
 
             ret.forEach(data => {
                 const p = HDStore.getHDPicture('../assets/hdmap/' + data.path);
