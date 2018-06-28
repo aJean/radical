@@ -51,5 +51,11 @@ export default {
     // animation
     ANIMATION: {
         END: 'animation-end'
+    },
+    // history
+    HISTORY: {
+        POP: 'history-pop',
+        PUSH: 'history-push',
+        REPLACE: 'history-replace'
     }
 };

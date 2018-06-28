@@ -85,7 +85,7 @@ export default class Pano extends History {
         }
 
         if (opts.history) {
-            this.initState({id: data.id}, Util.makeHref(location.href, data));
+            this.initState(data);
         }
         
         // all overlays manager
@@ -304,48 +304,68 @@ export default class Pano extends History {
     }
 
     /**
+     * 用户设置 size, 会导致 onresize 失效
+     * @param {number} width 
+     * @param {number} height 
+     */
+    customSize(width, height) {
+        const opts = this.opts;
+        const camera = this.getCamera();
+
+        opts.width = width;
+        opts.height = height;
+
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        this.webgl.setSize(width, height);
+    }
+
+    /**
      * 增加历史纪录
      */
-    pushState(state, url?) {
+    pushState(data) {
         if (!this.opts.history) {
             return;
         }
 
-        super.pushState(state, url);
+        super.pushState(data);
     }
 
     /**
      * 修改历史纪录
      */
-    replaceState(state, url?) {
+    replaceState(data) {
         if (!this.opts.history) {
             return;
         }
 
-        super.replaceState(state, url);
+        super.replaceState(data);
     }
 
     /**
      * 处理场景后退, 会发请求获取场景 group
      */
-    onPopstate() {
+    onPopState(topic, payload) {
         if (!this.opts.history) {
             return;
         }
 
-        const state = this.popState();
+        const data = payload.data;
 
-        if (!state || state.atomPageId || state.id == this.currentData.id) {
+        if (!data || !data.sceneid || data.sceneid == this.currentData.id) {
             location.replace(document.referrer || 'about:blank');
-        } else if (state.id) {
-            const id = state.id;
-            const scene = this.overlays.findScene(id);
+        } else if (data.sceneid) {
+            const id = data.sceneid;
+            const setid = data.xrkey;
             
-            this.enterNext(scene);
-            myLoader.fetchUrl(`https://image.baidu.com/img/image/quanjing/bxlpanoinfo?sf=1&setid=${scene.setId}`)
+            myLoader.fetchUrl(`https://image.baidu.com/img/image/quanjing/bxlpanoinfo?sf=1&setid=${setid}&sceneid=${id}`)
                 .then(res => {
                     const data = res.data;
-                    this.publish(this.Topic.THRU.BACK, {id, scene, scenes: data.sceneGroup, data});
+                    const scenes = data.sceneGroup;
+                    const scene = scenes.find(obj => obj.id == id);
+
+                    this.enterNext(scene);
+                    this.publish(this.Topic.THRU.BACK, {id, scene, scenes, data});
                 });
         }
     }
@@ -487,7 +507,7 @@ export default class Pano extends History {
         const path = data.imgPath;
         const opts = this.opts;
         // replace history
-        this.replaceState({id: data.id}, Util.makeHref(location.href, data));
+        this.replaceState(data);
 
         // preTrans defeates sceneTrans
         if (opts.preTrans && path) {
@@ -515,7 +535,7 @@ export default class Pano extends History {
      */
     enterThru(data, texture) {
         // positive direction add history state
-        this.pushState({id: data.id}, Util.makeHref(location.href, data));
+        this.pushState(data);
         this.resetEnv(data);
         this.replaceTexture(texture);
     }

@@ -1,41 +1,54 @@
+import PubSub from '../core/pubsub';
+import Topic from '../core/topic';
 import PubSubAble from './pubsub.interface';
+import * as QS from 'query-string';
 
 /**
  * @file simple 历史管理
  */
 
+window.addEventListener('popstate', e => {
+    PubSub.publish(Topic.HISTORY.POP, {data: QS.parse(location.search)});
+});
+
+const STATE = {bxlhistory: 1};
 export default abstract class History extends PubSubAble {
     constructor() {
         super();
-
-        this.onPopstate = this.onPopstate.bind(this);
-        window.addEventListener('popstate', this.onPopstate);
+        this.subscribe(Topic.HISTORY.POP, this.onPopState.bind(this));
     }
 
-    initState(state, url?) {
-        this.pushState(state, url);
+    _makeUrl(data) {
+        const params = QS.parse(location.search);
+        params.xrkey = data.setId;
+        params.sceneid = data.id;
+
+        return `//${location.host}${location.pathname}?${QS.stringify(params)}`;
     }
 
-    pushState(state, url = location.href) {
+    initState(data) {
+        this.replaceState(data);
+    }
+
+    pushState(data) {
         try {
-            history.pushState(state, null, url);
+            history.pushState(STATE, null, this._makeUrl(data));
         } catch (e) {}
     }
 
-    replaceState(state, url = location.href) {
+    replaceState(data) {
         try {
-            history.replaceState(state, null, url);
+            history.replaceState(STATE, null, this._makeUrl(data));
         } catch (e) {}
     }
 
-    popState() {
+    getState() {
         return history.state;
     }
 
-    abstract onPopstate()
+    abstract onPopState(topic, payload)
 
     dispose() {
         super.dispose();
-        window.removeEventListener('popstate', this.onPopstate);
     }
 }
