@@ -11,7 +11,7 @@ import HDStore from './store.hdmap';
 
 export default class HDMonitor extends PubSubAble {
     pano: any;
-    level = 3;
+    level = 2;
 
     constructor(pano, opts?) {
         super();
@@ -29,10 +29,16 @@ export default class HDMonitor extends PubSubAble {
         const camera = pano.getCamera();
         const target = pano.skyBox.getPlastic();
         const intersects = Util.intersect({x: 0, y: 0}, [target], camera);
+        // no zoom
+        if (camera.fov >= 90) {
+            return;
+        }
 
         if (intersects) {
             const point = intersects[0].point;
-            const ret = HDAnalyse.analyse(point, this.level);
+            const ret = HDAnalyse.analyse(point, this.getLevel(camera.fov));
+            console.log(this.getLevel(camera.fov))
+            console.log(ret)
 
             ret.forEach(data => {
                 const p = HDStore.getHDPicture('../assets/hdmap/' + data.path);
@@ -41,6 +47,17 @@ export default class HDMonitor extends PubSubAble {
                 }
             });
         }
+    }
+
+    getLevel(fov) {
+        const level = fov < 50 ? 3 : 2;
+        const last = this.level;
+
+        if (level > last) {
+            this.level = level;
+        }
+
+        return this.level;
     }
 
     /**

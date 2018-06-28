@@ -112,7 +112,7 @@ export default class AnimationFly {
             fly2: [{
                 start: {fov: 150, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
                 end: {fov, px, py, pz, rx: -Math.PI, ry: 0, rz:  Math.PI},
-                time: 4000
+                time: 2000
             }],
             // has beginning lookat
             fly3: [{

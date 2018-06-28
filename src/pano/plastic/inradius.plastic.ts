@@ -187,10 +187,13 @@ export default class Inradius extends Plastic {
     }
 
     addRotate() {
-        const target = this.wrap || this.plastic;
-        target.rotation.x += 0.01;
-        target.rotation.y += 0.01;
-        target.rotation.z += 0.01;
+        const target = this.getPlastic();
+
+        if (target.visible) {
+            target.rotation.x += 0.01;
+            target.rotation.y += 0.01;
+            target.rotation.z += 0.01;
+        }
     }
 
     fadeIn(onComplete) {

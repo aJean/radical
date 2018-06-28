@@ -73,15 +73,21 @@ export default abstract class HDAnalyse {
      */
     static calcSize(level) {
         switch (level) {
-            case 2:
+            case 1:
                 // 512 * 4
                 return {
                     fw: 1024, fh: 1024,
                     w: 512, h: 512,
                     phases: [512, 0]
                 };
-            case 3:
+            case 2:
                 // 512 * 25
+                return {
+                    fw: 2560, fh: 2560,
+                    w: 512, h: 512,
+                    phases: [2048, 1536, 1024, 512, 0]
+                };
+            case 3:
                 return {
                     fw: 2560, fh: 2560,
                     w: 512, h: 512,
@@ -234,8 +240,9 @@ export default abstract class HDAnalyse {
      * 获取高清图的路径
      */
     static calcPath(i, row, column, level) {
-        level = level == 2 ? 'l1' : 'l2'; 
         const dir = order[i];
-        return `hd_${dir}/${level}/${row}/${level}_${dir}_${row}_${column}.jpg`;
+        const name = `l${level}`;
+        
+        return `hd_${dir}/${name}/${row}/${name}_${dir}_${row}_${column}.jpg`;
     }
 }
