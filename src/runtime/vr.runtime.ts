@@ -93,8 +93,7 @@ export default abstract class Runtime {
             EnvQueue.add(vpano.onResize, vpano);
             vpano.run();
         } catch (e) {
-            events && events.nosupport && events.nosupport();
-            throw new Error(e);
+            events && events.nosupport && events.nosupport(e) || console.error(e);
         }
     }
 

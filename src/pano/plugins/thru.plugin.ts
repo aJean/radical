@@ -93,12 +93,10 @@ export default class Thru extends PubSubAble {
                 const interpolat = 141;
                 const hole = new Inradius({
                     name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
-                    rotate: true, emissive: '#787878', envMap: texture, hide: true, cloudimg: opts.img
+                    rotate: true, emissive: '#787878', envMap: texture, cloudimg: opts.img
                 }, pano);
-                const text = new Text({text: item.setName, fontsize: 40, width: 512, hide: true,
+                const text = new Text({text: item.setName, fontsize: 40, width: 512,
                     x: pos.x, y: pos.y - interpolat, z: pos.z, limit: 6, shadow: true});
-                hole.addBy(pano);
-                text.addBy(pano);
 
                 group.push(hole.getPlastic());
                 objs.push(hole);
@@ -125,8 +123,26 @@ export default class Thru extends PubSubAble {
         clearTimeout(this.timeid);
         this.timeid = setTimeout(() => {
             this.publish(this.Topic.THRU.SHOW, {list: this.list, pano: this.pano});
-            this.show();
+            this.add();
         }, this.opts.lazy);
+    }
+
+    /**
+     * 添加穿越点
+     */
+    add() {
+        const pano = this.pano;
+        const camera = this.camera;
+
+        this.active = true;
+        this.objs.forEach(obj => {
+            obj.lookAt(camera.position);
+            obj.addBy(pano);
+        });
+        this.texts.forEach(text => {
+            text.lookAt(camera.position);
+            text.addBy(pano);
+        });
     }
 
     /**

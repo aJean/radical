@@ -41,19 +41,15 @@ export default abstract class History extends PubSubAble {
     }
 
     pushState(data) {
-        try {
-            const url =  this._makeUrl(data);
-            this.router ? this.router.redirect(url.search, null, SFOPTS)
-                : history.pushState(STATE, null, url.all);
-        } catch (e) {}
+        const url =  this._makeUrl(data);
+        this.router ? this.router.redirect(url.search, null, SFOPTS)
+            : history.pushState(STATE, null, url.all);
     }
 
     replaceState(data) {
-        try {
-            const url =  this._makeUrl(data);
-            this.router ? this.router.reset(url.search, null, SFOPTS)
-                : history.replaceState(STATE, null, url.all);
-        } catch (e) {}
+        const url =  this._makeUrl(data);
+        this.router ? this.router.reset(url.search, null, SFOPTS)
+            : history.replaceState(STATE, null, url.all);
     }
 
     getState() {

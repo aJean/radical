@@ -150,8 +150,7 @@ abstract class Runtime {
             // load and render
             pano.run();
         } catch(e) {
-            events && events.nosupport && events.nosupport();
-            throw new Error(e);
+            events && events.nosupport && events.nosupport(e) || console.error(e);
         }
     }
 };

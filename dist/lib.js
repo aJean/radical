@@ -6882,6 +6882,108 @@ module.exports = function (encodedURI) {
 
 /***/ }),
 
+/***/ "./node_modules/object-assign/index.js":
+/*!*********************************************!*\
+  !*** ./node_modules/object-assign/index.js ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/*
+object-assign
+(c) Sindre Sorhus
+@license MIT
+*/
+
+
+/* eslint-disable no-unused-vars */
+var getOwnPropertySymbols = Object.getOwnPropertySymbols;
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+var propIsEnumerable = Object.prototype.propertyIsEnumerable;
+
+function toObject(val) {
+	if (val === null || val === undefined) {
+		throw new TypeError('Object.assign cannot be called with null or undefined');
+	}
+
+	return Object(val);
+}
+
+function shouldUseNative() {
+	try {
+		if (!Object.assign) {
+			return false;
+		}
+
+		// Detect buggy property enumeration order in older V8 versions.
+
+		// https://bugs.chromium.org/p/v8/issues/detail?id=4118
+		var test1 = new String('abc');  // eslint-disable-line no-new-wrappers
+		test1[5] = 'de';
+		if (Object.getOwnPropertyNames(test1)[0] === '5') {
+			return false;
+		}
+
+		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
+		var test2 = {};
+		for (var i = 0; i < 10; i++) {
+			test2['_' + String.fromCharCode(i)] = i;
+		}
+		var order2 = Object.getOwnPropertyNames(test2).map(function (n) {
+			return test2[n];
+		});
+		if (order2.join('') !== '0123456789') {
+			return false;
+		}
+
+		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
+		var test3 = {};
+		'abcdefghijklmnopqrst'.split('').forEach(function (letter) {
+			test3[letter] = letter;
+		});
+		if (Object.keys(Object.assign({}, test3)).join('') !==
+				'abcdefghijklmnopqrst') {
+			return false;
+		}
+
+		return true;
+	} catch (err) {
+		// We don't expect any of the above to throw, but better to be safe.
+		return false;
+	}
+}
+
+module.exports = shouldUseNative() ? Object.assign : function (target, source) {
+	var from;
+	var to = toObject(target);
+	var symbols;
+
+	for (var s = 1; s < arguments.length; s++) {
+		from = Object(arguments[s]);
+
+		for (var key in from) {
+			if (hasOwnProperty.call(from, key)) {
+				to[key] = from[key];
+			}
+		}
+
+		if (getOwnPropertySymbols) {
+			symbols = getOwnPropertySymbols(from);
+			for (var i = 0; i < symbols.length; i++) {
+				if (propIsEnumerable.call(from, symbols[i])) {
+					to[symbols[i]] = from[symbols[i]];
+				}
+			}
+		}
+	}
+
+	return to;
+};
+
+
+/***/ }),
+
 /***/ "./node_modules/query-string/index.js":
 /*!********************************************!*\
   !*** ./node_modules/query-string/index.js ***!
@@ -6891,51 +6993,54 @@ module.exports = function (encodedURI) {
 
 "use strict";
 
-const strictUriEncode = __webpack_require__(/*! strict-uri-encode */ "./node_modules/strict-uri-encode/index.js");
-const decodeComponent = __webpack_require__(/*! decode-uri-component */ "./node_modules/decode-uri-component/index.js");
+var strictUriEncode = __webpack_require__(/*! strict-uri-encode */ "./node_modules/strict-uri-encode/index.js");
+var objectAssign = __webpack_require__(/*! object-assign */ "./node_modules/object-assign/index.js");
+var decodeComponent = __webpack_require__(/*! decode-uri-component */ "./node_modules/decode-uri-component/index.js");
 
-function encoderForArrayFormat(options) {
-	switch (options.arrayFormat) {
+function encoderForArrayFormat(opts) {
+	switch (opts.arrayFormat) {
 		case 'index':
-			return (key, value, index) => {
+			return function (key, value, index) {
 				return value === null ? [
-					encode(key, options),
+					encode(key, opts),
 					'[',
 					index,
 					']'
 				].join('') : [
-					encode(key, options),
+					encode(key, opts),
 					'[',
-					encode(index, options),
+					encode(index, opts),
 					']=',
-					encode(value, options)
+					encode(value, opts)
 				].join('');
 			};
+
 		case 'bracket':
-			return (key, value) => {
-				return value === null ? [encode(key, options), '[]'].join('') : [
-					encode(key, options),
+			return function (key, value) {
+				return value === null ? encode(key, opts) : [
+					encode(key, opts),
 					'[]=',
-					encode(value, options)
+					encode(value, opts)
 				].join('');
 			};
+
 		default:
-			return (key, value) => {
-				return value === null ? encode(key, options) : [
-					encode(key, options),
+			return function (key, value) {
+				return value === null ? encode(key, opts) : [
+					encode(key, opts),
 					'=',
-					encode(value, options)
+					encode(value, opts)
 				].join('');
 			};
 	}
 }
 
-function parserForArrayFormat(options) {
-	let result;
+function parserForArrayFormat(opts) {
+	var result;
 
-	switch (options.arrayFormat) {
+	switch (opts.arrayFormat) {
 		case 'index':
-			return (key, value, accumulator) => {
+			return function (key, value, accumulator) {
 				result = /\[(\d*)\]$/.exec(key);
 
 				key = key.replace(/\[\d*\]$/, '');
@@ -6951,25 +7056,25 @@ function parserForArrayFormat(options) {
 
 				accumulator[key][result[1]] = value;
 			};
+
 		case 'bracket':
-			return (key, value, accumulator) => {
+			return function (key, value, accumulator) {
 				result = /(\[\])$/.exec(key);
 				key = key.replace(/\[\]$/, '');
 
 				if (!result) {
 					accumulator[key] = value;
 					return;
-				}
-
-				if (accumulator[key] === undefined) {
+				} else if (accumulator[key] === undefined) {
 					accumulator[key] = [value];
 					return;
 				}
 
 				accumulator[key] = [].concat(accumulator[key], value);
 			};
+
 		default:
-			return (key, value, accumulator) => {
+			return function (key, value, accumulator) {
 				if (accumulator[key] === undefined) {
 					accumulator[key] = value;
 					return;
@@ -6980,17 +7085,9 @@ function parserForArrayFormat(options) {
 	}
 }
 
-function encode(value, options) {
-	if (options.encode) {
-		return options.strict ? strictUriEncode(value) : encodeURIComponent(value);
-	}
-
-	return value;
-}
-
-function decode(value, options) {
-	if (options.decode) {
-		return decodeComponent(value);
+function encode(value, opts) {
+	if (opts.encode) {
+		return opts.strict ? strictUriEncode(value) : encodeURIComponent(value);
 	}
 
 	return value;
@@ -6999,60 +7096,65 @@ function decode(value, options) {
 function keysSorter(input) {
 	if (Array.isArray(input)) {
 		return input.sort();
-	}
-
-	if (typeof input === 'object') {
-		return keysSorter(Object.keys(input))
-			.sort((a, b) => Number(a) - Number(b))
-			.map(key => input[key]);
+	} else if (typeof input === 'object') {
+		return keysSorter(Object.keys(input)).sort(function (a, b) {
+			return Number(a) - Number(b);
+		}).map(function (key) {
+			return input[key];
+		});
 	}
 
 	return input;
 }
 
-function extract(input) {
-	const queryStart = input.indexOf('?');
+function extract(str) {
+	var queryStart = str.indexOf('?');
 	if (queryStart === -1) {
 		return '';
 	}
-	return input.slice(queryStart + 1);
+	return str.slice(queryStart + 1);
 }
 
-function parse(input, options) {
-	options = Object.assign({decode: true, arrayFormat: 'none'}, options);
+function parse(str, opts) {
+	opts = objectAssign({arrayFormat: 'none'}, opts);
 
-	const formatter = parserForArrayFormat(options);
+	var formatter = parserForArrayFormat(opts);
 
 	// Create an object with no prototype
-	const ret = Object.create(null);
+	// https://github.com/sindresorhus/query-string/issues/47
+	var ret = Object.create(null);
 
-	if (typeof input !== 'string') {
+	if (typeof str !== 'string') {
 		return ret;
 	}
 
-	input = input.trim().replace(/^[?#&]/, '');
+	str = str.trim().replace(/^[?#&]/, '');
 
-	if (!input) {
+	if (!str) {
 		return ret;
 	}
 
-	for (const param of input.split('&')) {
-		let [key, value] = param.replace(/\+/g, ' ').split('=');
+	str.split('&').forEach(function (param) {
+		var parts = param.replace(/\+/g, ' ').split('=');
+		// Firefox (pre 40) decodes `%3D` to `=`
+		// https://github.com/sindresorhus/query-string/pull/37
+		var key = parts.shift();
+		var val = parts.length > 0 ? parts.join('=') : undefined;
 
-		// Missing `=` should be `null`:
+		// missing `=` should be `null`:
 		// http://w3.org/TR/2012/WD-url-20120524/#collect-url-parameters
-		value = value === undefined ? null : decode(value, options);
+		val = val === undefined ? null : decodeComponent(val);
 
-		formatter(decode(key, options), value, ret);
-	}
+		formatter(decodeComponent(key), val, ret);
+	});
 
-	return Object.keys(ret).sort().reduce((result, key) => {
-		const value = ret[key];
-		if (Boolean(value) && typeof value === 'object' && !Array.isArray(value)) {
+	return Object.keys(ret).sort().reduce(function (result, key) {
+		var val = ret[key];
+		if (Boolean(val) && typeof val === 'object' && !Array.isArray(val)) {
 			// Sort object keys, not values
-			result[key] = keysSorter(value);
+			result[key] = keysSorter(val);
 		} else {
-			result[key] = value;
+			result[key] = val;
 		}
 
 		return result;
@@ -7062,54 +7164,56 @@ function parse(input, options) {
 exports.extract = extract;
 exports.parse = parse;
 
-exports.stringify = (obj, options) => {
-	const defaults = {
+exports.stringify = function (obj, opts) {
+	var defaults = {
 		encode: true,
 		strict: true,
 		arrayFormat: 'none'
 	};
 
-	options = Object.assign(defaults, options);
+	opts = objectAssign(defaults, opts);
 
-	if (options.sort === false) {
-		options.sort = () => {};
+	if (opts.sort === false) {
+		opts.sort = function () {};
 	}
 
-	const formatter = encoderForArrayFormat(options);
+	var formatter = encoderForArrayFormat(opts);
 
-	return obj ? Object.keys(obj).sort(options.sort).map(key => {
-		const value = obj[key];
+	return obj ? Object.keys(obj).sort(opts.sort).map(function (key) {
+		var val = obj[key];
 
-		if (value === undefined) {
+		if (val === undefined) {
 			return '';
 		}
 
-		if (value === null) {
-			return encode(key, options);
+		if (val === null) {
+			return encode(key, opts);
 		}
 
-		if (Array.isArray(value)) {
-			const result = [];
+		if (Array.isArray(val)) {
+			var result = [];
 
-			for (const value2 of value.slice()) {
-				if (value2 === undefined) {
-					continue;
+			val.slice().forEach(function (val2) {
+				if (val2 === undefined) {
+					return;
 				}
 
-				result.push(formatter(key, value2, result.length));
-			}
+				result.push(formatter(key, val2, result.length));
+			});
 
 			return result.join('&');
 		}
 
-		return encode(key, options) + '=' + encode(value, options);
-	}).filter(x => x.length > 0).join('&') : '';
+		return encode(key, opts) + '=' + encode(val, opts);
+	}).filter(function (x) {
+		return x.length > 0;
+	}).join('&') : '';
 };
 
-exports.parseUrl = (input, options) => {
+exports.parseUrl = function (str, opts) {
 	return {
-		url: input.split('?')[0] || '',
-		query: parse(extract(input), options)
+		url: str.split('?')[0] || '',
+		query: parse(extract(str), opts)
 	};
 };
 
@@ -7125,7 +7229,11 @@ exports.parseUrl = (input, options) => {
 
 "use strict";
 
-module.exports = str => encodeURIComponent(str).replace(/[!'()*]/g, x => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
+module.exports = function (str) {
+	return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
+		return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+	});
+};
 
 
 /***/ }),
@@ -54171,7 +54279,6 @@ function default_1() {
     }
 }
 exports.default = default_1;
-;
 
 
 /***/ }),
@@ -54851,20 +54958,14 @@ var History = /** @class */ (function (_super) {
         this.replaceState(data);
     };
     History.prototype.pushState = function (data) {
-        try {
-            var url_1 = this._makeUrl(data);
-            this.router ? this.router.redirect(url_1.search, null, SFOPTS)
-                : history.pushState(STATE, null, url_1.all);
-        }
-        catch (e) { }
+        var url = this._makeUrl(data);
+        this.router ? this.router.redirect(url.search, null, SFOPTS)
+            : history.pushState(STATE, null, url.all);
     };
     History.prototype.replaceState = function (data) {
-        try {
-            var url_2 = this._makeUrl(data);
-            this.router ? this.router.reset(url_2.search, null, SFOPTS)
-                : history.replaceState(STATE, null, url_2.all);
-        }
-        catch (e) { }
+        var url = this._makeUrl(data);
+        this.router ? this.router.reset(url.search, null, SFOPTS)
+            : history.replaceState(STATE, null, url.all);
     };
     History.prototype.getState = function () {
         return history.state;
@@ -59846,12 +59947,10 @@ var Thru = /** @class */ (function (_super) {
                 var interpolat = 141;
                 var hole = new inradius_plastic_1.default({
                     name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
-                    rotate: true, emissive: '#787878', envMap: texture, hide: true, cloudimg: opts.img
+                    rotate: true, emissive: '#787878', envMap: texture, cloudimg: opts.img
                 }, pano);
-                var text = new text_plastic_1.default({ text: item.setName, fontsize: 40, width: 512, hide: true,
+                var text = new text_plastic_1.default({ text: item.setName, fontsize: 40, width: 512,
                     x: pos.x, y: pos.y - interpolat, z: pos.z, limit: 6, shadow: true });
-                hole.addBy(pano);
-                text.addBy(pano);
                 group.push(hole.getPlastic());
                 objs.push(hole);
                 texts.push(text);
@@ -59875,8 +59974,24 @@ var Thru = /** @class */ (function (_super) {
         clearTimeout(this.timeid);
         this.timeid = setTimeout(function () {
             _this.publish(_this.Topic.THRU.SHOW, { list: _this.list, pano: _this.pano });
-            _this.show();
+            _this.add();
         }, this.opts.lazy);
+    };
+    /**
+     * 添加穿越点
+     */
+    Thru.prototype.add = function () {
+        var pano = this.pano;
+        var camera = this.camera;
+        this.active = true;
+        this.objs.forEach(function (obj) {
+            obj.lookAt(camera.position);
+            obj.addBy(pano);
+        });
+        this.texts.forEach(function (text) {
+            text.lookAt(camera.position);
+            text.addBy(pano);
+        });
     };
     /**
      * 显示穿越点
@@ -60320,8 +60435,7 @@ var Runtime = /** @class */ (function () {
                             pano.run();
                         }
                         catch (e) {
-                            events && events.nosupport && events.nosupport();
-                            throw new Error(e);
+                            events && events.nosupport && events.nosupport(e) || console.error(e);
                         }
                         return [2 /*return*/];
                 }
@@ -60505,8 +60619,7 @@ var Runtime = /** @class */ (function () {
                             vpano_1.run();
                         }
                         catch (e) {
-                            events && events.nosupport && events.nosupport();
-                            throw new Error(e);
+                            events && events.nosupport && events.nosupport(e) || console.error(e);
                         }
                         return [2 /*return*/];
                 }

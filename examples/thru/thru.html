@@ -43,8 +43,13 @@
                             });
                         }
                     });
-
-                    bxl.startPano(data, '#test');
+                    
+                    bxl.startPano(data, '#test', {
+                        nosupport: e => {
+                            alert(e);
+                            return true;
+                        }
+                    });
                 }
             });
         </script>
