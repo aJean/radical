@@ -85,6 +85,7 @@ export default class Pano extends History {
         }
 
         if (opts.history) {
+            this._setRouter(opts.router);
             this.initState(data);
         }
         

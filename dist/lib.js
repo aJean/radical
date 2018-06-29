@@ -54827,6 +54827,7 @@ window.addEventListener('popstate', function (e) {
     pubsub_1.default.publish(topic_1.default.HISTORY.POP, { data: QS.parse(location.search) });
 });
 var STATE = { bxlhistory: 1 };
+var SFOPTS = { disableServiceDispatch: true, silent: true };
 var History = /** @class */ (function (_super) {
     __extends(History, _super);
     function History() {
@@ -54838,20 +54839,30 @@ var History = /** @class */ (function (_super) {
         var params = QS.parse(location.search);
         params.xrkey = data.setId;
         params.sceneid = data.id;
-        return "//" + location.host + location.pathname + "?" + QS.stringify(params);
+        return {
+            all: "//" + location.host + location.pathname + "?" + QS.stringify(params),
+            search: "?" + QS.stringify(params)
+        };
+    };
+    History.prototype._setRouter = function (router) {
+        this.router = router;
     };
     History.prototype.initState = function (data) {
         this.replaceState(data);
     };
     History.prototype.pushState = function (data) {
         try {
-            history.pushState(STATE, null, this._makeUrl(data));
+            var url_1 = this._makeUrl(data);
+            this.router ? this.router.redirect(url_1.search, null, SFOPTS)
+                : history.pushState(STATE, null, url_1.all);
         }
         catch (e) { }
     };
     History.prototype.replaceState = function (data) {
         try {
-            history.replaceState(STATE, null, this._makeUrl(data));
+            var url_2 = this._makeUrl(data);
+            this.router ? this.router.reset(url_2.search, null, SFOPTS)
+                : history.replaceState(STATE, null, url_2.all);
         }
         catch (e) { }
     };
@@ -57744,6 +57755,7 @@ var Pano = /** @class */ (function (_super) {
             new monitor_hdmap_1.default(this, opts.hdm);
         }
         if (opts.history) {
+            this._setRouter(opts.router);
             this.initState(data);
         }
         // all overlays manager

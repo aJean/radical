@@ -12,7 +12,10 @@ window.addEventListener('popstate', e => {
 });
 
 const STATE = {bxlhistory: 1};
+const SFOPTS = {disableServiceDispatch: true, silent: true};
 export default abstract class History extends PubSubAble {
+    router: any;
+
     constructor() {
         super();
         this.subscribe(Topic.HISTORY.POP, this.onPopState.bind(this));
@@ -23,7 +26,14 @@ export default abstract class History extends PubSubAble {
         params.xrkey = data.setId;
         params.sceneid = data.id;
 
-        return `//${location.host}${location.pathname}?${QS.stringify(params)}`;
+        return {
+            all: `//${location.host}${location.pathname}?${QS.stringify(params)}`,
+            search: `?${QS.stringify(params)}`
+        };
+    }
+
+    _setRouter(router) {
+        this.router = router;
     }
 
     initState(data) {
@@ -32,13 +42,17 @@ export default abstract class History extends PubSubAble {
 
     pushState(data) {
         try {
-            history.pushState(STATE, null, this._makeUrl(data));
+            const url =  this._makeUrl(data);
+            this.router ? this.router.redirect(url.search, null, SFOPTS)
+                : history.pushState(STATE, null, url.all);
         } catch (e) {}
     }
 
     replaceState(data) {
         try {
-            history.replaceState(STATE, null, this._makeUrl(data));
+            const url =  this._makeUrl(data);
+            this.router ? this.router.reset(url.search, null, SFOPTS)
+                : history.replaceState(STATE, null, url.all);
         } catch (e) {}
     }
 
