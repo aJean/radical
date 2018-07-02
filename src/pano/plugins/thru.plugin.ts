@@ -69,7 +69,7 @@ export default class Thru extends PubSubAble {
         const poss = [Analyse.calcWorld(4, 0.59375, 0.695906433),
             Analyse.calcWorld(5, 0.703125, 0.664717349),
             Analyse.calcWorld(1, 0.375, 0.859649123)];
-
+        
         list.forEach((item, i) => {
             const pos = this.getVector(i);
             const interpolat = 141;
@@ -79,15 +79,17 @@ export default class Thru extends PubSubAble {
             }, pano);
             const text = new Text({text: item.setName, fontsize: 40, width: 512,
                 x: pos.x, y: pos.y - interpolat, z: pos.z, limit: 6, shadow: true});
-
+            
+            hole.setOpacity(0);
+            text.setOpacity(0);
             hole.addBy(pano);
             text.addBy(pano);
-
+            
             this.group.push(hole.getPlastic());
             this.objs.push(hole);
             this.texts.push(text);
             // load texture
-            item.setName && loader.loadTexture(item.image).then(texture => this.objs[i].setMap(texture));
+            setTimeout(() => loader.loadTexture(item.image).then(texture => this.objs[i].setMap(texture)), 0);
         });
     }
 
@@ -145,34 +147,32 @@ export default class Thru extends PubSubAble {
     }
 
     /**
-     * 显示穿越点
+     * 显示穿越点, use opacity for high performance
      */
     show() {
-        const camera = this.camera;
-
         clearTimeout(this.timeid);
         this.active = true;
 
         this.objs.forEach(obj => {
-            obj.lookAt(camera.position);
-            obj.show();
+            obj.lookAt(this.camera.position);
+            obj.setOpacity(1);
         });
         this.texts.forEach(text => {
-            text.lookAt(camera.position);
-            text.show();
+            text.lookAt(this.camera.position);
+            text.setOpacity(1);
         });
     }
 
     /**
-     * 隐藏穿越点
+     * 隐藏穿越点, use opacity for high performance
      */
     hide() {
         clearTimeout(this.timeid);
         this.active = false;
 
         if (this.objs.length) {
-            this.objs.forEach(obj => obj.hide());
-            this.texts.forEach(text => text.hide());
+            this.objs.forEach(obj => obj.setOpacity(0));
+            this.texts.forEach(text => text.setOpacity(0));
         }
     }
 
@@ -180,7 +180,6 @@ export default class Thru extends PubSubAble {
      * 沉浸模式
      */
     onToggle(topic, payload) {
-        clearTimeout(this.timeid);
         payload.should ? this.show() : this.hide();
     }
 

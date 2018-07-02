@@ -58662,14 +58662,16 @@ var Inradius = /** @class */ (function (_super) {
             refractionRatio: 0,
             reflectivity: 1,
             transparent: true,
-            opacity: opts.opacity
+            opacity: opts.opacity,
+            depthTest: false
         } : {
             color: opts.color,
             side: opts.side,
             refractionRatio: 0,
             reflectivity: 1,
             transparent: true,
-            opacity: opts.opacity
+            opacity: opts.opacity,
+            depthTest: false
         };
         if (opts.envMap) {
             this.setRefraction(opts.envMap);
@@ -58723,6 +58725,8 @@ var Inradius = /** @class */ (function (_super) {
             transparent: true,
             depthTest: false
         }));
+        sphere.renderOrder = 1;
+        cloud.renderOrder = 2;
         cloud.add(sphere);
     };
     /**
@@ -58782,6 +58786,15 @@ var Inradius = /** @class */ (function (_super) {
         material.needsUpdate = true;
         material.envMap = texture;
         tempMap && tempMap.dispose();
+    };
+    /**
+     * 设置透明度
+     */
+    Inradius.prototype.setOpacity = function (opacity) {
+        if (this.wrap) {
+            this.wrap.material.opacity = opacity;
+        }
+        this.plastic.material.opacity = opacity;
     };
     /**
      * 设置材质映射
@@ -59152,6 +59165,10 @@ var Text = /** @class */ (function (_super) {
             ctx.closePath();
         }
     };
+    /**
+     * 没有 lookat 需要 rotate
+     * @param rad
+     */
     Text.prototype.rotate = function (rad) {
         this.plastic.rotateY(rad);
     };
@@ -59173,6 +59190,12 @@ var Text = /** @class */ (function (_super) {
         ctx.beginPath();
         ctx.fillText(text, opts.width / 2, opts.height / 2 + 10, opts.width);
         ctx.closePath();
+    };
+    /**
+     * 设置透明度
+     */
+    Text.prototype.setOpacity = function (opacity) {
+        this.plastic.material.opacity = opacity;
     };
     Text.prototype.dispose = function () {
         delete this.plastic['wrapper'];
@@ -59976,13 +59999,15 @@ var Thru = /** @class */ (function (_super) {
             }, pano);
             var text = new text_plastic_1.default({ text: item.setName, fontsize: 40, width: 512,
                 x: pos.x, y: pos.y - interpolat, z: pos.z, limit: 6, shadow: true });
+            hole.setOpacity(0);
+            text.setOpacity(0);
             hole.addBy(pano);
             text.addBy(pano);
             _this.group.push(hole.getPlastic());
             _this.objs.push(hole);
             _this.texts.push(text);
             // load texture
-            item.setName && loader.loadTexture(item.image).then(function (texture) { return _this.objs[i].setMap(texture); });
+            setTimeout(function () { return loader.loadTexture(item.image).then(function (texture) { return _this.objs[i].setMap(texture); }); }, 0);
         });
     };
     /**
@@ -60032,37 +60057,36 @@ var Thru = /** @class */ (function (_super) {
         }, this.opts.lazy);
     };
     /**
-     * 显示穿越点
+     * 显示穿越点, use opacity for high performance
      */
     Thru.prototype.show = function () {
-        var camera = this.camera;
+        var _this = this;
         clearTimeout(this.timeid);
         this.active = true;
         this.objs.forEach(function (obj) {
-            obj.lookAt(camera.position);
-            obj.show();
+            obj.lookAt(_this.camera.position);
+            obj.setOpacity(1);
         });
         this.texts.forEach(function (text) {
-            text.lookAt(camera.position);
-            text.show();
+            text.lookAt(_this.camera.position);
+            text.setOpacity(1);
         });
     };
     /**
-     * 隐藏穿越点
+     * 隐藏穿越点, use opacity for high performance
      */
     Thru.prototype.hide = function () {
         clearTimeout(this.timeid);
         this.active = false;
         if (this.objs.length) {
-            this.objs.forEach(function (obj) { return obj.hide(); });
-            this.texts.forEach(function (text) { return text.hide(); });
+            this.objs.forEach(function (obj) { return obj.setOpacity(0); });
+            this.texts.forEach(function (text) { return text.setOpacity(0); });
         }
     };
     /**
      * 沉浸模式
      */
     Thru.prototype.onToggle = function (topic, payload) {
-        clearTimeout(this.timeid);
         payload.should ? this.show() : this.hide();
     };
     /**

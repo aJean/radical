@@ -6,6 +6,11 @@ body {
     margin: 0;
 }
 
+#test {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-tap-highlight-color: transparent;
+}
+
 .testlabel {
     position: absolute;
     padding: 10px;

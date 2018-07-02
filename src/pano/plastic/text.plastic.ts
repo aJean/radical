@@ -98,6 +98,10 @@ export default class Text extends Plastic {
         }
     }
     
+    /**
+     * 没有 lookat 需要 rotate
+     * @param rad 
+     */
     rotate(rad) {
         this.plastic.rotateY(rad);
     }
@@ -123,6 +127,13 @@ export default class Text extends Plastic {
         ctx.beginPath();
         ctx.fillText(text, opts.width / 2, opts.height / 2 + 10, opts.width);
         ctx.closePath();
+    }
+
+    /**
+     * 设置透明度
+     */
+    setOpacity(opacity) {
+        this.plastic.material.opacity = opacity;
     }
 
     dispose() {

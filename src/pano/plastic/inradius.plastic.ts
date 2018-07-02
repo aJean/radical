@@ -49,14 +49,16 @@ export default class Inradius extends Plastic {
                 refractionRatio: 0,
                 reflectivity: 1,
                 transparent: true,
-                opacity: opts.opacity                
+                opacity: opts.opacity,
+                depthTest: false            
             } : {
                 color: opts.color,                
                 side: opts.side,
                 refractionRatio: 0,
                 reflectivity: 1,
                 transparent: true,
-                opacity: opts.opacity
+                opacity: opts.opacity,
+                depthTest: false
             };
 
         if (opts.envMap) {
@@ -126,6 +128,8 @@ export default class Inradius extends Plastic {
                 depthTest: false
             })
         );
+        sphere.renderOrder = 1;
+        cloud.renderOrder = 2;
         cloud.add(sphere);
     }
 
@@ -193,6 +197,17 @@ export default class Inradius extends Plastic {
         material.needsUpdate = true;
         material.envMap = texture;
         tempMap && tempMap.dispose();
+    }
+
+    /**
+     * 设置透明度
+     */
+    setOpacity(opacity) {
+        if (this.wrap) {
+            this.wrap.material.opacity = opacity;
+        }
+
+        this.plastic.material.opacity = opacity;
     }
 
     /**
