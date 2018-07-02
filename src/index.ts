@@ -42,4 +42,4 @@ export default {
     publish(topic, data) {
         PubSub.publish(topic, data);
     }
-};
+}

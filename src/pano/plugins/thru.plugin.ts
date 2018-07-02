@@ -15,7 +15,8 @@ import Analyse from '../hdmap/analyse.hdmap';
 const defaultOpts = {
     radius: 100,
     lazy: 3000,
-    surl: null
+    surl: null,
+    limit: 3
 };
 const loader = new Loader();
 export default class Thru extends PubSubAble {
@@ -40,47 +41,29 @@ export default class Thru extends PubSubAble {
         this.onCanvasClick = this.onCanvasClick.bind(this);
 
         // common lights
-        this.createLights();
+        this.initLights();
 
         const Topic = this.Topic;
-        this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT, this.load.bind(this));
-        this.subscribe(Topic.SCENE.ATTACHSTART, this.onSceneChange.bind(this));
-        this.subscribe(Topic.SCENE.ATTACH, this.load.bind(this));
+        this.subscribe(Topic.SCENE.INIT, this.init.bind(this));
+        this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT, this.needToShow.bind(this));
+        this.subscribe(Topic.SCENE.ATTACHSTART, this.hide.bind(this));
+        this.subscribe(Topic.SCENE.ATTACH, this.change.bind(this));
         this.subscribe(Topic.UI.IMMERSION, this.onToggle.bind(this));
         this.judgeid = pano.overlays.addJudgeFunc(this.onCanvasClick.bind(this));
     }
 
-    load(topic, payload) {
-        const scene = payload.scene;
-        const list = this.list = scene.recomList;
+    /**
+     * 创建固定穿越点
+     */
+    init(topic, payload) {
+        const opts = this.opts;
+        const list = this.list =  payload.scene.recomList.slice(0, opts.limit);
 
-        if (!list || !list.length || this.objs.length) {
+        if (!list || !list.length) {
             return;
         }
         // clean current thru list
-        this.create(list);
-        this.needToShow();
-    }
-
-    /**
-     * 使用唯一点光源避免互相干扰
-     */
-    createLights() {
-        const light = new Light({intensity: 0.3, type: 2});
-
-        light.addBy(this.pano);
-        this.lights.push(light);
-    }
-
-    /**
-     * 创建穿越点
-     */
-    create(list) {
         const pano = this.pano;
-        const opts = this.opts;
-        const group = this.group;
-        const objs = this.objs;
-        const texts = this.texts;
         const radius = opts.radius;
         // TODO: 注意右侧的球文字间距需要处理
         const poss = [Analyse.calcWorld(4, 0.59375, 0.695906433),
@@ -88,21 +71,55 @@ export default class Thru extends PubSubAble {
             Analyse.calcWorld(1, 0.375, 0.859649123)];
 
         list.forEach((item, i) => {
-            item.setName && loader.loadTexture(item.image).then(texture => {
-                const pos = this.getVector(i);
-                const interpolat = 141;
-                const hole = new Inradius({
-                    name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
-                    rotate: true, emissive: '#787878', envMap: texture, cloudimg: opts.img
-                }, pano);
-                const text = new Text({text: item.setName, fontsize: 40, width: 512,
-                    x: pos.x, y: pos.y - interpolat, z: pos.z, limit: 6, shadow: true});
+            const pos = this.getVector(i);
+            const interpolat = 141;
+            const hole = new Inradius({
+                name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
+                rotate: true, emissive: '#787878', cloudimg: opts.img
+            }, pano);
+            const text = new Text({text: item.setName, fontsize: 40, width: 512,
+                x: pos.x, y: pos.y - interpolat, z: pos.z, limit: 6, shadow: true});
 
-                group.push(hole.getPlastic());
-                objs.push(hole);
-                texts.push(text);
-            });
+            hole.addBy(pano);
+            text.addBy(pano);
+
+            this.group.push(hole.getPlastic());
+            this.objs.push(hole);
+            this.texts.push(text);
+            // load texture
+            item.setName && loader.loadTexture(item.image).then(texture => this.objs[i].setMap(texture));
         });
+    }
+
+    /**
+     * 场景切换或穿越更新穿越点的内容
+     */
+    change(topic, payload) {
+        const list = this.list = payload.scene.recomList.slice(0, this.opts.limit);
+        const objs = this.objs;
+        const texts = this.texts;
+
+        if (!list || !list.length || !objs.length) {
+            return;
+        }
+        // change thru content
+        list.forEach((item, i) => {
+            const name = item.setName;
+            loader.loadTexture(item.image).then(texture => objs[i].setMap(texture));
+            texts[i].draw(name);
+        });
+
+        this.needToShow();
+    }
+
+    /**
+     * 使用唯一点光源避免互相干扰
+     */
+    initLights() {
+        const light = new Light({intensity: 0.3, type: 2});
+
+        light.addBy(this.pano);
+        this.lights.push(light);
     }
 
     /**
@@ -123,26 +140,8 @@ export default class Thru extends PubSubAble {
         clearTimeout(this.timeid);
         this.timeid = setTimeout(() => {
             this.publish(this.Topic.THRU.SHOW, {list: this.list, pano: this.pano});
-            this.add();
+            this.show();
         }, this.opts.lazy);
-    }
-
-    /**
-     * 添加穿越点
-     */
-    add() {
-        const pano = this.pano;
-        const camera = this.camera;
-
-        this.active = true;
-        this.objs.forEach(obj => {
-            obj.lookAt(camera.position);
-            obj.addBy(pano);
-        });
-        this.texts.forEach(text => {
-            text.lookAt(camera.position);
-            text.addBy(pano);
-        });
     }
 
     /**
@@ -151,7 +150,9 @@ export default class Thru extends PubSubAble {
     show() {
         const camera = this.camera;
 
-        this.active = true;        
+        clearTimeout(this.timeid);
+        this.active = true;
+
         this.objs.forEach(obj => {
             obj.lookAt(camera.position);
             obj.show();
@@ -173,14 +174,6 @@ export default class Thru extends PubSubAble {
             this.objs.forEach(obj => obj.hide());
             this.texts.forEach(text => text.hide());
         }
-    }
-
-    /**
-     * 场景变换删除穿越点
-     */
-    onSceneChange() {
-        this.cleanup();
-        this.hide();
     }
 
     /**
@@ -245,7 +238,7 @@ export default class Thru extends PubSubAble {
                                                 this.publish(this.Topic.THRU.CHANGE, {data, scene: oldscene, pano});
                                                 this.active = true;
                                                 pano.enterThru(scene, instance.getMap());
-                                                this.cleanup();
+                                                this.hide();
                                                 pano.getControl().reset(flag);
                                                 pano.supplyOverlayScenes(sceneGroup);
                                                 pano.gyro && pano.gyro.makeEnable(true);
@@ -266,13 +259,10 @@ export default class Thru extends PubSubAble {
      * 删除穿越点
      */
     cleanup() {
-        const objs = this.objs;
-        const texts = this.texts;
-
-        objs.forEach(obj => obj.removeBy(this.pano));
-        texts.forEach(text => text.removeBy(this.pano));
-        objs.length = 0;
-        texts.length = 0;
+        this.objs.forEach(obj => obj.removeBy(this.pano));
+        this.texts.forEach(text => text.removeBy(this.pano));
+        this.objs.length = 0;
+        this.texts.length = 0;
         this.group.length = 0;
     }
 

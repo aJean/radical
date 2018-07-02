@@ -70,12 +70,12 @@ export default class Text extends Plastic {
         const ctx = canvas.getContext('2d');
         ctx.font = `normal ${opts.fontsize}px ${opts.fontface}`;
         const metrics = ctx.measureText(opts.text);
-
+        // 宽度溢出?
         if (metrics.width > width) {
             width = opts.twidth = canvas.width = width * 2;
             ctx.font = `normal ${opts.weight} ${opts.fontsize}px ${opts.fontface}`;
         }
-
+        // 样式
         ctx.lineWidth = opts.linewidth;
         ctx.textAlign = 'center';
         ctx.fillStyle = opts.color;
@@ -86,18 +86,8 @@ export default class Text extends Plastic {
             ctx.shadowOffsetY = 0;
             ctx.shadowBlur = 6;
         }
-        
-        let text = opts.text;
-        const limit = opts.limit;
-
-        if (limit !== void 0 && limit < text.length) {
-            text = text.substring(0, limit - 1) + '...';
-        }
-
-        ctx.beginPath();
-        ctx.fillText(text, width / 2, height / 2 + 10, opts.width);
-        ctx.closePath();
-
+        // 文字
+        this.draw(opts.text);
         // 描边
         if (opts.strokecolor) {
             ctx.beginPath();
@@ -112,14 +102,27 @@ export default class Text extends Plastic {
         this.plastic.rotateY(rad);
     }
 
-    change(text) {
+    /**
+     * 绘制文字
+     */
+    draw(text) {
         const opts = this.opts;
-        const context = this.canvas.getContext('2d');
+        const ctx = this.canvas.getContext('2d');
+        const limit = opts.limit;
         opts.text = text;
 
-        this.plastic.material.map.needsUpdate = true;
-        context.clearRect(0, 0, opts.width, opts.height);
-        context.fillText(text, opts.width / 2, opts.height / 2 + 10);
+        if (limit !== void 0 && limit < text.length) {
+            text = text.substring(0, limit - 1) + '...';
+        }
+
+        if (this.plastic) {
+            this.plastic.material.map.needsUpdate = true;
+            ctx.clearRect(0, 0, opts.width, opts.height);
+        }
+
+        ctx.beginPath();
+        ctx.fillText(text, opts.width / 2, opts.height / 2 + 10, opts.width);
+        ctx.closePath();
     }
 
     dispose() {

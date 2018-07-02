@@ -26,13 +26,17 @@
                     data.multiScene = true;
                     data.pano = {
                         fovTrans: true,
-                        preTrans: true,
+                        sceneTrans: true,
                         gyro: true,
                         history: true
                     };
                     data.thru = {
-                        lazy: 1000,
+                        lazy: 2000,
+                        limit: 1,
                         surl: 'https://image.baidu.com/img/image/quanjing/bxlpanoinfo?sf=1'
+                    };
+                    data.animation =  {
+                        fly: 'fly2'
                     };
                     // xr location to bxl
                     data.sceneGroup.forEach(scene => {

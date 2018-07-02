@@ -57472,7 +57472,7 @@ var Overlays = /** @class */ (function (_super) {
                 evt.preventDefault();
                 return true;
             }
-            else if (evt.target == pano.getCanvas()) {
+            else if (!pano.frozen && evt.target == pano.getCanvas()) {
                 this.publish(this.Topic.UI.PANOCLICK, { location: location, pano: pano });
             }
         }
@@ -58645,10 +58645,13 @@ var Inradius = /** @class */ (function (_super) {
         _this.opts = util_1.default.assign({}, defaultOpts, opts);
         _this.create();
         if (opts.rotate) {
-            _this.subscribe(_this.Topic.RENDER.PROCESS, function () { return _this.addRotate(); });
+            _this.subscribe(_this.Topic.RENDER.PROCESS, function () { return _this.update(); });
         }
         return _this;
     }
+    /**
+     * 创建球体及特效
+     */
     Inradius.prototype.create = function () {
         var opts = this.opts;
         var params = opts.shadow ? {
@@ -58750,41 +58753,71 @@ var Inradius = /** @class */ (function (_super) {
             shadow: true, text: str, inverse: false });
         text.addTo(this.getPlastic());
     };
+    /**
+     * 隐藏文字
+     */
     Inradius.prototype.hideText = function () {
         this.text && this.text.hide();
     };
+    /**
+     * 获取外部数据
+     */
     Inradius.prototype.getData = function () {
         return this.opts.data;
     };
+    /**
+     * 获取环境贴图
+     */
     Inradius.prototype.getMap = function () {
         return this.plastic.material.envMap;
     };
+    /**
+     * 设置环境贴图
+     * @param {Object} texture cube 材质
+     */
     Inradius.prototype.setMap = function (texture) {
+        var material = this.plastic.material;
         var tempMap = this.plastic.material.envMap;
         this.setRefraction(texture);
-        this.plastic.material.envMap = texture;
-        tempMap.dispose();
+        material.needsUpdate = true;
+        material.envMap = texture;
+        tempMap && tempMap.dispose();
     };
+    /**
+     * 设置材质映射
+     */
     Inradius.prototype.setRefraction = function (texture) {
         texture.mapping = three_1.CubeRefractionMapping;
         texture.needsUpdate = true;
     };
+    /**
+     * 获取主控 mesh
+     */
     Inradius.prototype.getPlastic = function () {
         return this.wrap || this.plastic;
     };
-    Inradius.prototype.addRotate = function () {
+    /**
+     * 球体自转效果, 避让入场动画
+     */
+    Inradius.prototype.update = function () {
         var target = this.getPlastic();
-        if (target.visible) {
+        if (!this.pano.frozen && target.visible) {
             target.rotation.x += 0.01;
             target.rotation.y += 0.01;
             target.rotation.z += 0.01;
         }
     };
+    /**
+     * 淡入效果
+     */
     Inradius.prototype.fadeIn = function (onComplete) {
         var material = this.plastic.material;
         new tween_animation_1.default(material).to({ opacity: 1 }).effect('linear', 1000)
             .start(['opacity']).complete(onComplete);
     };
+    /**
+     * 淡出效果
+     */
     Inradius.prototype.fadeOut = function (onComplete) {
         var material = this.plastic.material;
         new tween_animation_1.default(material).to({ opacity: 0 }).effect('linear', 1000)
@@ -59092,10 +59125,12 @@ var Text = /** @class */ (function (_super) {
         var ctx = canvas.getContext('2d');
         ctx.font = "normal " + opts.fontsize + "px " + opts.fontface;
         var metrics = ctx.measureText(opts.text);
+        // 宽度溢出?
         if (metrics.width > width) {
             width = opts.twidth = canvas.width = width * 2;
             ctx.font = "normal " + opts.weight + " " + opts.fontsize + "px " + opts.fontface;
         }
+        // 样式
         ctx.lineWidth = opts.linewidth;
         ctx.textAlign = 'center';
         ctx.fillStyle = opts.color;
@@ -59106,14 +59141,8 @@ var Text = /** @class */ (function (_super) {
             ctx.shadowOffsetY = 0;
             ctx.shadowBlur = 6;
         }
-        var text = opts.text;
-        var limit = opts.limit;
-        if (limit !== void 0 && limit < text.length) {
-            text = text.substring(0, limit - 1) + '...';
-        }
-        ctx.beginPath();
-        ctx.fillText(text, width / 2, height / 2 + 10, opts.width);
-        ctx.closePath();
+        // 文字
+        this.draw(opts.text);
         // 描边
         if (opts.strokecolor) {
             ctx.beginPath();
@@ -59126,13 +59155,24 @@ var Text = /** @class */ (function (_super) {
     Text.prototype.rotate = function (rad) {
         this.plastic.rotateY(rad);
     };
-    Text.prototype.change = function (text) {
+    /**
+     * 绘制文字
+     */
+    Text.prototype.draw = function (text) {
         var opts = this.opts;
-        var context = this.canvas.getContext('2d');
+        var ctx = this.canvas.getContext('2d');
+        var limit = opts.limit;
         opts.text = text;
-        this.plastic.material.map.needsUpdate = true;
-        context.clearRect(0, 0, opts.width, opts.height);
-        context.fillText(text, opts.width / 2, opts.height / 2 + 10);
+        if (limit !== void 0 && limit < text.length) {
+            text = text.substring(0, limit - 1) + '...';
+        }
+        if (this.plastic) {
+            this.plastic.material.map.needsUpdate = true;
+            ctx.clearRect(0, 0, opts.width, opts.height);
+        }
+        ctx.beginPath();
+        ctx.fillText(text, opts.width / 2, opts.height / 2 + 10, opts.width);
+        ctx.closePath();
     };
     Text.prototype.dispose = function () {
         delete this.plastic['wrapper'];
@@ -59881,7 +59921,8 @@ var analyse_hdmap_1 = __webpack_require__(/*! ../hdmap/analyse.hdmap */ "./src/p
 var defaultOpts = {
     radius: 100,
     lazy: 3000,
-    surl: null
+    surl: null,
+    limit: 3
 };
 var loader = new resource_loader_1.default();
 var Thru = /** @class */ (function (_super) {
@@ -59899,63 +59940,76 @@ var Thru = /** @class */ (function (_super) {
         _this.opts = util_1.default.assign({}, defaultOpts, opts);
         _this.onCanvasClick = _this.onCanvasClick.bind(_this);
         // common lights
-        _this.createLights();
+        _this.initLights();
         var Topic = _this.Topic;
-        _this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT, _this.load.bind(_this));
-        _this.subscribe(Topic.SCENE.ATTACHSTART, _this.onSceneChange.bind(_this));
-        _this.subscribe(Topic.SCENE.ATTACH, _this.load.bind(_this));
+        _this.subscribe(Topic.SCENE.INIT, _this.init.bind(_this));
+        _this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT, _this.needToShow.bind(_this));
+        _this.subscribe(Topic.SCENE.ATTACHSTART, _this.hide.bind(_this));
+        _this.subscribe(Topic.SCENE.ATTACH, _this.change.bind(_this));
         _this.subscribe(Topic.UI.IMMERSION, _this.onToggle.bind(_this));
         _this.judgeid = pano.overlays.addJudgeFunc(_this.onCanvasClick.bind(_this));
         return _this;
     }
-    Thru.prototype.load = function (topic, payload) {
-        var scene = payload.scene;
-        var list = this.list = scene.recomList;
-        if (!list || !list.length || this.objs.length) {
+    /**
+     * 创建固定穿越点
+     */
+    Thru.prototype.init = function (topic, payload) {
+        var _this = this;
+        var opts = this.opts;
+        var list = this.list = payload.scene.recomList.slice(0, opts.limit);
+        if (!list || !list.length) {
             return;
         }
         // clean current thru list
-        this.create(list);
-        this.needToShow();
-    };
-    /**
-     * 使用唯一点光源避免互相干扰
-     */
-    Thru.prototype.createLights = function () {
-        var light = new light_plastic_1.default({ intensity: 0.3, type: 2 });
-        light.addBy(this.pano);
-        this.lights.push(light);
-    };
-    /**
-     * 创建穿越点
-     */
-    Thru.prototype.create = function (list) {
-        var _this = this;
         var pano = this.pano;
-        var opts = this.opts;
-        var group = this.group;
-        var objs = this.objs;
-        var texts = this.texts;
         var radius = opts.radius;
         // TODO: 注意右侧的球文字间距需要处理
         var poss = [analyse_hdmap_1.default.calcWorld(4, 0.59375, 0.695906433),
             analyse_hdmap_1.default.calcWorld(5, 0.703125, 0.664717349),
             analyse_hdmap_1.default.calcWorld(1, 0.375, 0.859649123)];
         list.forEach(function (item, i) {
-            item.setName && loader.loadTexture(item.image).then(function (texture) {
-                var pos = _this.getVector(i);
-                var interpolat = 141;
-                var hole = new inradius_plastic_1.default({
-                    name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
-                    rotate: true, emissive: '#787878', envMap: texture, cloudimg: opts.img
-                }, pano);
-                var text = new text_plastic_1.default({ text: item.setName, fontsize: 40, width: 512,
-                    x: pos.x, y: pos.y - interpolat, z: pos.z, limit: 6, shadow: true });
-                group.push(hole.getPlastic());
-                objs.push(hole);
-                texts.push(text);
-            });
+            var pos = _this.getVector(i);
+            var interpolat = 141;
+            var hole = new inradius_plastic_1.default({
+                name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
+                rotate: true, emissive: '#787878', cloudimg: opts.img
+            }, pano);
+            var text = new text_plastic_1.default({ text: item.setName, fontsize: 40, width: 512,
+                x: pos.x, y: pos.y - interpolat, z: pos.z, limit: 6, shadow: true });
+            hole.addBy(pano);
+            text.addBy(pano);
+            _this.group.push(hole.getPlastic());
+            _this.objs.push(hole);
+            _this.texts.push(text);
+            // load texture
+            item.setName && loader.loadTexture(item.image).then(function (texture) { return _this.objs[i].setMap(texture); });
         });
+    };
+    /**
+     * 场景切换或穿越更新穿越点的内容
+     */
+    Thru.prototype.change = function (topic, payload) {
+        var list = this.list = payload.scene.recomList.slice(0, this.opts.limit);
+        var objs = this.objs;
+        var texts = this.texts;
+        if (!list || !list.length || !objs.length) {
+            return;
+        }
+        // change thru content
+        list.forEach(function (item, i) {
+            var name = item.setName;
+            loader.loadTexture(item.image).then(function (texture) { return objs[i].setMap(texture); });
+            texts[i].draw(name);
+        });
+        this.needToShow();
+    };
+    /**
+     * 使用唯一点光源避免互相干扰
+     */
+    Thru.prototype.initLights = function () {
+        var light = new light_plastic_1.default({ intensity: 0.3, type: 2 });
+        light.addBy(this.pano);
+        this.lights.push(light);
     };
     /**
      * 获取屏幕中心点的世界坐标
@@ -59974,30 +60028,15 @@ var Thru = /** @class */ (function (_super) {
         clearTimeout(this.timeid);
         this.timeid = setTimeout(function () {
             _this.publish(_this.Topic.THRU.SHOW, { list: _this.list, pano: _this.pano });
-            _this.add();
+            _this.show();
         }, this.opts.lazy);
-    };
-    /**
-     * 添加穿越点
-     */
-    Thru.prototype.add = function () {
-        var pano = this.pano;
-        var camera = this.camera;
-        this.active = true;
-        this.objs.forEach(function (obj) {
-            obj.lookAt(camera.position);
-            obj.addBy(pano);
-        });
-        this.texts.forEach(function (text) {
-            text.lookAt(camera.position);
-            text.addBy(pano);
-        });
     };
     /**
      * 显示穿越点
      */
     Thru.prototype.show = function () {
         var camera = this.camera;
+        clearTimeout(this.timeid);
         this.active = true;
         this.objs.forEach(function (obj) {
             obj.lookAt(camera.position);
@@ -60018,13 +60057,6 @@ var Thru = /** @class */ (function (_super) {
             this.objs.forEach(function (obj) { return obj.hide(); });
             this.texts.forEach(function (text) { return text.hide(); });
         }
-    };
-    /**
-     * 场景变换删除穿越点
-     */
-    Thru.prototype.onSceneChange = function () {
-        this.cleanup();
-        this.hide();
     };
     /**
      * 沉浸模式
@@ -60079,7 +60111,7 @@ var Thru = /** @class */ (function (_super) {
                                     _this.publish(_this.Topic.THRU.CHANGE, { data: data, scene: oldscene, pano: pano });
                                     _this.active = true;
                                     pano.enterThru(scene_1, instance_1.getMap());
-                                    _this.cleanup();
+                                    _this.hide();
                                     pano.getControl().reset(flag_1);
                                     pano.supplyOverlayScenes(sceneGroup);
                                     pano.gyro && pano.gyro.makeEnable(true);
@@ -60100,12 +60132,10 @@ var Thru = /** @class */ (function (_super) {
      */
     Thru.prototype.cleanup = function () {
         var _this = this;
-        var objs = this.objs;
-        var texts = this.texts;
-        objs.forEach(function (obj) { return obj.removeBy(_this.pano); });
-        texts.forEach(function (text) { return text.removeBy(_this.pano); });
-        objs.length = 0;
-        texts.length = 0;
+        this.objs.forEach(function (obj) { return obj.removeBy(_this.pano); });
+        this.texts.forEach(function (text) { return text.removeBy(_this.pano); });
+        this.objs.length = 0;
+        this.texts.length = 0;
         this.group.length = 0;
     };
     Thru.prototype.dispose = function () {

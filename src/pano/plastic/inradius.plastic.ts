@@ -32,10 +32,13 @@ export default class Inradius extends Plastic {
         this.create();
 
         if (opts.rotate) {
-            this.subscribe(this.Topic.RENDER.PROCESS, () => this.addRotate());
+            this.subscribe(this.Topic.RENDER.PROCESS, () => this.update());
         }
     }
 
+    /**
+     * 创建球体及特效
+     */
     create() {
         const opts = this.opts;
         const params: any = opts.shadow ? {
@@ -157,52 +160,82 @@ export default class Inradius extends Plastic {
         text.addTo(this.getPlastic());
     }
 
+    /**
+     * 隐藏文字
+     */
     hideText() {
         this.text && this.text.hide();
     }
 
+    /**
+     * 获取外部数据
+     */
     getData() {
         return this.opts.data;
     }
 
+    /**
+     * 获取环境贴图
+     */
     getMap() {
         return this.plastic.material.envMap;
     }
 
+    /**
+     * 设置环境贴图
+     * @param {Object} texture cube 材质
+     */
     setMap(texture) {
+        const material = this.plastic.material;
         const tempMap = this.plastic.material.envMap;
 
         this.setRefraction(texture);
-        this.plastic.material.envMap = texture;
-        tempMap.dispose();
+        material.needsUpdate = true;
+        material.envMap = texture;
+        tempMap && tempMap.dispose();
     }
 
+    /**
+     * 设置材质映射
+     */
     setRefraction(texture) {
         texture.mapping = CubeRefractionMapping;
         texture.needsUpdate = true;
     }
 
+    /**
+     * 获取主控 mesh
+     */
     getPlastic() {
         return this.wrap || this.plastic;
     }
 
-    addRotate() {
+    /**
+     * 球体自转效果, 避让入场动画
+     */
+    update() {
         const target = this.getPlastic();
 
-        if (target.visible) {
+        if (!this.pano.frozen && target.visible) {
             target.rotation.x += 0.01;
             target.rotation.y += 0.01;
             target.rotation.z += 0.01;
         }
     }
 
+    /**
+     * 淡入效果
+     */
     fadeIn(onComplete) {
         const material = this.plastic.material;
 
         new Tween(material).to({ opacity: 1 }).effect('linear', 1000)
             .start(['opacity']).complete(onComplete);
     }
-
+    
+    /**
+     * 淡出效果
+     */
     fadeOut(onComplete) {
         const material = this.plastic.material;
 

@@ -234,7 +234,7 @@ export default class Overlays extends PubSubAble {
                 evt.preventDefault();
 
                 return true;
-            } else if (evt.target == pano.getCanvas()) {
+            } else if (!pano.frozen && evt.target == pano.getCanvas()) {
                 this.publish(this.Topic.UI.PANOCLICK, {location, pano});
             }
         } catch(e) {
