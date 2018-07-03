@@ -37,6 +37,7 @@ export default class Pano extends History {
     reqid = 0;
     currentData = null;
     frozen = true;
+    interactable = true;
     pluginList = [];
 
     constructor(el, source) {
@@ -574,6 +575,20 @@ export default class Pano extends History {
         this.startControl();
         // entrance animation end, scene become stable
         this.publishSync(this.Topic.SCENE.READY, {scene: this.currentData, pano: this});
+    }
+
+    /**
+     * 锁定全景, click animation ...
+     */
+    lock() {
+        this.interactable = false;
+    }
+
+    /**
+     * 解锁全景
+     */
+    unlock() {
+        this.interactable = true;
     }
 
     /** 

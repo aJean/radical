@@ -107,8 +107,11 @@ export default class Thru extends PubSubAble {
         // change thru content
         list.forEach((item, i) => {
             const name = item.setName;
-            loader.loadTexture(item.image).then(texture => objs[i].setMap(texture));
+            const hole = objs[i];
+
+            hole.setData(item);
             texts[i].draw(name);
+            loader.loadTexture(item.image).then(texture => hole.setMap(texture));
         });
 
         this.needToShow();
@@ -211,6 +214,7 @@ export default class Thru extends PubSubAble {
                     const id = data.sceneId;
                     const sid = data.setId;
 
+                    pano.lock();
                     loader.fetchUrl(`${surl}&setid=${sid}&sceneid=${id}`)
                         .then(res => {
                             const data = res.data;
@@ -240,12 +244,14 @@ export default class Thru extends PubSubAble {
                                                 this.hide();
                                                 pano.getControl().reset(flag);
                                                 pano.supplyOverlayScenes(sceneGroup);
+                                                pano.unlock();
                                                 pano.gyro && pano.gyro.makeEnable(true);
                                             });
                                     });
                             }
                         }).catch(e => {
                             this.active = true;
+                            pano.unlock();
                             pano.gyro && pano.gyro.makeEnable(true);
                         });
                 }

@@ -179,6 +179,13 @@ export default class Inradius extends Plastic {
     }
 
     /**
+     * 设置外部数据
+     */
+    setData(data) {
+        this.opts.data = data;
+    }
+
+    /**
      * 获取环境贴图
      */
     getMap() {
