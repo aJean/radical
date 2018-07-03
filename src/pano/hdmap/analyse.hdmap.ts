@@ -64,7 +64,7 @@ export default abstract class HDAnalyse {
             });
         }
 
-        return ret;
+        return {ret, key: this.calcPath(data.index, prop.row, prop.column, level)};
     }
 
     /**

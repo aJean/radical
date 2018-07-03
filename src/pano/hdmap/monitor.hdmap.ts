@@ -12,6 +12,7 @@ import HDStore from './store.hdmap';
 export default class HDMonitor extends PubSubAble {
     pano: any;
     level = 2;
+    cache = {};
 
     constructor(pano, opts?) {
         super();
@@ -36,14 +37,21 @@ export default class HDMonitor extends PubSubAble {
 
         if (intersects) {
             const point = intersects[0].point;
-            const ret = HDAnalyse.analyse(point, this.getLevel(camera.fov));
+            const data = HDAnalyse.analyse(point, this.getLevel(camera.fov));
+            const list = data.ret;
+            const key = data.key;
+            const cache = this.cache;
 
-            ret.forEach(data => {
-                const p = HDStore.getHDPicture('../assets/hdmap/' + data.path);
-                if (p) {
-                    p.then(hdimg => this.draw(hdimg, data));
-                }
-            });
+            if (!cache[key]) {
+                cache[key] = true;
+
+                list.forEach(item => {
+                    const p = HDStore.getHDPicture('../assets/hdmap/' + item.path);
+                    if (p) {
+                        p.then(hdimg => this.draw(hdimg, item));
+                    }
+                });
+            }
         }
     }
 
