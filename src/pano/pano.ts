@@ -119,23 +119,23 @@ export default class Pano extends History {
     async run() {
         const source = this.source;
         const Topic = this.Topic;
+        const data = this.currentData;
+        const publishdata = {scene: data, pano: this};
+        // has pano instance
+        this.publishSync(this.Topic.SCENE.CREATE, publishdata);
         source['cretPath'] && myLoader.loadCret(source['cretPath']);
 
         try {
-            // push pano obj for client
-            this.publishSync(Topic.SCENE.CREATE, {pano: this});
-            const data = this.currentData;
             const img = await myLoader.loadTexture(data.imgPath, 'canvas');
             const skyBox = this.skyBox = new Inradius({envMap: img});
-            const publishdata = {scene: data, pano: this};
 
-            skyBox.addTo(this.scene);
+            skyBox.addBy(this);
             this.publishSync(Topic.SCENE.INIT, publishdata);
             this.render();
-
+            // high source
             await myLoader.loadTexture(data.bxlPath || data.texPath)
                 .then(texture => {
-                    this.skyBox.setMap(texture);
+                    skyBox.setMap(texture);
                     this.publishSync(Topic.SCENE.LOAD, publishdata);
                 }).catch(e => Log.output(e));
             this.animate();
@@ -283,8 +283,8 @@ export default class Pano extends History {
      */
     animate() {
         this.updateControl();
-        this.publishSync(this.Topic.RENDER.PROCESS, this)
         this.render();
+        this.publishSync(this.Topic.RENDER.PROCESS, this)
 
         this.reqid = requestAnimationFrame(this.animate.bind(this));
     }

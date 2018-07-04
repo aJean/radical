@@ -17,7 +17,8 @@
             const setid = ret1 ? ret1[1] : '14757014946023377241';
             const ret2 = /sceneid=([^&]*)/g.exec(location.search);
             const id = ret2 ? ret2[1] : null;
-
+            
+            const time = Date.now();
             $.ajax({
                 url: `https://image.baidu.com/img/image/quanjing/bxlpanoinfo?setid=${setid}&sceneid=${id}&sf=1`,
                 success: function(res) {

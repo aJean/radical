@@ -75,12 +75,16 @@ export default class Point extends Plastic {
             .start(['rad']).process((old, val) => {
                 this.draw(val);
             }).complete(() => {
+                this.clean();
                 circle.visible = true;
                 frame.visible = false;
                 cb && cb();
             });
     }
 
+    /**
+     * draw arc as loading
+     */
     draw(rad) {
         const ctx = this.ctx;
 
@@ -93,6 +97,16 @@ export default class Point extends Plastic {
         ctx.beginPath();
         ctx.arc(32, 32, 10, -Math.PI / 2, rad);
         ctx.stroke();
+    }
+
+    /**
+     * 清除画完的圆环
+     */
+    clean() {
+        const ctx = this.ctx;
+
+        this.frame.material.map.needsUpdate = true;
+        ctx.clearRect(0, 0, 64, 64);
     }
 
     scale(n) {
@@ -111,7 +125,6 @@ export default class Point extends Plastic {
 
     fadeStop() {
         const frame = this.frame;
-        const ctx = this.ctx;
 
         if (this.tween) {
             this.tween.stop();

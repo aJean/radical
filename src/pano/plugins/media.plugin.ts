@@ -33,9 +33,10 @@ export default class Media extends PluggableUI {
         this.pano = pano;
         this.opts = Object.assign({}, defaultOpts, opts);
 
-        this.create();
-        this.setContainer(pano.getRoot());
-        this.bindEvent();
+        const Topic = this.Topic;
+        this.subscribe(Topic.SCENE.CREATE, () => this.create());
+        this.subscribe(Topic.SCENE.LOAD, () => this.createInradius());
+        this.subscribe(Topic.RENDER.PROCESS, () => this.update());
     }
 
     create() {
@@ -51,14 +52,15 @@ export default class Media extends PluggableUI {
         texture.minFilter = LinearFilter;
         texture.magFilter = LinearFilter;
         texture.format = RGBFormat;
-        const box = this.box =  new Mesh(new BoxBufferGeometry(300, 300, 300),
-            new MeshBasicMaterial({map: texture}));
-        box.rotation.set(0, -2, 0);
-        box.visible = false;
 
         const scene = this.scene = new Scene();
         const camera = this.camera = new PerspectiveCamera(80, window.innerWidth / window.innerHeight, 1, 10000);
         camera.position.set(0, 0, 600);
+        const box = this.box = new Mesh(new BoxBufferGeometry(300, 300, 300),
+            new MeshBasicMaterial({map: texture}));
+        box.rotation.set(0, -2, 0);
+        box.visible = false;
+
         scene.add(box);
 
         // music
@@ -76,6 +78,9 @@ export default class Media extends PluggableUI {
         if (!opts.aauto) {
             aelem.className = 'pano-media-audio  pano-media-audio-paused';
         }
+
+        this.pano.webgl.autoClear = false;
+        this.setContainer(this.pano.getRoot());
     }
 
     /**
@@ -87,15 +92,8 @@ export default class Media extends PluggableUI {
             opacity: 0,
             visible: false,
             radius: 1900});
+
         inradius.addBy(this.pano);
-    }
-
-    bindEvent() {
-        const Topic = this.Topic;
-
-        this.pano.webgl.autoClear = false;
-        this.subscribe(Topic.RENDER.PROCESS, () => this.update());
-        this.subscribe(Topic.SCENE.LOAD, () => this.createInradius());
     }
 
     getElement() {
@@ -118,6 +116,8 @@ export default class Media extends PluggableUI {
             camera.lookAt(this.box.position);
         }
 
+        camera.lookAt(this.box.position);
+
         webgl.render(this.scene, camera);
     }
 
@@ -138,7 +138,6 @@ export default class Media extends PluggableUI {
      * webgl play
      */
     handleVideo(e) {
-        const pano = this.pano;
         const video = this.video;
         const elem = e.target;
         const inradius = this.inradius;

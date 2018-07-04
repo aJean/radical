@@ -112,6 +112,10 @@ abstract class Runtime {
             } else {
                 pano.noTimeline();
             }
+
+            if (source['thru']) {
+                pano.addPlugin(Thru, source['thru']);
+            }
     
             if (source['rotate']) {
                 pano.addPlugin(Rotate, source['rotate']);
@@ -131,10 +135,6 @@ abstract class Runtime {
     
             if (source['wormhole']) {
                 pano.addPlugin(Wormhole, source['wormhole']);
-            }
-
-            if (source['thru']) {
-                pano.addPlugin(Thru, source['thru']);
             }
 
             if (source['media']) {

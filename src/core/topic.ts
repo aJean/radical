@@ -50,6 +50,7 @@ export default {
     },
     // animation
     ANIMATION: {
+        INIT: 'animaton-init',
         END: 'animation-end'
     },
     // history

@@ -156,17 +156,17 @@ export default class Divider extends PubSubAble {
 
         const auto = new Button({
             parent: setPanel, name: 'vr-setpanel-auto', text: '每30s自动切换', color: '#c9c9c9',
-            active: false, width: 380, height: 100, x: 150, y: 100, z: 1
+            active: false, width: 360, x: 150, y: 100, z: 1
         });
 
         const noauto = new Button({
             parent: setPanel, name: 'vr-setpanel-noauto', text: '不自动切换', color: '#c9c9c9',
-            width: 300, height: 100, x: -190, y: 100, z: 1
+            width: 300, x: -190, y: 100, z: 1
         });
 
         const changeBtn = new Button({
             parent: setPanel, name: 'vr-setpanel-change', text: '切换设置',
-            color: '#c9c9c9', x: 0, y: -20, z: 0
+            color: '#c9c9c9', x: 0, y: -20, z: 1
         });
     }
 
@@ -185,19 +185,17 @@ export default class Divider extends PubSubAble {
         const point3d = this.point.plastic;
         const condition = vpano.getLook();
 
-        if (vpano.getLook().lat <= 80) {
-            if (!panel.visible) {
-                const v1 = Util.calcScreenToWorld({x: 0, y: -0.3}, camera);
-                panel.position.copy(v1);
-                panel.lookAt(camera.position);
-                panel.rotateX(0.5);
-                panel.rotateY(Math.PI);
-                panel.visible = true;
-                point3d.visible = true;
-            } else {
-                
-            }
-
+        if (vpano.getLook().lat <= 80 && !panel.visible) {
+            const v1 = Util.calcScreenToWorld({x: 0, y: -0.3}, camera);
+            panel.position.copy(v1);
+            panel.lookAt(camera.position);
+            panel.rotateX(0.5);
+            panel.rotateY(Math.PI);
+            panel.visible = true;
+            point3d.visible = true;
+        } else if (condition.lat > 110) {
+            this.hideAll();
+        } else if (panel.visible) {
             ray.setFromCamera({x: 0, y: 0}, camera);
             const intersects = ray.intersectObjects(this.group.children, true);
 
@@ -207,8 +205,6 @@ export default class Divider extends PubSubAble {
                 this.stopOperate();
                 this.stopHover();
             }
-        } else if (condition.lat > 110) {
-            this.hideAll();
         }
 
         if (point3d.visible) {
@@ -231,8 +227,6 @@ export default class Divider extends PubSubAble {
                 break;
             case 'vr-panel-next':
                 this.pagingHandle(1, obj);
-                break;
-            case 'vr-setpanel-change':
                 break;
             case 'vr-setpanel-close':
                 this.closeSetHandle();
@@ -265,7 +259,7 @@ export default class Divider extends PubSubAble {
             const data = this.calcPageData(num);
             
             this.startOperate(() => {
-                pagenum.change(`${data.index} / ${data.limit}`);
+                pagenum.draw(`${data.index} / ${data.limit}`);
                 vpano.enterNext(data.scene);
                 this.index = data.index;
             });
@@ -390,7 +384,7 @@ export default class Divider extends PubSubAble {
             const pagenum = this.group.getObjectByName('vr-panel-pagenum').wrapper;
             const data = this.calcPageData(1);
             
-            pagenum.change(`${data.index} / ${data.limit}`);
+            pagenum.draw(`${data.index} / ${data.limit}`);
             this.vpano.enterNext(data.scene);
             this.index = data.index;
             this.regularChange();
@@ -441,7 +435,7 @@ export default class Divider extends PubSubAble {
     hideAll() {
         this.point.hide();
         this.panel.visible = false;
-        this.setpanel.visible = false;
+        this.setpanel.visible = true;
     }
 
     dispose() {

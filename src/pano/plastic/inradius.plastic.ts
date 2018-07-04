@@ -14,8 +14,8 @@ const defaultOpts = {
     radius: 2000,
     color: '#fff',
     emissive: '#000',
-    widthSegments: 40,
-    heightSegments: 40,
+    widthSegments: 16,
+    heightSegments: 16,
     opacity: 1,
     cloudimg: '../assets/cloud.png',
     shadow: false
@@ -105,7 +105,7 @@ export default class Inradius extends Plastic {
      */
     createMask(sphere) {
         const mask = this.wrap = new Mesh(
-            new SphereGeometry(this.opts.radius, 40, 40),
+            new SphereGeometry(this.opts.radius, 16, 16),
             new MeshBasicMaterial({
                 color: '#000',
                 transparent: true,
@@ -121,7 +121,7 @@ export default class Inradius extends Plastic {
      */
     createCloud(sphere) {
         const cloud = this.wrap = new Mesh(
-            new SphereGeometry(this.opts.radius, 40, 40),
+            new SphereGeometry(this.opts.radius, 16, 16),
             new MeshBasicMaterial({
                 map: new TextureLoader().load(this.opts.cloudimg),
                 transparent: true,
@@ -151,7 +151,7 @@ export default class Inradius extends Plastic {
             transparent: true
         });
 
-        const glow = this.wrap = new Mesh(new SphereGeometry(opts.radius, 40, 40), glowMaterial);
+        const glow = this.wrap = new Mesh(new SphereGeometry(opts.radius, 16, 16), glowMaterial);
         glow.add(sphere);
     }
 

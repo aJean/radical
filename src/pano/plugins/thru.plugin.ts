@@ -5,7 +5,6 @@ import Util from '../../core/util';
 import Loader from '../loaders/resource.loader';
 import Inradius from '../plastic/inradius.plastic';
 import Light from '../plastic/light.plastic';
-import Analyse from '../hdmap/analyse.hdmap';
 
 /**
  * @file 星际穿越 plugin
@@ -40,12 +39,9 @@ export default class Thru extends PubSubAble {
         this.opts = Util.assign({}, defaultOpts, opts);
         this.onCanvasClick = this.onCanvasClick.bind(this);
 
-        // common lights
-        this.initLights();
-
         const Topic = this.Topic;
-        this.subscribe(Topic.SCENE.INIT, this.init.bind(this));
-        this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT, this.needToShow.bind(this));
+        this.subscribe(Topic.SCENE.CREATE, this.init.bind(this));
+        this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.LOAD, this.needToShow.bind(this));
         this.subscribe(Topic.SCENE.ATTACHSTART, this.hide.bind(this));
         this.subscribe(Topic.SCENE.ATTACH, this.change.bind(this));
         this.subscribe(Topic.UI.IMMERSION, this.onToggle.bind(this));
@@ -65,14 +61,14 @@ export default class Thru extends PubSubAble {
         // clean current thru list
         const pano = this.pano;
         const radius = opts.radius;
+        const interpolat = 141;
         // TODO: 注意右侧的球文字间距需要处理
-        const poss = [Analyse.calcWorld(4, 0.59375, 0.695906433),
+        /* const poss = [Analyse.calcWorld(4, 0.59375, 0.695906433),
             Analyse.calcWorld(5, 0.703125, 0.664717349),
-            Analyse.calcWorld(1, 0.375, 0.859649123)];
+            Analyse.calcWorld(1, 0.375, 0.859649123)]; */
         
         list.forEach((item, i) => {
             const pos = this.getVector(i);
-            const interpolat = 141;
             const hole = new Inradius({
                 name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
                 rotate: true, emissive: '#787878', cloudimg: opts.img
@@ -91,6 +87,19 @@ export default class Thru extends PubSubAble {
             // load texture
             setTimeout(() => loader.loadTexture(item.image).then(texture => this.objs[i].setMap(texture)), 0);
         });
+
+        // common lights
+        this.initLights();
+    }
+
+    /**
+     * 使用唯一点光源避免互相干扰
+     */
+    initLights() {
+        const light = new Light({intensity: 0.3, type: 2});
+
+        light.addBy(this.pano);
+        this.lights.push(light);
     }
 
     /**
@@ -115,16 +124,6 @@ export default class Thru extends PubSubAble {
         });
 
         this.needToShow();
-    }
-
-    /**
-     * 使用唯一点光源避免互相干扰
-     */
-    initLights() {
-        const light = new Light({intensity: 0.3, type: 2});
-
-        light.addBy(this.pano);
-        this.lights.push(light);
     }
 
     /**

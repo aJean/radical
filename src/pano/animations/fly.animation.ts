@@ -28,7 +28,7 @@ export default class AnimationFly {
     init() {
         const path = this.path = this.getPath(this.camera, this.type);
         const camera = this.camera;
-        const data = this.path[0].start;
+        const data = path[0].start;
 
         camera.fov = data.fov;
         camera.position.set(data.px, data.py, data.pz);

@@ -54564,6 +54564,7 @@ exports.default = {
     },
     // animation
     ANIMATION: {
+        INIT: 'animaton-init',
         END: 'animation-end'
     },
     // history
@@ -55249,7 +55250,7 @@ var AnimationFly = /** @class */ (function () {
         var _this = this;
         var path = this.path = this.getPath(this.camera, this.type);
         var camera = this.camera;
-        var data = this.path[0].start;
+        var data = path[0].start;
         camera.fov = data.fov;
         camera.position.set(data.px, data.py, data.pz);
         camera.rotation.set(data.rx, data.ry, data.rz);
@@ -57893,33 +57894,35 @@ var Pano = /** @class */ (function (_super) {
     Pano.prototype.run = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
-            var source, Topic, data, img, skyBox, publishdata_1, e_1;
+            var source, Topic, data, publishdata, img, skyBox_1, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         source = this.source;
                         Topic = this.Topic;
+                        data = this.currentData;
+                        publishdata = { scene: data, pano: this };
+                        // has pano instance
+                        this.publishSync(this.Topic.SCENE.CREATE, publishdata);
                         source['cretPath'] && myLoader.loadCret(source['cretPath']);
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 4, , 5]);
-                        // push pano obj for client
-                        this.publishSync(Topic.SCENE.CREATE, { pano: this });
-                        data = this.currentData;
                         return [4 /*yield*/, myLoader.loadTexture(data.imgPath, 'canvas')];
                     case 2:
                         img = _a.sent();
-                        skyBox = this.skyBox = new inradius_plastic_1.default({ envMap: img });
-                        publishdata_1 = { scene: data, pano: this };
-                        skyBox.addTo(this.scene);
-                        this.publishSync(Topic.SCENE.INIT, publishdata_1);
+                        skyBox_1 = this.skyBox = new inradius_plastic_1.default({ envMap: img });
+                        skyBox_1.addBy(this);
+                        this.publishSync(Topic.SCENE.INIT, publishdata);
                         this.render();
+                        // high source
                         return [4 /*yield*/, myLoader.loadTexture(data.bxlPath || data.texPath)
                                 .then(function (texture) {
-                                _this.skyBox.setMap(texture);
-                                _this.publishSync(Topic.SCENE.LOAD, publishdata_1);
+                                skyBox_1.setMap(texture);
+                                _this.publishSync(Topic.SCENE.LOAD, publishdata);
                             }).catch(function (e) { return log_1.default.output(e); })];
                     case 3:
+                        // high source
                         _a.sent();
                         this.animate();
                         return [3 /*break*/, 5];
@@ -58055,8 +58058,8 @@ var Pano = /** @class */ (function (_super) {
      */
     Pano.prototype.animate = function () {
         this.updateControl();
-        this.publishSync(this.Topic.RENDER.PROCESS, this);
         this.render();
+        this.publishSync(this.Topic.RENDER.PROCESS, this);
         this.reqid = requestAnimationFrame(this.animate.bind(this));
     };
     Pano.prototype.render = function () {
@@ -58651,8 +58654,8 @@ var defaultOpts = {
     radius: 2000,
     color: '#fff',
     emissive: '#000',
-    widthSegments: 40,
-    heightSegments: 40,
+    widthSegments: 16,
+    heightSegments: 16,
     opacity: 1,
     cloudimg: '../assets/cloud.png',
     shadow: false
@@ -58728,7 +58731,7 @@ var Inradius = /** @class */ (function (_super) {
      * 创建蒙层
      */
     Inradius.prototype.createMask = function (sphere) {
-        var mask = this.wrap = new three_1.Mesh(new three_1.SphereGeometry(this.opts.radius, 40, 40), new three_1.MeshBasicMaterial({
+        var mask = this.wrap = new three_1.Mesh(new three_1.SphereGeometry(this.opts.radius, 16, 16), new three_1.MeshBasicMaterial({
             color: '#000',
             transparent: true,
             opacity: 0.1,
@@ -58740,7 +58743,7 @@ var Inradius = /** @class */ (function (_super) {
      * 创建云层
      */
     Inradius.prototype.createCloud = function (sphere) {
-        var cloud = this.wrap = new three_1.Mesh(new three_1.SphereGeometry(this.opts.radius, 40, 40), new three_1.MeshBasicMaterial({
+        var cloud = this.wrap = new three_1.Mesh(new three_1.SphereGeometry(this.opts.radius, 16, 16), new three_1.MeshBasicMaterial({
             map: new three_1.TextureLoader().load(this.opts.cloudimg),
             transparent: true,
             depthTest: false
@@ -58766,7 +58769,7 @@ var Inradius = /** @class */ (function (_super) {
             blending: three_1.AdditiveBlending,
             transparent: true
         });
-        var glow = this.wrap = new three_1.Mesh(new three_1.SphereGeometry(opts.radius, 40, 40), glowMaterial);
+        var glow = this.wrap = new three_1.Mesh(new three_1.SphereGeometry(opts.radius, 16, 16), glowMaterial);
         glow.add(sphere);
     };
     /**
@@ -59036,11 +59039,15 @@ var Point = /** @class */ (function (_super) {
             .start(['rad']).process(function (old, val) {
             _this.draw(val);
         }).complete(function () {
+            _this.clean();
             circle.visible = true;
             frame.visible = false;
             cb && cb();
         });
     };
+    /**
+     * draw arc as loading
+     */
     Point.prototype.draw = function (rad) {
         var ctx = this.ctx;
         this.frame.material.map.needsUpdate = true;
@@ -59050,6 +59057,14 @@ var Point = /** @class */ (function (_super) {
         ctx.beginPath();
         ctx.arc(32, 32, 10, -Math.PI / 2, rad);
         ctx.stroke();
+    };
+    /**
+     * 清除画完的圆环
+     */
+    Point.prototype.clean = function () {
+        var ctx = this.ctx;
+        this.frame.material.map.needsUpdate = true;
+        ctx.clearRect(0, 0, 64, 64);
     };
     Point.prototype.scale = function (n) {
         var ctx = this.ctx;
@@ -59063,7 +59078,6 @@ var Point = /** @class */ (function (_super) {
     };
     Point.prototype.fadeStop = function () {
         var frame = this.frame;
-        var ctx = this.ctx;
         if (this.tween) {
             this.tween.stop();
             frame.visible = false;
@@ -59509,9 +59523,10 @@ var Media = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.pano = pano;
         _this.opts = Object.assign({}, defaultOpts, opts);
-        _this.create();
-        _this.setContainer(pano.getRoot());
-        _this.bindEvent();
+        var Topic = _this.Topic;
+        _this.subscribe(Topic.SCENE.CREATE, function () { return _this.create(); });
+        _this.subscribe(Topic.SCENE.LOAD, function () { return _this.createInradius(); });
+        _this.subscribe(Topic.RENDER.PROCESS, function () { return _this.update(); });
         return _this;
     }
     Media.prototype.create = function () {
@@ -59527,12 +59542,12 @@ var Media = /** @class */ (function (_super) {
         texture.minFilter = three_1.LinearFilter;
         texture.magFilter = three_1.LinearFilter;
         texture.format = three_1.RGBFormat;
-        var box = this.box = new three_1.Mesh(new three_1.BoxBufferGeometry(300, 300, 300), new three_1.MeshBasicMaterial({ map: texture }));
-        box.rotation.set(0, -2, 0);
-        box.visible = false;
         var scene = this.scene = new three_1.Scene();
         var camera = this.camera = new three_1.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 1, 10000);
         camera.position.set(0, 0, 600);
+        var box = this.box = new three_1.Mesh(new three_1.BoxBufferGeometry(300, 300, 300), new three_1.MeshBasicMaterial({ map: texture }));
+        box.rotation.set(0, -2, 0);
+        box.visible = false;
         scene.add(box);
         // music
         this.audio = util_1.default.createElement("<audio src=\"" + opts.asrc + "\"" + (opts.aauto ? ' autoplay' : '') + (opts.aloop ? ' loop' : '') + "></audio>");
@@ -59545,6 +59560,8 @@ var Media = /** @class */ (function (_super) {
         if (!opts.aauto) {
             aelem.className = 'pano-media-audio  pano-media-audio-paused';
         }
+        this.pano.webgl.autoClear = false;
+        this.setContainer(this.pano.getRoot());
     };
     /**
      * 播放环境创建
@@ -59557,13 +59574,6 @@ var Media = /** @class */ (function (_super) {
             radius: 1900
         });
         inradius.addBy(this.pano);
-    };
-    Media.prototype.bindEvent = function () {
-        var _this = this;
-        var Topic = this.Topic;
-        this.pano.webgl.autoClear = false;
-        this.subscribe(Topic.RENDER.PROCESS, function () { return _this.update(); });
-        this.subscribe(Topic.SCENE.LOAD, function () { return _this.createInradius(); });
     };
     Media.prototype.getElement = function () {
         return this.element;
@@ -59581,6 +59591,7 @@ var Media = /** @class */ (function (_super) {
             camera.position.copy(vector);
             camera.lookAt(this.box.position);
         }
+        camera.lookAt(this.box.position);
         webgl.render(this.scene, camera);
     };
     Media.prototype.handleFull = function (e) {
@@ -59599,7 +59610,6 @@ var Media = /** @class */ (function (_super) {
      * webgl play
      */
     Media.prototype.handleVideo = function (e) {
-        var pano = this.pano;
         var video = this.video;
         var elem = e.target;
         var inradius = this.inradius;
@@ -59962,7 +59972,6 @@ var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 var resource_loader_1 = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 var inradius_plastic_1 = __webpack_require__(/*! ../plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
 var light_plastic_1 = __webpack_require__(/*! ../plastic/light.plastic */ "./src/pano/plastic/light.plastic.ts");
-var analyse_hdmap_1 = __webpack_require__(/*! ../hdmap/analyse.hdmap */ "./src/pano/hdmap/analyse.hdmap.ts");
 /**
  * @file 星际穿越 plugin
  * 管理穿越点个数, 数据拉取, 展示策略
@@ -59988,11 +59997,9 @@ var Thru = /** @class */ (function (_super) {
         _this.camera = pano.getCamera();
         _this.opts = util_1.default.assign({}, defaultOpts, opts);
         _this.onCanvasClick = _this.onCanvasClick.bind(_this);
-        // common lights
-        _this.initLights();
         var Topic = _this.Topic;
-        _this.subscribe(Topic.SCENE.INIT, _this.init.bind(_this));
-        _this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT, _this.needToShow.bind(_this));
+        _this.subscribe(Topic.SCENE.CREATE, _this.init.bind(_this));
+        _this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.LOAD, _this.needToShow.bind(_this));
         _this.subscribe(Topic.SCENE.ATTACHSTART, _this.hide.bind(_this));
         _this.subscribe(Topic.SCENE.ATTACH, _this.change.bind(_this));
         _this.subscribe(Topic.UI.IMMERSION, _this.onToggle.bind(_this));
@@ -60012,13 +60019,13 @@ var Thru = /** @class */ (function (_super) {
         // clean current thru list
         var pano = this.pano;
         var radius = opts.radius;
+        var interpolat = 141;
         // TODO: 注意右侧的球文字间距需要处理
-        var poss = [analyse_hdmap_1.default.calcWorld(4, 0.59375, 0.695906433),
-            analyse_hdmap_1.default.calcWorld(5, 0.703125, 0.664717349),
-            analyse_hdmap_1.default.calcWorld(1, 0.375, 0.859649123)];
+        /* const poss = [Analyse.calcWorld(4, 0.59375, 0.695906433),
+            Analyse.calcWorld(5, 0.703125, 0.664717349),
+            Analyse.calcWorld(1, 0.375, 0.859649123)]; */
         list.forEach(function (item, i) {
             var pos = _this.getVector(i);
-            var interpolat = 141;
             var hole = new inradius_plastic_1.default({
                 name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
                 rotate: true, emissive: '#787878', cloudimg: opts.img
@@ -60035,6 +60042,16 @@ var Thru = /** @class */ (function (_super) {
             // load texture
             setTimeout(function () { return loader.loadTexture(item.image).then(function (texture) { return _this.objs[i].setMap(texture); }); }, 0);
         });
+        // common lights
+        this.initLights();
+    };
+    /**
+     * 使用唯一点光源避免互相干扰
+     */
+    Thru.prototype.initLights = function () {
+        var light = new light_plastic_1.default({ intensity: 0.3, type: 2 });
+        light.addBy(this.pano);
+        this.lights.push(light);
     };
     /**
      * 场景切换或穿越更新穿越点的内容
@@ -60055,14 +60072,6 @@ var Thru = /** @class */ (function (_super) {
             loader.loadTexture(item.image).then(function (texture) { return hole.setMap(texture); });
         });
         this.needToShow();
-    };
-    /**
-     * 使用唯一点光源避免互相干扰
-     */
-    Thru.prototype.initLights = function () {
-        var light = new light_plastic_1.default({ intensity: 0.3, type: 2 });
-        light.addBy(this.pano);
-        this.lights.push(light);
     };
     /**
      * 获取屏幕中心点的世界坐标
@@ -60490,6 +60499,9 @@ var Runtime = /** @class */ (function () {
                             else {
                                 pano.noTimeline();
                             }
+                            if (source['thru']) {
+                                pano.addPlugin(thru_plugin_1.default, source['thru']);
+                            }
                             if (source['rotate']) {
                                 pano.addPlugin(rotate_plugin_1.default, source['rotate']);
                             }
@@ -60504,9 +60516,6 @@ var Runtime = /** @class */ (function () {
                             }
                             if (source['wormhole']) {
                                 pano.addPlugin(wormhole_plugin_1.default, source['wormhole']);
-                            }
-                            if (source['thru']) {
-                                pano.addPlugin(thru_plugin_1.default, source['thru']);
                             }
                             if (source['media']) {
                                 pano.addPlugin(media_plugin_1.default, source['media']);
@@ -60950,15 +60959,15 @@ var Divider = /** @class */ (function (_super) {
         });
         var auto = new button_plastic_1.default({
             parent: setPanel, name: 'vr-setpanel-auto', text: '每30s自动切换', color: '#c9c9c9',
-            active: false, width: 380, height: 100, x: 150, y: 100, z: 1
+            active: false, width: 360, x: 150, y: 100, z: 1
         });
         var noauto = new button_plastic_1.default({
             parent: setPanel, name: 'vr-setpanel-noauto', text: '不自动切换', color: '#c9c9c9',
-            width: 300, height: 100, x: -190, y: 100, z: 1
+            width: 300, x: -190, y: 100, z: 1
         });
         var changeBtn = new button_plastic_1.default({
             parent: setPanel, name: 'vr-setpanel-change', text: '切换设置',
-            color: '#c9c9c9', x: 0, y: -20, z: 0
+            color: '#c9c9c9', x: 0, y: -20, z: 1
         });
     };
     /**
@@ -60974,18 +60983,19 @@ var Divider = /** @class */ (function (_super) {
         var panel = this.panel;
         var point3d = this.point.plastic;
         var condition = vpano.getLook();
-        if (vpano.getLook().lat <= 80) {
-            if (!panel.visible) {
-                var v1 = util_1.default.calcScreenToWorld({ x: 0, y: -0.3 }, camera);
-                panel.position.copy(v1);
-                panel.lookAt(camera.position);
-                panel.rotateX(0.5);
-                panel.rotateY(Math.PI);
-                panel.visible = true;
-                point3d.visible = true;
-            }
-            else {
-            }
+        if (vpano.getLook().lat <= 80 && !panel.visible) {
+            var v1 = util_1.default.calcScreenToWorld({ x: 0, y: -0.3 }, camera);
+            panel.position.copy(v1);
+            panel.lookAt(camera.position);
+            panel.rotateX(0.5);
+            panel.rotateY(Math.PI);
+            panel.visible = true;
+            point3d.visible = true;
+        }
+        else if (condition.lat > 110) {
+            this.hideAll();
+        }
+        else if (panel.visible) {
             ray.setFromCamera({ x: 0, y: 0 }, camera);
             var intersects = ray.intersectObjects(this.group.children, true);
             if (intersects.length) {
@@ -60995,9 +61005,6 @@ var Divider = /** @class */ (function (_super) {
                 this.stopOperate();
                 this.stopHover();
             }
-        }
-        else if (condition.lat > 110) {
-            this.hideAll();
         }
         if (point3d.visible) {
             var v2 = util_1.default.calcScreenToWorld({ x: 0, y: 0 }, camera);
@@ -61017,8 +61024,6 @@ var Divider = /** @class */ (function (_super) {
                 break;
             case 'vr-panel-next':
                 this.pagingHandle(1, obj);
-                break;
-            case 'vr-setpanel-change':
                 break;
             case 'vr-setpanel-close':
                 this.closeSetHandle();
@@ -61048,7 +61053,7 @@ var Divider = /** @class */ (function (_super) {
         if (!this.timeid) {
             var data_1 = this.calcPageData(num);
             this.startOperate(function () {
-                pagenum.change(data_1.index + " / " + data_1.limit);
+                pagenum.draw(data_1.index + " / " + data_1.limit);
                 vpano.enterNext(data_1.scene);
                 _this.index = data_1.index;
             });
@@ -61158,7 +61163,7 @@ var Divider = /** @class */ (function (_super) {
         this.regularid = setTimeout(function () {
             var pagenum = _this.group.getObjectByName('vr-panel-pagenum').wrapper;
             var data = _this.calcPageData(1);
-            pagenum.change(data.index + " / " + data.limit);
+            pagenum.draw(data.index + " / " + data.limit);
             _this.vpano.enterNext(data.scene);
             _this.index = data.index;
             _this.regularChange();
@@ -61198,7 +61203,7 @@ var Divider = /** @class */ (function (_super) {
     Divider.prototype.hideAll = function () {
         this.point.hide();
         this.panel.visible = false;
-        this.setpanel.visible = false;
+        this.setpanel.visible = true;
     };
     Divider.prototype.dispose = function () {
         _super.prototype.dispose.call(this);
