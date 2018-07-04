@@ -19,7 +19,7 @@ function OrbitControl(camera, domElement, pano) {
     // How far you can dolly in and out ( PerspectiveCamera only )
     this.minDistance = 0;
     this.maxDistance = Infinity;
-    this.minFov = 50;
+    this.minFov = 30;
     this.maxFov = 120;
     // How far you can zoom in and out ( OrthographicCamera only )
     this.minZoom = 0;

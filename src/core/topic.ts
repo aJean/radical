@@ -57,6 +57,7 @@ export default {
     HISTORY: {
         POP: 'history-pop',
         PUSH: 'history-push',
-        REPLACE: 'history-replace'
+        REPLACE: 'history-replace',
+        END: 'history-end'
     }
 };

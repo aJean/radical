@@ -52,6 +52,11 @@ export default abstract class History extends PubSubAble {
             : history.replaceState(STATE, null, url.all);
     }
 
+    cleanState() {
+        this.router ? this.publish(this.Topic.HISTORY.END, null)
+            : location.replace(document.referrer || 'about:blank');
+    }
+
     getState() {
         return history.state;
     }
