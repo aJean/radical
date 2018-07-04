@@ -18,7 +18,7 @@ export default abstract class History extends PubSubAble {
 
     constructor() {
         super();
-        this.subscribe(Topic.HISTORY.POP, this.onPopState.bind(this));
+        this.subscribe(Topic.SCENE.LOAD, () => this.subscribe(Topic.HISTORY.POP, this.onPopState.bind(this)));
     }
 
     _makeUrl(data) {

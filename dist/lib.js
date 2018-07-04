@@ -54941,7 +54941,7 @@ var History = /** @class */ (function (_super) {
     __extends(History, _super);
     function History() {
         var _this = _super.call(this) || this;
-        _this.subscribe(topic_1.default.HISTORY.POP, _this.onPopState.bind(_this));
+        _this.subscribe(topic_1.default.SCENE.LOAD, function () { return _this.subscribe(topic_1.default.HISTORY.POP, _this.onPopState.bind(_this)); });
         return _this;
     }
     History.prototype._makeUrl = function (data) {
@@ -60567,6 +60567,11 @@ var onEnvResize = function (event) {
     }, 200);
 };
 window.addEventListener(eventType, onEnvResize);
+window.onbeforeunload = function () {
+    for (var ref in Runtime.instanceMap) {
+        Runtime.instanceMap[ref].dispose();
+    }
+};
 exports.default = Runtime;
 
 
