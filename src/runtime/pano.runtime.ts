@@ -182,10 +182,4 @@ const onEnvResize = event => {
 
 window.addEventListener(eventType, onEnvResize);
 
-window.onbeforeunload = () => {
-    for (let ref in Runtime.instanceMap) {
-        Runtime.instanceMap[ref].dispose();
-    }
-};
-
 export default Runtime;

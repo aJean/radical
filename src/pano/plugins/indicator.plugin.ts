@@ -72,19 +72,18 @@ export default class Indicator extends PluggableUI {
         const pano = this.pano;
         const orbit = pano.getControl();
         const azimuthal = orbit.getAzimuthalAngle();
-        const polar = orbit.getPolarAngle();
-        const target = {azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal)};
-        
-        pano.gyro && pano.gyro.makeEnable(false);
-        new Tween({polar}).to({polar: this.polar}).effect('quadEaseOut', 400)
-            .start(['polar']).process((newval, oldval) => {
-                orbit.rotateUp(oldval - newval);
-            });
-
-        new Tween({azimuthal}).to(target).effect('quadEaseOut', 500)
-            .start(['azimuthal']).process((newval, oldval) => {
-                orbit.rotateLeft(oldval - newval);
-                this.setTheta(newval * 180 / Math.PI);
+alert(azimuthal)
+        pano.makeControl(false);
+        new Tween({polar: orbit.getPolarAngle(), azimuthal: orbit.getAzimuthalAngle()})
+            .to({polar: this.polar, azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal)})
+            .effect('sineOut', 500)
+            .start(['polar', 'azimuthal']).process((newval, oldval, key) => {
+                if (key == 'polar') {
+                    orbit.rotateUp(oldval - newval);
+                } else {
+                    orbit.rotateLeft(oldval - newval);
+                    this.setTheta(newval * 180 / Math.PI);
+                }
             }).complete(() => this.end());
     }
 

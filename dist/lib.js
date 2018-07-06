@@ -46,32 +46,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
 /******/ 		}
 /******/ 	};
 /******/
 /******/ 	// define __esModule on exports
 /******/ 	__webpack_require__.r = function(exports) {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
 /******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/
-/******/ 	// create a fake namespace object
-/******/ 	// mode & 1: value is a module id, require it
-/******/ 	// mode & 2: merge all properties of value into the ns
-/******/ 	// mode & 4: return value when already ns object
-/******/ 	// mode & 8|1: behave like require
-/******/ 	__webpack_require__.t = function(value, mode) {
-/******/ 		if(mode & 1) value = __webpack_require__(value);
-/******/ 		if(mode & 8) return value;
-/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
-/******/ 		var ns = Object.create(null);
-/******/ 		__webpack_require__.r(ns);
-/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
-/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
-/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -55462,6 +55447,15 @@ var EFFECT = {
     backOut: function (t, b, c, d) {
         var s = 1.70158;
         return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
+    },
+    sineIn: function (t, b, c, d) {
+        return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
+    },
+    sineOut: function (t, b, c, d) {
+        return c * Math.sin(t / d * (Math.PI / 2)) + b;
+    },
+    sineInOut: function (t, b, c, d) {
+        return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;
     }
 };
 var Tween = /** @class */ (function (_super) {
@@ -55577,7 +55571,7 @@ var GyroControl = /** @class */ (function () {
         this.spherical = new three_1.Spherical();
         camera.rotation.reorder('YXZ');
         this.orbit = orbit;
-        this.oribtcamera = camera;
+        this.oribtCamera = camera;
         this.camera = camera.clone();
         this.onDeviceOrientationChange = function (event) { return _this.deviceOrien = event; };
         this.onScreenOrientationChange = function (event) { return _this.screenOrien = Number(window.orientation) || 0; };
@@ -55650,17 +55644,11 @@ var GyroControl = /** @class */ (function () {
         this.update();
     };
     /**
-     * 锁定 gyro 控制器
-     */
-    GyroControl.prototype.makeEnable = function (single) {
-        this.enabled = single;
-    };
-    /**
      * 重置 gyro 和 orbit 控制器
      */
     GyroControl.prototype.reset = function () {
         this.orbit.reset();
-        this.camera.copy(this.oribtcamera);
+        this.camera.copy(this.oribtCamera);
         this.lastSpherical = null;
         this.enabled = true;
     };
@@ -57948,11 +57936,39 @@ var Pano = /** @class */ (function (_super) {
         !this.frozen && control.update();
     };
     /**
+     * 改变控制器的状态
+     * @param {string} state 启用或禁止
+     */
+    Pano.prototype.makeControl = function (state) {
+        var control = this.gyro || this.orbit;
+        control.enabled = state;
+    };
+    /**
      * 重置控制器
      */
     Pano.prototype.resetControl = function () {
         var control = this.gyro || this.orbit;
         control.reset();
+    };
+    /**
+     * 启动控制器
+     */
+    Pano.prototype.startControl = function () {
+        if (this.gyro && !this.gyro.enabled) {
+            this.gyro.connect();
+        }
+        this.orbit.enabled = true;
+    };
+    /**
+     * 停止控制器
+     */
+    Pano.prototype.stopControl = function () {
+        if (this.gyro) {
+            this.gyro.disconnect();
+            delete this.gyro;
+        }
+        this.orbit.enabled = false;
+        delete this.orbit;
     };
     /**
      * 设置相机角度, 相机方向 (0, 0, -1), 相对初始 z 轴正方向 (180, 90)
@@ -58287,26 +58303,6 @@ var Pano = /** @class */ (function (_super) {
         this.pushState(data);
         this.resetEnv(data);
         this.replaceTexture(texture);
-    };
-    /**
-     * 启动控制器
-     */
-    Pano.prototype.startControl = function () {
-        if (this.gyro && !this.gyro.enabled) {
-            this.gyro.connect();
-        }
-        this.orbit.enabled = true;
-    };
-    /**
-     * 停止控制器
-     */
-    Pano.prototype.stopControl = function () {
-        if (this.gyro) {
-            this.gyro.disconnect();
-            delete this.gyro;
-        }
-        this.orbit.enabled = false;
-        delete this.orbit;
     };
     /**
      * 开场动画结束, 控制器需要在这时候开启
@@ -59390,17 +59386,19 @@ var Indicator = /** @class */ (function (_super) {
         var pano = this.pano;
         var orbit = pano.getControl();
         var azimuthal = orbit.getAzimuthalAngle();
-        var polar = orbit.getPolarAngle();
-        var target = { azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal) };
-        pano.gyro && pano.gyro.makeEnable(false);
-        new tween_animation_1.default({ polar: polar }).to({ polar: this.polar }).effect('quadEaseOut', 400)
-            .start(['polar']).process(function (newval, oldval) {
-            orbit.rotateUp(oldval - newval);
-        });
-        new tween_animation_1.default({ azimuthal: azimuthal }).to(target).effect('quadEaseOut', 500)
-            .start(['azimuthal']).process(function (newval, oldval) {
-            orbit.rotateLeft(oldval - newval);
-            _this.setTheta(newval * 180 / Math.PI);
+        alert(azimuthal);
+        pano.makeControl(false);
+        new tween_animation_1.default({ polar: orbit.getPolarAngle(), azimuthal: orbit.getAzimuthalAngle() })
+            .to({ polar: this.polar, azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal) })
+            .effect('sineOut', 500)
+            .start(['polar', 'azimuthal']).process(function (newval, oldval, key) {
+            if (key == 'polar') {
+                orbit.rotateUp(oldval - newval);
+            }
+            else {
+                orbit.rotateLeft(oldval - newval);
+                _this.setTheta(newval * 180 / Math.PI);
+            }
         }).complete(function () { return _this.end(); });
     };
     /**
@@ -60165,8 +60163,8 @@ var Thru = /** @class */ (function (_super) {
                             var ctarget = pano.getLookAtTarget();
                             var pos_1 = instance_1.getPosition().clone();
                             var flag_1 = pos_1.z > 0;
-                            // lock gyro control
-                            pano.gyro && pano.gyro.makeEnable(false);
+                            // lock control
+                            pano.makeControl(false);
                             pos_1.z += flag_1 ? 50 : -50;
                             new tween_animation_1.default(ctarget).to(pos_1).effect('quintEaseIn', 1000)
                                 .start(['x', 'y', 'z'])
@@ -60176,20 +60174,18 @@ var Thru = /** @class */ (function (_super) {
                                     .start(['x', 'y', 'z'])
                                     .complete(function () {
                                     _this.publish(_this.Topic.THRU.CHANGE, { data: data, scene: oldscene, pano: pano });
-                                    _this.active = true;
                                     pano.enterThru(scene_1, instance_1.getMap());
                                     _this.hide();
                                     pano.getControl().reset(flag_1);
                                     pano.supplyOverlayScenes(sceneGroup);
                                     pano.unlock();
-                                    pano.gyro && pano.gyro.makeEnable(true);
+                                    pano.makeControl(_this.active = true);
                                 });
                             });
                         }
                     }).catch(function (e) {
-                        _this.active = true;
                         pano.unlock();
-                        pano.gyro && pano.gyro.makeEnable(true);
+                        pano.makeControl(_this.active = true);
                     });
                 }
                 return true;
@@ -60567,11 +60563,6 @@ var onEnvResize = function (event) {
     }, 200);
 };
 window.addEventListener(eventType, onEnvResize);
-window.onbeforeunload = function () {
-    for (var ref in Runtime.instanceMap) {
-        Runtime.instanceMap[ref].dispose();
-    }
-};
 exports.default = Runtime;
 
 
