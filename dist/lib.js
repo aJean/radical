@@ -54571,7 +54571,8 @@ exports.default = {
     HISTORY: {
         POP: 'history-pop',
         PUSH: 'history-push',
-        REPLACE: 'history-replace'
+        REPLACE: 'history-replace',
+        END: 'history-end'
     }
 };
 
@@ -54940,7 +54941,7 @@ var History = /** @class */ (function (_super) {
     __extends(History, _super);
     function History() {
         var _this = _super.call(this) || this;
-        _this.subscribe(topic_1.default.HISTORY.POP, _this.onPopState.bind(_this));
+        _this.subscribe(topic_1.default.SCENE.LOAD, function () { return _this.subscribe(topic_1.default.HISTORY.POP, _this.onPopState.bind(_this)); });
         return _this;
     }
     History.prototype._makeUrl = function (data) {
@@ -54967,6 +54968,10 @@ var History = /** @class */ (function (_super) {
         var url = this._makeUrl(data);
         this.router ? this.router.reset(url.search, null, SFOPTS)
             : history.replaceState(STATE, null, url.all);
+    };
+    History.prototype.cleanState = function () {
+        this.router ? this.publish(this.Topic.HISTORY.END, null)
+            : location.replace(document.referrer || 'about:blank');
     };
     History.prototype.getState = function () {
         return history.state;
@@ -55197,7 +55202,7 @@ var PluggableUI = /** @class */ (function (_super) {
         container.appendChild(this.element);
     };
     PluggableUI.prototype.detachContainer = function () {
-        this.container.removeChild(this.element);
+        this.container && this.container.removeChild(this.element);
     };
     PluggableUI.prototype.show = function () {
         this.element.style.display = 'block';
@@ -55695,7 +55700,7 @@ function OrbitControl(camera, domElement, pano) {
     // How far you can dolly in and out ( PerspectiveCamera only )
     this.minDistance = 0;
     this.maxDistance = Infinity;
-    this.minFov = 50;
+    this.minFov = 30;
     this.maxFov = 120;
     // How far you can zoom in and out ( OrthographicCamera only )
     this.minZoom = 0;
@@ -58117,7 +58122,7 @@ var Pano = /** @class */ (function (_super) {
         }
         var data = payload.data;
         if (!data || !data.sceneid || data.sceneid == this.currentData.id) {
-            location.replace(document.referrer || 'about:blank');
+            this.cleanState();
         }
         else if (data.sceneid) {
             var id_1 = data.sceneid;
@@ -60562,6 +60567,11 @@ var onEnvResize = function (event) {
     }, 200);
 };
 window.addEventListener(eventType, onEnvResize);
+window.onbeforeunload = function () {
+    for (var ref in Runtime.instanceMap) {
+        Runtime.instanceMap[ref].dispose();
+    }
+};
 exports.default = Runtime;
 
 

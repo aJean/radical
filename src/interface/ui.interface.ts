@@ -33,7 +33,7 @@ export default class PluggableUI extends PubSubAble implements IPluggableUI {
     }
 
     detachContainer() {
-        this.container.removeChild(this.element);
+        this.container && this.container.removeChild(this.element);
     }
 
     show() {

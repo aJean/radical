@@ -18,7 +18,7 @@ export default abstract class History extends PubSubAble {
 
     constructor() {
         super();
-        this.subscribe(Topic.HISTORY.POP, this.onPopState.bind(this));
+        this.subscribe(Topic.SCENE.LOAD, () => this.subscribe(Topic.HISTORY.POP, this.onPopState.bind(this)));
     }
 
     _makeUrl(data) {
@@ -50,6 +50,11 @@ export default abstract class History extends PubSubAble {
         const url =  this._makeUrl(data);
         this.router ? this.router.reset(url.search, null, SFOPTS)
             : history.replaceState(STATE, null, url.all);
+    }
+
+    cleanState() {
+        this.router ? this.publish(this.Topic.HISTORY.END, null)
+            : location.replace(document.referrer || 'about:blank');
     }
 
     getState() {

@@ -355,7 +355,7 @@ export default class Pano extends History {
         const data = payload.data;
 
         if (!data || !data.sceneid || data.sceneid == this.currentData.id) {
-            location.replace(document.referrer || 'about:blank');
+            this.cleanState();
         } else if (data.sceneid) {
             const id = data.sceneid;
             const setid = data.xrkey;
