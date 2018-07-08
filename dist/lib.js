@@ -59460,7 +59460,7 @@ var Info = /** @class */ (function (_super) {
         var element = this.element = util_1.default.createElement('<div class="pano-info"></div>');
         if (info) {
             element.innerHTML = info.logo ? "<img src=\"" + info.logo + "\" width=\"70\">" : '';
-            element.innerHTML += "<div class=\"pano-info-name\">" + info.author + "</div>";
+            element.innerHTML += "<a href=\"" + info.url + "\" class=\"pano-info-name\">" + info.author + "</a>";
         }
     };
     Info.prototype.renderDom = function (topic, payload) {
