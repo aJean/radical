@@ -54989,7 +54989,7 @@ var History = /** @class */ (function (_super) {
             len === 0 ? history.back() : window.history.go(-(len + 1));
         }
         else {
-            window.location.replace(furl);
+            window.location.assign(furl);
         }
     };
     History.prototype.getState = function () {
@@ -57651,6 +57651,10 @@ var Overlays = /** @class */ (function (_super) {
     Overlays.prototype.dispose = function () {
         _super.prototype.dispose.call(this);
         this.pluginFuncs = [];
+        for (var id in this.maps) {
+            var cache = this.maps[id];
+            cache && this.hideOverlays(cache, true);
+        }
     };
     return Overlays;
 }(pubsub_interface_1.default));
@@ -58365,13 +58369,18 @@ var Pano = /** @class */ (function (_super) {
      */
     Pano.prototype.dispose = function () {
         cancelAnimationFrame(this.reqid);
-        this.stopControl();
-        this.skyBox.dispose();
-        this.webgl.dispose();
-        this.pluginList.forEach(function (plugin) { return plugin.dispose(); });
-        this.publish(this.Topic.RENDER.DISPOSE, this);
+        var webgl = this.webgl;
+        webgl.dispose();
+        webgl.forceContextLoss();
+        webgl.context = null;
+        webgl.domElement = null;
         // delete all subscribes
         _super.prototype.dispose.call(this);
+        this.stopControl();
+        this.pluginList.forEach(function (plugin) { return plugin.dispose(); });
+        this.skyBox.dispose();
+        this.overlays.dispose();
+        this.publish(this.Topic.RENDER.DISPOSE, this);
         util_1.default.cleanup(null, this.scene);
     };
     return Pano;

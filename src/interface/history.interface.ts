@@ -71,7 +71,7 @@ export default abstract class History extends PubSubAble {
             this['opts'].history = false;
             len === 0 ? history.back() : window.history.go(-(len + 1));
         } else {
-            window.location.replace(furl);
+            window.location.assign(furl);
         }
     }
 

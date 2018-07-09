@@ -605,15 +605,22 @@ export default class Pano extends History {
      */
     dispose() {
         cancelAnimationFrame(this.reqid);
-        
-        this.stopControl();
-        this.skyBox.dispose();
-        this.webgl.dispose();
-        this.pluginList.forEach(plugin => plugin.dispose());
 
-        this.publish(this.Topic.RENDER.DISPOSE, this);
+        const webgl = this.webgl;
+        webgl.dispose();
+        webgl.forceContextLoss();
+        webgl.context = null;
+        webgl.domElement = null;
+
         // delete all subscribes
         super.dispose();
+        
+        this.stopControl();
+        this.pluginList.forEach(plugin => plugin.dispose());
+        this.skyBox.dispose();
+        this.overlays.dispose();
+        
+        this.publish(this.Topic.RENDER.DISPOSE, this);
         Util.cleanup(null, this.scene);
     }
 }

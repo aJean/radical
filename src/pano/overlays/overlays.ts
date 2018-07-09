@@ -391,5 +391,10 @@ export default class Overlays extends PubSubAble {
     dispose() {
         super.dispose();
         this.pluginFuncs = [];
+
+        for (let id in this.maps) {
+            const cache = this.maps[id];
+            cache && this.hideOverlays(cache, true);
+        }
     }
 }
