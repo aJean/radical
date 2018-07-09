@@ -153,11 +153,44 @@ export default class Pano extends History {
     }
 
     /**
+     * 改变控制器的状态
+     * @param {string} state 启用或禁止
+     */
+    makeControl(state) {
+        const control = this.gyro || this.orbit;
+        control.enabled = state;
+    }
+
+    /**
      * 重置控制器
      */
     resetControl() {
         const control = this.gyro || this.orbit;
         control.reset();
+    }
+
+    /** 
+     * 启动控制器
+     */
+    startControl() {
+        if (this.gyro && !this.gyro.enabled) {
+            this.gyro.connect();
+        }
+        
+        this.orbit.enabled = true;
+    }
+
+    /** 
+     * 停止控制器
+     */
+    stopControl() {
+        if (this.gyro) {
+            this.gyro.disconnect();
+            delete this.gyro;
+        }
+
+        this.orbit.enabled = false;
+        delete this.orbit;
     }
 
     /**
@@ -540,30 +573,6 @@ export default class Pano extends History {
         this.pushState(data);
         this.resetEnv(data);
         this.replaceTexture(texture);
-    }
-
-    /** 
-     * 启动控制器
-     */
-    startControl() {
-        if (this.gyro && !this.gyro.enabled) {
-            this.gyro.connect();
-        }
-        
-        this.orbit.enabled = true;
-    }
-
-    /** 
-     * 停止控制器
-     */
-    stopControl() {
-        if (this.gyro) {
-            this.gyro.disconnect();
-            delete this.gyro;
-        }
-
-        this.orbit.enabled = false;
-        delete this.orbit;
     }
 
     /** 

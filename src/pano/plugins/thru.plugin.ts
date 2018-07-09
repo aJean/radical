@@ -226,8 +226,8 @@ export default class Thru extends PubSubAble {
                                 const pos = instance.getPosition().clone();
                                 const flag = pos.z > 0;
 
-                                // lock gyro control
-                                pano.gyro && pano.gyro.makeEnable(false);
+                                // lock control
+                                pano.makeControl(false);
                                 pos.z += flag ? 50 : -50;
 
                                 new Tween(ctarget).to(pos).effect('quintEaseIn', 1000)
@@ -238,20 +238,18 @@ export default class Thru extends PubSubAble {
                                             .start(['x', 'y', 'z'])
                                             .complete(() => {
                                                 this.publish(this.Topic.THRU.CHANGE, {data, scene: oldscene, pano});
-                                                this.active = true;
                                                 pano.enterThru(scene, instance.getMap());
                                                 this.hide();
                                                 pano.getControl().reset(flag);
                                                 pano.supplyOverlayScenes(sceneGroup);
                                                 pano.unlock();
-                                                pano.gyro && pano.gyro.makeEnable(true);
+                                                pano.makeControl(this.active = true);
                                             });
                                     });
                             }
                         }).catch(e => {
-                            this.active = true;
                             pano.unlock();
-                            pano.gyro && pano.gyro.makeEnable(true);
+                            pano.makeControl(this.active = true);
                         });
                 }
                 return true;

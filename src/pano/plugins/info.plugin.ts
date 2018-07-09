@@ -23,7 +23,7 @@ export default class Info extends PluggableUI {
 
         if (info) {
             element.innerHTML = info.logo ? `<img src="${info.logo}" width="70">` : '';
-            element.innerHTML += `<div class="pano-info-name">${info.author}</div>`;
+            element.innerHTML += `<a href="${info.url}" class="pano-info-name">${info.author}</a>`;
         }
     }
 

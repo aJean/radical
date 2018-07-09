@@ -6,7 +6,7 @@ import {Vector3, Euler, Quaternion, Spherical, Math as TMath, Camera} from 'thre
 
 export default class GyroControl {
     orbit: any;
-    oribtcamera: any;
+    oribtCamera: any;
     onDeviceOrientationChange: any;
     onScreenOrientationChange: any;
     camera: any;
@@ -26,7 +26,7 @@ export default class GyroControl {
         camera.rotation.reorder('YXZ');
 
         this.orbit = orbit;
-        this.oribtcamera = camera;
+        this.oribtCamera = camera;
         this.camera = camera.clone();
         this.onDeviceOrientationChange = event => this.deviceOrien = event;
         this.onScreenOrientationChange = event => this.screenOrien = Number(window.orientation) || 0;
@@ -113,18 +113,11 @@ export default class GyroControl {
     }
 
     /**
-     * 锁定 gyro 控制器
-     */
-    makeEnable(single) {
-        this.enabled = single;
-    }
-
-    /**
      * 重置 gyro 和 orbit 控制器
      */
     reset() {
         this.orbit.reset();
-        this.camera.copy(this.oribtcamera);
+        this.camera.copy(this.oribtCamera);
         this.lastSpherical = null;
         this.enabled = true;
     }
