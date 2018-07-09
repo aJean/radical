@@ -52,9 +52,27 @@ export default abstract class History extends PubSubAble {
             : history.replaceState(STATE, null, url.all);
     }
 
-    cleanState() {
-        this.router ? this.publish(this.Topic.HISTORY.END, null)
-            : location.replace(document.referrer || 'about:blank');
+    exhaustState() {
+        if (this.router) {
+            this['opts'].history = false;
+            this.publish(this.Topic.HISTORY.END, null);
+        } else {
+            window.location.replace(document.referrer || 'about:blank');
+        }
+    }
+
+    /**
+     * 外部有机会控制历史纪录
+     * @param {string} surl 来源
+     * @param {string} furl 跳转
+     */
+    _releaseState(len, surl, furl) {
+        if (len >= 0 && surl) {
+            this['opts'].history = false;
+            len === 0 ? history.back() : window.history.go(-(len + 1));
+        } else {
+            window.location.replace(furl);
+        }
     }
 
     getState() {

@@ -46,17 +46,32 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
 /******/ 		}
 /******/ 	};
 /******/
 /******/ 	// define __esModule on exports
 /******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
 /******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -54954,9 +54969,28 @@ var History = /** @class */ (function (_super) {
         this.router ? this.router.reset(url.search, null, SFOPTS)
             : history.replaceState(STATE, null, url.all);
     };
-    History.prototype.cleanState = function () {
-        this.router ? this.publish(this.Topic.HISTORY.END, null)
-            : location.replace(document.referrer || 'about:blank');
+    History.prototype.exhaustState = function () {
+        if (this.router) {
+            this['opts'].history = false;
+            this.publish(this.Topic.HISTORY.END, null);
+        }
+        else {
+            window.location.replace(document.referrer || 'about:blank');
+        }
+    };
+    /**
+     * 外部有机会控制历史纪录
+     * @param {string} surl 来源
+     * @param {string} furl 跳转
+     */
+    History.prototype._releaseState = function (len, surl, furl) {
+        if (len >= 0 && surl) {
+            this['opts'].history = false;
+            len === 0 ? history.back() : window.history.go(-(len + 1));
+        }
+        else {
+            window.location.replace(furl);
+        }
     };
     History.prototype.getState = function () {
         return history.state;
@@ -58138,7 +58172,7 @@ var Pano = /** @class */ (function (_super) {
         }
         var data = payload.data;
         if (!data || !data.sceneid || data.sceneid == this.currentData.id) {
-            this.cleanState();
+            this.exhaustState();
         }
         else if (data.sceneid) {
             var id_1 = data.sceneid;
@@ -59386,7 +59420,6 @@ var Indicator = /** @class */ (function (_super) {
         var pano = this.pano;
         var orbit = pano.getControl();
         var azimuthal = orbit.getAzimuthalAngle();
-        alert(azimuthal);
         pano.makeControl(false);
         new tween_animation_1.default({ polar: orbit.getPolarAngle(), azimuthal: orbit.getAzimuthalAngle() })
             .to({ polar: this.polar, azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal) })
