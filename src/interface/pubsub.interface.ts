@@ -1,31 +1,52 @@
 import Topic from '../core/topic';
-import PubSub from '../core/pubsub';
+import PSPool from '../core/pspool';
 
 /**
  * @file 通用接口
  */
 
 export default class PubSubAble {
-    subtokens = [];
     Topic = Topic;
+    _subtokens = [];
+    _pubSub = PSPool.getPSContext();
 
+    /**
+     * 订阅
+     */
     subscribe(topic, fn) {
-        this.subtokens.push(PubSub.subscribe(topic, fn));
+        this._subtokens.push(this._pubSub.subscribe(topic, fn));
     }
 
+    /**
+     * 异步发布
+     */
     publish(topic, data) {
-        PubSub.publish(topic, data);
+        this._pubSub.publish(topic, data);
     }
 
+    /**
+     * 同步发布
+     */
     publishSync(topic, data) {
-        PubSub.publishSync(topic, data);
+        this._pubSub.publishSync(topic, data);
     }
 
+    /**
+     * 清除所有
+     */
     clean() {
-        PubSub.clearAllSubscriptions();
+        this._pubSub.clearAllSubscriptions();
+    }
+
+    /**
+     * 取消订阅
+     */
+    unsubscribe(token) {
+        this._pubSub.unsubscribe(token);
     }
 
     dispose() {
-        this.subtokens.forEach(token => PubSub.unsubscribe(token));
+        this._subtokens.forEach(token => this._pubSub.unsubscribe(token));
+        this._pubSub.clearAllSubscriptions();
     }
 }

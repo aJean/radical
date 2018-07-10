@@ -7,13 +7,26 @@
         <title>多 pano 渲染</title>
         <link rel="stylesheet" href="../../dist/lib.css">
         <link rel="stylesheet" href="../assets/example.css">
+        <style>
+            #test1 {
+                position: absolute;
+                left: 0;
+                top: 50px;
+            }
+
+            #test2 {
+                position: absolute;
+                right: 0;
+                top: 50px;
+            }
+        </style>
     </head>
     <body>
         <div id="test1"></div>
         <div id="test2"></div>
         <script src="../../dist/lib.js"></script>
         <script>
-            const json = {
+            const json1 = {
                 title: 'test bxl transfer',
                 cretPath: '../assets/cret.txt',
                 pano: {
@@ -24,19 +37,41 @@
                     info: {
                         author: 'pano - 1'
                     },
-                    id: '49775931288',
-                    name: '罗浮宫',
                     bxlPath: '../assets/scene6/scene6.bxl',
                     imgPath: '../assets/scene6/scene6.jpg',
                     thumbPath: '../assets/scene6/thumb6.jpg'
                 }]
             };
 
-            bxl.startPano(json, '#test1', {
+            bxl.startPano(json1, '#test1', {
                 'scene-create': function (topic, payload) {
                     console.log(payload);
                 }
             });
+
+            const json2 = {
+                title: 'test bxl transfer',
+                cretPath: '../assets/cret.txt',
+                pano: {
+                    width: '50%',
+                    height: '50%'
+                },
+                sceneGroup: [{
+                    info: {
+                        author: 'pano - 2'
+                    },
+                    bxlPath: '../assets/scene1/scene1.bxl',
+                    imgPath: '../assets/scene1/scene1.jpg',
+                    thumbPath: '../assets/scene1/thumb1.jpg'
+                }]
+            };
+
+            bxl.startPano(json2, '#test2', {
+                'scene-create': function (topic, payload) {
+                    console.log(payload);
+                }
+            });
+
         </script>
     </body>
 </html>

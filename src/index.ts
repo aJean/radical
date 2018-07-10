@@ -6,7 +6,6 @@ import '../styles/vr.style.less';
 import polyfill from './core/polyfill';
 import PRuntime from './runtime/pano.runtime';
 import VRuntime from './runtime/vr.runtime';
-import PubSub from './core/pubsub';
 
 /**
  * @file bxl lib
@@ -32,14 +31,5 @@ export default {
 
     disposeVR(ref: string) {
         VRuntime.releaseInstance(ref);
-    },
-
-    /**
-     * 业务方发布事件
-     * @param {string} topic 
-     * @param {Object} data 
-     */
-    publish(topic, data) {
-        PubSub.publish(topic, data);
     }
 }

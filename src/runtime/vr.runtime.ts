@@ -1,3 +1,4 @@
+import PSPool from '../core/pspool';
 import ResourceLoader from '../pano/loaders/resource.loader';
 import Log from '../core/log';
 import VPano from '../vr/pano.vr';
@@ -44,6 +45,8 @@ export default abstract class Runtime {
     static instanceMap = {};
 
     static async start(url, el, events?) {
+        PSPool.createPSContext();
+
         const source = typeof url === 'string' ? await myLoader.fetchUrl(url) : url;
         el = (typeof el == 'string') ? document.querySelector(el) : el;
 
@@ -69,7 +72,7 @@ export default abstract class Runtime {
             }
             // 开场动画
             if (source['animation']) {
-                Timeline.install(source['animation'], vpano);
+                new Timeline().install(source['animation'], vpano);
             } else {
                 vpano.noTimeline();
             }

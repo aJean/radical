@@ -54283,9 +54283,9 @@ exports.default = default_1;
 
 /***/ }),
 
-/***/ "./src/core/pubsub.ts":
+/***/ "./src/core/pspool.ts":
 /*!****************************!*\
-  !*** ./src/core/pubsub.ts ***!
+  !*** ./src/core/pspool.ts ***!
   \****************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -54293,219 +54293,236 @@ exports.default = default_1;
 "use strict";
 
 /**
- * @file pubsub - ts
+ * @file create pubsub
+ * 执行 runtime 时创建, 保证每一个 context 的隔离性
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var PubSub = {};
-var messages = {};
-var lastUid = -1;
-function hasKeys(obj) {
-    for (var key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            return true;
-        }
-    }
-    return false;
-}
-/**
- * Returns a function that throws the passed exception, for use as argument for setTimeout
- * @param { Object } ex An Error object
- */
-function throwException(ex) {
-    return function reThrowException() {
-        throw ex;
-    };
-}
-function callSubscriberWithDelayedExceptions(subscriber, message, data) {
-    try {
-        subscriber(message, data);
-    }
-    catch (ex) {
-        setTimeout(throwException(ex), 0);
-    }
-}
-function callSubscriberWithImmediateExceptions(subscriber, message, data) {
-    subscriber(message, data);
-}
-function deliverMessage(originalMessage, matchedMessage, data, immediateExceptions) {
-    var subscribers = messages[matchedMessage];
-    var callSubscriber = immediateExceptions ? callSubscriberWithImmediateExceptions : callSubscriberWithDelayedExceptions;
-    if (!messages.hasOwnProperty(matchedMessage)) {
-        return;
-    }
-    for (var s in subscribers) {
-        if (subscribers.hasOwnProperty(s)) {
-            callSubscriber(subscribers[s], originalMessage, data);
-        }
-    }
-}
-function createDeliveryFunction(message, data, immediateExceptions) {
-    return function deliverNamespaced() {
-        var topic = String(message);
-        var position = topic.lastIndexOf('.');
-        // deliver the message as it is now
-        deliverMessage(message, message, data, immediateExceptions);
-        // trim the hierarchy and deliver message to each level
-        while (position !== -1) {
-            topic = topic.substr(0, position);
-            position = topic.lastIndexOf('.');
-            deliverMessage(message, topic, data, immediateExceptions);
-        }
-    };
-}
-function messageHasSubscribers(message) {
-    var topic = String(message);
-    var found = Boolean(messages.hasOwnProperty(topic) && hasKeys(messages[topic]));
-    var position = topic.lastIndexOf('.');
-    while (!found && position !== -1) {
-        topic = topic.substr(0, position);
-        position = topic.lastIndexOf('.');
-        found = Boolean(messages.hasOwnProperty(topic) && hasKeys(messages[topic]));
-    }
-    return found;
-}
-function publish(message, data, sync, immediateExceptions) {
-    var deliver = createDeliveryFunction(message, data, immediateExceptions);
-    var hasSubscribers = messageHasSubscribers(message);
-    if (!hasSubscribers) {
-        return false;
-    }
-    if (sync === true) {
-        deliver();
-    }
-    else {
-        setTimeout(deliver, 0);
-    }
-    return true;
-}
-/**
- *	PubSub.publish( message[, data] ) -> Boolean
- *	- message (String): The message to publish
- *	- data: The data to pass to subscribers
- *	Publishes the the message, passing the data to it's subscribers
- */
-PubSub.publish = function (message, data) {
-    return publish(message, data, false, PubSub.immediateExceptions);
-};
-/**
- *	PubSub.publishSync( message[, data] ) -> Boolean
- *	- message (String): The message to publish
- *	- data: The data to pass to subscribers
- *	Publishes the the message synchronously, passing the data to it's subscribers
- **/
-PubSub.publishSync = function (message, data) {
-    return publish(message, data, true, PubSub.immediateExceptions);
-};
-/**
- *	PubSub.subscribe( message, func ) -> String
- *	- message (String): The message to subscribe to
- *	- func (Function): The function to call when a new message is published
- *	Subscribes the passed function to the passed message. Every returned token is unique and should be stored if
- *	you need to unsubscribe
- */
-PubSub.subscribe = function (message, func) {
-    if (typeof func !== 'function') {
-        return false;
-    }
-    // message is not registered yet
-    if (!messages.hasOwnProperty(message)) {
-        messages[message] = {};
-    }
-    // forcing token as String, to allow for future expansions without breaking usage
-    // and allow for easy use as key names for the 'messages' object
-    var token = 'uid_' + String(++lastUid);
-    messages[message][token] = func;
-    // return token for unsubscribing
-    return token;
-};
-/**
- *	PubSub.subscribeOnce( message, func ) -> PubSub
- *	- message (String): The message to subscribe to
- *	- func (Function): The function to call when a new message is published
- *	Subscribes the passed function to the passed message once
- */
-PubSub.subscribeOnce = function (message, func) {
-    var token = PubSub.subscribe(message, function () {
-        // before func apply, unsubscribe message
-        PubSub.unsubscribe(token);
-        func.apply(this, arguments);
-    });
-    return PubSub;
-};
-/**
- * Public: Clears all subscriptions
- */
-PubSub.clearAllSubscriptions = function clearAllSubscriptions() {
-    messages = {};
-};
-/**
- * Public: Clear subscriptions by the topic
- */
-PubSub.clearSubscriptions = function clearSubscriptions(topic) {
-    for (var m in messages) {
-        if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0) {
-            delete messages[m];
-        }
-    }
-};
-/**
- * Public: removes subscriptions.
- * When passed a token, removes a specific subscription.
- * When passed a function, removes all subscriptions for that function
- * When passed a topic, removes all subscriptions for that topic (hierarchy)
- *
- * value - A token, function or topic to unsubscribe.
- *
- * Examples
- *		// Example 1 - unsubscribing with a token
- *		var token = PubSub.subscribe('mytopic', myFunc);
- *		PubSub.unsubscribe(token);
- *
- *		// Example 2 - unsubscribing with a function
- *		PubSub.unsubscribe(myFunc);
- *
- *		// Example 3 - unsubscribing a topic
- *		PubSub.unsubscribe('mytopic');
- */
-PubSub.unsubscribe = function (value) {
-    var descendantTopicExists = function (topic) {
-        for (var m in messages) {
-            if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0) {
+var create = function () {
+    var PubSub = {};
+    var messages = {};
+    var lastUid = -1;
+    function hasKeys(obj) {
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
                 return true;
             }
         }
         return false;
-    };
-    var isTopic = typeof value === 'string' && (messages.hasOwnProperty(value) || descendantTopicExists(value));
-    var isToken = !isTopic && typeof value === 'string';
-    var isFunction = typeof value === 'function';
-    var result = false;
-    if (isTopic) {
-        PubSub.clearSubscriptions(value);
-        return;
     }
-    for (var m in messages) {
-        if (messages.hasOwnProperty(m)) {
-            var message = messages[m];
-            if (isToken && message[value]) {
-                delete message[value];
-                result = value;
-                // tokens are unique, so we can just stop here
-                break;
+    /**
+     * Returns a function that throws the passed exception, for use as argument for setTimeout
+     * @param { Object } ex An Error object
+     */
+    function throwException(ex) {
+        return function reThrowException() {
+            throw ex;
+        };
+    }
+    function callSubscriberWithDelayedExceptions(subscriber, message, data) {
+        try {
+            subscriber(message, data);
+        }
+        catch (ex) {
+            setTimeout(throwException(ex), 0);
+        }
+    }
+    function callSubscriberWithImmediateExceptions(subscriber, message, data) {
+        subscriber(message, data);
+    }
+    function deliverMessage(originalMessage, matchedMessage, data, immediateExceptions) {
+        var subscribers = messages[matchedMessage];
+        var callSubscriber = immediateExceptions ? callSubscriberWithImmediateExceptions : callSubscriberWithDelayedExceptions;
+        if (!messages.hasOwnProperty(matchedMessage)) {
+            return;
+        }
+        for (var s in subscribers) {
+            if (subscribers.hasOwnProperty(s)) {
+                callSubscriber(subscribers[s], originalMessage, data);
             }
-            if (isFunction) {
-                for (var t in message) {
-                    if (message.hasOwnProperty(t) && message[t] === value) {
-                        delete message[t];
-                        result = true;
+        }
+    }
+    function createDeliveryFunction(message, data, immediateExceptions) {
+        return function deliverNamespaced() {
+            var topic = String(message);
+            var position = topic.lastIndexOf('.');
+            // deliver the message as it is now
+            deliverMessage(message, message, data, immediateExceptions);
+            // trim the hierarchy and deliver message to each level
+            while (position !== -1) {
+                topic = topic.substr(0, position);
+                position = topic.lastIndexOf('.');
+                deliverMessage(message, topic, data, immediateExceptions);
+            }
+        };
+    }
+    function messageHasSubscribers(message) {
+        var topic = String(message);
+        var found = Boolean(messages.hasOwnProperty(topic) && hasKeys(messages[topic]));
+        var position = topic.lastIndexOf('.');
+        while (!found && position !== -1) {
+            topic = topic.substr(0, position);
+            position = topic.lastIndexOf('.');
+            found = Boolean(messages.hasOwnProperty(topic) && hasKeys(messages[topic]));
+        }
+        return found;
+    }
+    function publish(message, data, sync, immediateExceptions) {
+        var deliver = createDeliveryFunction(message, data, immediateExceptions);
+        var hasSubscribers = messageHasSubscribers(message);
+        if (!hasSubscribers) {
+            return false;
+        }
+        if (sync === true) {
+            deliver();
+        }
+        else {
+            setTimeout(deliver, 0);
+        }
+        return true;
+    }
+    /**
+     *	Publishes the the message, passing the data to it's subscribers
+     *	- message (String): The message to publish
+     *	- data: The data to pass to subscribers
+     */
+    PubSub.publish = function (message, data) {
+        return publish(message, data, false, PubSub.immediateExceptions);
+    };
+    /**
+     *	Publishes the the message synchronously, passing the data to it's subscribers
+     *	- message (String): The message to publish
+     *	- data: The data to pass to subscribers
+     */
+    PubSub.publishSync = function (message, data) {
+        return publish(message, data, true, PubSub.immediateExceptions);
+    };
+    /**
+     *  Subscribes the passed function to the passed message
+     *	- message (String): The message to subscribe to
+     *	- func (Function): The function to call when a new message is published
+     */
+    PubSub.subscribe = function (message, func) {
+        if (typeof func !== 'function') {
+            return false;
+        }
+        // message is not registered yet
+        if (!messages.hasOwnProperty(message)) {
+            messages[message] = {};
+        }
+        // forcing token as String, to allow for future expansions without breaking usage
+        // and allow for easy use as key names for the 'messages' object
+        var token = 'uid_' + String(++lastUid);
+        messages[message][token] = func;
+        // return token for unsubscribing
+        return token;
+    };
+    /**
+     *	Subscribes the passed function to the passed message once
+     *	- message (String): The message to subscribe to
+     *	- func (Function): The function to call when a new message is published
+     */
+    PubSub.subscribeOnce = function (message, func) {
+        var token = PubSub.subscribe(message, function () {
+            // before func apply, unsubscribe message
+            PubSub.unsubscribe(token);
+            func.apply(this, arguments);
+        });
+        return PubSub;
+    };
+    /**
+     * Public: Clears all subscriptions
+     */
+    PubSub.clearAllSubscriptions = function clearAllSubscriptions() {
+        messages = {};
+    };
+    /**
+     * Public: Clear subscriptions by the topic
+     */
+    PubSub.clearSubscriptions = function clearSubscriptions(topic) {
+        for (var m in messages) {
+            if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0) {
+                delete messages[m];
+            }
+        }
+    };
+    /**
+     * Public: removes subscriptions.
+     * When passed a token, removes a specific subscription.
+     * When passed a function, removes all subscriptions for that function
+     * When passed a topic, removes all subscriptions for that topic (hierarchy)
+     *
+     * value - A token, function or topic to unsubscribe.
+     *
+     * Examples
+     *		// Example 1 - unsubscribing with a token
+     *		var token = PubSub.subscribe('mytopic', myFunc);
+     *		PubSub.unsubscribe(token);
+     *
+     *		// Example 2 - unsubscribing with a function
+     *		PubSub.unsubscribe(myFunc);
+     *
+     *		// Example 3 - unsubscribing a topic
+     *		PubSub.unsubscribe('mytopic');
+     */
+    PubSub.unsubscribe = function (value) {
+        var descendantTopicExists = function (topic) {
+            for (var m in messages) {
+                if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        var isTopic = typeof value === 'string' && (messages.hasOwnProperty(value) || descendantTopicExists(value));
+        var isToken = !isTopic && typeof value === 'string';
+        var isFunction = typeof value === 'function';
+        var result = false;
+        if (isTopic) {
+            PubSub.clearSubscriptions(value);
+            return;
+        }
+        for (var m in messages) {
+            if (messages.hasOwnProperty(m)) {
+                var message = messages[m];
+                if (isToken && message[value]) {
+                    delete message[value];
+                    result = value;
+                    // tokens are unique, so we can just stop here
+                    break;
+                }
+                if (isFunction) {
+                    for (var t in message) {
+                        if (message.hasOwnProperty(t) && message[t] === value) {
+                            delete message[t];
+                            result = true;
+                        }
                     }
                 }
             }
         }
-    }
-    return result;
+        return result;
+    };
+    return PubSub;
 };
-exports.default = PubSub;
+var current;
+var poolList = [];
+exports.default = {
+    /**
+     * invoke before pano create
+     */
+    createPSContext: function () {
+        poolList.push(current = create());
+    },
+    /**
+     * get context
+     */
+    getPSContext: function () {
+        return current;
+    },
+    getPool: function () {
+        return poolList;
+    }
+};
 
 
 /***/ }),
@@ -54878,7 +54895,6 @@ __webpack_require__(/*! ../styles/vr.style.less */ "./styles/vr.style.less");
 var polyfill_1 = __webpack_require__(/*! ./core/polyfill */ "./src/core/polyfill.ts");
 var pano_runtime_1 = __webpack_require__(/*! ./runtime/pano.runtime */ "./src/runtime/pano.runtime.ts");
 var vr_runtime_1 = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
-var pubsub_1 = __webpack_require__(/*! ./core/pubsub */ "./src/core/pubsub.ts");
 /**
  * @file bxl lib
  */
@@ -54898,14 +54914,6 @@ exports.default = {
     },
     disposeVR: function (ref) {
         vr_runtime_1.default.releaseInstance(ref);
-    },
-    /**
-     * 业务方发布事件
-     * @param {string} topic
-     * @param {Object} data
-     */
-    publish: function (topic, data) {
-        pubsub_1.default.publish(topic, data);
     }
 };
 
@@ -54932,23 +54940,20 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var pubsub_1 = __webpack_require__(/*! ../core/pubsub */ "./src/core/pubsub.ts");
-var topic_1 = __webpack_require__(/*! ../core/topic */ "./src/core/topic.ts");
 var pubsub_interface_1 = __webpack_require__(/*! ./pubsub.interface */ "./src/interface/pubsub.interface.ts");
 var QS = __webpack_require__(/*! query-string */ "./node_modules/query-string/index.js");
 /**
  * @file simple 历史管理
  */
-window.addEventListener('popstate', function (e) {
-    pubsub_1.default.publish(topic_1.default.HISTORY.POP, { data: QS.parse(location.search) });
-});
 var STATE = { bxlhistory: 1 };
 var SFOPTS = { disableServiceDispatch: true, silent: true };
 var History = /** @class */ (function (_super) {
     __extends(History, _super);
     function History() {
         var _this = _super.call(this) || this;
-        _this.subscribe(topic_1.default.SCENE.LOAD, function () { return _this.subscribe(topic_1.default.HISTORY.POP, _this.onPopState.bind(_this)); });
+        var Topic = _this.Topic;
+        window.addEventListener('popstate', function (e) { return _this.publish(Topic.HISTORY.POP, { data: QS.parse(location.search) }); });
+        _this.subscribe(Topic.HISTORY.POP, _this.onPopState.bind(_this));
         return _this;
     }
     /**
@@ -55169,29 +55174,50 @@ exports.default = Plastic;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var topic_1 = __webpack_require__(/*! ../core/topic */ "./src/core/topic.ts");
-var pubsub_1 = __webpack_require__(/*! ../core/pubsub */ "./src/core/pubsub.ts");
+var pspool_1 = __webpack_require__(/*! ../core/pspool */ "./src/core/pspool.ts");
 /**
  * @file 通用接口
  */
 var PubSubAble = /** @class */ (function () {
     function PubSubAble() {
-        this.subtokens = [];
         this.Topic = topic_1.default;
+        this._subtokens = [];
+        this._pubSub = pspool_1.default.getPSContext();
     }
+    /**
+     * 订阅
+     */
     PubSubAble.prototype.subscribe = function (topic, fn) {
-        this.subtokens.push(pubsub_1.default.subscribe(topic, fn));
+        this._subtokens.push(this._pubSub.subscribe(topic, fn));
     };
+    /**
+     * 异步发布
+     */
     PubSubAble.prototype.publish = function (topic, data) {
-        pubsub_1.default.publish(topic, data);
+        this._pubSub.publish(topic, data);
     };
+    /**
+     * 同步发布
+     */
     PubSubAble.prototype.publishSync = function (topic, data) {
-        pubsub_1.default.publishSync(topic, data);
+        this._pubSub.publishSync(topic, data);
     };
+    /**
+     * 清除所有
+     */
     PubSubAble.prototype.clean = function () {
-        pubsub_1.default.clearAllSubscriptions();
+        this._pubSub.clearAllSubscriptions();
+    };
+    /**
+     * 取消订阅
+     */
+    PubSubAble.prototype.unsubscribe = function (token) {
+        this._pubSub.unsubscribe(token);
     };
     PubSubAble.prototype.dispose = function () {
-        this.subtokens.forEach(function (token) { return pubsub_1.default.unsubscribe(token); });
+        var _this = this;
+        this._subtokens.forEach(function (token) { return _this._pubSub.unsubscribe(token); });
+        this._pubSub.clearAllSubscriptions();
     };
     return PubSubAble;
 }());
@@ -55384,7 +55410,7 @@ exports.default = AnimationFly;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var pubsub_1 = __webpack_require__(/*! ../../core/pubsub */ "./src/core/pubsub.ts");
+var pspool_1 = __webpack_require__(/*! ../../core/pspool */ "./src/core/pspool.ts");
 var topic_1 = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
 var fly_animation_1 = __webpack_require__(/*! ./fly.animation */ "./src/pano/animations/fly.animation.ts");
 /**
@@ -55393,33 +55419,37 @@ var fly_animation_1 = __webpack_require__(/*! ./fly.animation */ "./src/pano/ani
  */
 var Timeline = /** @class */ (function () {
     function Timeline() {
+        this.lines = [];
+        this._subtokens = [];
+        this._pubSub = pspool_1.default.getPSContext();
     }
-    Timeline.install = function (opts, pano) {
+    Timeline.prototype.install = function (opts, pano) {
         var _this = this;
         var camera = pano.getCamera();
-        var subtokens = this.subtokens;
         this.pano = pano;
         // minor planet
         if (opts.fly) {
             var fly = new fly_animation_1.default(camera, opts.fly);
             this.lines.push(fly);
         }
-        subtokens.push(pubsub_1.default.subscribe(topic_1.default.SCENE.INIT, function () { return _this.onTimeInit(); }));
-        subtokens.push(pubsub_1.default.subscribe(topic_1.default.RENDER.PROCESS, function () { return _this.onTimeChange(); }));
+        this._subtokens.push(this._pubSub.subscribe(topic_1.default.SCENE.INIT, function () { return _this.onTimeInit(); }));
+        this._subtokens.push(this._pubSub.subscribe(topic_1.default.RENDER.PROCESS, function () { return _this.onTimeChange(); }));
     };
-    Timeline.onTimeInit = function () {
+    Timeline.prototype.onTimeInit = function () {
         var lines = this.lines;
         lines.forEach(function (anim) { return anim.init && anim.init(); });
     };
-    Timeline.onTimeChange = function () {
+    Timeline.prototype.onTimeChange = function () {
+        var _this = this;
         var pano = this.pano;
         var lines = this.lines;
         if (!lines.length) {
+            this._subtokens.forEach(function (token) { return _this._pubSub.unsubscribe(token); });
             return this.onTimeEnd();
         }
         lines.forEach(function (anim, i) {
             if (anim.isEnd()) {
-                pubsub_1.default.publish(topic_1.default.ANIMATION.END, anim);
+                pano.publish(pano.Topic.ANIMATION.END, anim);
                 lines.splice(i, 1);
             }
             else {
@@ -55427,12 +55457,9 @@ var Timeline = /** @class */ (function () {
             }
         });
     };
-    Timeline.onTimeEnd = function () {
-        this.subtokens.forEach(function (token) { return pubsub_1.default.unsubscribe(token); });
+    Timeline.prototype.onTimeEnd = function () {
         this.pano.noTimeline();
     };
-    Timeline.lines = [];
-    Timeline.subtokens = [];
     return Timeline;
 }());
 exports.default = Timeline;
@@ -55718,8 +55745,6 @@ exports.default = GyroControl;
 Object.defineProperty(exports, "__esModule", { value: true });
 var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
-var topic_1 = __webpack_require__(/*! ../../core/topic */ "./src/core/topic.ts");
-var pubsub_1 = __webpack_require__(/*! ../../core/pubsub */ "./src/core/pubsub.ts");
 /**
  * @file 全景相机控制器
  */
@@ -55851,6 +55876,7 @@ function OrbitControl(camera, domElement, pano) {
         scope.camera.updateProjectionMatrix();
         scope.dispatchEvent(changeEvent);
         scope.update();
+        scope.enabled = true;
         state = STATE.NONE;
     };
     /* this method is exposed, but perhaps it would be better if we can make it private... */
@@ -56093,7 +56119,7 @@ function OrbitControl(camera, domElement, pano) {
             //TODO: prevent to dispatch click
             var pano_1 = scope.pano;
             var end = util_1.default.calcScreenToSphere({ x: 0, y: 0 }, scope.camera);
-            pubsub_1.default.publish(topic_1.default.UI.DRAG, { start: _rotatestart, end: end, pano: pano_1 });
+            pano_1.publish(pano_1.Topic.UI.DRAG, { start: _rotatestart, end: end, pano: pano_1 });
         }
         _rotatestart = null;
     }
@@ -56142,7 +56168,7 @@ function OrbitControl(camera, domElement, pano) {
             y: -(event.touches[0].pageY + dy / 2) / size.height * 2 + 1
         }, scope.camera);
         // center of tow fingers
-        pubsub_1.default.publish(topic_1.default.UI.ZOOM, { location: location, pano: pano });
+        pano.publish(pano.Topic.UI.ZOOM, { location: location, pano: pano });
     }
     function handleTouchStartPan(event) {
         panStart.set(event.touches[0].pageX, event.touches[0].pageY);
@@ -56188,7 +56214,7 @@ function OrbitControl(camera, domElement, pano) {
         if (_rotatestart) {
             var pano_2 = scope.pano;
             var end = util_1.default.calcScreenToSphere({ x: 0, y: 0 }, scope.camera);
-            pubsub_1.default.publish(topic_1.default.UI.DRAG, { start: _rotatestart, end: end, pano: pano_2 });
+            pano_2.publish(pano_2.Topic.UI.DRAG, { start: _rotatestart, end: end, pano: pano_2 });
         }
         _rotatestart = null;
     }
@@ -60450,6 +60476,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var pspool_1 = __webpack_require__(/*! ../core/pspool */ "./src/core/pspool.ts");
 var resource_loader_1 = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 var timeline_animation_1 = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
 var info_plugin_1 = __webpack_require__(/*! ../pano/plugins/info.plugin */ "./src/pano/plugins/info.plugin.ts");
@@ -60528,12 +60555,16 @@ var Runtime = /** @class */ (function () {
         el.setAttribute('ref', ref);
         return this.instanceMap[ref] = new pano_1.default(el, source);
     };
+    /**
+     * everytime create new PubSub context
+     */
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
             var source, _a, pano, name_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        pspool_1.default.createPSContext();
                         if (!(typeof url === 'string')) return [3 /*break*/, 2];
                         return [4 /*yield*/, myLoader.fetchUrl(url)];
                     case 1:
@@ -60556,7 +60587,7 @@ var Runtime = /** @class */ (function () {
                                 }
                             }
                             if (source['animation']) {
-                                timeline_animation_1.default.install(source['animation'], pano);
+                                new timeline_animation_1.default().install(source['animation'], pano);
                             }
                             else {
                                 pano.noTimeline();
@@ -60679,6 +60710,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var pspool_1 = __webpack_require__(/*! ../core/pspool */ "./src/core/pspool.ts");
 var resource_loader_1 = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 var log_1 = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
 var pano_vr_1 = __webpack_require__(/*! ../vr/pano.vr */ "./src/vr/pano.vr.ts");
@@ -60724,6 +60756,7 @@ var Runtime = /** @class */ (function () {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        pspool_1.default.createPSContext();
                         if (!(typeof url === 'string')) return [3 /*break*/, 2];
                         return [4 /*yield*/, myLoader.fetchUrl(url)];
                     case 1:
@@ -60755,7 +60788,7 @@ var Runtime = /** @class */ (function () {
                             }
                             // 开场动画
                             if (source['animation']) {
-                                timeline_animation_1.default.install(source['animation'], vpano_1);
+                                new timeline_animation_1.default().install(source['animation'], vpano_1);
                             }
                             else {
                                 vpano_1.noTimeline();

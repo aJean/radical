@@ -1,5 +1,3 @@
-import PubSub from '../core/pubsub';
-import Topic from '../core/topic';
 import PubSubAble from './pubsub.interface';
 import * as QS from 'query-string';
 
@@ -7,9 +5,6 @@ import * as QS from 'query-string';
  * @file simple 历史管理
  */
 
-window.addEventListener('popstate', e => {
-    PubSub.publish(Topic.HISTORY.POP, {data: QS.parse(location.search)});
-});
 
 const STATE = {bxlhistory: 1};
 const SFOPTS = {disableServiceDispatch: true, silent: true};
@@ -18,7 +13,10 @@ export default abstract class History extends PubSubAble {
 
     constructor() {
         super();
-        this.subscribe(Topic.SCENE.LOAD, () => this.subscribe(Topic.HISTORY.POP, this.onPopState.bind(this)));
+
+        const Topic = this.Topic;
+        window.addEventListener('popstate', e => this.publish(Topic.HISTORY.POP, {data: QS.parse(location.search)}));
+        this.subscribe(Topic.HISTORY.POP, this.onPopState.bind(this));
     }
 
     /**

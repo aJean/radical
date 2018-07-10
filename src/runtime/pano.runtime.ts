@@ -1,3 +1,4 @@
+import PSPool from '../core/pspool';
 import ResourceLoader from '../pano/loaders/resource.loader';
 import Timeline from '../pano/animations/timeline.animation';
 import Info from '../pano/plugins/info.plugin';
@@ -90,7 +91,12 @@ abstract class Runtime {
         return this.instanceMap[ref] = new Pano(el, source);
     }
 
+    /**
+     * everytime create new PubSub context
+     */
     static async start(url, el, events?) {
+        PSPool.createPSContext();
+
         const source = typeof url === 'string' ? await myLoader.fetchUrl(url) : url;
 
         if (!(source && source['sceneGroup'])) {
@@ -108,7 +114,7 @@ abstract class Runtime {
             }
 
             if (source['animation']) {
-                Timeline.install(source['animation'], pano);
+                new Timeline().install(source['animation'], pano);
             } else {
                 pano.noTimeline();
             }

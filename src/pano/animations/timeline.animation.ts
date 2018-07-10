@@ -1,4 +1,4 @@
-import PubSub from '../../core/pubsub';
+import PSPool from '../../core/pspool';
 import Topic from '../../core/topic';
 import AnimationFly from './fly.animation';
 
@@ -7,14 +7,14 @@ import AnimationFly from './fly.animation';
  * @example 入场动画, camera 动画, 全局动画
  */
 
-export default abstract class Timeline {
-    static pano: any;
-    static lines = [];
-    static subtokens = [];
+export default class Timeline {
+    pano: any;
+    lines = [];
+    _subtokens = [];
+    _pubSub = PSPool.getPSContext();
 
-    static install(opts, pano) {
+    install(opts, pano) {
         const camera = pano.getCamera();
-        const subtokens = this.subtokens;
 
         this.pano = pano;
         // minor planet
@@ -23,26 +23,27 @@ export default abstract class Timeline {
             this.lines.push(fly);
         }
 
-        subtokens.push(PubSub.subscribe(Topic.SCENE.INIT, () => this.onTimeInit()));
-        subtokens.push(PubSub.subscribe(Topic.RENDER.PROCESS, () => this.onTimeChange()));
+        this._subtokens.push(this._pubSub.subscribe(Topic.SCENE.INIT, () => this.onTimeInit()));
+        this._subtokens.push(this._pubSub.subscribe(Topic.RENDER.PROCESS, () => this.onTimeChange()));
     }
 
-    static onTimeInit() {
+    onTimeInit() {
         const lines = this.lines;
         lines.forEach(anim => anim.init && anim.init());
     }
 
-    static onTimeChange() {
+    onTimeChange() {
         const pano = this.pano;
         const lines = this.lines;
 
         if (!lines.length) {
+            this._subtokens.forEach(token => this._pubSub.unsubscribe(token));
             return this.onTimeEnd();
         }
 
         lines.forEach((anim, i) => {
             if (anim.isEnd()) {
-                PubSub.publish(Topic.ANIMATION.END, anim);
+                pano.publish(pano.Topic.ANIMATION.END, anim);
                 lines.splice(i, 1);
             } else {
                 anim.update();
@@ -50,8 +51,7 @@ export default abstract class Timeline {
         });
     }
 
-    static onTimeEnd() {
-        this.subtokens.forEach(token => PubSub.unsubscribe(token));
+    onTimeEnd() {
         this.pano.noTimeline();
     }
 }
