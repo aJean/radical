@@ -54300,8 +54300,7 @@ var PubSub = {};
 var messages = {};
 var lastUid = -1;
 function hasKeys(obj) {
-    var key;
-    for (key in obj) {
+    for (var key in obj) {
         if (obj.hasOwnProperty(key)) {
             return true;
         }
@@ -54309,9 +54308,9 @@ function hasKeys(obj) {
     return false;
 }
 /**
- *	Returns a function that throws the passed exception, for use as argument for setTimeout
-    *	@param { Object } ex An Error object
-    */
+ * Returns a function that throws the passed exception, for use as argument for setTimeout
+ * @param { Object } ex An Error object
+ */
 function throwException(ex) {
     return function reThrowException() {
         throw ex;
@@ -54329,11 +54328,12 @@ function callSubscriberWithImmediateExceptions(subscriber, message, data) {
     subscriber(message, data);
 }
 function deliverMessage(originalMessage, matchedMessage, data, immediateExceptions) {
-    var subscribers = messages[matchedMessage], callSubscriber = immediateExceptions ? callSubscriberWithImmediateExceptions : callSubscriberWithDelayedExceptions, s;
+    var subscribers = messages[matchedMessage];
+    var callSubscriber = immediateExceptions ? callSubscriberWithImmediateExceptions : callSubscriberWithDelayedExceptions;
     if (!messages.hasOwnProperty(matchedMessage)) {
         return;
     }
-    for (s in subscribers) {
+    for (var s in subscribers) {
         if (subscribers.hasOwnProperty(s)) {
             callSubscriber(subscribers[s], originalMessage, data);
         }
@@ -54341,7 +54341,8 @@ function deliverMessage(originalMessage, matchedMessage, data, immediateExceptio
 }
 function createDeliveryFunction(message, data, immediateExceptions) {
     return function deliverNamespaced() {
-        var topic = String(message), position = topic.lastIndexOf('.');
+        var topic = String(message);
+        var position = topic.lastIndexOf('.');
         // deliver the message as it is now
         deliverMessage(message, message, data, immediateExceptions);
         // trim the hierarchy and deliver message to each level
@@ -54353,7 +54354,9 @@ function createDeliveryFunction(message, data, immediateExceptions) {
     };
 }
 function messageHasSubscribers(message) {
-    var topic = String(message), found = Boolean(messages.hasOwnProperty(topic) && hasKeys(messages[topic])), position = topic.lastIndexOf('.');
+    var topic = String(message);
+    var found = Boolean(messages.hasOwnProperty(topic) && hasKeys(messages[topic]));
+    var position = topic.lastIndexOf('.');
     while (!found && position !== -1) {
         topic = topic.substr(0, position);
         position = topic.lastIndexOf('.');
@@ -54362,7 +54365,8 @@ function messageHasSubscribers(message) {
     return found;
 }
 function publish(message, data, sync, immediateExceptions) {
-    var deliver = createDeliveryFunction(message, data, immediateExceptions), hasSubscribers = messageHasSubscribers(message);
+    var deliver = createDeliveryFunction(message, data, immediateExceptions);
+    var hasSubscribers = messageHasSubscribers(message);
     if (!hasSubscribers) {
         return false;
     }
@@ -54376,29 +54380,29 @@ function publish(message, data, sync, immediateExceptions) {
 }
 /**
  *	PubSub.publish( message[, data] ) -> Boolean
-    *	- message (String): The message to publish
-    *	- data: The data to pass to subscribers
-    *	Publishes the the message, passing the data to it's subscribers
-    **/
+ *	- message (String): The message to publish
+ *	- data: The data to pass to subscribers
+ *	Publishes the the message, passing the data to it's subscribers
+ */
 PubSub.publish = function (message, data) {
     return publish(message, data, false, PubSub.immediateExceptions);
 };
 /**
  *	PubSub.publishSync( message[, data] ) -> Boolean
-    *	- message (String): The message to publish
-    *	- data: The data to pass to subscribers
-    *	Publishes the the message synchronously, passing the data to it's subscribers
-    **/
+ *	- message (String): The message to publish
+ *	- data: The data to pass to subscribers
+ *	Publishes the the message synchronously, passing the data to it's subscribers
+ **/
 PubSub.publishSync = function (message, data) {
     return publish(message, data, true, PubSub.immediateExceptions);
 };
 /**
  *	PubSub.subscribe( message, func ) -> String
-    *	- message (String): The message to subscribe to
-    *	- func (Function): The function to call when a new message is published
-    *	Subscribes the passed function to the passed message. Every returned token is unique and should be stored if
-    *	you need to unsubscribe
-    **/
+ *	- message (String): The message to subscribe to
+ *	- func (Function): The function to call when a new message is published
+ *	Subscribes the passed function to the passed message. Every returned token is unique and should be stored if
+ *	you need to unsubscribe
+ */
 PubSub.subscribe = function (message, func) {
     if (typeof func !== 'function') {
         return false;
@@ -54416,10 +54420,10 @@ PubSub.subscribe = function (message, func) {
 };
 /**
  *	PubSub.subscribeOnce( message, func ) -> PubSub
-    *	- message (String): The message to subscribe to
-    *	- func (Function): The function to call when a new message is published
-    *	Subscribes the passed function to the passed message once
-    **/
+ *	- message (String): The message to subscribe to
+ *	- func (Function): The function to call when a new message is published
+ *	Subscribes the passed function to the passed message once
+ */
 PubSub.subscribeOnce = function (message, func) {
     var token = PubSub.subscribe(message, function () {
         // before func apply, unsubscribe message
@@ -54428,58 +54432,61 @@ PubSub.subscribeOnce = function (message, func) {
     });
     return PubSub;
 };
-/* Public: Clears all subscriptions
-    */
+/**
+ * Public: Clears all subscriptions
+ */
 PubSub.clearAllSubscriptions = function clearAllSubscriptions() {
     messages = {};
 };
-/*Public: Clear subscriptions by the topic
-    */
+/**
+ * Public: Clear subscriptions by the topic
+ */
 PubSub.clearSubscriptions = function clearSubscriptions(topic) {
-    var m;
-    for (m in messages) {
+    for (var m in messages) {
         if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0) {
             delete messages[m];
         }
     }
 };
-/* Public: removes subscriptions.
-    * When passed a token, removes a specific subscription.
-    * When passed a function, removes all subscriptions for that function
-    * When passed a topic, removes all subscriptions for that topic (hierarchy)
-    *
-    * value - A token, function or topic to unsubscribe.
-    *
-    * Examples
-    *
-    *		// Example 1 - unsubscribing with a token
-    *		var token = PubSub.subscribe('mytopic', myFunc);
-    *		PubSub.unsubscribe(token);
-    *
-    *		// Example 2 - unsubscribing with a function
-    *		PubSub.unsubscribe(myFunc);
-    *
-    *		// Example 3 - unsubscribing a topic
-    *		PubSub.unsubscribe('mytopic');
-    */
+/**
+ * Public: removes subscriptions.
+ * When passed a token, removes a specific subscription.
+ * When passed a function, removes all subscriptions for that function
+ * When passed a topic, removes all subscriptions for that topic (hierarchy)
+ *
+ * value - A token, function or topic to unsubscribe.
+ *
+ * Examples
+ *		// Example 1 - unsubscribing with a token
+ *		var token = PubSub.subscribe('mytopic', myFunc);
+ *		PubSub.unsubscribe(token);
+ *
+ *		// Example 2 - unsubscribing with a function
+ *		PubSub.unsubscribe(myFunc);
+ *
+ *		// Example 3 - unsubscribing a topic
+ *		PubSub.unsubscribe('mytopic');
+ */
 PubSub.unsubscribe = function (value) {
     var descendantTopicExists = function (topic) {
-        var m;
-        for (m in messages) {
+        for (var m in messages) {
             if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0) {
-                // a descendant of the topic exists:
                 return true;
             }
         }
         return false;
-    }, isTopic = typeof value === 'string' && (messages.hasOwnProperty(value) || descendantTopicExists(value)), isToken = !isTopic && typeof value === 'string', isFunction = typeof value === 'function', result = false, m, message, t;
+    };
+    var isTopic = typeof value === 'string' && (messages.hasOwnProperty(value) || descendantTopicExists(value));
+    var isToken = !isTopic && typeof value === 'string';
+    var isFunction = typeof value === 'function';
+    var result = false;
     if (isTopic) {
         PubSub.clearSubscriptions(value);
         return;
     }
-    for (m in messages) {
+    for (var m in messages) {
         if (messages.hasOwnProperty(m)) {
-            message = messages[m];
+            var message = messages[m];
             if (isToken && message[value]) {
                 delete message[value];
                 result = value;
@@ -54487,7 +54494,7 @@ PubSub.unsubscribe = function (value) {
                 break;
             }
             if (isFunction) {
-                for (t in message) {
+                for (var t in message) {
                     if (message.hasOwnProperty(t) && message[t] === value) {
                         delete message[t];
                         result = true;
@@ -54944,10 +54951,16 @@ var History = /** @class */ (function (_super) {
         _this.subscribe(topic_1.default.SCENE.LOAD, function () { return _this.subscribe(topic_1.default.HISTORY.POP, _this.onPopState.bind(_this)); });
         return _this;
     }
+    /**
+     * 改造必要的 location.search
+     * data.setName 是为 nextpage 定制
+     * @param {Object} data
+     */
     History.prototype._makeUrl = function (data) {
         var params = QS.parse(location.search);
         params.xrkey = data.setId;
         params.sceneid = data.id;
+        params.setname = data.setName && encodeURIComponent(data.setName);
         return {
             all: "//" + location.host + location.pathname + "?" + QS.stringify(params),
             search: "?" + QS.stringify(params)
@@ -58181,11 +58194,14 @@ var Pano = /** @class */ (function (_super) {
         else if (data.sceneid) {
             var id_1 = data.sceneid;
             var setid = data.xrkey;
+            var setname_1 = data.setname;
             myLoader.fetchUrl("https://image.baidu.com/img/image/quanjing/bxlpanoinfo?sf=1&setid=" + setid + "&sceneid=" + id_1)
                 .then(function (res) {
                 var data = res.data;
                 var scenes = data.sceneGroup;
                 var scene = scenes.find(function (obj) { return obj.id == id_1; });
+                // for nextpage
+                scene.setName = setname_1 && decodeURIComponent(setname_1);
                 _this.enterNext(scene);
                 _this.publish(_this.Topic.THRU.BACK, { id: id_1, scene: scene, scenes: scenes, data: data });
             });
@@ -60194,6 +60210,7 @@ var Thru = /** @class */ (function (_super) {
                 if (data) {
                     var id_1 = data.sceneId;
                     var sid = data.setId;
+                    var setname_1 = data.setName;
                     pano.lock();
                     loader.fetchUrl(surl + "&setid=" + sid + "&sceneid=" + id_1)
                         .then(function (res) {
@@ -60205,6 +60222,8 @@ var Thru = /** @class */ (function (_super) {
                             var ctarget = pano.getLookAtTarget();
                             var pos_1 = instance_1.getPosition().clone();
                             var flag_1 = pos_1.z > 0;
+                            // for nextpage
+                            scene_1.setName = setname_1;
                             // lock control
                             pano.makeControl(false);
                             pos_1.z += flag_1 ? 50 : -50;
@@ -60215,8 +60234,8 @@ var Thru = /** @class */ (function (_super) {
                                     .effect('quadEaseOut', 1000)
                                     .start(['x', 'y', 'z'])
                                     .complete(function () {
-                                    _this.publish(_this.Topic.THRU.CHANGE, { data: data, scene: oldscene, pano: pano });
                                     pano.enterThru(scene_1, instance_1.getMap());
+                                    _this.publish(_this.Topic.THRU.CHANGE, { data: data, scene: oldscene, pano: pano });
                                     _this.hide();
                                     pano.getControl().reset(flag_1);
                                     pano.supplyOverlayScenes(sceneGroup);

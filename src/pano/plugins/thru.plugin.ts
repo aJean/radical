@@ -212,6 +212,7 @@ export default class Thru extends PubSubAble {
                 if (data) {
                     const id = data.sceneId;
                     const sid = data.setId;
+                    const setname = data.setName;
 
                     pano.lock();
                     loader.fetchUrl(`${surl}&setid=${sid}&sceneid=${id}`)
@@ -225,7 +226,8 @@ export default class Thru extends PubSubAble {
                                 const ctarget = pano.getLookAtTarget();
                                 const pos = instance.getPosition().clone();
                                 const flag = pos.z > 0;
-
+                                // for nextpage
+                                scene.setName = setname;
                                 // lock control
                                 pano.makeControl(false);
                                 pos.z += flag ? 50 : -50;
@@ -237,8 +239,8 @@ export default class Thru extends PubSubAble {
                                             .effect('quadEaseOut', 1000)
                                             .start(['x', 'y', 'z'])
                                             .complete(() => {
-                                                this.publish(this.Topic.THRU.CHANGE, {data, scene: oldscene, pano});
                                                 pano.enterThru(scene, instance.getMap());
+                                                this.publish(this.Topic.THRU.CHANGE, {data, scene: oldscene, pano});
                                                 this.hide();
                                                 pano.getControl().reset(flag);
                                                 pano.supplyOverlayScenes(sceneGroup);

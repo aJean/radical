@@ -4,26 +4,25 @@
         <title></title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>多媒体控件</title>
+        <title>多 pano 渲染</title>
         <link rel="stylesheet" href="../../dist/lib.css">
         <link rel="stylesheet" href="../assets/example.css">
     </head>
     <body>
-        <div id="test"></div>
+        <div id="test1"></div>
+        <div id="test2"></div>
         <script src="../../dist/lib.js"></script>
         <script>
             const json = {
                 title: 'test bxl transfer',
                 cretPath: '../assets/cret.txt',
-                media: {
-                    asrc: '../assets/video/astar.mp3',
-                    vsrc: '../assets/video/sintel.mp4',
-                    vloop: true,
-                    aauto: false
+                pano: {
+                    width: '50%',
+                    height: '50%'
                 },
                 sceneGroup: [{
                     info: {
-                        author: '视频播放 - 点击播放'
+                        author: 'pano - 1'
                     },
                     id: '49775931288',
                     name: '罗浮宫',
@@ -33,8 +32,8 @@
                 }]
             };
 
-            bxl.startPano(json, '#test', {
-                'overlay-click': function (topic, payload) {
+            bxl.startPano(json, '#test1', {
+                'scene-create': function (topic, payload) {
                     console.log(payload);
                 }
             });

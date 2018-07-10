@@ -7,9 +7,7 @@ let messages = {};
 let lastUid = -1;
 
 function hasKeys(obj) {
-    var key;
-
-    for (key in obj) {
+    for (let key in obj) {
         if (obj.hasOwnProperty(key)) {
             return true;
         }
@@ -18,9 +16,9 @@ function hasKeys(obj) {
 }
 
 /**
- *	Returns a function that throws the passed exception, for use as argument for setTimeout
-    *	@param { Object } ex An Error object
-    */
+ * Returns a function that throws the passed exception, for use as argument for setTimeout
+ * @param { Object } ex An Error object
+ */
 function throwException(ex) {
     return function reThrowException() {
         throw ex;
@@ -40,15 +38,14 @@ function callSubscriberWithImmediateExceptions(subscriber, message, data) {
 }
 
 function deliverMessage(originalMessage, matchedMessage, data, immediateExceptions) {
-    var subscribers = messages[matchedMessage],
-        callSubscriber = immediateExceptions ? callSubscriberWithImmediateExceptions : callSubscriberWithDelayedExceptions,
-        s;
+    const subscribers = messages[matchedMessage];
+    const callSubscriber = immediateExceptions ? callSubscriberWithImmediateExceptions : callSubscriberWithDelayedExceptions;
 
     if (!messages.hasOwnProperty(matchedMessage)) {
         return;
     }
 
-    for (s in subscribers) {
+    for (let s in subscribers) {
         if (subscribers.hasOwnProperty(s)) {
             callSubscriber(subscribers[s], originalMessage, data);
         }
@@ -57,8 +54,8 @@ function deliverMessage(originalMessage, matchedMessage, data, immediateExceptio
 
 function createDeliveryFunction(message, data, immediateExceptions) {
     return function deliverNamespaced() {
-        var topic = String(message),
-            position = topic.lastIndexOf('.');
+        let topic = String(message);
+        let position = topic.lastIndexOf('.');
 
         // deliver the message as it is now
         deliverMessage(message, message, data, immediateExceptions);
@@ -73,9 +70,9 @@ function createDeliveryFunction(message, data, immediateExceptions) {
 }
 
 function messageHasSubscribers(message) {
-    var topic = String(message),
-        found = Boolean(messages.hasOwnProperty(topic) && hasKeys(messages[topic])),
-        position = topic.lastIndexOf('.');
+    let topic = String(message);
+    let found = Boolean(messages.hasOwnProperty(topic) && hasKeys(messages[topic]));
+    let position = topic.lastIndexOf('.');
 
     while (!found && position !== -1) {
         topic = topic.substr(0, position);
@@ -87,8 +84,8 @@ function messageHasSubscribers(message) {
 }
 
 function publish(message, data, sync, immediateExceptions) {
-    var deliver = createDeliveryFunction(message, data, immediateExceptions),
-        hasSubscribers = messageHasSubscribers(message);
+    const deliver = createDeliveryFunction(message, data, immediateExceptions);
+    const hasSubscribers = messageHasSubscribers(message);
 
     if (!hasSubscribers) {
         return false;
@@ -99,36 +96,37 @@ function publish(message, data, sync, immediateExceptions) {
     } else {
         setTimeout(deliver, 0);
     }
+
     return true;
 }
 
 /**
  *	PubSub.publish( message[, data] ) -> Boolean
-    *	- message (String): The message to publish
-    *	- data: The data to pass to subscribers
-    *	Publishes the the message, passing the data to it's subscribers
-    **/
+ *	- message (String): The message to publish
+ *	- data: The data to pass to subscribers
+ *	Publishes the the message, passing the data to it's subscribers
+ */
 PubSub.publish = function (message, data) {
     return publish(message, data, false, PubSub.immediateExceptions);
 };
 
 /**
  *	PubSub.publishSync( message[, data] ) -> Boolean
-    *	- message (String): The message to publish
-    *	- data: The data to pass to subscribers
-    *	Publishes the the message synchronously, passing the data to it's subscribers
-    **/
+ *	- message (String): The message to publish
+ *	- data: The data to pass to subscribers
+ *	Publishes the the message synchronously, passing the data to it's subscribers
+ **/
 PubSub.publishSync = function (message, data) {
     return publish(message, data, true, PubSub.immediateExceptions);
 };
 
 /**
  *	PubSub.subscribe( message, func ) -> String
-    *	- message (String): The message to subscribe to
-    *	- func (Function): The function to call when a new message is published
-    *	Subscribes the passed function to the passed message. Every returned token is unique and should be stored if
-    *	you need to unsubscribe
-    **/
+ *	- message (String): The message to subscribe to
+ *	- func (Function): The function to call when a new message is published
+ *	Subscribes the passed function to the passed message. Every returned token is unique and should be stored if
+ *	you need to unsubscribe
+ */
 PubSub.subscribe = function (message, func) {
     if (typeof func !== 'function') {
         return false;
@@ -141,7 +139,7 @@ PubSub.subscribe = function (message, func) {
 
     // forcing token as String, to allow for future expansions without breaking usage
     // and allow for easy use as key names for the 'messages' object
-    var token = 'uid_' + String(++lastUid);
+    const token = 'uid_' + String(++lastUid);
     messages[message][token] = func;
 
     // return token for unsubscribing
@@ -150,12 +148,12 @@ PubSub.subscribe = function (message, func) {
 
 /**
  *	PubSub.subscribeOnce( message, func ) -> PubSub
-    *	- message (String): The message to subscribe to
-    *	- func (Function): The function to call when a new message is published
-    *	Subscribes the passed function to the passed message once
-    **/
+ *	- message (String): The message to subscribe to
+ *	- func (Function): The function to call when a new message is published
+ *	Subscribes the passed function to the passed message once
+ */
 PubSub.subscribeOnce = function (message, func) {
-    var token = PubSub.subscribe(message, function () {
+    const token = PubSub.subscribe(message, function () {
         // before func apply, unsubscribe message
         PubSub.unsubscribe(token);
         func.apply(this, arguments);
@@ -163,68 +161,65 @@ PubSub.subscribeOnce = function (message, func) {
     return PubSub;
 };
 
-/* Public: Clears all subscriptions
-    */
+/**
+ * Public: Clears all subscriptions
+ */
 PubSub.clearAllSubscriptions = function clearAllSubscriptions() {
     messages = {};
 };
 
-/*Public: Clear subscriptions by the topic
-    */
+/**
+ * Public: Clear subscriptions by the topic
+ */
 PubSub.clearSubscriptions = function clearSubscriptions(topic) {
-    var m;
-    for (m in messages) {
+    for (let m in messages) {
         if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0) {
             delete messages[m];
         }
     }
 };
 
-/* Public: removes subscriptions.
-    * When passed a token, removes a specific subscription.
-    * When passed a function, removes all subscriptions for that function
-    * When passed a topic, removes all subscriptions for that topic (hierarchy)
-    *
-    * value - A token, function or topic to unsubscribe.
-    *
-    * Examples
-    *
-    *		// Example 1 - unsubscribing with a token
-    *		var token = PubSub.subscribe('mytopic', myFunc);
-    *		PubSub.unsubscribe(token);
-    *
-    *		// Example 2 - unsubscribing with a function
-    *		PubSub.unsubscribe(myFunc);
-    *
-    *		// Example 3 - unsubscribing a topic
-    *		PubSub.unsubscribe('mytopic');
-    */
+/**
+ * Public: removes subscriptions.
+ * When passed a token, removes a specific subscription.
+ * When passed a function, removes all subscriptions for that function
+ * When passed a topic, removes all subscriptions for that topic (hierarchy)
+ *
+ * value - A token, function or topic to unsubscribe.
+ *
+ * Examples
+ *		// Example 1 - unsubscribing with a token
+ *		var token = PubSub.subscribe('mytopic', myFunc);
+ *		PubSub.unsubscribe(token);
+ *
+ *		// Example 2 - unsubscribing with a function
+ *		PubSub.unsubscribe(myFunc);
+ *
+ *		// Example 3 - unsubscribing a topic
+ *		PubSub.unsubscribe('mytopic');
+ */
 PubSub.unsubscribe = function (value) {
-    var descendantTopicExists = function (topic) {
-            var m;
-            for (m in messages) {
-                if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0) {
-                    // a descendant of the topic exists:
-                    return true;
-                }
+    const descendantTopicExists = function (topic) {
+        for (let m in messages) {
+            if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0) {
+                return true;
             }
-
-            return false;
-        },
-        isTopic = typeof value === 'string' && (messages.hasOwnProperty(value) || descendantTopicExists(value)),
-        isToken = !isTopic && typeof value === 'string',
-        isFunction = typeof value === 'function',
-        result = false,
-        m, message, t;
+        }
+        return false;
+    };
+    const isTopic = typeof value === 'string' && (messages.hasOwnProperty(value) || descendantTopicExists(value));
+    const isToken = !isTopic && typeof value === 'string';
+    const isFunction = typeof value === 'function';
+    let result = false;
 
     if (isTopic) {
         PubSub.clearSubscriptions(value);
         return;
     }
 
-    for (m in messages) {
+    for (let m in messages) {
         if (messages.hasOwnProperty(m)) {
-            message = messages[m];
+            let message = messages[m];
 
             if (isToken && message[value]) {
                 delete message[value];
@@ -234,7 +229,7 @@ PubSub.unsubscribe = function (value) {
             }
 
             if (isFunction) {
-                for (t in message) {
+                for (let t in message) {
                     if (message.hasOwnProperty(t) && message[t] === value) {
                         delete message[t];
                         result = true;

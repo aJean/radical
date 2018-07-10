@@ -21,10 +21,16 @@ export default abstract class History extends PubSubAble {
         this.subscribe(Topic.SCENE.LOAD, () => this.subscribe(Topic.HISTORY.POP, this.onPopState.bind(this)));
     }
 
+    /**
+     * 改造必要的 location.search
+     * data.setName 是为 nextpage 定制
+     * @param {Object} data
+     */
     _makeUrl(data) {
         const params = QS.parse(location.search);
         params.xrkey = data.setId;
         params.sceneid = data.id;
+        params.setname = data.setName && encodeURIComponent(data.setName);
 
         return {
             all: `//${location.host}${location.pathname}?${QS.stringify(params)}`,
