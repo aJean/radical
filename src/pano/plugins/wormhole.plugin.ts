@@ -71,7 +71,7 @@ export default class Wormhole extends PubSubAble {
             x: (evt.clientX / size.width) * 2 - 1,
             y: -(evt.clientY / size.height) * 2 + 1
         };
-        const intersects =  Util.intersect(pos, [this.hole.plastic], camera);
+        const intersects = Util.intersect(pos, [this.hole.plastic], camera);
 
         if (intersects) {
             const lookTarget = pano.getLookAtTarget();
@@ -80,11 +80,11 @@ export default class Wormhole extends PubSubAble {
             pos.z += this.direction ? 100 : -100;
 
             // camera lookAt
-            new Tween(lookTarget).to(pos).effect('quintEaseIn', 1000)
+            new Tween(lookTarget, pano.ref).to(pos).effect('quintEaseIn', 1000)
                 .start(['x', 'y', 'z'])
                 .complete(() => {
                     // camera position
-                    new Tween(camera.position).to(this.pos).effect('quadEaseOut', 1000)
+                    new Tween(camera.position, pano.ref).to(this.pos).effect('quadEaseOut', 1000)
                         .start(['x', 'y', 'z'])
                         .complete(() => {
                             this.finish();

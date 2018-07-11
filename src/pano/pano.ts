@@ -127,7 +127,7 @@ export default class Pano extends History {
 
         try {
             const img = await myLoader.loadTexture(data.imgPath, 'canvas');
-            const skyBox = this.skyBox = new Inradius({envMap: img});
+            const skyBox = this.skyBox = new Inradius({envMap: img}, this);
 
             skyBox.addBy(this);
             this.publishSync(Topic.SCENE.INIT, publishdata);
@@ -234,7 +234,7 @@ export default class Pano extends History {
         const camera = this.getCamera();
         
         if (this.opts.fovTrans) {
-            new Tween(camera).to({fov}).effect('quadEaseOut', duration || 1000)
+            new Tween(camera, this['ref']).to({fov}).effect('quadEaseOut', duration || 1000)
                 .start(['fov']).process(() => camera.updateProjectionMatrix());
         } else {
             camera.fov = fov;
@@ -301,7 +301,7 @@ export default class Pano extends History {
         this.publish(Topic.SCENE.ATTACHSTART, publishdata);
         
         const skyBox = this.skyBox;
-        const newBox = new Inradius({envMap: texture, opacity: 0});
+        const newBox = new Inradius({envMap: texture, opacity: 0}, this);
 
         newBox.addTo(this.scene);
         newBox.fadeIn(() => {
@@ -607,13 +607,6 @@ export default class Pano extends History {
      */
     dispose() {
         cancelAnimationFrame(this.reqid);
-
-        const webgl = this.webgl;
-        webgl.dispose();
-        webgl.forceContextLoss();
-        webgl.context = null;
-        webgl.domElement = null;
-
         // delete all subscribes
         super.dispose();
         
@@ -624,5 +617,11 @@ export default class Pano extends History {
         
         this.publish(this.Topic.RENDER.DISPOSE, this);
         Util.cleanup(null, this.scene);
+
+        const webgl = this.webgl;
+        webgl.dispose();
+        webgl.forceContextLoss();
+        webgl.context = null;
+        webgl.domElement = null;
     }
 }

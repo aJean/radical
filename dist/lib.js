@@ -55128,7 +55128,7 @@ var Plastic = /** @class */ (function (_super) {
      */
     Plastic.prototype.setOpacity = function (num, useanim) {
         var material = this.plastic.material;
-        useanim ? new tween_animation_1.default(material).to({ opacity: num }).effect('backOut', 500)
+        useanim ? new tween_animation_1.default(material, this.pano.ref).to({ opacity: num }).effect('backOut', 500)
             .start(['opacity'])
             : (material.opacity = num);
     };
@@ -57987,7 +57987,7 @@ var Pano = /** @class */ (function (_super) {
                         return [4 /*yield*/, myLoader.loadTexture(data.imgPath, 'canvas')];
                     case 2:
                         img = _a.sent();
-                        skyBox_1 = this.skyBox = new inradius_plastic_1.default({ envMap: img });
+                        skyBox_1 = this.skyBox = new inradius_plastic_1.default({ envMap: img }, this);
                         skyBox_1.addBy(this);
                         this.publishSync(Topic.SCENE.INIT, publishdata);
                         this.render();
@@ -58088,7 +58088,7 @@ var Pano = /** @class */ (function (_super) {
     Pano.prototype.setFov = function (fov, duration) {
         var camera = this.getCamera();
         if (this.opts.fovTrans) {
-            new tween_animation_1.default(camera).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
+            new tween_animation_1.default(camera, this['ref']).to({ fov: fov }).effect('quadEaseOut', duration || 1000)
                 .start(['fov']).process(function () { return camera.updateProjectionMatrix(); });
         }
         else {
@@ -58149,7 +58149,7 @@ var Pano = /** @class */ (function (_super) {
         var Topic = this.Topic;
         this.publish(Topic.SCENE.ATTACHSTART, publishdata);
         var skyBox = this.skyBox;
-        var newBox = new inradius_plastic_1.default({ envMap: texture, opacity: 0 });
+        var newBox = new inradius_plastic_1.default({ envMap: texture, opacity: 0 }, this);
         newBox.addTo(this.scene);
         newBox.fadeIn(function () {
             skyBox.setMap(texture);
@@ -58417,11 +58417,6 @@ var Pano = /** @class */ (function (_super) {
      */
     Pano.prototype.dispose = function () {
         cancelAnimationFrame(this.reqid);
-        var webgl = this.webgl;
-        webgl.dispose();
-        webgl.forceContextLoss();
-        webgl.context = null;
-        webgl.domElement = null;
         // delete all subscribes
         _super.prototype.dispose.call(this);
         this.stopControl();
@@ -58430,6 +58425,11 @@ var Pano = /** @class */ (function (_super) {
         this.overlays.dispose();
         this.publish(this.Topic.RENDER.DISPOSE, this);
         util_1.default.cleanup(null, this.scene);
+        var webgl = this.webgl;
+        webgl.dispose();
+        webgl.forceContextLoss();
+        webgl.context = null;
+        webgl.domElement = null;
     };
     return Pano;
 }(history_interface_1.default));
@@ -58946,7 +58946,7 @@ var Inradius = /** @class */ (function (_super) {
      */
     Inradius.prototype.fadeIn = function (onComplete) {
         var material = this.plastic.material;
-        new tween_animation_1.default(material).to({ opacity: 1 }).effect('linear', 1000)
+        new tween_animation_1.default(material, this.pano.ref).to({ opacity: 1 }).effect('linear', 1000)
             .start(['opacity']).complete(onComplete);
     };
     /**
@@ -58954,7 +58954,7 @@ var Inradius = /** @class */ (function (_super) {
      */
     Inradius.prototype.fadeOut = function (onComplete) {
         var material = this.plastic.material;
-        new tween_animation_1.default(material).to({ opacity: 0 }).effect('linear', 1000)
+        new tween_animation_1.default(material, this.pano.ref).to({ opacity: 0 }).effect('linear', 1000)
             .start(['opacity']).complete(onComplete);
     };
     Inradius.prototype.dispose = function () {
@@ -59127,10 +59127,12 @@ var Point = /** @class */ (function (_super) {
         var frame = this.frame;
         circle.visible = false;
         frame.visible = true;
-        this.tween = new tween_animation_1.default({ rad: -Math.PI / 2 }).to({ rad: Math.PI * 2 }).effect('linear', 1500)
-            .start(['rad']).process(function (old, val) {
-            _this.draw(val);
-        }).complete(function () {
+        this.tween = new tween_animation_1.default({ rad: -Math.PI / 2 }, this.pano.ref)
+            .to({ rad: Math.PI * 2 })
+            .effect('linear', 1500)
+            .start(['rad'])
+            .process(function (old, val) { return _this.draw(val); })
+            .complete(function () {
             _this.clean();
             circle.visible = true;
             frame.visible = false;
@@ -59322,12 +59324,6 @@ var Text = /** @class */ (function (_super) {
         ctx.beginPath();
         ctx.fillText(text, opts.width / 2, opts.height / 2 + 10, opts.width);
         ctx.closePath();
-    };
-    /**
-     * 设置透明度
-     */
-    Text.prototype.setOpacity = function (opacity) {
-        this.plastic.material.opacity = opacity;
     };
     Text.prototype.dispose = function () {
         delete this.plastic['wrapper'];
@@ -60015,7 +60011,7 @@ var Rotate = /** @class */ (function (_super) {
         var pano = this.pano;
         var orbit = pano.getControl();
         this.timeid = setTimeout(function () {
-            _this.tween = new tween_animation_1.default({ polar: orbit.getPolarAngle() }).to(_this.target)
+            _this.tween = new tween_animation_1.default({ polar: orbit.getPolarAngle() }, pano.ref).to(_this.target)
                 .effect('quadEaseOut', data.recover)
                 .start(['polar'])
                 .process(function (newVal, oldVal) { return orbit.rotateUp(oldVal - newVal); });
@@ -60262,10 +60258,11 @@ var Thru = /** @class */ (function (_super) {
                             // lock control
                             pano.makeControl(false);
                             pos_1.z += flag_1 ? 50 : -50;
-                            new tween_animation_1.default(ctarget).to(pos_1).effect('quintEaseIn', 1000)
+                            // start thru animation
+                            new tween_animation_1.default(ctarget, pano.ref).to(pos_1).effect('quintEaseIn', 1000)
                                 .start(['x', 'y', 'z'])
                                 .complete(function () {
-                                new tween_animation_1.default(camera.position).to(instance_1.getPosition())
+                                new tween_animation_1.default(camera.position, pano.ref).to(instance_1.getPosition())
                                     .effect('quadEaseOut', 1000)
                                     .start(['x', 'y', 'z'])
                                     .complete(function () {
@@ -60397,11 +60394,11 @@ var Wormhole = /** @class */ (function (_super) {
             // camera lookAt.z > camera position.z
             pos_1.z += this.direction ? 100 : -100;
             // camera lookAt
-            new tween_animation_1.default(lookTarget).to(pos_1).effect('quintEaseIn', 1000)
+            new tween_animation_1.default(lookTarget, pano.ref).to(pos_1).effect('quintEaseIn', 1000)
                 .start(['x', 'y', 'z'])
                 .complete(function () {
                 // camera position
-                new tween_animation_1.default(camera.position).to(_this.pos).effect('quadEaseOut', 1000)
+                new tween_animation_1.default(camera.position, pano.ref).to(_this.pos).effect('quadEaseOut', 1000)
                     .start(['x', 'y', 'z'])
                     .complete(function () {
                     _this.finish();

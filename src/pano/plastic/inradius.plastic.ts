@@ -251,7 +251,7 @@ export default class Inradius extends Plastic {
     fadeIn(onComplete) {
         const material = this.plastic.material;
 
-        new Tween(material).to({ opacity: 1 }).effect('linear', 1000)
+        new Tween(material, this.pano.ref).to({ opacity: 1 }).effect('linear', 1000)
             .start(['opacity']).complete(onComplete);
     }
     
@@ -261,7 +261,7 @@ export default class Inradius extends Plastic {
     fadeOut(onComplete) {
         const material = this.plastic.material;
 
-        new Tween(material).to({ opacity: 0 }).effect('linear', 1000)
+        new Tween(material, this.pano.ref).to({ opacity: 0 }).effect('linear', 1000)
             .start(['opacity']).complete(onComplete);
     }
 

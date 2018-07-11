@@ -231,11 +231,11 @@ export default class Thru extends PubSubAble {
                                 // lock control
                                 pano.makeControl(false);
                                 pos.z += flag ? 50 : -50;
-
-                                new Tween(ctarget).to(pos).effect('quintEaseIn', 1000)
+                                // start thru animation
+                                new Tween(ctarget, pano.ref).to(pos).effect('quintEaseIn', 1000)
                                     .start(['x', 'y', 'z'])
                                     .complete(() => {
-                                        new Tween(camera.position).to(instance.getPosition())
+                                        new Tween(camera.position, pano.ref).to(instance.getPosition())
                                             .effect('quadEaseOut', 1000)
                                             .start(['x', 'y', 'z'])
                                             .complete(() => {

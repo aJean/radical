@@ -129,13 +129,6 @@ export default class Text extends Plastic {
         ctx.closePath();
     }
 
-    /**
-     * 设置透明度
-     */
-    setOpacity(opacity) {
-        this.plastic.material.opacity = opacity;
-    }
-
     dispose() {
         delete this.plastic['wrapper'];
         super.dispose();

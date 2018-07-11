@@ -72,7 +72,7 @@ export default class Rotate extends PubSubAble {
         const orbit = pano.getControl();
 
         this.timeid = setTimeout(() => {
-            this.tween = new Tween({polar: orbit.getPolarAngle()}).to(this.target)
+            this.tween = new Tween({polar: orbit.getPolarAngle()}, pano.ref).to(this.target)
                 .effect('quadEaseOut', data.recover)
                 .start(['polar'])
                 .process((newVal, oldVal) => orbit.rotateUp(oldVal - newVal));

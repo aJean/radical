@@ -71,10 +71,12 @@ export default class Point extends Plastic {
         circle.visible = false;
         frame.visible = true;
 
-        this.tween = new Tween({ rad: -Math.PI / 2 }).to({ rad: Math.PI * 2 }).effect('linear', 1500)
-            .start(['rad']).process((old, val) => {
-                this.draw(val);
-            }).complete(() => {
+        this.tween = new Tween({rad: -Math.PI / 2}, this.pano.ref)
+            .to({rad: Math.PI * 2})
+            .effect('linear', 1500)
+            .start(['rad'])
+            .process((old, val) => this.draw(val))
+            .complete(() => {
                 this.clean();
                 circle.visible = true;
                 frame.visible = false;

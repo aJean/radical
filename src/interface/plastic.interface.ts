@@ -48,10 +48,10 @@ export default abstract class Plastic extends PubSubAble {
     /**
      * 设置透明度
      */
-    setOpacity(num, useanim) {
+    setOpacity(num, useanim?) {
         const material = this.plastic.material;
        
-        useanim ? new Tween(material).to({opacity: num}).effect('backOut', 500)
+        useanim ? new Tween(material, this.pano.ref).to({opacity: num}).effect('backOut', 500)
             .start(['opacity'])
             : (material.opacity = num);
     }
