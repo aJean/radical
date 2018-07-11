@@ -74,7 +74,7 @@ export default class Indicator extends PluggableUI {
         const azimuthal = orbit.getAzimuthalAngle();
 
         pano.makeControl(false);
-        new Tween({polar: orbit.getPolarAngle(), azimuthal: orbit.getAzimuthalAngle()})
+        new Tween({polar: orbit.getPolarAngle(), azimuthal}, pano['ref'])
             .to({polar: this.polar, azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal)})
             .effect('sineOut', 500)
             .start(['polar', 'azimuthal']).process((newval, oldval, key) => {

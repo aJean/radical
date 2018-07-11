@@ -243,24 +243,31 @@ const create = () => {
 };
 
 let current;
-const poolList = [];
+const poolMap = {};
 
 export default {
     /**
      * invoke before pano create
      */
-    createPSContext() {
-        poolList.push(current = create());
+    createPSContext(ref) {
+        poolMap[ref] = current = create();
     },
 
     /**
      * get context
+     * 动态获时取需要传入 ref, 确保取得正确的 context
      */
-    getPSContext() {
-        return current;
+    getPSContext(ref?) {
+        return ref ? poolMap[ref] : current;
     },
 
     getPool() {
-        return poolList;
+        return poolMap;
+    },
+
+    dispose() {
+        for (let ref in poolMap) {
+            poolMap[ref].clearAllSubscriptions();
+        }
     }
 }

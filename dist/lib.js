@@ -54505,22 +54505,28 @@ var create = function () {
     return PubSub;
 };
 var current;
-var poolList = [];
+var poolMap = {};
 exports.default = {
     /**
      * invoke before pano create
      */
-    createPSContext: function () {
-        poolList.push(current = create());
+    createPSContext: function (ref) {
+        poolMap[ref] = current = create();
     },
     /**
      * get context
+     * 动态获时取需要传入 ref, 确保取得正确的 context
      */
-    getPSContext: function () {
-        return current;
+    getPSContext: function (ref) {
+        return ref ? poolMap[ref] : current;
     },
     getPool: function () {
-        return poolList;
+        return poolMap;
+    },
+    dispose: function () {
+        for (var ref in poolMap) {
+            poolMap[ref].clearAllSubscriptions();
+        }
     }
 };
 
@@ -55179,10 +55185,10 @@ var pspool_1 = __webpack_require__(/*! ../core/pspool */ "./src/core/pspool.ts")
  * @file 通用接口
  */
 var PubSubAble = /** @class */ (function () {
-    function PubSubAble() {
-        this.Topic = topic_1.default;
+    function PubSubAble(ref) {
         this._subtokens = [];
-        this._pubSub = pspool_1.default.getPSContext();
+        this.Topic = topic_1.default;
+        this._pubSub = pspool_1.default.getPSContext(ref);
     }
     /**
      * 订阅
@@ -55217,7 +55223,6 @@ var PubSubAble = /** @class */ (function () {
     PubSubAble.prototype.dispose = function () {
         var _this = this;
         this._subtokens.forEach(function (token) { return _this._pubSub.unsubscribe(token); });
-        this._pubSub.clearAllSubscriptions();
     };
     return PubSubAble;
 }());
@@ -55441,15 +55446,13 @@ var Timeline = /** @class */ (function () {
     };
     Timeline.prototype.onTimeChange = function () {
         var _this = this;
-        var pano = this.pano;
         var lines = this.lines;
         if (!lines.length) {
-            this._subtokens.forEach(function (token) { return _this._pubSub.unsubscribe(token); });
             return this.onTimeEnd();
         }
         lines.forEach(function (anim, i) {
             if (anim.isEnd()) {
-                pano.publish(pano.Topic.ANIMATION.END, anim);
+                _this._pubSub.publish(topic_1.default.ANIMATION.END, anim);
                 lines.splice(i, 1);
             }
             else {
@@ -55458,6 +55461,8 @@ var Timeline = /** @class */ (function () {
         });
     };
     Timeline.prototype.onTimeEnd = function () {
+        var _this = this;
+        this._subtokens.forEach(function (token) { return _this._pubSub.unsubscribe(token); });
         this.pano.noTimeline();
     };
     return Timeline;
@@ -55534,8 +55539,8 @@ var EFFECT = {
 };
 var Tween = /** @class */ (function (_super) {
     __extends(Tween, _super);
-    function Tween(obj) {
-        var _this = _super.call(this) || this;
+    function Tween(obj, ref) {
+        var _this = _super.call(this, ref) || this;
         _this.record = {};
         _this.startTime = 0;
         _this.duration = 500;
@@ -55968,6 +55973,7 @@ function OrbitControl(camera, domElement, pano) {
         };
     }());
     this.dispose = function () {
+        scope.enabled = false;
         scope.domElement.removeEventListener('contextmenu', onContextMenu, false);
         scope.domElement.removeEventListener('mousedown', onMouseDown, false);
         scope.domElement.removeEventListener('wheel', onMouseWheel, false);
@@ -58044,7 +58050,7 @@ var Pano = /** @class */ (function (_super) {
             this.gyro.disconnect();
             delete this.gyro;
         }
-        this.orbit.enabled = false;
+        this.orbit.dispose();
         delete this.orbit;
     };
     /**
@@ -59472,7 +59478,7 @@ var Indicator = /** @class */ (function (_super) {
         var orbit = pano.getControl();
         var azimuthal = orbit.getAzimuthalAngle();
         pano.makeControl(false);
-        new tween_animation_1.default({ polar: orbit.getPolarAngle(), azimuthal: orbit.getAzimuthalAngle() })
+        new tween_animation_1.default({ polar: orbit.getPolarAngle(), azimuthal: azimuthal }, pano['ref'])
             .to({ polar: this.polar, azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal) })
             .effect('sineOut', 500)
             .start(['polar', 'azimuthal']).process(function (newval, oldval, key) {
@@ -59533,10 +59539,13 @@ var Info = /** @class */ (function (_super) {
     __extends(Info, _super);
     function Info(pano) {
         var _this = _super.call(this) || this;
+        var Topic = _this.Topic;
         _this.pano = pano;
         _this.createDom(pano.currentData);
         _this.setContainer(pano.getRoot());
-        _this.subscribe(_this.Topic.SCENE.ATTACH, _this.renderDom.bind(_this));
+        _this.subscribe(Topic.SCENE.ATTACH, _this.renderDom.bind(_this));
+        _this.subscribe(Topic.VR.ENTER, _this.hide.bind(_this));
+        _this.subscribe(Topic.VR.EXIT, _this.show.bind(_this));
         return _this;
     }
     Info.prototype.createDom = function (data) {
@@ -60553,7 +60562,10 @@ var Runtime = /** @class */ (function () {
         }
         var ref = el.getAttribute('ref') || "pano_" + this.uid++;
         el.setAttribute('ref', ref);
-        return this.instanceMap[ref] = new pano_1.default(el, source);
+        pspool_1.default.createPSContext(ref);
+        var pano = new pano_1.default(el, source);
+        pano['ref'] = ref;
+        return this.instanceMap[ref] = pano;
     };
     /**
      * everytime create new PubSub context
@@ -60564,7 +60576,6 @@ var Runtime = /** @class */ (function () {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        pspool_1.default.createPSContext();
                         if (!(typeof url === 'string')) return [3 /*break*/, 2];
                         return [4 /*yield*/, myLoader.fetchUrl(url)];
                     case 1:
@@ -60750,13 +60761,29 @@ var EnvQueue = /** @class */ (function () {
 var Runtime = /** @class */ (function () {
     function Runtime() {
     }
+    /**
+     * 创建全景对象
+     * @param {HTMLElement} el root 元素
+     * @param {Object} source
+     */
+    Runtime.createRef = function (el, source) {
+        el = (typeof el == 'string') ? document.querySelector(el) : el;
+        if (!el || !el.parentNode) {
+            el = document.body;
+        }
+        var ref = el.getAttribute('ref') || "vpano_" + this.uid++;
+        el.setAttribute('ref', ref);
+        pspool_1.default.createPSContext(ref);
+        var vpano = new pano_vr_1.default(el, source);
+        vpano['ref'] = ref;
+        return this.instanceMap[ref] = vpano;
+    };
     Runtime.start = function (url, el, events) {
         return __awaiter(this, void 0, void 0, function () {
-            var source, _a, ref, vpano_1, name_1;
+            var source, _a, vpano_1, name_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        pspool_1.default.createPSContext();
                         if (!(typeof url === 'string')) return [3 /*break*/, 2];
                         return [4 /*yield*/, myLoader.fetchUrl(url)];
                     case 1:
@@ -60767,19 +60794,13 @@ var Runtime = /** @class */ (function () {
                         _b.label = 3;
                     case 3:
                         source = _a;
-                        el = (typeof el == 'string') ? document.querySelector(el) : el;
-                        if (!el || !el.parentNode) {
-                            el = document.body;
-                        }
                         if (!(source && source['sceneGroup'])) {
                             return [2 /*return*/, log_1.default.output('load source error')];
                         }
                         // enable gyro instead of vrcontrol ?
                         source.pano ? (source.pano.gyro = true) : (source.pano = { gyro: true });
                         try {
-                            ref = el.getAttribute('ref') || "vpano_" + this.uid++;
-                            vpano_1 = this.instanceMap[ref] = new pano_vr_1.default(el, source);
-                            el.setAttribute('ref', ref);
+                            vpano_1 = this.createRef(el, source);
                             // 用户订阅事件
                             if (events) {
                                 for (name_1 in events) {
@@ -60999,9 +61020,7 @@ var Divider = /** @class */ (function (_super) {
         };
     };
     Divider.prototype.initPanel = function () {
-        var data = this.data;
         var vpano = this.vpano;
-        var camera = vpano.getCamera();
         var group = this.group = new three_1.Group();
         var total = "1 / " + vpano.overlays.getScenes().length;
         vpano.addSceneObject(group);
@@ -61036,10 +61055,6 @@ var Divider = /** @class */ (function (_super) {
         }, vpano);
     };
     Divider.prototype.initSetPanel = function () {
-        var data = this.data;
-        var vpano = this.vpano;
-        var camera = vpano.getCamera();
-        var group = this.group;
         // setting panel
         var setPanel = this.setpanel = this.createMesh({
             parent: this.panel, name: 'vr-setpanel', hide: true, width: 775, height: 400,
@@ -61303,7 +61318,7 @@ var Divider = /** @class */ (function (_super) {
     Divider.prototype.hideAll = function () {
         this.point.hide();
         this.panel.visible = false;
-        this.setpanel.visible = true;
+        this.setpanel.visible = false;
     };
     Divider.prototype.dispose = function () {
         _super.prototype.dispose.call(this);

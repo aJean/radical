@@ -65,8 +65,8 @@ export default class Tween extends PubSubAble {
     startTime = 0;
     duration = 500;
 
-    constructor(obj) {
-        super();
+    constructor(obj, ref?) {
+        super(ref);
         this.obj = obj;
     }
 

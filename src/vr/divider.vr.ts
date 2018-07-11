@@ -87,9 +87,7 @@ export default class Divider extends PubSubAble {
     }
 
     initPanel() {
-        const data = this.data;
         const vpano = this.vpano;
-        const camera = vpano.getCamera();
         const group = this.group = new Group();
         const total = `1 / ${vpano.overlays.getScenes().length}`;
 
@@ -129,11 +127,6 @@ export default class Divider extends PubSubAble {
     }
 
     initSetPanel() {
-        const data = this.data;
-        const vpano = this.vpano;
-        const camera = vpano.getCamera();
-        const group = this.group;
-
         // setting panel
         const setPanel = this.setpanel = this.createMesh({
             parent: this.panel, name: 'vr-setpanel', hide: true, width: 775, height: 400,
@@ -435,7 +428,7 @@ export default class Divider extends PubSubAble {
     hideAll() {
         this.point.hide();
         this.panel.visible = false;
-        this.setpanel.visible = true;
+        this.setpanel.visible = false;
     }
 
     dispose() {

@@ -189,7 +189,7 @@ export default class Pano extends History {
             delete this.gyro;
         }
 
-        this.orbit.enabled = false;
+        this.orbit.dispose();
         delete this.orbit;
     }
 

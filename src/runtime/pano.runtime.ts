@@ -88,15 +88,16 @@ abstract class Runtime {
         const ref = el.getAttribute('ref') || `pano_${this.uid++}`;
         el.setAttribute('ref', ref);
 
-        return this.instanceMap[ref] = new Pano(el, source);
+        PSPool.createPSContext(ref);
+        const pano = new Pano(el, source);
+        pano['ref'] = ref;
+        return this.instanceMap[ref] = pano;
     }
 
     /**
      * everytime create new PubSub context
      */
     static async start(url, el, events?) {
-        PSPool.createPSContext();
-
         const source = typeof url === 'string' ? await myLoader.fetchUrl(url) : url;
 
         if (!(source && source['sceneGroup'])) {

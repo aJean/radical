@@ -44,15 +44,29 @@ export default abstract class Runtime {
     static uid = 0;
     static instanceMap = {};
 
-    static async start(url, el, events?) {
-        PSPool.createPSContext();
-
-        const source = typeof url === 'string' ? await myLoader.fetchUrl(url) : url;
+    /**
+     * 创建全景对象
+     * @param {HTMLElement} el root 元素
+     * @param {Object} source
+     */
+    static createRef(el, source) {
         el = (typeof el == 'string') ? document.querySelector(el) : el;
 
         if (!el || !el.parentNode) {
             el = document.body;
         }
+
+        const ref = el.getAttribute('ref') || `vpano_${this.uid++}`;
+        el.setAttribute('ref', ref);
+
+        PSPool.createPSContext(ref);
+        const vpano = new VPano(el, source);
+        vpano['ref'] = ref;
+        return this.instanceMap[ref] = vpano;
+    }
+
+    static async start(url, el, events?) {
+        const source = typeof url === 'string' ? await myLoader.fetchUrl(url) : url;
 
         if (!(source && source['sceneGroup'])) {
             return Log.output('load source error');
@@ -60,9 +74,7 @@ export default abstract class Runtime {
         // enable gyro instead of vrcontrol ?
         source.pano ? (source.pano.gyro = true) : (source.pano = {gyro: true});
         try {
-            const ref = el.getAttribute('ref') || `vpano_${this.uid++}`;
-            const vpano = this.instanceMap[ref] = new VPano(el, source);
-            el.setAttribute('ref', ref);            
+            const vpano = this.createRef(el, source);            
             
             // 用户订阅事件
             if (events) {

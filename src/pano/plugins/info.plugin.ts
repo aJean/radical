@@ -11,10 +11,13 @@ export default class Info extends PluggableUI {
     constructor(pano) {
         super();
 
+        const Topic = this.Topic;
         this.pano = pano;
         this.createDom(pano.currentData);
         this.setContainer(pano.getRoot());
-        this.subscribe(this.Topic.SCENE.ATTACH, this.renderDom.bind(this));
+        this.subscribe(Topic.SCENE.ATTACH, this.renderDom.bind(this));
+        this.subscribe(Topic.VR.ENTER, this.hide.bind(this));
+        this.subscribe(Topic.VR.EXIT, this.show.bind(this));
     }
 
     createDom(data) {

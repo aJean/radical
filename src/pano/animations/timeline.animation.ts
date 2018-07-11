@@ -33,17 +33,15 @@ export default class Timeline {
     }
 
     onTimeChange() {
-        const pano = this.pano;
         const lines = this.lines;
 
         if (!lines.length) {
-            this._subtokens.forEach(token => this._pubSub.unsubscribe(token));
             return this.onTimeEnd();
         }
 
         lines.forEach((anim, i) => {
             if (anim.isEnd()) {
-                pano.publish(pano.Topic.ANIMATION.END, anim);
+                this._pubSub.publish(Topic.ANIMATION.END, anim);
                 lines.splice(i, 1);
             } else {
                 anim.update();
@@ -52,6 +50,7 @@ export default class Timeline {
     }
 
     onTimeEnd() {
+        this._subtokens.forEach(token => this._pubSub.unsubscribe(token));
         this.pano.noTimeline();
     }
 }

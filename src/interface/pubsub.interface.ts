@@ -6,9 +6,13 @@ import PSPool from '../core/pspool';
  */
 
 export default class PubSubAble {
-    Topic = Topic;
+    _pubSub: any;
     _subtokens = [];
-    _pubSub = PSPool.getPSContext();
+    Topic = Topic;
+
+    constructor(ref?) {
+        this._pubSub = PSPool.getPSContext(ref);
+    }
 
     /**
      * 订阅
@@ -47,6 +51,5 @@ export default class PubSubAble {
 
     dispose() {
         this._subtokens.forEach(token => this._pubSub.unsubscribe(token));
-        this._pubSub.clearAllSubscriptions();
     }
 }
