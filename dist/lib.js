@@ -57013,7 +57013,7 @@ function cutCanvas(url, timeout) {
     return new Promise(function (resolve, reject) {
         var texture = new three_1.CubeTexture();
         var image = new Image();
-        image.crossOrigin = "anonymous";
+        image.crossOrigin = 'anonymous';
         var count = 0;
         image.onload = function () {
             var canvas;
@@ -60722,6 +60722,7 @@ var pspool_1 = __webpack_require__(/*! ../core/pspool */ "./src/core/pspool.ts")
 var resource_loader_1 = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 var log_1 = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
 var pano_vr_1 = __webpack_require__(/*! ../vr/pano.vr */ "./src/vr/pano.vr.ts");
+var thru_plugin_1 = __webpack_require__(/*! ../pano/plugins/thru.plugin */ "./src/pano/plugins/thru.plugin.ts");
 var info_plugin_1 = __webpack_require__(/*! ../pano/plugins/info.plugin */ "./src/pano/plugins/info.plugin.ts");
 var indicator_plugin_1 = __webpack_require__(/*! ../pano/plugins/indicator.plugin */ "./src/pano/plugins/indicator.plugin.ts");
 var divider_vr_1 = __webpack_require__(/*! ../vr/divider.vr */ "./src/vr/divider.vr.ts");
@@ -60810,6 +60811,10 @@ var Runtime = /** @class */ (function () {
                             }
                             else {
                                 vpano_1.noTimeline();
+                            }
+                            // 星际穿越
+                            if (source['thru']) {
+                                vpano_1.addPlugin(thru_plugin_1.default, source['thru']);
                             }
                             // 版权信息
                             if (source['info'] !== false) {

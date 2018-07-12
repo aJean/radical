@@ -79,7 +79,7 @@ function cutCanvas(url, timeout?) {
     return new Promise((resolve, reject) => {
         const texture = new CubeTexture();
         const image = new Image();
-        image.crossOrigin = "anonymous";
+        image.crossOrigin = 'anonymous';
 
         let count = 0;
         image.onload = () => {

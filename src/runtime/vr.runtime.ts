@@ -2,6 +2,7 @@ import PSPool from '../core/pspool';
 import ResourceLoader from '../pano/loaders/resource.loader';
 import Log from '../core/log';
 import VPano from '../vr/pano.vr';
+import Thru from '../pano/plugins/thru.plugin';
 import Info from '../pano/plugins/info.plugin';
 import Indicator from '../pano/plugins/indicator.plugin';
 import Divider from '../vr/divider.vr';
@@ -87,6 +88,10 @@ export default abstract class Runtime {
                 new Timeline().install(source['animation'], vpano);
             } else {
                 vpano.noTimeline();
+            }
+            // 星际穿越
+            if (source['thru']) {
+                vpano.addPlugin(Thru, source['thru']);
             }
             // 版权信息
             if (source['info'] !== false) {
