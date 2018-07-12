@@ -100,22 +100,22 @@ function cutCanvas(url, timeout?) {
                 subImage.onload = function () {
                     count++;
                     switch (this['idx']) {
-                        case 0:
+                        case 0: // left
                             texture.images[1] = this;
                             break;
-                        case 1:
+                        case 1: // front
                             texture.images[4] = this;
                             break;
-                        case 2:
+                        case 2: // right
                             texture.images[0] = this;
                             break;
-                        case 3:
+                        case 3: // back
                             texture.images[5] = this;
                             break;
-                        case 4:
+                        case 4: // up
                             texture.images[2] = this;
                             break;
-                        case 5:
+                        case 5: // down
                             texture.images[3] = this;
                             break;
                     }
