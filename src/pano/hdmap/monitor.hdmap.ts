@@ -91,8 +91,6 @@ export default class HDMonitor extends PubSubAble {
                 ctx.drawImage(img, 0, 0, fw, fh);
                 texture.image[i] = canvas;
             });
-
-            console.log(texture.image)
         }
 
         const obj = texture.image[data.index];
