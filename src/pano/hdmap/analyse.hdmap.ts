@@ -7,7 +7,13 @@ const order = ['r', 'l', 'u', 'd', 'f', 'b'];
 export default abstract class HDAnalyse {
     static analyse(point, level) {
         const data = this.calcUV(point.x, point.y, point.z);
-        return this.calcLayers(data, level);
+
+        switch (Number(level)) {
+            case 1:
+                return this.calcLayersByPlane(data, level);
+            case 2:
+                return this.calcLayersByColumn(data, level);
+        }
     }
 
     static calcProp(data, level) {
@@ -28,31 +34,33 @@ export default abstract class HDAnalyse {
         const x = (column - 1) * w;
         const y = (row - 1) * h;
 
-        return {x, y, column, row, fw, fh, w, h};
+        return {x, y, column, row, fw, fh, w, h, phases};
     }
 
     /**
-     * 计算图层, uv 原点在左下, 对应到 backside 贴图为右下
+     * 按点计算图层, uv 原点在左下, 对应到 backside 贴图为右下
      */
-    static calcLayer(data, level) {
+    static calcLayerByPoint(data, level) {
         const prop = this.calcProp(data, level);
-
-        return [{
-            index: data.index,
-            path: this.calcPath(data.index, prop.row, prop.column, level),
+        const path = this.calcPath(data.index, prop.row, prop.column, level);
+        const ret = [{
+            index: data.index, path,
             x: prop.x, y: prop.y, w: prop.w, h: prop.h,
             fw: prop.fw, fh: prop.fh
         }];
+
+        return {ret, key: path};
     }
 
     /**
      * 按列计算图层
      */
-    static calcLayers(data, level) {
+    static calcLayersByColumn(data, level) {
         const prop = this.calcProp(data, level);
+        const limit = prop.phases.length;
         const ret = [];
 
-        for (let i = 1; i < 6; i++) {
+        for (let i = 1; i <= limit; i++) {
             prop.row = i;
             prop.y = (i - 1) * prop.h;
 
@@ -68,30 +76,53 @@ export default abstract class HDAnalyse {
     }
 
     /**
+     * 按面计算图层
+     */
+    static calcLayersByPlane(data, level) {
+        const prop = this.calcProp(data, level);
+        const ret = [];
+
+        for (let i = 1; i <= 2; i++) {
+            const row = i;
+            const y =  prop.h * (i - 1);
+
+            ret.push({
+                index: data.index,
+                path: this.calcPath(data.index, row, 1, level),
+                x: 0, y, w: prop.w, h: prop.h,
+                fw: prop.fw, fh: prop.fh
+            });
+
+            ret.push({
+                index: data.index,
+                path: this.calcPath(data.index, row, 2, level),
+                x: prop.w, y, w: prop.w, h: prop.h,
+                fw: prop.fw, fh: prop.fh
+            });
+        }
+
+        return {ret, key: this.calcPath(data.index, 0, 0, level)};
+    }
+
+    /**
      * 计算栅格尺寸
      * @param {number} level 层级 
      */
     static calcSize(level) {
         switch (level) {
             case 1:
-                // 512 * 4
+                // 512 * 16
                 return {
-                    fw: 1024, fh: 1024,
-                    w: 512, h: 512,
-                    phases: [512, 0]
+                    fw: 1600, fh: 1600,
+                    w: 800, h: 800,
+                    phases: [800, 0]
                 };
             case 2:
-                // 512 * 25
+                // 512 * 16
                 return {
-                    fw: 2560, fh: 2560,
-                    w: 512, h: 512,
-                    phases: [2048, 1536, 1024, 512, 0]
-                };
-            case 3:
-                return {
-                    fw: 2560, fh: 2560,
-                    w: 512, h: 512,
-                    phases: [2048, 1536, 1024, 512, 0]
+                    fw: 1600, fh: 1600,
+                    w: 400, h: 400,
+                    phases: [1200, 800, 400, 0]
                 };
         }
     }
@@ -238,6 +269,7 @@ export default abstract class HDAnalyse {
 
     /**
      * 获取高清图的路径
+     * 0_0 表示 plane
      */
     static calcPath(i, row, column, level) {
         const dir = order[i];

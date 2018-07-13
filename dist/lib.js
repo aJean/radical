@@ -56958,7 +56958,12 @@ var HDAnalyse = /** @class */ (function () {
     }
     HDAnalyse.analyse = function (point, level) {
         var data = this.calcUV(point.x, point.y, point.z);
-        return this.calcLayers(data, level);
+        switch (Number(level)) {
+            case 1:
+                return this.calcLayersByPlane(data, level);
+            case 2:
+                return this.calcLayersByColumn(data, level);
+        }
     };
     HDAnalyse.calcProp = function (data, level) {
         var size = this.calcSize(level);
@@ -56976,27 +56981,29 @@ var HDAnalyse = /** @class */ (function () {
         // draw start point
         var x = (column - 1) * w;
         var y = (row - 1) * h;
-        return { x: x, y: y, column: column, row: row, fw: fw, fh: fh, w: w, h: h };
+        return { x: x, y: y, column: column, row: row, fw: fw, fh: fh, w: w, h: h, phases: phases };
     };
     /**
-     * 计算图层, uv 原点在左下, 对应到 backside 贴图为右下
+     * 按点计算图层, uv 原点在左下, 对应到 backside 贴图为右下
      */
-    HDAnalyse.calcLayer = function (data, level) {
+    HDAnalyse.calcLayerByPoint = function (data, level) {
         var prop = this.calcProp(data, level);
-        return [{
-                index: data.index,
-                path: this.calcPath(data.index, prop.row, prop.column, level),
+        var path = this.calcPath(data.index, prop.row, prop.column, level);
+        var ret = [{
+                index: data.index, path: path,
                 x: prop.x, y: prop.y, w: prop.w, h: prop.h,
                 fw: prop.fw, fh: prop.fh
             }];
+        return { ret: ret, key: path };
     };
     /**
      * 按列计算图层
      */
-    HDAnalyse.calcLayers = function (data, level) {
+    HDAnalyse.calcLayersByColumn = function (data, level) {
         var prop = this.calcProp(data, level);
+        var limit = prop.phases.length;
         var ret = [];
-        for (var i = 1; i < 6; i++) {
+        for (var i = 1; i <= limit; i++) {
             prop.row = i;
             prop.y = (i - 1) * prop.h;
             ret.push({
@@ -57009,30 +57016,48 @@ var HDAnalyse = /** @class */ (function () {
         return { ret: ret, key: this.calcPath(data.index, prop.row, prop.column, level) };
     };
     /**
+     * 按面计算图层
+     */
+    HDAnalyse.calcLayersByPlane = function (data, level) {
+        var prop = this.calcProp(data, level);
+        var ret = [];
+        for (var i = 1; i <= 2; i++) {
+            var row = i;
+            var y = prop.h * (i - 1);
+            ret.push({
+                index: data.index,
+                path: this.calcPath(data.index, row, 1, level),
+                x: 0, y: y, w: prop.w, h: prop.h,
+                fw: prop.fw, fh: prop.fh
+            });
+            ret.push({
+                index: data.index,
+                path: this.calcPath(data.index, row, 2, level),
+                x: prop.w, y: y, w: prop.w, h: prop.h,
+                fw: prop.fw, fh: prop.fh
+            });
+        }
+        return { ret: ret, key: this.calcPath(data.index, 0, 0, level) };
+    };
+    /**
      * 计算栅格尺寸
      * @param {number} level 层级
      */
     HDAnalyse.calcSize = function (level) {
         switch (level) {
             case 1:
-                // 512 * 4
+                // 512 * 16
                 return {
-                    fw: 1024, fh: 1024,
-                    w: 512, h: 512,
-                    phases: [512, 0]
+                    fw: 1600, fh: 1600,
+                    w: 800, h: 800,
+                    phases: [800, 0]
                 };
             case 2:
-                // 512 * 25
+                // 512 * 16
                 return {
-                    fw: 2560, fh: 2560,
-                    w: 512, h: 512,
-                    phases: [2048, 1536, 1024, 512, 0]
-                };
-            case 3:
-                return {
-                    fw: 2560, fh: 2560,
-                    w: 512, h: 512,
-                    phases: [2048, 1536, 1024, 512, 0]
+                    fw: 1600, fh: 1600,
+                    w: 400, h: 400,
+                    phases: [1200, 800, 400, 0]
                 };
         }
     };
@@ -57164,6 +57189,7 @@ var HDAnalyse = /** @class */ (function () {
     };
     /**
      * 获取高清图的路径
+     * 0_0 表示 plane
      */
     HDAnalyse.calcPath = function (i, row, column, level) {
         var dir = order[i];
@@ -57210,7 +57236,7 @@ var HDMonitor = /** @class */ (function (_super) {
     __extends(HDMonitor, _super);
     function HDMonitor(pano, opts) {
         var _this = _super.call(this) || this;
-        _this.level = 2;
+        _this.level = 0;
         _this.cache = {};
         _this.pano = pano;
         _this.subscribe(pano.frozen ? _this.Topic.SCENE.READY : _this.Topic.SCENE.LOAD, _this.init.bind(_this));
@@ -57247,7 +57273,7 @@ var HDMonitor = /** @class */ (function (_super) {
         }
     };
     HDMonitor.prototype.getLevel = function (fov) {
-        var level = fov < 50 ? 3 : 2;
+        var level = fov < 50 ? 2 : 1;
         var last = this.level;
         if (level > last) {
             this.level = level;
@@ -57273,17 +57299,16 @@ var HDMonitor = /** @class */ (function (_super) {
                 var ctx = canvas.getContext("2d");
                 canvas.width = fw;
                 canvas.height = fh;
-                canvas.style.width = fw;
-                canvas.style.height = fh;
                 ctx.drawImage(img, 0, 0, fw, fh);
                 texture.image[i] = canvas;
             });
+            console.log(texture.image);
         }
         var obj = texture.image[data.index];
         var ctx = obj.getContext("2d");
         ctx.beginPath();
         ctx.drawImage(hdimg, data.x, data.y, data.w, data.h);
-        this.text(ctx, 'ready', data.x, data.y);
+        // this.text(ctx, 'ready', data.x, data.y);
         ctx.closePath();
     };
     HDMonitor.prototype.text = function (ctx, str, x, y) {

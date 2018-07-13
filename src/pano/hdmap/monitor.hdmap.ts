@@ -11,7 +11,7 @@ import HDStore from './store.hdmap';
 
 export default class HDMonitor extends PubSubAble {
     pano: any;
-    level = 2;
+    level = 0;
     cache = {};
 
     constructor(pano, opts?) {
@@ -56,7 +56,7 @@ export default class HDMonitor extends PubSubAble {
     }
 
     getLevel(fov) {
-        const level = fov < 50 ? 3 : 2;
+        const level = fov < 50 ? 2 : 1;
         const last = this.level;
 
         if (level > last) {
@@ -82,16 +82,17 @@ export default class HDMonitor extends PubSubAble {
             texture.generateMipmaps = false;
             texture.wrapS = texture.wrapT = ClampToEdgeWrapping;
             texture.minFilter = LinearFilter;
+
             texture.image.forEach((img, i) => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext("2d");
                 canvas.width = fw;
                 canvas.height = fh;
-                canvas.style.width = fw;
-                canvas.style.height = fh;
                 ctx.drawImage(img, 0, 0, fw, fh);
                 texture.image[i] = canvas;
             });
+
+            console.log(texture.image)
         }
 
         const obj = texture.image[data.index];
@@ -99,7 +100,7 @@ export default class HDMonitor extends PubSubAble {
 
         ctx.beginPath();
         ctx.drawImage(hdimg, data.x, data.y, data.w, data.h);
-        this.text(ctx, 'ready', data.x, data.y);
+        // this.text(ctx, 'ready', data.x, data.y);
         ctx.closePath();
     }
 
