@@ -1,10 +1,10 @@
-import {Group, Vector3, Raycaster, DoubleSide, Mesh, PlaneGeometry, MeshBasicMaterial, 
-    TextureLoader  , Geometry, Line, LineBasicMaterial} from 'three';
+import {Group,Raycaster, DoubleSide, Mesh, PlaneGeometry, MeshBasicMaterial, TextureLoader} from 'three';
 import PubSubAble from '../interface/pubsub.interface';
 import Text from '../pano/plastic/text.plastic';
 import Button from '../pano/plastic/button.plastic';
 import Icon from '../pano/plastic/icon.plastic';
 import Point from '../pano/plastic/point.plastic';
+import Line from '../pano/plastic/line.plastic';
 import Util from '../core/util';
 import Assets from './assets.vr';
 
@@ -133,14 +133,10 @@ export default class Divider extends PubSubAble {
             color: '#000', opacity: 0.8, order: 3, x: 0, y: 350, z: 0
         });
 
-        const geo = new Geometry();
-        geo.vertices.push(new Vector3(387.5, -100, -2), new Vector3(-387.5, -100, -2));
-        const setLine = new Line(geo, new LineBasicMaterial({
-            color: '#fff',
-            linewidth: 1.5
-        }));
-        setLine.renderOrder = 3;
-        setPanel.add(setLine);
+        const setLine = new Line({
+            parent: setPanel, color: '#fff',
+            width: 775, height: 2, x: 0, y: -100, z: 1
+        });
 
         const close = new Text({
             parent: setPanel, name: 'vr-setpanel-close', text: '完成',
