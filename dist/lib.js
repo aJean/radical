@@ -59562,81 +59562,6 @@ exports.default = Light;
 
 /***/ }),
 
-/***/ "./src/pano/plastic/line.plastic.ts":
-/*!******************************************!*\
-  !*** ./src/pano/plastic/line.plastic.ts ***!
-  \******************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-var plastic_interface_1 = __webpack_require__(/*! ../../interface/plastic.interface */ "./src/interface/plastic.interface.ts");
-/**
- * @file line
- */
-var defaultOpts = {
-    name: '',
-    width: 256,
-    height: 256,
-    order: 5,
-    x: 0,
-    y: 0,
-    z: 0
-};
-var Line = /** @class */ (function (_super) {
-    __extends(Line, _super);
-    function Line(opts) {
-        var _this = _super.call(this) || this;
-        _this.opts = Object.assign({}, defaultOpts, opts);
-        _this.create();
-        return _this;
-    }
-    Line.prototype.create = function () {
-        var opts = this.opts;
-        var mesh = this.plastic = new three_1.Mesh(new three_1.PlaneGeometry(opts.width, opts.height), new three_1.MeshBasicMaterial({
-            color: '#eee',
-            depthTest: false,
-            side: three_1.DoubleSide,
-            transparent: true,
-            opacity: .8
-        }));
-        // delete before dispose
-        mesh.wrapper = this;
-        mesh.position.set(opts.x, opts.y, opts.z);
-        mesh.renderOrder = opts.order;
-        mesh.name = opts.name;
-        if (opts.hide) {
-            mesh.visible = false;
-        }
-        if (opts.parent) {
-            this.addTo(opts.parent);
-        }
-        return mesh;
-    };
-    Line.prototype.dispose = function () {
-        delete this.plastic['wrapper'];
-        _super.prototype.dispose.call(this);
-    };
-    return Line;
-}(plastic_interface_1.default));
-exports.default = Line;
-
-
-/***/ }),
-
 /***/ "./src/pano/plastic/point.plastic.ts":
 /*!*******************************************!*\
   !*** ./src/pano/plastic/point.plastic.ts ***!
@@ -61547,7 +61472,6 @@ var text_plastic_1 = __webpack_require__(/*! ../pano/plastic/text.plastic */ "./
 var button_plastic_1 = __webpack_require__(/*! ../pano/plastic/button.plastic */ "./src/pano/plastic/button.plastic.ts");
 var icon_plastic_1 = __webpack_require__(/*! ../pano/plastic/icon.plastic */ "./src/pano/plastic/icon.plastic.ts");
 var point_plastic_1 = __webpack_require__(/*! ../pano/plastic/point.plastic */ "./src/pano/plastic/point.plastic.ts");
-var line_plastic_1 = __webpack_require__(/*! ../pano/plastic/line.plastic */ "./src/pano/plastic/line.plastic.ts");
 var util_1 = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
 var assets_vr_1 = __webpack_require__(/*! ./assets.vr */ "./src/vr/assets.vr.ts");
 /**
@@ -61650,10 +61574,6 @@ var Divider = /** @class */ (function (_super) {
         var setPanel = this.setpanel = this.createMesh({
             parent: this.panel, name: 'vr-setpanel', hide: true, width: 775, height: 400,
             color: '#000', opacity: 0.8, order: 3, x: 0, y: 350, z: 0
-        });
-        var setLine = new line_plastic_1.default({
-            parent: setPanel, color: '#fff',
-            width: 775, height: 2, x: 0, y: -100, z: 1
         });
         var close = new text_plastic_1.default({
             parent: setPanel, name: 'vr-setpanel-close', text: '完成',

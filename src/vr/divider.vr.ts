@@ -4,7 +4,6 @@ import Text from '../pano/plastic/text.plastic';
 import Button from '../pano/plastic/button.plastic';
 import Icon from '../pano/plastic/icon.plastic';
 import Point from '../pano/plastic/point.plastic';
-import Line from '../pano/plastic/line.plastic';
 import Util from '../core/util';
 import Assets from './assets.vr';
 
@@ -131,11 +130,6 @@ export default class Divider extends PubSubAble {
         const setPanel = this.setpanel = this.createMesh({
             parent: this.panel, name: 'vr-setpanel', hide: true, width: 775, height: 400,
             color: '#000', opacity: 0.8, order: 3, x: 0, y: 350, z: 0
-        });
-
-        const setLine = new Line({
-            parent: setPanel, color: '#fff',
-            width: 775, height: 2, x: 0, y: -100, z: 1
         });
 
         const close = new Text({
