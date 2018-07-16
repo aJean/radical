@@ -56949,7 +56949,6 @@ exports.default = OrbitControl;
 
 /**
  * @file 高清资源分析器
- * @todo 函数式
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 var order = ['r', 'l', 'u', 'd', 'f', 'b'];
@@ -56963,28 +56962,12 @@ var HDAnalyse = /** @class */ (function () {
                 return this.calcLayersByPlane(data, level);
             case 2:
                 return this.calcLayersByColumn(data, level);
+            case 3:
+                return this.calcLayerByPoint(data, level);
         }
     };
-    HDAnalyse.calcProp = function (data, level) {
-        var size = this.calcSize(level);
-        var fw = size.fw;
-        var fh = size.fh;
-        var w = size.w;
-        var h = size.h;
-        var phases = size.phases;
-        // 像素坐标左上是原点
-        var u = fw - data.u * fw;
-        var v = fh - data.v * fh;
-        // 计算 uv 坐标在分段中的位置
-        var column = phases.length - phases.findIndex(function (phase) { return u >= phase; });
-        var row = phases.length - phases.findIndex(function (phase) { return v >= phase; });
-        // draw start point
-        var x = (column - 1) * w;
-        var y = (row - 1) * h;
-        return { x: x, y: y, column: column, row: row, fw: fw, fh: fh, w: w, h: h, phases: phases };
-    };
     /**
-     * 按点计算图层, uv 原点在左下, 对应到 backside 贴图为右下
+     * 按点计算图层
      */
     HDAnalyse.calcLayerByPoint = function (data, level) {
         var prop = this.calcProp(data, level);
@@ -57040,26 +57023,50 @@ var HDAnalyse = /** @class */ (function () {
         return { ret: ret, key: this.calcPath(data.index, 0, 0, level) };
     };
     /**
-     * 计算栅格尺寸
+     * 贴图参数
      * @param {number} level 层级
      */
     HDAnalyse.calcSize = function (level) {
         switch (level) {
             case 1:
-                // 512 * 16
+                // 800 * 4
                 return {
                     fw: 1600, fh: 1600,
                     w: 800, h: 800,
                     phases: [800, 0]
                 };
             case 2:
-                // 512 * 16
+                // 400 * 16
                 return {
                     fw: 1600, fh: 1600,
                     w: 400, h: 400,
                     phases: [1200, 800, 400, 0]
                 };
         }
+    };
+    /**
+     * 中心点瓦片参数
+     * uv 原点在左下, 对应到 backside 贴图为右下, 转为像素坐标原点在左上
+     * @param {Object} data
+     * @param {number} level 视觉层级
+     */
+    HDAnalyse.calcProp = function (data, level) {
+        var size = this.calcSize(level);
+        var fw = size.fw;
+        var fh = size.fh;
+        var w = size.w;
+        var h = size.h;
+        var phases = size.phases;
+        // pixel 坐标左上是原点
+        var pu = fw - data.u * fw;
+        var pv = fh - data.v * fh;
+        // 计算 pixel 坐标在分段中的位置
+        var column = phases.length - phases.findIndex(function (phase) { return pu >= phase; });
+        var row = phases.length - phases.findIndex(function (phase) { return pv >= phase; });
+        // draw start point
+        var x = (column - 1) * w;
+        var y = (row - 1) * h;
+        return { x: x, y: y, column: column, row: row, fw: fw, fh: fh, w: w, h: h, phases: phases };
     };
     /**
      * 计算世界坐标到 uv 坐标
@@ -57136,6 +57143,7 @@ var HDAnalyse = /** @class */ (function () {
     };
     /**
      * uv 坐标转换为世界坐标
+     * uv 原点在左下, 对应到 backside 贴图为右下, 转为像素坐标原点在左上
      * @param {number} index 图片编号
      * @param {number} u
      * @param {number} v
@@ -57302,7 +57310,6 @@ var HDMonitor = /** @class */ (function (_super) {
                 ctx.drawImage(img, 0, 0, fw, fh);
                 texture.image[i] = canvas;
             });
-            console.log(texture.image);
         }
         var obj = texture.image[data.index];
         var ctx = obj.getContext("2d");
@@ -60617,6 +60624,7 @@ var Thru = /** @class */ (function (_super) {
     __extends(Thru, _super);
     function Thru(pano, opts) {
         var _this = _super.call(this) || this;
+        _this.invr = false;
         _this.active = false; // prevent excessive click
         _this.timeid = 0;
         _this.group = [];
@@ -60626,14 +60634,15 @@ var Thru = /** @class */ (function (_super) {
         _this.pano = pano;
         _this.camera = pano.getCamera();
         _this.opts = util_1.default.assign({}, defaultOpts, opts);
-        _this.onCanvasClick = _this.onCanvasClick.bind(_this);
         var Topic = _this.Topic;
         _this.subscribe(Topic.SCENE.CREATE, _this.init.bind(_this));
         _this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.LOAD, _this.needToShow.bind(_this));
         _this.subscribe(Topic.SCENE.ATTACHSTART, _this.hide.bind(_this));
         _this.subscribe(Topic.SCENE.ATTACH, _this.change.bind(_this));
-        _this.subscribe(Topic.UI.IMMERSION, _this.onToggle.bind(_this));
-        _this.judgeid = pano.overlays.addJudgeFunc(_this.onCanvasClick.bind(_this));
+        _this.subscribe(Topic.UI.IMMERSION, _this.immersHandle.bind(_this));
+        _this.subscribe(Topic.VR.ENTER, _this.vrHandle.bind(_this, true));
+        _this.subscribe(Topic.VR.EXIT, _this.vrHandle.bind(_this, false));
+        _this.judgeid = pano.overlays.addJudgeFunc(_this.clickHandle.bind(_this));
         return _this;
     }
     /**
@@ -60717,6 +60726,9 @@ var Thru = /** @class */ (function (_super) {
      */
     Thru.prototype.needToShow = function () {
         var _this = this;
+        if (this.invr) {
+            return;
+        }
         clearTimeout(this.timeid);
         this.timeid = setTimeout(function () {
             _this.publish(_this.Topic.THRU.SHOW, { list: _this.list, pano: _this.pano });
@@ -60728,6 +60740,9 @@ var Thru = /** @class */ (function (_super) {
      */
     Thru.prototype.show = function () {
         var _this = this;
+        if (this.invr) {
+            return;
+        }
         clearTimeout(this.timeid);
         this.active = true;
         this.objs.forEach(function (obj) {
@@ -60751,15 +60766,23 @@ var Thru = /** @class */ (function (_super) {
         }
     };
     /**
+     * 处理进入 vr 模式
+     * @param {boolean} invr
+     */
+    Thru.prototype.vrHandle = function (invr) {
+        invr && this.hide();
+        this.invr = invr;
+    };
+    /**
      * 沉浸模式
      */
-    Thru.prototype.onToggle = function (topic, payload) {
+    Thru.prototype.immersHandle = function (topic, payload) {
         payload.should ? this.show() : this.hide();
     };
     /**
      * 判断是否点击穿越点
      */
-    Thru.prototype.onCanvasClick = function (pos) {
+    Thru.prototype.clickHandle = function (pos) {
         var _this = this;
         if (!this.active) {
             return;

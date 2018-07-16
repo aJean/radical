@@ -24,6 +24,7 @@ export default class Thru extends PubSubAble {
     list: any;
     camera: any;
     pano: any;
+    invr = false;
     active = false; // prevent excessive click
     timeid = 0;
     group = [];
@@ -37,15 +38,16 @@ export default class Thru extends PubSubAble {
         this.pano = pano;
         this.camera = pano.getCamera();
         this.opts = Util.assign({}, defaultOpts, opts);
-        this.onCanvasClick = this.onCanvasClick.bind(this);
 
         const Topic = this.Topic;
         this.subscribe(Topic.SCENE.CREATE, this.init.bind(this));
         this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.LOAD, this.needToShow.bind(this));
         this.subscribe(Topic.SCENE.ATTACHSTART, this.hide.bind(this));
         this.subscribe(Topic.SCENE.ATTACH, this.change.bind(this));
-        this.subscribe(Topic.UI.IMMERSION, this.onToggle.bind(this));
-        this.judgeid = pano.overlays.addJudgeFunc(this.onCanvasClick.bind(this));
+        this.subscribe(Topic.UI.IMMERSION, this.immersHandle.bind(this));
+        this.subscribe(Topic.VR.ENTER, this.vrHandle.bind(this, true));
+        this.subscribe(Topic.VR.EXIT, this.vrHandle.bind(this, false));
+        this.judgeid = pano.overlays.addJudgeFunc(this.clickHandle.bind(this));
     }
 
     /**
@@ -141,6 +143,10 @@ export default class Thru extends PubSubAble {
      * lazy 显示穿越点
      */
     needToShow() {
+        if (this.invr) {
+            return;
+        }
+
         clearTimeout(this.timeid);
         this.timeid = setTimeout(() => {
             this.publish(this.Topic.THRU.SHOW, {list: this.list, pano: this.pano});
@@ -152,6 +158,10 @@ export default class Thru extends PubSubAble {
      * 显示穿越点, use opacity for high performance
      */
     show() {
+        if (this.invr) {
+            return;
+        }
+
         clearTimeout(this.timeid);
         this.active = true;
 
@@ -179,16 +189,25 @@ export default class Thru extends PubSubAble {
     }
 
     /**
+     * 处理进入 vr 模式
+     * @param {boolean} invr
+     */
+    vrHandle(invr) {
+        invr && this.hide();
+        this.invr = invr;
+    }
+
+    /**
      * 沉浸模式
      */
-    onToggle(topic, payload) {
+    immersHandle(topic, payload) {
         payload.should ? this.show() : this.hide();
     }
 
     /**
      * 判断是否点击穿越点
      */
-    onCanvasClick(pos) {
+    clickHandle(pos) {
         if (!this.active) {
             return;
         }
