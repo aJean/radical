@@ -55345,7 +55345,7 @@ exports.default = {
      */
     findScene: function (source, tid) {
         var group = source.sceneGroup;
-        var id = tid !== void 0 ? tid : source.defaultSceneId;
+        var id = tid !== void 0 ? tid : source.sceneid;
         var scene = group.find(function (item) { return item.id == id; });
         return (scene || group[0]);
     },
@@ -60808,7 +60808,7 @@ var Thru = /** @class */ (function (_super) {
                         .then(function (res) {
                         var data = res.data;
                         var sceneGroup = data.sceneGroup;
-                        data.defaultSceneId = id_1;
+                        data.sceneid = id_1;
                         if (sceneGroup) {
                             var scene_1 = sceneGroup.find(function (item) { return item.id == id_1; });
                             var ctarget = pano.getLookAtTarget();

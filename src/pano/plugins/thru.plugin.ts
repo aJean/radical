@@ -238,7 +238,7 @@ export default class Thru extends PubSubAble {
                         .then(res => {
                             const data = res.data;
                             const sceneGroup = data.sceneGroup;
-                            data.defaultSceneId = id;
+                            data.sceneid = id;
 
                             if (sceneGroup) {
                                 const scene = sceneGroup.find(item => item.id == id);

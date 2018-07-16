@@ -236,7 +236,7 @@ export default {
      */
     findScene(source, tid?) {
         const group = source.sceneGroup;
-        const id = tid !== void 0 ? tid : source.defaultSceneId;
+        const id = tid !== void 0 ? tid : source.sceneid;
         const scene = group.find(item => item.id == id);
 
         return (scene || group[0]);

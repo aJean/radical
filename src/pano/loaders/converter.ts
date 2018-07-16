@@ -12,4 +12,8 @@ export default abstract class Converter {
         location.lng = location.lng - 180;
         location.lat = location.lat - 90;
     }
+
+    static DataTransform(olddata) {
+        
+    }
 }

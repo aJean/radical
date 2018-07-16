@@ -20,7 +20,7 @@
             
             const time = Date.now();
             $.ajax({
-                url: `https://image.baidu.com/img/image/quanjing/bxlpanoinfo?setid=${setid}&sceneid=${id}&sf=1`,
+                url: `http://opendata.baidu.com/api.php?format=json&query=1&resource_id=5099&tn=wisetpl&dsp=iphone&xrkey=${setid}&sceneid=${id}`,
                 success: function(res) {
                     const data = res.data;
                     
@@ -34,7 +34,7 @@
                     data.thru = {
                         lazy: 2000,
                         limit: 2,
-                        surl: 'https://image.baidu.com/img/image/quanjing/bxlpanoinfo?sf=1'
+                        surl: 'http://opendata.baidu.com/api.php?format=json&query=1&resource_id=5099&tn=wisetpl&dsp=iphone'
                     };
                     data.animation =  {
                         fly: 'fly2'
