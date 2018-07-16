@@ -1,6 +1,5 @@
 /**
  * @file 高清资源分析器
- * @todo 函数式
  */
 
 const order = ['r', 'l', 'u', 'd', 'f', 'b'];
@@ -13,32 +12,13 @@ export default abstract class HDAnalyse {
                 return this.calcLayersByPlane(data, level);
             case 2:
                 return this.calcLayersByColumn(data, level);
+            case 3:
+                return this.calcLayerByPoint(data, level);
         }
     }
 
-    static calcProp(data, level) {
-        const size = this.calcSize(level);
-        const fw = size.fw;
-        const fh = size.fh;
-        const w = size.w;
-        const h = size.h;
-        const phases = size.phases;
-        // 像素坐标左上是原点
-        const u = fw - data.u * fw;
-        const v = fh - data.v * fh;
-
-        // 计算 uv 坐标在分段中的位置
-        const column = phases.length - phases.findIndex(phase => u >= phase);
-        const row = phases.length - phases.findIndex(phase => v >= phase);
-        // draw start point
-        const x = (column - 1) * w;
-        const y = (row - 1) * h;
-
-        return {x, y, column, row, fw, fh, w, h, phases};
-    }
-
     /**
-     * 按点计算图层, uv 原点在左下, 对应到 backside 贴图为右下
+     * 按点计算图层
      */
     static calcLayerByPoint(data, level) {
         const prop = this.calcProp(data, level);
@@ -105,26 +85,53 @@ export default abstract class HDAnalyse {
     }
 
     /**
-     * 计算栅格尺寸
+     * 贴图参数
      * @param {number} level 层级 
      */
     static calcSize(level) {
         switch (level) {
             case 1:
-                // 512 * 16
+                // 800 * 4
                 return {
                     fw: 1600, fh: 1600,
                     w: 800, h: 800,
                     phases: [800, 0]
                 };
             case 2:
-                // 512 * 16
+                // 400 * 16
                 return {
                     fw: 1600, fh: 1600,
                     w: 400, h: 400,
                     phases: [1200, 800, 400, 0]
                 };
         }
+    }
+
+    /**
+     * 中心点瓦片参数
+     * uv 原点在左下, 对应到 backside 贴图为右下, 转为像素坐标原点在左上
+     * @param {Object} data
+     * @param {number} level 视觉层级
+     */
+    static calcProp(data, level) {
+        const size = this.calcSize(level);
+        const fw = size.fw;
+        const fh = size.fh;
+        const w = size.w;
+        const h = size.h;
+        const phases = size.phases;
+        // pixel 坐标左上是原点
+        const pu = fw - data.u * fw;
+        const pv = fh - data.v * fh;
+
+        // 计算 pixel 坐标在分段中的位置
+        const column = phases.length - phases.findIndex(phase => pu >= phase);
+        const row = phases.length - phases.findIndex(phase => pv >= phase);
+        // draw start point
+        const x = (column - 1) * w;
+        const y = (row - 1) * h;
+
+        return {x, y, column, row, fw, fh, w, h, phases};
     }
 
     /**
@@ -213,6 +220,7 @@ export default abstract class HDAnalyse {
 
     /**
      * uv 坐标转换为世界坐标
+     * uv 原点在左下, 对应到 backside 贴图为右下, 转为像素坐标原点在左上
      * @param {number} index 图片编号
      * @param {number} u 
      * @param {number} v 
