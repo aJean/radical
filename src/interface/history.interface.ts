@@ -5,7 +5,6 @@ import * as QS from 'query-string';
  * @file simple 历史管理
  */
 
-
 const STATE = {bxlhistory: 1};
 const SFOPTS = {disableServiceDispatch: true, silent: true};
 export default abstract class History extends PubSubAble {
