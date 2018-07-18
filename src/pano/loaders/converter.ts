@@ -14,6 +14,10 @@ export default abstract class Converter {
     }
 
     static DataTransform(olddata) {
-        
+        try {
+            return olddata.result[0].DisplayData.DisplayData.tplData;
+        } catch (e) {
+            return null;
+        }
     }
 }
