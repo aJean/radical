@@ -40,7 +40,7 @@ export default class Multiple extends PluggableUI {
         outer.appendChild(inner);
         element.appendChild(outer);
 
-        const node = inner.querySelector(`div[data-scene="${this.pano.currentData.id}"]`);
+        const node = inner.querySelector(`div[data-scene="${this.pano.sceneData.id}"]`);
         this.setActive(node);
         setTimeout(() => this.setScrollLeft(node), 0);
     }

@@ -1,4 +1,4 @@
-import { Scene, Mesh, SphereGeometry, MeshBasicMaterial, CubeReflectionMapping, PerspectiveCamera, Vector3 } from 'three';
+import {Scene, Mesh, SphereGeometry, MeshBasicMaterial, CubeReflectionMapping, PerspectiveCamera, Vector3} from 'three';
 import ResourceLoader from '../loaders/resource.loader';
 import Log from '../../core/log';
 import Util from '../../core/util';
@@ -80,7 +80,7 @@ export default class Suspend extends Plastic {
 
         if (ret) {
             const data = this.toscene;
-            this.toscene = pano.currentData;
+            this.toscene = pano.sceneData;
             pano.enterNext(data);
             sphere.material.envMap = pano.skyBox.getMap();
         }

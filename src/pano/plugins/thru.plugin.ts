@@ -216,7 +216,7 @@ export default class Thru extends PubSubAble {
         const camera = this.camera;
         const group = this.group;
         const surl = this.opts.surl;
-        const oldscene = pano.currentData;
+        const oldscene = pano.sceneData;
 
         if (group.length) {
             const intersects = Util.intersect(pos, group, pano.getCamera());

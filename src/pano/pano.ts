@@ -9,6 +9,7 @@ import Inradius from './plastic/inradius.plastic';
 import Log from '../core/log';
 import Util from '../core/util';
 import History from '../interface/history.interface';
+import Converter, {SceneData} from './loaders/converter';
 
 /**
  * @file 全景渲染 & 历史记录
@@ -22,10 +23,12 @@ const defaultOpts = {
     sceneTrans: false
 };
 const myLoader = new ResourceLoader();
+
 export default class Pano extends History {
     overlays: Overlays;
     source: any;
     size: any;
+    sceneData: SceneData;
     opts = null;
     root = null;
     webgl = null;
@@ -35,7 +38,6 @@ export default class Pano extends History {
     orbit = null;
     gyro = null;
     reqid = 0;
-    currentData = null;
     frozen = true;
     interactable = true;
     pluginList = [];
@@ -43,7 +45,7 @@ export default class Pano extends History {
     constructor(el, source) {
         super();
 
-        this.currentData = Util.findScene(source);
+        this.sceneData = Converter.DataTransform(Util.findScene(source));
         this.opts = Object.assign({el}, defaultOpts, source['pano']);
         this.source = source;
 
@@ -55,7 +57,7 @@ export default class Pano extends History {
      */
     initEnv() {
         const opts = this.opts;
-        const data = this.currentData;
+        const data = this.sceneData;
         const size = this.size = Util.calcRenderSize(opts);
         const root = this.root = Util.createElement(`<div class="pano-root"></div>`);
         const webgl = this.webgl = new WebGLRenderer({alpha: true, antialias: true, precision: 'highp'});
@@ -102,7 +104,7 @@ export default class Pano extends History {
         const fov = data.fov || this.opts.fov;
 
         // set current scene data
-        this.currentData = data;
+        this.sceneData = data;
         // look at angle
         if (!this.gyro && data.lng !== void 0) {
             this.setLook(data.lng, data.lat);
@@ -119,21 +121,21 @@ export default class Pano extends History {
     async run() {
         const source = this.source;
         const Topic = this.Topic;
-        const data = this.currentData;
+        const data = this.sceneData;
         const publishdata = {scene: data, pano: this};
         // has pano instance
         this.publishSync(this.Topic.SCENE.CREATE, publishdata);
         source['cretPath'] && myLoader.loadCret(source['cretPath']);
 
         try {
-            const img = await myLoader.loadTexture(data.imgPath, 'canvas');
+            const img = await myLoader.loadTexture(data.pimg, 'canvas');
             const skyBox = this.skyBox = new Inradius({envMap: img}, this);
 
             skyBox.addBy(this);
             this.publishSync(Topic.SCENE.INIT, publishdata);
             this.render();
             // high source
-            await myLoader.loadTexture(data.bxlPath || data.texPath)
+            await myLoader.loadTexture(data.simg)
                 .then(texture => {
                     skyBox.setMap(texture);
                     this.publishSync(Topic.SCENE.LOAD, publishdata);
@@ -274,7 +276,7 @@ export default class Pano extends History {
      * @param {Object} texture 场景原图纹理
      */
     replaceTexture(texture) {
-        const publishdata = {scene: this.currentData, pano: this};
+        const publishdata = {scene: this.sceneData, pano: this};
         const Topic = this.Topic;
 
         this.publish(Topic.SCENE.ATTACHSTART, publishdata);
@@ -295,7 +297,7 @@ export default class Pano extends History {
      * @param {Object} texture 场景原图纹理
      */
     replaceAnim(texture) {
-        const publishdata = {scene: this.currentData, pano: this};
+        const publishdata = {scene: this.sceneData, pano: this};
         const Topic = this.Topic;        
         
         this.publish(Topic.SCENE.ATTACHSTART, publishdata);
@@ -387,7 +389,7 @@ export default class Pano extends History {
 
         const data = payload.data;
 
-        if (!data || !data.sceneid || data.sceneid == this.currentData.id) {
+        if (!data || !data.sceneid || data.sceneid == this.sceneData.id) {
             this.exhaustState();
         } else if (data.sceneid) {
             const id = data.sceneid;
@@ -398,7 +400,7 @@ export default class Pano extends History {
                 .then(res => {
                     const data = res.data;
                     const scenes = data.sceneGroup;
-                    const scene = scenes.find(obj => obj.id == id);
+                    const scene = Util.findScene(scenes, id);
                     // for nextpage
                     scene.setName = setname && decodeURIComponent(setname);
                     this.enterNext(scene);
@@ -541,23 +543,22 @@ export default class Pano extends History {
      * @param {Object} data scene data
      */
     enterNext(data) {
-        const path = data.imgPath;
         const opts = this.opts;
         // replace history
-        this.replaceState(data);
+        this.replaceState(data = Converter.DataTransform(data));
 
         // preTrans defeates sceneTrans
-        if (opts.preTrans && path) {
-            myLoader.loadTexture(path, 'canvas')
+        if (opts.preTrans) {
+            myLoader.loadTexture(data.pimg, 'canvas')
                 .then(texture => {
                     this.resetEnv(data);
                     this.replaceTexture(texture);
-                    // 清晰图
-                    return myLoader.loadTexture(data.bxlPath || data.texPath)
-                        .then(texture => this.currentData == data && this.replaceSlient(texture));
+                    // load source img
+                    return myLoader.loadTexture(data.simg)
+                        .then(texture => data.equal(this.sceneData) && this.replaceSlient(texture));
                 }).catch(e => Log.output(e));
         } else {
-            myLoader.loadTexture(data.bxlPath || data.texPath)
+            myLoader.loadTexture(data.simg)
                 .then(texture => {
                     this.resetEnv(data);
                     opts.sceneTrans ? this.replaceAnim(texture) : this.replaceTexture(texture);
@@ -571,6 +572,7 @@ export default class Pano extends History {
      * @param {Object} texture skybox texture to replace
      */
     enterThru(data, texture) {
+        data = Converter.DataTransform(data);
         // positive direction add history state
         this.pushState(data);
         this.resetEnv(data);
@@ -585,7 +587,7 @@ export default class Pano extends History {
         this.frozen = false;
         this.startControl();
         // entrance animation end, scene become stable
-        this.publishSync(this.Topic.SCENE.READY, {scene: this.currentData, pano: this});
+        this.publishSync(this.Topic.SCENE.READY, {scene: this.sceneData, pano: this});
     }
 
     /**

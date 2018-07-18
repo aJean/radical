@@ -1,4 +1,4 @@
-import {Vector3, Group} from 'three';
+import {Group} from 'three';
 import DomOverlay from './dom.overlay';
 import MeshOverlay from './mesh.overlay';
 import SpriteOverlay from './sprite.overlay';
@@ -301,7 +301,7 @@ export default class Overlays extends PubSubAble {
      * @param {Object} pano 全景对象
      */
     updateOverlays(topic, pano) {
-        const cache = this.getCurrent(pano.currentData.id);
+        const cache = this.getCurrent(pano.sceneData.id);
         cache.domGroup.forEach(item => this.updateDomOverlay(item));
         cache.meshGroup.forEach(item => item.update());
     }

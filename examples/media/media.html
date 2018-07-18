@@ -34,7 +34,7 @@
             };
 
             bxl.startPano(json, '#test', {
-                'overlay-click': function (topic, payload) {
+                'scene-init': function (topic, payload) {
                     console.log(payload);
                 }
             });
