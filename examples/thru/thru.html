@@ -20,9 +20,11 @@
             
             const time = Date.now();
             $.ajax({
-                url: `http://opendata.baidu.com/api.php?format=json&query=1&resource_id=5099&tn=wisetpl&dsp=iphone&xrkey=${setid}&sceneid=${id}`,
+                url: `http://opendata.baidu.com/api.php?query=乌龟&resource_id=5099&tn=wisetpl&dsp=iphone&xrkey=${setid}&sceneid=${id}`,
+                dataType: 'jsonp',
+                jsonp: 'cb',
                 success: function(res) {
-                    const data = res.data;
+                    const data = res.Result[0].DisplayData.resultData.tplData;
                     
                     data.multiScene = true;
                     data.pano = {
@@ -34,7 +36,7 @@
                     data.thru = {
                         lazy: 2000,
                         limit: 2,
-                        surl: 'http://opendata.baidu.com/api.php?format=json&query=1&resource_id=5099&tn=wisetpl&dsp=iphone'
+                        surl: 'http://opendata.baidu.com/api.php?&query=1&resource_id=5099&tn=wisetpl&dsp=iphone'
                     };
                     data.animation =  {
                         fly: 'fly2'

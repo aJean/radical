@@ -45,10 +45,16 @@ export default abstract class BaseLoader {
         );
     }
 
+    /**
+     * 获取证书
+     */
     fetchCret() {
         return cret;
     }
 
+    /**
+     * ajax promise
+     */
     fetchUrl(url, type?) {
         const cache = this.opts.cache;
         const useCache = this.opts.useCache;
@@ -74,6 +80,24 @@ export default abstract class BaseLoader {
             xhr.onerror = e => reject(e);
 
             xhr.send();
+        });
+    }
+
+    /**
+     * openapi 需要 jsonp 方式调用
+     * @param {string} url 
+     */
+    fetchJsonp(url) {
+        const script = document.createElement('script');
+        const head = document.head;
+        
+        script.src = url + '&cb=bxlJsonpCb&_=' + Date.now();
+        return new Promise(function (resolve, reject) {
+            window['bxlJsonpCb'] = function(res) {
+                resolve(res);
+                head.removeChild(script);
+            };
+            head.appendChild(script);
         });
     }
 

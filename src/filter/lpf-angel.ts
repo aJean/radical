@@ -10,6 +10,10 @@ export default class AngelLPF {
     size: number;
     defaultResult: number[] = [];
 
+    constructor(size, values?) {
+        this.init(size, values);
+    }
+
     init(size: number, values: number[][] = []) {
         this.size = size;
         this.defaultValue = [];
@@ -40,6 +44,7 @@ export default class AngelLPF {
         );
 
         this.buffer[this.buffer.length - 1] = result as[number, number][];
+        return this.current();
     }
 
     reset(value: number[]) {

@@ -54,9 +54,14 @@ export default class GyroControl {
         camera.getWorldDirection(vector);
         spherical.setFromVector3(vector);
 
-        if (this.lastSpherical && spherical.phi < 3) {
-            const theta = spherical.theta - this.lastSpherical.theta;
-            const phi = this.lastSpherical.phi - spherical.phi;
+        if (this.lastSpherical) {
+            let theta = spherical.theta - this.lastSpherical.theta;
+            let phi = this.lastSpherical.phi - spherical.phi;
+
+            if (spherical.phi > 3) {
+                theta *= 0.05;
+            }
+
             this.orbit.update(theta, phi);
         }
 

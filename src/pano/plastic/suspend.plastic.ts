@@ -76,7 +76,7 @@ export default class Suspend extends Plastic {
             y: -(e.clientY / size.height) * 2 + 1
         };
 
-        const ret = Util.intersect(pos, [this.sphere], this.camera);
+        const ret = Util.intersect(pos, [this.sphere], camera);
 
         if (ret) {
             const data = this.toscene;

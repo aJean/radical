@@ -50,6 +50,14 @@ export default abstract class Converter {
         location.lat = location.lat - 90;
     }
 
+    static ResultTransform(res) {
+        try {
+            return res.Result[0].DisplayData.resultData.tplData;
+        } catch (error) {
+            return null;
+        }
+    }
+
     static DataTransform(olddata) {
         return new SceneData(olddata);
     }

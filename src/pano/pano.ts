@@ -394,15 +394,14 @@ export default class Pano extends History {
         } else if (data.sceneid) {
             const id = data.sceneid;
             const setid = data.xrkey;
-            const setname = data.setname;
+            const url = this.pluginList[0].opts.surl;
 
-            myLoader.fetchUrl(`https://image.baidu.com/img/image/quanjing/bxlpanoinfo?sf=1&setid=${setid}&sceneid=${id}`)
+            myLoader.fetchJsonp(`${url}&xrkey=${setid}&sceneid=${id}`)
                 .then(res => {
-                    const data = res.data;
+                    const data = Converter.ResultTransform(res);
                     const scenes = data.sceneGroup;
-                    const scene = Util.findScene(scenes, id);
-                    // for nextpage
-                    scene.setName = setname && decodeURIComponent(setname);
+                    const scene = scenes.find(obj => obj.id == id);
+
                     this.enterNext(scene);
                     this.publish(this.Topic.THRU.BACK, {id, scene, scenes, data});
                 });

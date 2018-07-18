@@ -5,6 +5,7 @@ import Util from '../../core/util';
 import Loader from '../loaders/resource.loader';
 import Inradius from '../plastic/inradius.plastic';
 import Light from '../plastic/light.plastic';
+import Converter from '../loaders/converter';
 
 /**
  * @file 星际穿越 plugin
@@ -231,12 +232,11 @@ export default class Thru extends PubSubAble {
                 if (data) {
                     const id = data.sceneId;
                     const sid = data.setId;
-                    const setname = data.setName;
 
                     pano.lock();
-                    loader.fetchUrl(`${surl}&setid=${sid}&sceneid=${id}`)
+                    loader.fetchJsonp(`${surl}&xrkey=${sid}&sceneid=${id}`)
                         .then(res => {
-                            const data = res.data;
+                            const data = Converter.ResultTransform(res);
                             const sceneGroup = data.sceneGroup;
                             data.sceneid = id;
 
@@ -245,8 +245,6 @@ export default class Thru extends PubSubAble {
                                 const ctarget = pano.getLookAtTarget();
                                 const pos = instance.getPosition().clone();
                                 const flag = pos.z > 0;
-                                // for nextpage
-                                scene.setName = setname;
                                 // lock control
                                 pano.makeControl(false);
                                 pos.z += flag ? 50 : -50;
