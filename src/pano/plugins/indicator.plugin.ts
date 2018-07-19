@@ -11,7 +11,7 @@ export default class Indicator extends PluggableUI {
     theta: any;
     azimuthal = Math.PI;
     polar = Math.PI / 2;
-    lock = false;
+    animating = false;
     
     constructor(pano) {
         super();
@@ -54,7 +54,7 @@ export default class Indicator extends PluggableUI {
         const pano = this.pano;
         const theta = pano.getLook().lng;
 
-        if (!this.lock && theta != this.theta) {
+        if (!this.animating && theta != this.theta) {
            this.setTheta(theta);
         }
     }
@@ -66,7 +66,7 @@ export default class Indicator extends PluggableUI {
         event.preventDefault();
         event.stopPropagation();
 
-        this.lock = true;
+        this.animating = true;
         this.publish(this.Topic.UI.INDICATORSTART, {pano: this.pano});
 
         const pano = this.pano;
@@ -92,7 +92,7 @@ export default class Indicator extends PluggableUI {
      */
     end() {
         this.pano.resetControl();
-        this.lock = false;
+        this.animating = false;
         this.setTheta(this.theta = 180);
         this.publish(this.Topic.UI.INDICATOREND, {pano: this.pano});
     }

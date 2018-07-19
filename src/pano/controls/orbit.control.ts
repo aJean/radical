@@ -151,7 +151,8 @@ function OrbitControl(camera, domElement, pano) {
         var quatInverse = quat.clone().inverse();
         var lastPosition = new Vector3();
         var lastQuaternion = new Quaternion();
-        return function update(gyroTheta, gyroPhi) {
+
+        return function update() {
             var position = scope.camera.position;
             offset.copy(position).sub(scope.target);
             /* rotate offset to "y-axis-is-up" space */
@@ -172,11 +173,6 @@ function OrbitControl(camera, domElement, pano) {
                 } else {
                     state = STATE.NONE;
                 }
-            }
-            // 陀螺仪的增量
-            if (gyroTheta || gyroPhi) {
-                spherical.theta += gyroTheta;
-                spherical.phi += gyroPhi;
             }
 
             spherical.theta += sphericalDelta.theta;

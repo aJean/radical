@@ -272,7 +272,7 @@ export default abstract class HDAnalyse {
             break;
         }
 
-        return {x: x * 1000, y: y * 1000, z: z * 1000};
+        return {x, y, z};
     }
 
     /**

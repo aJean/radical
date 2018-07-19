@@ -9,12 +9,14 @@ export class SceneData {
     pimg: string; // 预览图
     timg: string; // 缩略图
     simg: string; // 资源图
+    suffix: string;
     fov: number; 
     lng: number; // 初始横向角度
     lat: number; // 初始纵向角度
     info: Object;
     overlays: Array<{}>;
     recomList: Array<{}>;
+    recomPos: Array<{}>;
 
     constructor(data) {
         this.id = data.id;
@@ -22,12 +24,14 @@ export class SceneData {
         this.pimg = data.imgPath;
         this.timg = data.thumbPath;
         this.simg = data.texPath || data.bxlPath;
+        this.suffix = data.textPathExt;
         this.fov = data.fov;
         this.lat = data.lat;
         this.lng = data.lng;
         this.info = data.bearInfo || data.info;
         this.overlays = this.getArrayValue(data.overlays);
         this.recomList = this.getArrayValue(data.recomList);
+        this.recomPos = this.getArrayValue(data.recomPos);
     }
 
     getArrayValue(arry) {

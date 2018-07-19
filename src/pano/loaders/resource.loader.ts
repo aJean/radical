@@ -43,11 +43,12 @@ class ResourceLoader extends BaseLoader {
     /**
      * 加载 6 张复合顺序和命名的图
      * attach order: right -> left -> up -> down -> front -> back
-     * @param {string} url 
+     * @param {string} url
+     * @param {string} suffix 资源后缀
      */
-    loadImage(url) {
+    loadImage(url, suffix = '') {
         url = url.replace(/\/$/, '');
-        const urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(name => this.crosUrl(`${url}/mobile_${name}.jpg`));
+        const urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(name => this.crosUrl(`${url}/mobile_${name}.jpg${suffix}`));
 
         return new Promise((resolve, reject) => {
             cubeLoader.load(urls, tex => resolve(tex), null, e => reject(e));
@@ -55,17 +56,23 @@ class ResourceLoader extends BaseLoader {
     }
 
     /**
+     * canvas 切分预览图
+     * @param {string} url 
+     */
+    loadCanvas(url) {
+        return cutCanvas(this.crosUrl(url)); 
+    }
+
+    /**
      * 多种方式加载贴图
      * @param {string} url 
-     * @param {string} type 
+     * @param {string} suffix 
      */
-    loadTexture(url, type?) {
-        if (type == 'canvas') {
-            return cutCanvas(this.crosUrl(url)); 
-        } else if (type == 'bxl' || /\.bxl$/.test(url)) {
+    loadTexture(url, suffix?) {
+        if (/\.bxl$/.test(url)) {
             return this.loadBxl(this.crosUrl(url));
         } else {
-            return this.loadImage(url);
+            return this.loadImage(url, suffix);
         }
     }
 }

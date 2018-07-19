@@ -8,7 +8,7 @@
     "wormhole": {
         "lng": 10,
         "lat": 10,
-        "texPath": "../assets/scene7"
+        "simg": "../assets/scene7"
     },
     "sceneGroup": [{
         "info": {

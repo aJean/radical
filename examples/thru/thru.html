@@ -20,7 +20,7 @@
             
             const time = Date.now();
             $.ajax({
-                url: `http://opendata.baidu.com/api.php?query=乌龟&resource_id=5099&tn=wisetpl&dsp=iphone&xrkey=${setid}&sceneid=${id}`,
+                url: `http://yq01-psdy-diaoyan1514.yq01.baidu.com:8132/openapi/index.php/api/index?query=乌龟&resource_id=5099&tn=wisetpl&dsp=iphone&xrkey=${setid}&sceneid=${id}`,
                 dataType: 'jsonp',
                 jsonp: 'cb',
                 success: function(res) {
@@ -35,8 +35,8 @@
                     };
                     data.thru = {
                         lazy: 2000,
-                        limit: 2,
-                        surl: 'http://opendata.baidu.com/api.php?&query=1&resource_id=5099&tn=wisetpl&dsp=iphone'
+                        limit: 3,
+                        surl: 'http://yq01-psdy-diaoyan1514.yq01.baidu.com:8132/openapi/index.php/api/index?&query=1&resource_id=5099&tn=wisetpl&dsp=iphone'
                     };
                     data.animation =  {
                         fly: 'fly2'

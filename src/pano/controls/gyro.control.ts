@@ -1,4 +1,4 @@
-import {Vector3, Euler, Quaternion, Spherical, Math as TMath, Camera} from 'three';
+import {Vector3, Euler, Quaternion, Math as TMath} from 'three';
 
 /**
  * @file gyro control
@@ -19,8 +19,8 @@ export default class GyroControl {
     q0 = new Quaternion();
     // - PI/2 around the x-axis
     q1 = new Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
-    lastSpherical;
-    spherical = new Spherical();
+    lastBeta;
+    lastGamma;
 
     constructor(camera, orbit) {
         camera.rotation.reorder('YXZ');
@@ -41,8 +41,7 @@ export default class GyroControl {
 
         const camera = this.camera;
         const quaternion = camera.quaternion;
-        const spherical = this.spherical;
-        const vector = new Vector3();
+        const orbit = this.orbit;
         
         // orient the device
         quaternion.setFromEuler(this.euler);
@@ -50,22 +49,16 @@ export default class GyroControl {
         quaternion.multiply(this.q1);
         // 竖屏 or 横屏
         quaternion.multiply(this.q0.setFromAxisAngle(this.zee, -orient));
-        // 获取球面坐标
-        camera.getWorldDirection(vector);
-        spherical.setFromVector3(vector);
 
-        if (this.lastSpherical) {
-            let theta = spherical.theta - this.lastSpherical.theta;
-            let phi = this.lastSpherical.phi - spherical.phi;
-
-            if (spherical.phi > 3) {
-                theta *= 0.05;
-            }
-
-            this.orbit.update(theta, phi);
+        const currentAngle = this.quat2Angle(quaternion);
+        if (this.lastBeta) {
+            orbit.rotateLeft(this.lastGamma - currentAngle.z);
+            orbit.rotateUp(this.lastBeta - currentAngle.y);
+            orbit.update();
         }
 
-        this.lastSpherical = spherical.clone();
+        this.lastBeta = currentAngle.y;
+        this.lastGamma = currentAngle.z;
     }
 
     connect() {
@@ -105,7 +98,50 @@ export default class GyroControl {
         }
 
         // 不是每次都会更新, lead to state will not be STATE.NONE
-        this.calcQuaternion(alpha.toFixed(5), beta.toFixed(5), gamma.toFixed(5), orient);
+        this.calcQuaternion(alpha, beta, gamma, orient);
+    }
+
+    /**
+     * 四元数转化成角度
+     * @param {Quaternion} quaternion
+     */
+    quat2Angle(quaternion) {
+        const x = quaternion.x;
+        const y = quaternion.y;
+        const z = quaternion.z;
+        const w = quaternion.w;
+        let pitch;
+        let roll;
+        let yaw;
+
+        const factor = x * y + z * w;
+        // singularity at north pole
+        if (factor > 0.499) {
+            yaw = Math.atan2(x, w) * 2;
+            pitch = Math.PI / 2;
+            roll = 0;
+
+            return new Vector3(pitch, roll, yaw);
+        }
+
+        // singularity at south pole
+        if (factor < -0.499) {
+            yaw = -2 * Math.atan2(x, w);
+            pitch = -Math.PI / 2;
+            roll = 0;
+
+            return new Vector3(pitch, roll, yaw);
+        }
+
+        const sqx = x * x;
+        const sqy = y * y;
+        const sqz = z * z;
+
+        yaw = Math.atan2((2 * y * w) - (2 * x * z), 1 - (2 * sqy) - (2 * sqz));
+        pitch = Math.asin(2 * factor);
+        roll = Math.atan2((2 * x * w) - (2 * y * z), 1 - (2 * sqx) - (2 * sqz));
+
+        return new Vector3(pitch, roll, yaw);
     }
 
     /**
@@ -123,7 +159,8 @@ export default class GyroControl {
     reset() {
         this.orbit.reset();
         this.camera.copy(this.oribtCamera);
-        this.lastSpherical = null;
+        this.lastBeta = null;
+        this.lastGamma = null;
         this.enabled = true;
     }
 }

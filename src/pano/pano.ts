@@ -128,14 +128,14 @@ export default class Pano extends History {
         source['cretPath'] && myLoader.loadCret(source['cretPath']);
 
         try {
-            const img = await myLoader.loadTexture(data.pimg, 'canvas');
+            const img = await myLoader.loadCanvas(data.pimg);
             const skyBox = this.skyBox = new Inradius({envMap: img}, this);
 
             skyBox.addBy(this);
             this.publishSync(Topic.SCENE.INIT, publishdata);
             this.render();
             // high source
-            await myLoader.loadTexture(data.simg)
+            await myLoader.loadTexture(data.simg, data.suffix)
                 .then(texture => {
                     skyBox.setMap(texture);
                     this.publishSync(Topic.SCENE.LOAD, publishdata);
@@ -548,16 +548,16 @@ export default class Pano extends History {
 
         // preTrans defeates sceneTrans
         if (opts.preTrans) {
-            myLoader.loadTexture(data.pimg, 'canvas')
+            myLoader.loadCanvas(data.pimg)
                 .then(texture => {
                     this.resetEnv(data);
                     this.replaceTexture(texture);
                     // load source img
-                    return myLoader.loadTexture(data.simg)
+                    return myLoader.loadTexture(data.simg, data.suffix)
                         .then(texture => data.equal(this.sceneData) && this.replaceSlient(texture));
                 }).catch(e => Log.output(e));
         } else {
-            myLoader.loadTexture(data.simg)
+            myLoader.loadTexture(data.simg, data.suffix)
                 .then(texture => {
                     this.resetEnv(data);
                     opts.sceneTrans ? this.replaceAnim(texture) : this.replaceTexture(texture);
@@ -592,15 +592,8 @@ export default class Pano extends History {
     /**
      * 锁定全景, click animation ...
      */
-    lock() {
-        this.interactable = false;
-    }
-
-    /**
-     * 解锁全景
-     */
-    unlock() {
-        this.interactable = true;
+    makeInteract(flag) {
+        this.interactable = flag;
     }
 
     /** 

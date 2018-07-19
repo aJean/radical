@@ -43,7 +43,7 @@ export default class Wormhole extends PubSubAble {
         const pos = this.pos = Util.calcSphereToWorld(data.lng, data.lat);
 
         // pano.enableShadow();
-        myLoader.loadTexture(data.bxlPath || data.texPath).then((texture: Texture) => {
+        myLoader.loadTexture(data.simg).then((texture: Texture) => {
             const hole = this.hole = new Inradius({
                 rotate: true, shadow: true, type: 'cloud',
                 position: pos, radius: 100, envMap: this.texture = texture
@@ -78,13 +78,13 @@ export default class Wormhole extends PubSubAble {
             const pos = this.pos.clone();
             // camera lookAt.z > camera position.z
             pos.z += this.direction ? 100 : -100;
-
+            
             // camera lookAt
             new Tween(lookTarget, pano.ref).to(pos).effect('quintEaseIn', 1000)
                 .start(['x', 'y', 'z'])
                 .complete(() => {
                     // camera position
-                    new Tween(camera.position, pano.ref).to(this.pos).effect('quadEaseOut', 1000)
+                    new Tween(camera.position, pano.ref).to(this.pos).effect('expoOut', 1000)
                         .start(['x', 'y', 'z'])
                         .complete(() => {
                             this.finish();

@@ -89,7 +89,7 @@ export default abstract class Runtime {
             } else {
                 vpano.noTimeline();
             }
-            // 星际穿越
+            // 星际穿越, make sure to be first
             if (source['thru']) {
                 vpano.addPlugin(Thru, source['thru']);
             }

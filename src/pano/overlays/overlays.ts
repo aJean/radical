@@ -69,9 +69,13 @@ export default class Overlays extends PubSubAble {
         this.create(scene.overlays);
     }
 
+    /**
+     * 创建本场景的覆盖物
+     */
     create(list) {
         const cache = this.getCurrent(this.cid);
-
+        // add detects group
+        this.pano.addSceneObject(cache.detects);
         list.forEach(data => {
             switch (data.type) {
                 case 'dom':
@@ -195,11 +199,8 @@ export default class Overlays extends PubSubAble {
         if (data) {
             return data;
         } else {
-            const group = new Group();
-            this.pano.addSceneObject(group);
-
             return this.maps[id] = {
-                detects: group,
+                detects: new Group(),
                 domGroup: [],
                 meshGroup: []
             };
@@ -232,8 +233,6 @@ export default class Overlays extends PubSubAble {
             if (this.pluginJudge(ndcpos)) {
                 evt.stopPropagation();
                 evt.preventDefault();
-
-                return true;
             } else if (!pano.frozen && pano.interactable && evt.target == pano.getCanvas()) {
                 this.publish(this.Topic.UI.PANOCLICK, {location, pano});
             }
@@ -326,8 +325,9 @@ export default class Overlays extends PubSubAble {
         const pano = this.pano;
 
         if (data) {
-            if (isclean && data.detects.children) {
+            if (isclean && data.detects) {
                 data.detects.remove(...data.detects.children);
+                pano.removeSceneObject(data.detects);
             }
 
             data.domGroup.forEach(item => {

@@ -6,6 +6,7 @@ import Loader from '../loaders/resource.loader';
 import Inradius from '../plastic/inradius.plastic';
 import Light from '../plastic/light.plastic';
 import Converter from '../loaders/converter';
+import Analyse from '../hdmap/analyse.hdmap';
 
 /**
  * @file 星际穿越 plugin
@@ -25,6 +26,8 @@ export default class Thru extends PubSubAble {
     list: any;
     camera: any;
     pano: any;
+    tween: any;
+    textgap = 160;
     invr = false;
     active = false; // prevent excessive click
     timeid = 0;
@@ -57,6 +60,8 @@ export default class Thru extends PubSubAble {
     init(topic, payload) {
         const opts = this.opts;
         const list = this.list =  payload.scene.recomList.slice(0, opts.limit);
+        const poss = payload.scene.recomPos.slice(0, opts.limit)
+            .map(data => this.calcPos(data.pos, data.x, data.y));
 
         if (!list || !list.length) {
             return;
@@ -64,20 +69,15 @@ export default class Thru extends PubSubAble {
         // clean current thru list
         const pano = this.pano;
         const radius = opts.radius;
-        const interpolat = 141;
-        // TODO: 注意右侧的球文字间距需要处理
-        /* const poss = [Analyse.calcWorld(4, 0.59375, 0.695906433),
-            Analyse.calcWorld(5, 0.703125, 0.664717349),
-            Analyse.calcWorld(1, 0.375, 0.859649123)]; */
         
         list.forEach((item, i) => {
-            const pos = this.getVector(i);
+            const pos = poss[i];
             const hole = new Inradius({
                 name: i, shadow: true, position: pos, radius: radius, type: 'cloud', data: item,
                 rotate: true, emissive: '#787878', cloudimg: opts.img
             }, pano);
             const text = new Text({text: item.setName, fontsize: 40, width: 512,
-                x: pos.x, y: pos.y - interpolat, z: pos.z, limit: 6, shadow: true});
+                x: pos.x, y: pos.y - this.textgap, z: pos.z, limit: 6, shadow: true});
             
             hole.setOpacity(0);
             text.setOpacity(0);
@@ -96,6 +96,21 @@ export default class Thru extends PubSubAble {
     }
 
     /**
+     * 计算推荐球世界坐标
+     * @param {number} index 编号, 位与六面体的哪一个面上
+     * @param {number} u 贴图横坐标
+     * @param {number} v 贴图纵坐标
+     */
+    calcPos(index, u, v) {
+        const {x, y, z} = Analyse.calcWorld(Number(index), Number(u), Number(v));
+        return {
+            x: x * 1000,
+            y: y * 1000,
+            z: z > 0 ? 1000 : -1000
+        };
+    }
+
+    /**
      * 使用唯一点光源避免互相干扰
      */
     initLights() {
@@ -109,9 +124,11 @@ export default class Thru extends PubSubAble {
      * 场景切换或穿越更新穿越点的内容
      */
     change(topic, payload) {
-        const list = this.list = payload.scene.recomList.slice(0, this.opts.limit);
         const objs = this.objs;
         const texts = this.texts;
+        const list = this.list = payload.scene.recomList.slice(0, this.opts.limit);
+        const poss = payload.scene.recomPos.slice(0, this.opts.limit)
+            .map(data => this.calcPos(data.pos, data.x, data.y));
 
         if (!list || !list.length || !objs.length) {
             return;
@@ -120,10 +137,15 @@ export default class Thru extends PubSubAble {
         list.forEach((item, i) => {
             const name = item.setName;
             const hole = objs[i];
+            const text = texts[i];
+            const pos = poss[i];
 
             hole.setData(item);
-            texts[i].draw(name);
-            loader.loadTexture(item.image).then(texture => hole.setMap(texture));
+            hole.setPosition(pos.x, pos.y, pos.z);
+            text.draw(name);
+            text.setPosition(pos.x, pos.y - this.textgap, pos.z);
+            
+            loader.loadImage(item.image).then(texture => hole.setMap(texture));
         });
 
         this.needToShow();
@@ -233,7 +255,7 @@ export default class Thru extends PubSubAble {
                     const id = data.sceneId;
                     const sid = data.setId;
 
-                    pano.lock();
+                    pano.makeInteract(false);
                     loader.fetchJsonp(`${surl}&xrkey=${sid}&sceneid=${id}`)
                         .then(res => {
                             const data = Converter.ResultTransform(res);
@@ -249,7 +271,7 @@ export default class Thru extends PubSubAble {
                                 pano.makeControl(false);
                                 pos.z += flag ? 50 : -50;
                                 // start thru animation
-                                new Tween(ctarget, pano.ref).to(pos).effect('quintEaseIn', 1000)
+                                this.tween = new Tween(ctarget, pano.ref).to(pos).effect('quintEaseIn', 1000)
                                     .start(['x', 'y', 'z'])
                                     .complete(() => {
                                         new Tween(camera.position, pano.ref).to(instance.getPosition())
@@ -261,13 +283,13 @@ export default class Thru extends PubSubAble {
                                                 this.hide();
                                                 pano.getControl().reset(flag);
                                                 pano.supplyOverlayScenes(sceneGroup);
-                                                pano.unlock();
+                                                pano.makeInteract(true);
                                                 pano.makeControl(this.active = true);
                                             });
                                     });
                             }
                         }).catch(e => {
-                            pano.unlock();
+                            pano.makeInteract(true);
                             pano.makeControl(this.active = true);
                         });
                 }

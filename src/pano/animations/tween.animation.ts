@@ -47,11 +47,21 @@ const EFFECT = {
     sineIn(t, b, c, d) {
         return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
     },
+
     sineOut(t, b, c, d) {
         return c * Math.sin(t / d * (Math.PI / 2)) + b;
     },
+
     sineInOut(t, b, c, d) {
         return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;
+    },
+
+    expoIn(t, b, c, d) {
+        return (t == 0) ? b : c * Math.pow(2, 10 * (t / d - 1)) + b;
+    },
+
+    expoOut(t, b, c, d) {
+        return (t == d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b;
     }
 };
 

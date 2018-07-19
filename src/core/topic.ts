@@ -34,6 +34,7 @@ export default {
     // ui interface
     UI: {
         PANOCLICK: 'pano-click',
+        PANOCANCEL: 'pano-cancel',
         OVERLAYCLICK: 'overlay-click',
         MULTIPLEACTIVE: 'multiple-active',
         DRAG: 'pano-drag',
