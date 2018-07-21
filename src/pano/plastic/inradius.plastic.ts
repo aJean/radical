@@ -1,5 +1,4 @@
 import { BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending } from 'three';
-import Tween from '../animations/tween.animation';
 import Plastic from '../../interface/plastic.interface';
 import Text from '../plastic/text.plastic';
 import Shader from '../../shader/plastic.shader';
@@ -210,11 +209,7 @@ export default class Inradius extends Plastic {
      * 设置透明度
      */
     setOpacity(opacity) {
-        if (this.wrap) {
-            this.wrap.material.opacity = opacity;
-        }
-
-        this.plastic.material.opacity = opacity;
+        this.getPlastic().material.opacity = opacity;
     }
 
     /**
@@ -243,26 +238,6 @@ export default class Inradius extends Plastic {
             target.rotation.y += 0.01;
             target.rotation.z += 0.01;
         }
-    }
-
-    /**
-     * 淡入效果
-     */
-    fadeIn(onComplete) {
-        const material = this.plastic.material;
-
-        new Tween(material, this.pano.ref).to({ opacity: 1 }).effect('linear', 1000)
-            .start(['opacity']).complete(onComplete);
-    }
-    
-    /**
-     * 淡出效果
-     */
-    fadeOut(onComplete) {
-        const material = this.plastic.material;
-
-        new Tween(material, this.pano.ref).to({ opacity: 0 }).effect('linear', 1000)
-            .start(['opacity']).complete(onComplete);
     }
 
     dispose() {

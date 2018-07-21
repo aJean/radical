@@ -71,6 +71,7 @@ export default class Tween extends PubSubAble {
     fn: Function;
     onProcess: Function;
     onComplete: Function;
+    onError: Function;
     record = {};
     startTime = 0;
     duration = 500;
@@ -121,6 +122,11 @@ export default class Tween extends PubSubAble {
         return this;
     }
 
+    error(fn) {
+        this.onError = fn;
+        return this;
+    }
+
     animate() {
         try {
             const t = Date.now() - this.startTime;
@@ -142,7 +148,7 @@ export default class Tween extends PubSubAble {
                 this.onComplete && this.onComplete();
             }
         } catch (e) {
-            Log.errorLog(e);
+            this.onError ? this.onComplete(e) : Log.errorLog(e);
             this.stop();
         }
     }

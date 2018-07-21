@@ -1,3 +1,4 @@
+import {CameraHelper} from 'three';
 import Util from '../../core/util';
 import PluggableUI from '../../interface/ui.interface';
 
@@ -14,14 +15,17 @@ export default class Helper extends PluggableUI {
         this.pano = pano;
         this.subscribe(this.Topic.RENDER.PROCESS, () => this.update());
 
-        const circle = this.element = Util.createElement('<div style="position:absolute;width:10px;height:10px;background:#fff;border-radius:10px;z-index:99;border:2px solid red;"></div>');
+        this.element = Util.createElement('<div style="position:absolute;width:10px;height:10px;background:#fff;border-radius:10px;z-index:99;border:2px solid red;"></div>');
         this.setContainer(pano.getRoot());
+
+        const helper = new CameraHelper(pano.getCamera());
+        pano.addSceneObject(helper);
     }
 
     update() {
         const pano = this.pano;
         let pos = this.pano.getLook();
-        // camera to object
+        // camera to object world
         pos.lng -= 180;
         pos.lat -= 90;
 

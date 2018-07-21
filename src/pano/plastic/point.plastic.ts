@@ -48,10 +48,10 @@ export default class Point extends Plastic {
 
         if (opts.anim) {
             const canvas = document.createElement('canvas');
-            const ctx = this.ctx = canvas.getContext('2d');
             canvas.width = 64;
             canvas.height = 64;
 
+            this.ctx = canvas.getContext('2d');
             const frame = this.frame = new Mesh(new CircleGeometry(32, opts.seagment),
                 new MeshBasicMaterial({
                     map: new CanvasTexture(canvas),

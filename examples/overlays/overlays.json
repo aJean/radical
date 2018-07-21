@@ -5,7 +5,7 @@
     "pano": {
         "fovTrans": true,
         "sceneTrans": true,
-        "preTrans": false
+        "preTrans": true
     },
     "sceneGroup": [{
         "info": {

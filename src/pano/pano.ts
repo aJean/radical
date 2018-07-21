@@ -4,6 +4,7 @@ import GyroControl from './controls/gyro.control';
 import ResourceLoader from './loaders/resource.loader';
 import HDMonitor from './hdmap/monitor.hdmap';
 import Tween from './animations/tween.animation';
+import Transition from './animations/transition.animation';
 import Overlays from './overlays/overlays';
 import Inradius from './plastic/inradius.plastic';
 import Log from '../core/log';
@@ -294,20 +295,33 @@ export default class Pano extends History {
 
     /**
      * 动画效果切换场景贴图
-     * @param {Object} texture 场景原图纹理
+     * @param {Texture} texture 场景原图纹理
+     * @param {string} effect 动画类型
+     * @param {Object} data 要继续加载清晰大图
      */
-    replaceAnim(texture) {
+    replaceAnim(texture, effect, data?) {
         const publishdata = {scene: this.sceneData, pano: this};
-        const Topic = this.Topic;        
+        const Topic = this.Topic;    
+        let final;    
         
         this.publish(Topic.SCENE.ATTACHSTART, publishdata);
         
         const skyBox = this.skyBox;
-        const newBox = new Inradius({envMap: texture, opacity: 0}, this);
+        const newBox = new Inradius({envMap: texture}, this);
 
-        newBox.addTo(this.scene);
-        newBox.fadeIn(() => {
+        if (data) {
+            final = myLoader.loadTexture(data.simg, data.suffix)
+                .then(texture => data.equal(this.sceneData) && texture);
+        }
+
+        return Transition[effect](skyBox, newBox, this).then(() => {
             skyBox.setMap(texture);
+            skyBox.setOpacity(1);
+
+            if (final) {
+                final.then(texture => texture && this.replaceSlient(texture));
+            }
+
             newBox.dispose();
             this.publish(Topic.SCENE.ATTACH, publishdata);
         });
@@ -543,6 +557,7 @@ export default class Pano extends History {
      */
     enterNext(data) {
         const opts = this.opts;
+        const sceneTrans = opts.sceneTrans;
         // replace history
         this.replaceState(data = Converter.DataTransform(data));
 
@@ -551,16 +566,20 @@ export default class Pano extends History {
             myLoader.loadCanvas(data.pimg)
                 .then(texture => {
                     this.resetEnv(data);
-                    this.replaceTexture(texture);
-                    // load source img
-                    return myLoader.loadTexture(data.simg, data.suffix)
-                        .then(texture => data.equal(this.sceneData) && this.replaceSlient(texture));
+                    if (sceneTrans) {
+                        this.replaceAnim(texture, 'trans', data);
+                    } else {
+                        this.replaceTexture(texture);
+                        // load source img
+                        myLoader.loadTexture(data.simg, data.suffix)
+                            .then(texture => data.equal(this.sceneData) && this.replaceSlient(texture));
+                    }
                 }).catch(e => Log.output(e));
         } else {
             myLoader.loadTexture(data.simg, data.suffix)
                 .then(texture => {
                     this.resetEnv(data);
-                    opts.sceneTrans ? this.replaceAnim(texture) : this.replaceTexture(texture);
+                    sceneTrans ? this.replaceAnim(texture, 'fade') : this.replaceTexture(texture);
                 }).catch(e => Log.output(e));
         }
     }
