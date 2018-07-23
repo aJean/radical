@@ -5,7 +5,7 @@ import Log from '../../core/log';
  * @file js frame animation
  */
 
-const EFFECT = {
+export const EFFECT = {
     linear(t, b, c, d): number { 
         return c * t / d + b; 
     },
@@ -17,6 +17,11 @@ const EFFECT = {
     quadEaseOut(t, b, c, d): number {
         return -c * (t /= d) * (t - 2) + b;
     },
+    
+    quadEaseInOut: function(t, b, c, d) {
+        if ((t /= d / 2) < 1) return c / 2 * t * t + b;
+        return -c / 2 * ((--t) * (t-2) - 1) + b;
+    },
 
     cubicEaseIn(t, b, c, d): number {
         return c * (t /= d) * t * t + b;
@@ -26,12 +31,22 @@ const EFFECT = {
         return c * ((t = t / d - 1) * t * t + 1) + b;
     },
 
+    cubeEaseInOut: function(t, b, c, d) {
+        if ((t /= d / 2) < 1) return c / 2 * t * t*t + b;
+        return c / 2*((t -= 2) * t * t + 2) + b;
+    },
+
     quintEaseIn(t, b, c, d): number {
         return c * (t /= d) * t * t * t * t + b; 
     },
 
     quintEaseOut(t, b, c, d): number {
         return c * ((t = t/d - 1) * t * t * t * t + 1) + b;
+    },
+
+    quintEaseInOut: function(t, b, c, d) {
+        if ((t /= d / 2) < 1) return c / 2 * t * t * t * t * t + b;
+        return c / 2*((t -= 2) * t * t * t * t + 2) + b;
     },
 
     backIn(t, b, c, d) {
@@ -62,6 +77,13 @@ const EFFECT = {
 
     expoOut(t, b, c, d) {
         return (t == d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b;
+    },
+
+    expoInOut: function(t, b, c, d) {
+        if (t==0) return b;
+        if (t==d) return b+c;
+        if ((t /= d / 2) < 1) return c / 2 * Math.pow(2, 10 * (t - 1)) + b;
+        return c / 2 * (-Math.pow(2, -10 * --t) + 2) + b;
     }
 };
 

@@ -1,11 +1,10 @@
-﻿/**
+﻿import {EFFECT} from './tween.animation';
+
+/**
  * @file minor planet animation
  */
 
-function calc (t, b, c, d) { 
-    return c * t / d + b; 
-}
-
+const calc = EFFECT.quadEaseInOut;
 const defaultOpts = {
     special: 'step'
 };
@@ -110,15 +109,15 @@ export default class AnimationFly {
             }],
             // some not well anim
             fly2: [{
-                start: {fov: 150, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
+                start: {fov: 140, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: Math.PI / 3},
                 end: {fov, px, py, pz, rx: -Math.PI, ry: 0, rz:  Math.PI},
                 time: 2000
             }],
             // has beginning lookat
             fly3: [{
-                start: {fov: 150, px: 0, py: 1900, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
+                start: {fov: 150, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
                 end: {fov, px, py, pz, rx: rx, ry: ry, rz: rz},
-                time: 4000
+                time: 3000
             }]
         };
 

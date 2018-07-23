@@ -209,7 +209,11 @@ export default class Inradius extends Plastic {
      * 设置透明度
      */
     setOpacity(opacity) {
-        this.getPlastic().material.opacity = opacity;
+        if (this.wrap) {
+            this.wrap.material.opacity = opacity;
+        }
+        
+        this.plastic.material.opacity = opacity;
     }
 
     /**

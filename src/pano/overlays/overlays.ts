@@ -46,7 +46,7 @@ export default class Overlays extends PubSubAble {
 
         const Topic = this.Topic;
 
-        this.subscribe(Topic.SCENE.INIT, this.init.bind(this));
+        this.subscribe(pano.frozen ? Topic.SCENE.READY : Topic.SCENE.INIT, this.init.bind(this));
         this.subscribe(Topic.SCENE.ATTACHSTART, this.removeOverlays.bind(this));
         this.subscribe(Topic.SCENE.ATTACH, this.init.bind(this));
         this.subscribe(Topic.RENDER.PROCESS, this.updateOverlays.bind(this));
