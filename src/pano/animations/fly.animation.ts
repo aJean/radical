@@ -4,15 +4,13 @@
  * @file minor planet animation
  */
 
-const calc = EFFECT.quadEaseInOut;
-const defaultOpts = {
-    special: 'step'
-};
+const calc = EFFECT.quadInOut;
 export default class AnimationFly {
     path: any;
     camera: any;
     type: string;
     time = 0;
+    timex = 0;
     finished = false;
     enable = false;
 
@@ -74,10 +72,10 @@ export default class AnimationFly {
             const px = calc(time, data.start.px, data.end.px - data.start.px, data.time);
             const py = calc(time, data.start.py, data.end.py - data.start.py, data.time);
             const pz = calc(time, data.start.pz, data.end.pz - data.start.pz, data.time);
-            const rx = calc(time, data.start.rx, data.end.rx - data.start.rx, data.time);
             const ry = calc(time, data.start.ry, data.end.ry - data.start.ry, data.time);
             const rz = calc(time, data.start.rz, data.end.rz - data.start.rz, data.time);
             const fov = calc(time, data.start.fov, data.end.fov - data.start.fov, data.time);
+            const rx = calc(time, data.start.rx, data.end.rx - data.start.rx, data.time);
 
             camera.fov = fov;
             camera.position.set(px, py, pz);
@@ -117,7 +115,7 @@ export default class AnimationFly {
             fly3: [{
                 start: {fov: 150, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0},
                 end: {fov, px, py, pz, rx: rx, ry: ry, rz: rz},
-                time: 3000
+                time: 2000
             }]
         };
 

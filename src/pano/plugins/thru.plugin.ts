@@ -59,9 +59,7 @@ export default class Thru extends PubSubAble {
      */
     init(topic, payload) {
         const opts = this.opts;
-        const list = this.list =  payload.scene.recomList.slice(0, opts.limit);
-        const poss = payload.scene.recomPos.slice(0, opts.limit)
-            .map(data => this.calcPos(data.pos, data.x, data.y));
+        const list = this.list = payload.scene.recomList.slice(0, opts.limit);
 
         if (!list || !list.length) {
             return;
@@ -69,6 +67,7 @@ export default class Thru extends PubSubAble {
         // clean current thru list
         const pano = this.pano;
         const radius = opts.radius;
+        const poss = this.calcPos(payload.scene.recomPos.slice(0, opts.limit));
         
         list.forEach((item, i) => {
             const pos = poss[i];
@@ -97,17 +96,18 @@ export default class Thru extends PubSubAble {
 
     /**
      * 计算推荐球世界坐标
-     * @param {number} index 编号, 位与六面体的哪一个面上
-     * @param {number} u 贴图横坐标
-     * @param {number} v 贴图纵坐标
+     * @param {Array} list 位置信息数组
      */
-    calcPos(index, u, v) {
-        const {x, y, z} = Analyse.calcWorld(Number(index), Number(u), Number(v));
-        return {
-            x: x * 1000,
-            y: y * 1000,
-            z: z > 0 ? 1000 : -1000
-        };
+    calcPos(list) {
+        return list && list.slice(0, this.opts.limit).map(data => {
+            const {x, y, z} = Analyse.calcWorld(Number(data.pos), Number(data.x), Number(data.y));
+
+            return {
+                x: x * 1000,
+                y: y * 1000,
+                z: z > 0 ? 1000 : -1000
+            };
+        });
     }
 
     /**
@@ -127,12 +127,12 @@ export default class Thru extends PubSubAble {
         const objs = this.objs;
         const texts = this.texts;
         const list = this.list = payload.scene.recomList.slice(0, this.opts.limit);
-        const poss = payload.scene.recomPos.slice(0, this.opts.limit)
-            .map(data => this.calcPos(data.pos, data.x, data.y));
 
         if (!list || !list.length || !objs.length) {
             return;
         }
+
+        const poss = this.calcPos(payload.scene.recomPos.slice(0, this.opts.limit));
         // change thru content
         list.forEach((item, i) => {
             const name = item.setName;

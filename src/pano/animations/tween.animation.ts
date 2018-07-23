@@ -18,7 +18,7 @@ export const EFFECT = {
         return -c * (t /= d) * (t - 2) + b;
     },
     
-    quadEaseInOut: function(t, b, c, d) {
+    quadInOut: function(t, b, c, d) {
         if ((t /= d / 2) < 1) return c / 2 * t * t + b;
         return -c / 2 * ((--t) * (t-2) - 1) + b;
     },
@@ -31,7 +31,7 @@ export const EFFECT = {
         return c * ((t = t / d - 1) * t * t + 1) + b;
     },
 
-    cubeEaseInOut: function(t, b, c, d) {
+    cubeInOut: function(t, b, c, d) {
         if ((t /= d / 2) < 1) return c / 2 * t * t*t + b;
         return c / 2*((t -= 2) * t * t + 2) + b;
     },
@@ -44,7 +44,7 @@ export const EFFECT = {
         return c * ((t = t/d - 1) * t * t * t * t + 1) + b;
     },
 
-    quintEaseInOut: function(t, b, c, d) {
+    quintInOut: function(t, b, c, d) {
         if ((t /= d / 2) < 1) return c / 2 * t * t * t * t * t + b;
         return c / 2*((t -= 2) * t * t * t * t + 2) + b;
     },

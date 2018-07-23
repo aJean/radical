@@ -77,14 +77,14 @@ export default class Wormhole extends PubSubAble {
             const lookTarget = pano.getLookAtTarget();
             const pos = this.pos.clone();
             // camera lookAt.z > camera position.z
-            pos.z += this.direction ? 100 : -100;
+            pos.z += this.direction ? 1 : -1;
             
             // camera lookAt
             new Tween(lookTarget, pano.ref).to(pos).effect('quintEaseIn', 1000)
                 .start(['x', 'y', 'z'])
                 .complete(() => {
                     // camera position
-                    new Tween(camera.position, pano.ref).to(this.pos).effect('expoOut', 1000)
+                    new Tween(camera.position, pano.ref).to(this.pos).effect('quadEaseOut', 1000)
                         .start(['x', 'y', 'z'])
                         .complete(() => {
                             this.finish();
@@ -110,7 +110,7 @@ export default class Wormhole extends PubSubAble {
     addBackDoor() {
         const hole = this.hole;
         const pos = this.pos = Util.calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
-        const z = this.direction ? pos.z + 200 : pos.z - 200;
+        const z = this.direction ? pos.z + 1 : pos.z - 1;
 
         hole.setMap(this.texture = this.backTexture);
         hole.setPosition(pos.x, pos.y, pos.z);

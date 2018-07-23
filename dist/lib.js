@@ -55810,13 +55810,11 @@ var tween_animation_1 = __webpack_require__(/*! ./tween.animation */ "./src/pano
 /**
  * @file minor planet animation
  */
-var calc = tween_animation_1.EFFECT.quadEaseInOut;
-var defaultOpts = {
-    special: 'step'
-};
+var calc = tween_animation_1.EFFECT.quadInOut;
 var AnimationFly = /** @class */ (function () {
     function AnimationFly(camera, type) {
         this.time = 0;
+        this.timex = 0;
         this.finished = false;
         this.enable = false;
         this.camera = camera;
@@ -55860,10 +55858,10 @@ var AnimationFly = /** @class */ (function () {
             var px = calc(time, data.start.px, data.end.px - data.start.px, data.time);
             var py = calc(time, data.start.py, data.end.py - data.start.py, data.time);
             var pz = calc(time, data.start.pz, data.end.pz - data.start.pz, data.time);
-            var rx = calc(time, data.start.rx, data.end.rx - data.start.rx, data.time);
             var ry = calc(time, data.start.ry, data.end.ry - data.start.ry, data.time);
             var rz = calc(time, data.start.rz, data.end.rz - data.start.rz, data.time);
             var fov = calc(time, data.start.fov, data.end.fov - data.start.fov, data.time);
+            var rx = calc(time, data.start.rx, data.end.rx - data.start.rx, data.time);
             camera.fov = fov;
             camera.position.set(px, py, pz);
             camera.rotation.set(rx, ry, rz);
@@ -55900,7 +55898,7 @@ var AnimationFly = /** @class */ (function () {
             fly3: [{
                     start: { fov: 150, px: 0, py: 1800, pz: 0, rx: -Math.PI / 2, ry: 0, rz: 0 },
                     end: { fov: fov, px: px, py: py, pz: pz, rx: rx, ry: ry, rz: rz },
-                    time: 3000
+                    time: 2000
                 }]
         };
         return FlyPath[type];
@@ -56066,7 +56064,7 @@ exports.EFFECT = {
     quadEaseOut: function (t, b, c, d) {
         return -c * (t /= d) * (t - 2) + b;
     },
-    quadEaseInOut: function (t, b, c, d) {
+    quadInOut: function (t, b, c, d) {
         if ((t /= d / 2) < 1)
             return c / 2 * t * t + b;
         return -c / 2 * ((--t) * (t - 2) - 1) + b;
@@ -56077,7 +56075,7 @@ exports.EFFECT = {
     cubicEaseOut: function (t, b, c, d) {
         return c * ((t = t / d - 1) * t * t + 1) + b;
     },
-    cubeEaseInOut: function (t, b, c, d) {
+    cubeInOut: function (t, b, c, d) {
         if ((t /= d / 2) < 1)
             return c / 2 * t * t * t + b;
         return c / 2 * ((t -= 2) * t * t + 2) + b;
@@ -56088,7 +56086,7 @@ exports.EFFECT = {
     quintEaseOut: function (t, b, c, d) {
         return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
     },
-    quintEaseInOut: function (t, b, c, d) {
+    quintInOut: function (t, b, c, d) {
         if ((t /= d / 2) < 1)
             return c / 2 * t * t * t * t * t + b;
         return c / 2 * ((t -= 2) * t * t * t * t + 2) + b;
@@ -60860,14 +60858,13 @@ var Thru = /** @class */ (function (_super) {
         var _this = this;
         var opts = this.opts;
         var list = this.list = payload.scene.recomList.slice(0, opts.limit);
-        var poss = payload.scene.recomPos.slice(0, opts.limit)
-            .map(function (data) { return _this.calcPos(data.pos, data.x, data.y); });
         if (!list || !list.length) {
             return;
         }
         // clean current thru list
         var pano = this.pano;
         var radius = opts.radius;
+        var poss = this.calcPos(payload.scene.recomPos.slice(0, opts.limit));
         list.forEach(function (item, i) {
             var pos = poss[i];
             var hole = new inradius_plastic_1.default({
@@ -60891,17 +60888,17 @@ var Thru = /** @class */ (function (_super) {
     };
     /**
      * 计算推荐球世界坐标
-     * @param {number} index 编号, 位与六面体的哪一个面上
-     * @param {number} u 贴图横坐标
-     * @param {number} v 贴图纵坐标
+     * @param {Array} list 位置信息数组
      */
-    Thru.prototype.calcPos = function (index, u, v) {
-        var _a = analyse_hdmap_1.default.calcWorld(Number(index), Number(u), Number(v)), x = _a.x, y = _a.y, z = _a.z;
-        return {
-            x: x * 1000,
-            y: y * 1000,
-            z: z > 0 ? 1000 : -1000
-        };
+    Thru.prototype.calcPos = function (list) {
+        return list && list.slice(0, this.opts.limit).map(function (data) {
+            var _a = analyse_hdmap_1.default.calcWorld(Number(data.pos), Number(data.x), Number(data.y)), x = _a.x, y = _a.y, z = _a.z;
+            return {
+                x: x * 1000,
+                y: y * 1000,
+                z: z > 0 ? 1000 : -1000
+            };
+        });
     };
     /**
      * 使用唯一点光源避免互相干扰
@@ -60919,11 +60916,10 @@ var Thru = /** @class */ (function (_super) {
         var objs = this.objs;
         var texts = this.texts;
         var list = this.list = payload.scene.recomList.slice(0, this.opts.limit);
-        var poss = payload.scene.recomPos.slice(0, this.opts.limit)
-            .map(function (data) { return _this.calcPos(data.pos, data.x, data.y); });
         if (!list || !list.length || !objs.length) {
             return;
         }
+        var poss = this.calcPos(payload.scene.recomPos.slice(0, this.opts.limit));
         // change thru content
         list.forEach(function (item, i) {
             var name = item.setName;
@@ -61176,13 +61172,13 @@ var Wormhole = /** @class */ (function (_super) {
             var lookTarget = pano.getLookAtTarget();
             var pos_1 = this.pos.clone();
             // camera lookAt.z > camera position.z
-            pos_1.z += this.direction ? 100 : -100;
+            pos_1.z += this.direction ? 1 : -1;
             // camera lookAt
             new tween_animation_1.default(lookTarget, pano.ref).to(pos_1).effect('quintEaseIn', 1000)
                 .start(['x', 'y', 'z'])
                 .complete(function () {
                 // camera position
-                new tween_animation_1.default(camera.position, pano.ref).to(_this.pos).effect('expoOut', 1000)
+                new tween_animation_1.default(camera.position, pano.ref).to(_this.pos).effect('quadEaseOut', 1000)
                     .start(['x', 'y', 'z'])
                     .complete(function () {
                     _this.finish();
@@ -61204,7 +61200,7 @@ var Wormhole = /** @class */ (function (_super) {
     Wormhole.prototype.addBackDoor = function () {
         var hole = this.hole;
         var pos = this.pos = util_1.default.calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
-        var z = this.direction ? pos.z + 200 : pos.z - 200;
+        var z = this.direction ? pos.z + 1 : pos.z - 1;
         hole.setMap(this.texture = this.backTexture);
         hole.setPosition(pos.x, pos.y, pos.z);
         this.light.setPosition(pos.x, pos.y, z);
