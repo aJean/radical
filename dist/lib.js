@@ -57248,8 +57248,8 @@ var HDAnalyse = /** @class */ (function () {
         return { u: u, v: v, index: index };
     };
     /**
-     * uv 坐标转换为世界坐标
-     * uv 原点在左下, 对应到 backside 贴图为右下, 转为像素坐标原点在左上
+     * uv 坐标转换为世界坐标, uv 原点 backside 贴图为右下
+     * 注意左右交换
      * @param {number} index 图片编号
      * @param {number} u
      * @param {number} v
@@ -57262,14 +57262,14 @@ var HDAnalyse = /** @class */ (function () {
         var y;
         var z;
         switch (index) {
-            // POSITIVE X
-            case 0:
+            // right
+            case 1:
                 x = 1;
                 y = vc;
                 z = -uc;
                 break;
-            // NEGATIVE X
-            case 1:
+            // left
+            case 0:
                 x = -1;
                 y = vc;
                 z = uc;
@@ -58683,8 +58683,8 @@ var Pano = /** @class */ (function (_super) {
         this.camera = new three_1.PerspectiveCamera(data.fov || opts.fov, size.aspect, 0.1, 10000);
         // create control
         var orbit = this.orbit = new orbit_control_1.default(this.camera, webgl.domElement, this);
-        // 设置初始角度, 需要执行 orbit control update
-        if (data.lng !== void 0) {
+        // 设置初始角度, 需要执行 orbit control update, 并且执行 fly3
+        if (data.lng && data.lat) {
             this.setLook(data.lng, data.lat);
             orbit.update();
         }
@@ -59507,8 +59507,8 @@ var defaultOpts = {
     radius: 2000,
     color: '#fff',
     emissive: '#000',
-    widthSegments: 16,
-    heightSegments: 16,
+    widthSegments: 18,
+    heightSegments: 18,
     opacity: 1,
     cloudimg: '../assets/cloud.png',
     shadow: false
@@ -61037,23 +61037,20 @@ var Thru = /** @class */ (function (_super) {
                             var flag_1 = pos_1.z > 0;
                             // lock control
                             pano.makeControl(false);
-                            pos_1.z += flag_1 ? 50 : -50;
+                            pos_1.z += flag_1 ? 1 : -1;
                             // start thru animation
-                            _this.tween = new tween_animation_1.default(ctarget, pano.ref).to(pos_1).effect('quintEaseIn', 1000)
-                                .start(['x', 'y', 'z'])
+                            new tween_animation_1.default(ctarget, pano.ref).to(pos_1).effect('expoInOut', 1500).start(['x', 'y', 'z']);
+                            // start camera animation
+                            new tween_animation_1.default(camera.position, pano.ref).to(instance_1.getPosition())
+                                .effect('expoInOut', 1800).start(['x', 'y', 'z'])
                                 .complete(function () {
-                                new tween_animation_1.default(camera.position, pano.ref).to(instance_1.getPosition())
-                                    .effect('quadEaseOut', 1000)
-                                    .start(['x', 'y', 'z'])
-                                    .complete(function () {
-                                    pano.enterThru(scene_1, instance_1.getMap());
-                                    _this.publish(_this.Topic.THRU.CHANGE, { data: data, scene: oldscene, pano: pano });
-                                    _this.hide();
-                                    pano.getControl().reset(flag_1);
-                                    pano.supplyOverlayScenes(sceneGroup);
-                                    pano.makeInteract(true);
-                                    pano.makeControl(_this.active = true);
-                                });
+                                pano.enterThru(scene_1, instance_1.getMap());
+                                _this.publish(_this.Topic.THRU.CHANGE, { data: data, scene: oldscene, pano: pano });
+                                _this.hide();
+                                pano.getControl().reset(flag_1);
+                                pano.supplyOverlayScenes(sceneGroup);
+                                pano.makeInteract(true);
+                                pano.makeControl(_this.active = true);
                             });
                         }
                     }).catch(function (e) {
@@ -61146,7 +61143,7 @@ var Wormhole = /** @class */ (function (_super) {
                 position: pos, radius: 100, envMap: _this.texture = texture
             }, pano);
             hole.addBy(pano);
-            hole.getPlastic().lookAt(pano.getCamera().position);
+            hole.getPlastic();
             var light = _this.light = new light_plastic_1.default({
                 target: hole, x: pos.x, y: pos.y, z: pos.z - 200
             });
@@ -61174,16 +61171,12 @@ var Wormhole = /** @class */ (function (_super) {
             // camera lookAt.z > camera position.z
             pos_1.z += this.direction ? 1 : -1;
             // camera lookAt
-            new tween_animation_1.default(lookTarget, pano.ref).to(pos_1).effect('quintEaseIn', 1000)
-                .start(['x', 'y', 'z'])
-                .complete(function () {
-                // camera position
-                new tween_animation_1.default(camera.position, pano.ref).to(_this.pos).effect('quadEaseOut', 1000)
-                    .start(['x', 'y', 'z'])
-                    .complete(function () {
-                    _this.finish();
-                    _this.addBackDoor();
-                });
+            new tween_animation_1.default(lookTarget, pano.ref).to(pos_1).effect('sineIn', 1400)
+                .start(['x', 'y', 'z']);
+            new tween_animation_1.default(camera.position, pano.ref).to(this.pos).effect('sineIn', 1500)
+                .start(['x', 'y', 'z']).complete(function () {
+                _this.finish();
+                _this.addBackDoor();
             });
         }
     };

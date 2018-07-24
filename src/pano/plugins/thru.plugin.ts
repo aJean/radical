@@ -26,7 +26,6 @@ export default class Thru extends PubSubAble {
     list: any;
     camera: any;
     pano: any;
-    tween: any;
     textgap = 160;
     invr = false;
     active = false; // prevent excessive click
@@ -269,23 +268,20 @@ export default class Thru extends PubSubAble {
                                 const flag = pos.z > 0;
                                 // lock control
                                 pano.makeControl(false);
-                                pos.z += flag ? 50 : -50;
+                                pos.z += flag ? 1 : -1;
                                 // start thru animation
-                                this.tween = new Tween(ctarget, pano.ref).to(pos).effect('quintEaseIn', 1000)
-                                    .start(['x', 'y', 'z'])
+                                new Tween(ctarget, pano.ref).to(pos).effect('expoInOut', 1500).start(['x', 'y', 'z']);
+                                // start camera animation
+                                new Tween(camera.position, pano.ref).to(instance.getPosition())
+                                    .effect('expoInOut', 1800).start(['x', 'y', 'z'])
                                     .complete(() => {
-                                        new Tween(camera.position, pano.ref).to(instance.getPosition())
-                                            .effect('quadEaseOut', 1000)
-                                            .start(['x', 'y', 'z'])
-                                            .complete(() => {
-                                                pano.enterThru(scene, instance.getMap());
-                                                this.publish(this.Topic.THRU.CHANGE, {data, scene: oldscene, pano});
-                                                this.hide();
-                                                pano.getControl().reset(flag);
-                                                pano.supplyOverlayScenes(sceneGroup);
-                                                pano.makeInteract(true);
-                                                pano.makeControl(this.active = true);
-                                            });
+                                        pano.enterThru(scene, instance.getMap());
+                                        this.publish(this.Topic.THRU.CHANGE, {data, scene: oldscene, pano});
+                                        this.hide();
+                                        pano.getControl().reset(flag);
+                                        pano.supplyOverlayScenes(sceneGroup);
+                                        pano.makeInteract(true);
+                                        pano.makeControl(this.active = true);
                                     });
                             }
                         }).catch(e => {

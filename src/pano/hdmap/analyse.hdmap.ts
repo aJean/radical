@@ -219,8 +219,8 @@ export default abstract class HDAnalyse {
     }
 
     /**
-     * uv 坐标转换为世界坐标
-     * uv 原点在左下, 对应到 backside 贴图为右下, 转为像素坐标原点在左上
+     * uv 坐标转换为世界坐标, uv 原点 backside 贴图为右下
+     * 注意左右交换
      * @param {number} index 图片编号
      * @param {number} u 
      * @param {number} v 
@@ -234,14 +234,14 @@ export default abstract class HDAnalyse {
         let z;
 
         switch (index) {
-            // POSITIVE X
-            case 0: 
+            // right
+            case 1: 
                 x = 1;
                 y = vc;
                 z = -uc;
                 break;
-            // NEGATIVE X
-            case 1:
+            // left
+            case 0:
                 x = -1;
                 y = vc;
                 z = uc;

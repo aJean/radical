@@ -13,8 +13,8 @@ const defaultOpts = {
     radius: 2000,
     color: '#fff',
     emissive: '#000',
-    widthSegments: 16,
-    heightSegments: 16,
+    widthSegments: 18,
+    heightSegments: 18,
     opacity: 1,
     cloudimg: '../assets/cloud.png',
     shadow: false

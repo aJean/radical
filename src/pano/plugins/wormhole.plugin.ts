@@ -1,4 +1,4 @@
-import { Texture } from 'three';
+import {Texture, Quaternion, Euler, Vector3} from 'three';
 import ResourceLoader from '../loaders/resource.loader';
 import Tween from '../animations/tween.animation';
 import Inradius from '../plastic/inradius.plastic';
@@ -49,7 +49,7 @@ export default class Wormhole extends PubSubAble {
                 position: pos, radius: 100, envMap: this.texture = texture
             }, pano);
             hole.addBy(pano);
-            hole.getPlastic().lookAt(pano.getCamera().position);
+            hole.getPlastic();
 
             const light = this.light = new Light({
                 target: hole, x: pos.x, y: pos.y, z: pos.z - 200
@@ -78,19 +78,16 @@ export default class Wormhole extends PubSubAble {
             const pos = this.pos.clone();
             // camera lookAt.z > camera position.z
             pos.z += this.direction ? 1 : -1;
-            
+
             // camera lookAt
-            new Tween(lookTarget, pano.ref).to(pos).effect('quintEaseIn', 1000)
-                .start(['x', 'y', 'z'])
-                .complete(() => {
-                    // camera position
-                    new Tween(camera.position, pano.ref).to(this.pos).effect('quadEaseOut', 1000)
-                        .start(['x', 'y', 'z'])
-                        .complete(() => {
-                            this.finish();
-                            this.addBackDoor();
-                        });
-                });
+            new Tween(lookTarget, pano.ref).to(pos).effect('sineIn', 1400)
+                .start(['x', 'y', 'z']);
+
+            new Tween(camera.position, pano.ref).to(this.pos).effect('sineIn', 1500)
+            .start(['x', 'y', 'z']).complete(() => {
+                this.finish();
+                this.addBackDoor();
+            });
         }
     }
 

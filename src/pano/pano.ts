@@ -74,8 +74,8 @@ export default class Pano extends History {
         this.camera = new PerspectiveCamera(data.fov || opts.fov, size.aspect, 0.1, 10000);
         // create control
         const orbit = this.orbit = new OrbitControl(this.camera, webgl.domElement, this);
-        // 设置初始角度, 需要执行 orbit control update
-        if (data.lng !== void 0) {
+        // 设置初始角度, 需要执行 orbit control update, 并且执行 fly3
+        if (data.lng && data.lat) {
             this.setLook(data.lng, data.lat);
             orbit.update();
         }
