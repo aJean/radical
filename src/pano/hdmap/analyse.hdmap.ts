@@ -234,14 +234,14 @@ export default abstract class HDAnalyse {
         let z;
 
         switch (index) {
-            // right
-            case 1: 
+            // POSITIVE X
+            case 0: 
                 x = 1;
                 y = vc;
                 z = -uc;
                 break;
-            // left
-            case 0:
+            // NEGATIVE X
+            case 1:
                 x = -1;
                 y = vc;
                 z = uc;

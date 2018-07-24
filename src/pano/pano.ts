@@ -318,12 +318,12 @@ export default class Pano extends History {
             skyBox.setMap(texture);
             skyBox.setOpacity(1);
 
+            newBox.dispose();
+            this.publish(Topic.SCENE.ATTACH, publishdata);
+
             if (final) {
                 final.then(texture => texture && this.replaceSlient(texture));
             }
-
-            newBox.dispose();
-            this.publish(Topic.SCENE.ATTACH, publishdata);
         });
     }
 

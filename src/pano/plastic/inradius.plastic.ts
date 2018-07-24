@@ -6,6 +6,7 @@ import Util from '../../core/util';
 
 /**
  * @file 内切球
+ * renderOrder = 10
  */
 
 const defaultOpts = {
@@ -112,6 +113,9 @@ export default class Inradius extends Plastic {
                 depthTest: false
             })
         );
+
+        sphere.renderOrder = 9;
+        mask.renderOrder = 10;
         mask.add(sphere);
     }
 
@@ -127,8 +131,9 @@ export default class Inradius extends Plastic {
                 depthTest: false
             })
         );
-        sphere.renderOrder = 1;
-        cloud.renderOrder = 2;
+
+        sphere.renderOrder = 9;
+        cloud.renderOrder = 10;
         cloud.add(sphere);
     }
 

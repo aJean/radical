@@ -274,6 +274,7 @@ export default class Thru extends PubSubAble {
                                 // start camera animation
                                 new Tween(camera.position, pano.ref).to(instance.getPosition())
                                     .effect('expoInOut', 1800).start(['x', 'y', 'z'])
+                                    .process(() => camera.lookAt(ctarget))
                                     .complete(() => {
                                         pano.enterThru(scene, instance.getMap());
                                         this.publish(this.Topic.THRU.CHANGE, {data, scene: oldscene, pano});

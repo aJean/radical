@@ -57262,14 +57262,14 @@ var HDAnalyse = /** @class */ (function () {
         var y;
         var z;
         switch (index) {
-            // right
-            case 1:
+            // POSITIVE X
+            case 0:
                 x = 1;
                 y = vc;
                 z = -uc;
                 break;
-            // left
-            case 0:
+            // NEGATIVE X
+            case 1:
                 x = -1;
                 y = vc;
                 z = uc;
@@ -58914,11 +58914,11 @@ var Pano = /** @class */ (function (_super) {
         return transition_animation_1.default[effect](skyBox, newBox, this).then(function () {
             skyBox.setMap(texture);
             skyBox.setOpacity(1);
+            newBox.dispose();
+            _this.publish(Topic.SCENE.ATTACH, publishdata);
             if (final) {
                 final.then(function (texture) { return texture && _this.replaceSlient(texture); });
             }
-            newBox.dispose();
-            _this.publish(Topic.SCENE.ATTACH, publishdata);
         });
     };
     /**
@@ -59501,6 +59501,7 @@ var plastic_shader_1 = __webpack_require__(/*! ../../shader/plastic.shader */ ".
 var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 /**
  * @file 内切球
+ * renderOrder = 10
  */
 var defaultOpts = {
     side: three_1.BackSide,
@@ -59590,6 +59591,8 @@ var Inradius = /** @class */ (function (_super) {
             opacity: 0.1,
             depthTest: false
         }));
+        sphere.renderOrder = 9;
+        mask.renderOrder = 10;
         mask.add(sphere);
     };
     /**
@@ -59601,8 +59604,8 @@ var Inradius = /** @class */ (function (_super) {
             transparent: true,
             depthTest: false
         }));
-        sphere.renderOrder = 1;
-        cloud.renderOrder = 2;
+        sphere.renderOrder = 9;
+        cloud.renderOrder = 10;
         cloud.add(sphere);
     };
     /**
@@ -61032,17 +61035,18 @@ var Thru = /** @class */ (function (_super) {
                         data.sceneid = id_1;
                         if (sceneGroup) {
                             var scene_1 = sceneGroup.find(function (item) { return item.id == id_1; });
-                            var ctarget = pano.getLookAtTarget();
+                            var ctarget_1 = pano.getLookAtTarget();
                             var pos_1 = instance_1.getPosition().clone();
                             var flag_1 = pos_1.z > 0;
                             // lock control
                             pano.makeControl(false);
                             pos_1.z += flag_1 ? 1 : -1;
                             // start thru animation
-                            new tween_animation_1.default(ctarget, pano.ref).to(pos_1).effect('expoInOut', 1500).start(['x', 'y', 'z']);
+                            new tween_animation_1.default(ctarget_1, pano.ref).to(pos_1).effect('expoInOut', 1500).start(['x', 'y', 'z']);
                             // start camera animation
                             new tween_animation_1.default(camera.position, pano.ref).to(instance_1.getPosition())
                                 .effect('expoInOut', 1800).start(['x', 'y', 'z'])
+                                .process(function () { return camera.lookAt(ctarget_1); })
                                 .complete(function () {
                                 pano.enterThru(scene_1, instance_1.getMap());
                                 _this.publish(_this.Topic.THRU.CHANGE, { data: data, scene: oldscene, pano: pano });
