@@ -5,8 +5,7 @@ import Shader from '../../shader/plastic.shader';
 import Util from '../../core/util';
 
 /**
- * @file 内切球
- * renderOrder = 10
+ * @file 内切球, 作为穿越球使用时要提升 renderOrder = 10
  */
 
 const defaultOpts = {

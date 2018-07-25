@@ -59,6 +59,12 @@ export const EFFECT = {
         return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
     },
 
+    backInOut: function(t, b, c, d, s) {
+        if (typeof s == "undefined") s = 1.70158; 
+        if ((t /= d / 2) < 1) return c / 2 * (t * t * (((s *= (1.525)) + 1) * t - s)) + b;
+        return c / 2*((t -= 2) * t * (((s *= (1.525)) + 1) * t + s) + 2) + b;
+    },
+
     sineIn(t, b, c, d) {
         return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
     },
@@ -84,6 +90,62 @@ export const EFFECT = {
         if (t==d) return b+c;
         if ((t /= d / 2) < 1) return c / 2 * Math.pow(2, 10 * (t - 1)) + b;
         return c / 2 * (-Math.pow(2, -10 * --t) + 2) + b;
+    },
+
+    circEaseIn: function(t, b, c, d) {
+        return -c * (Math.sqrt(1 - (t /= d) * t) - 1) + b;
+    },
+
+    circEaseOut: function(t, b, c, d) {
+        return c * Math.sqrt(1 - (t = t/d - 1) * t) + b;
+    },
+
+    circInOut: function(t, b, c, d) {
+        if ((t /= d / 2) < 1) return -c / 2 * (Math.sqrt(1 - t * t) - 1) + b;
+        return c / 2 * (Math.sqrt(1 - (t -= 2) * t) + 1) + b;
+    },
+
+    elasticEaseIn: function(t, b, c, d, a, p) {
+        let s;
+        if (t==0) return b;
+        if ((t /= d) == 1) return b + c;
+        if (typeof p == "undefined") p = d * .3;
+        if (!a || a < Math.abs(c)) {
+            s = p / 4;
+            a = c;
+        } else {
+            s = p / (2 * Math.PI) * Math.asin(c / a);
+        }
+        return -(a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
+    },
+
+    elasticEaseOut: function(t, b, c, d, a, p) {
+        let s;
+        if (t==0) return b;
+        if ((t /= d) == 1) return b + c;
+        if (typeof p == "undefined") p = d * .3;
+        if (!a || a < Math.abs(c)) {
+            a = c; 
+            s = p / 4;
+        } else {
+            s = p/(2*Math.PI) * Math.asin(c/a);
+        }
+        return (a * Math.pow(2, -10 * t) * Math.sin((t * d - s) * (2 * Math.PI) / p) + c + b);
+    },
+
+    elasticInOut: function(t, b, c, d, a, p) {
+        let s;
+        if (t==0) return b;
+        if ((t /= d / 2) == 2) return b+c;
+        if (typeof p == "undefined") p = d * (.3 * 1.5);
+        if (!a || a < Math.abs(c)) {
+            a = c; 
+            s = p / 4;
+        } else {
+            s = p / (2  *Math.PI) * Math.asin(c / a);
+        }
+        if (t < 1) return -.5 * (a * Math.pow(2, 10* (t -=1 )) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
+        return a * Math.pow(2, -10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p ) * .5 + c + b;
     }
 };
 

@@ -236,15 +236,15 @@ export default abstract class HDAnalyse {
         switch (index) {
             // POSITIVE X
             case 0: 
-                x = 1;
-                y = vc;
-                z = -uc;
-                break;
-            // NEGATIVE X
-            case 1:
                 x = -1;
                 y = vc;
                 z = uc;
+                break;
+            // NEGATIVE X
+            case 1:
+                x = 1;
+                y = vc;
+                z = -uc;
                 break;
             // POSITIVE Y
             case 2:

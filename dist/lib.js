@@ -56099,6 +56099,13 @@ exports.EFFECT = {
         var s = 1.70158;
         return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
     },
+    backInOut: function (t, b, c, d, s) {
+        if (typeof s == "undefined")
+            s = 1.70158;
+        if ((t /= d / 2) < 1)
+            return c / 2 * (t * t * (((s *= (1.525)) + 1) * t - s)) + b;
+        return c / 2 * ((t -= 2) * t * (((s *= (1.525)) + 1) * t + s) + 2) + b;
+    },
     sineIn: function (t, b, c, d) {
         return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
     },
@@ -56122,6 +56129,70 @@ exports.EFFECT = {
         if ((t /= d / 2) < 1)
             return c / 2 * Math.pow(2, 10 * (t - 1)) + b;
         return c / 2 * (-Math.pow(2, -10 * --t) + 2) + b;
+    },
+    circEaseIn: function (t, b, c, d) {
+        return -c * (Math.sqrt(1 - (t /= d) * t) - 1) + b;
+    },
+    circEaseOut: function (t, b, c, d) {
+        return c * Math.sqrt(1 - (t = t / d - 1) * t) + b;
+    },
+    circInOut: function (t, b, c, d) {
+        if ((t /= d / 2) < 1)
+            return -c / 2 * (Math.sqrt(1 - t * t) - 1) + b;
+        return c / 2 * (Math.sqrt(1 - (t -= 2) * t) + 1) + b;
+    },
+    elasticEaseIn: function (t, b, c, d, a, p) {
+        var s;
+        if (t == 0)
+            return b;
+        if ((t /= d) == 1)
+            return b + c;
+        if (typeof p == "undefined")
+            p = d * .3;
+        if (!a || a < Math.abs(c)) {
+            s = p / 4;
+            a = c;
+        }
+        else {
+            s = p / (2 * Math.PI) * Math.asin(c / a);
+        }
+        return -(a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
+    },
+    elasticEaseOut: function (t, b, c, d, a, p) {
+        var s;
+        if (t == 0)
+            return b;
+        if ((t /= d) == 1)
+            return b + c;
+        if (typeof p == "undefined")
+            p = d * .3;
+        if (!a || a < Math.abs(c)) {
+            a = c;
+            s = p / 4;
+        }
+        else {
+            s = p / (2 * Math.PI) * Math.asin(c / a);
+        }
+        return (a * Math.pow(2, -10 * t) * Math.sin((t * d - s) * (2 * Math.PI) / p) + c + b);
+    },
+    elasticInOut: function (t, b, c, d, a, p) {
+        var s;
+        if (t == 0)
+            return b;
+        if ((t /= d / 2) == 2)
+            return b + c;
+        if (typeof p == "undefined")
+            p = d * (.3 * 1.5);
+        if (!a || a < Math.abs(c)) {
+            a = c;
+            s = p / 4;
+        }
+        else {
+            s = p / (2 * Math.PI) * Math.asin(c / a);
+        }
+        if (t < 1)
+            return -.5 * (a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
+        return a * Math.pow(2, -10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p) * .5 + c + b;
     }
 };
 var Tween = /** @class */ (function (_super) {
@@ -57264,15 +57335,15 @@ var HDAnalyse = /** @class */ (function () {
         switch (index) {
             // POSITIVE X
             case 0:
-                x = 1;
-                y = vc;
-                z = -uc;
-                break;
-            // NEGATIVE X
-            case 1:
                 x = -1;
                 y = vc;
                 z = uc;
+                break;
+            // NEGATIVE X
+            case 1:
+                x = 1;
+                y = vc;
+                z = -uc;
                 break;
             // POSITIVE Y
             case 2:
@@ -59500,8 +59571,7 @@ var text_plastic_1 = __webpack_require__(/*! ../plastic/text.plastic */ "./src/p
 var plastic_shader_1 = __webpack_require__(/*! ../../shader/plastic.shader */ "./src/shader/plastic.shader.ts");
 var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 /**
- * @file 内切球
- * renderOrder = 10
+ * @file 内切球, 作为穿越球使用时要提升 renderOrder = 10
  */
 var defaultOpts = {
     side: three_1.BackSide,
@@ -60822,7 +60892,7 @@ var analyse_hdmap_1 = __webpack_require__(/*! ../hdmap/analyse.hdmap */ "./src/p
  * 管理穿越点个数, 数据拉取, 展示策略
  */
 var defaultOpts = {
-    radius: 100,
+    radius: 120,
     lazy: 3000,
     surl: null,
     limit: 3
@@ -60832,7 +60902,6 @@ var Thru = /** @class */ (function (_super) {
     __extends(Thru, _super);
     function Thru(pano, opts) {
         var _this = _super.call(this) || this;
-        _this.textgap = 160;
         _this.invr = false;
         _this.active = false; // prevent excessive click
         _this.timeid = 0;
@@ -60866,6 +60935,7 @@ var Thru = /** @class */ (function (_super) {
         }
         // clean current thru list
         var pano = this.pano;
+        var cameraPos = pano.getCamera().position;
         var radius = opts.radius;
         var poss = this.calcPos(payload.scene.recomPos.slice(0, opts.limit));
         list.forEach(function (item, i) {
@@ -60875,7 +60945,8 @@ var Thru = /** @class */ (function (_super) {
                 rotate: true, emissive: '#787878', cloudimg: opts.img
             }, pano);
             var text = new text_plastic_1.default({ text: item.setName, fontsize: 40, width: 512,
-                x: pos.x, y: pos.y - _this.textgap, z: pos.z, limit: 6, shadow: true });
+                x: pos.x, y: pos.y - pos.gap, z: pos.z, limit: 6, shadow: true });
+            hole.lookAt(cameraPos);
             hole.setOpacity(0);
             text.setOpacity(0);
             hole.addBy(pano);
@@ -60895,11 +60966,13 @@ var Thru = /** @class */ (function (_super) {
      */
     Thru.prototype.calcPos = function (list) {
         return list && list.slice(0, this.opts.limit).map(function (data) {
-            var _a = analyse_hdmap_1.default.calcWorld(Number(data.pos), Number(data.x), Number(data.y)), x = _a.x, y = _a.y, z = _a.z;
+            var v = data.y;
+            var _a = analyse_hdmap_1.default.calcWorld(Number(data.pos), Number(data.x), Number(v)), x = _a.x, y = _a.y, z = _a.z;
             return {
                 x: x * 1000,
                 y: y * 1000,
-                z: z > 0 ? 1000 : -1000
+                z: z * 1000,
+                gap: v < 0.2 ? 200 : 180
             };
         });
     };
@@ -60915,7 +60988,6 @@ var Thru = /** @class */ (function (_super) {
      * 场景切换或穿越更新穿越点的内容
      */
     Thru.prototype.change = function (topic, payload) {
-        var _this = this;
         var objs = this.objs;
         var texts = this.texts;
         var list = this.list = payload.scene.recomList.slice(0, this.opts.limit);
@@ -60923,16 +60995,18 @@ var Thru = /** @class */ (function (_super) {
             return;
         }
         var poss = this.calcPos(payload.scene.recomPos.slice(0, this.opts.limit));
+        var cameraPos = this.pano.getCamera().position;
         // change thru content
         list.forEach(function (item, i) {
             var name = item.setName;
             var hole = objs[i];
             var text = texts[i];
             var pos = poss[i];
+            hole.lookAt(cameraPos);
             hole.setData(item);
             hole.setPosition(pos.x, pos.y, pos.z);
             text.draw(name);
-            text.setPosition(pos.x, pos.y - _this.textgap, pos.z);
+            text.setPosition(pos.x, pos.y - pos.gap, pos.z);
             loader.loadImage(item.image).then(function (texture) { return hole.setMap(texture); });
         });
         this.needToShow();
@@ -61042,10 +61116,10 @@ var Thru = /** @class */ (function (_super) {
                             pano.makeControl(false);
                             pos_1.z += flag_1 ? 1 : -1;
                             // start thru animation
-                            new tween_animation_1.default(ctarget_1, pano.ref).to(pos_1).effect('expoInOut', 1500).start(['x', 'y', 'z']);
+                            new tween_animation_1.default(ctarget_1, pano.ref).to(pos_1).effect('cubeInOut', 1500).start(['x', 'y', 'z']);
                             // start camera animation
                             new tween_animation_1.default(camera.position, pano.ref).to(instance_1.getPosition())
-                                .effect('expoInOut', 1800).start(['x', 'y', 'z'])
+                                .effect('cubeInOut', 2000).start(['x', 'y', 'z'])
                                 .process(function () { return camera.lookAt(ctarget_1); })
                                 .complete(function () {
                                 pano.enterThru(scene_1, instance_1.getMap());
