@@ -57320,7 +57320,7 @@ var HDAnalyse = /** @class */ (function () {
     };
     /**
      * uv 坐标转换为世界坐标, uv 原点 backside 贴图为右下
-     * 注意左右交换
+     * !!! 注意左右交换
      * @param {number} index 图片编号
      * @param {number} u
      * @param {number} v
@@ -57333,37 +57333,37 @@ var HDAnalyse = /** @class */ (function () {
         var y;
         var z;
         switch (index) {
-            // POSITIVE X
+            // right
             case 0:
                 x = -1;
                 y = vc;
                 z = uc;
                 break;
-            // NEGATIVE X
+            // left
             case 1:
                 x = 1;
                 y = vc;
                 z = -uc;
                 break;
-            // POSITIVE Y
+            // up
             case 2:
                 x = uc;
                 y = 1;
                 z = -vc;
                 break;
-            // NEGATIVE Y
+            // down
             case 3:
                 x = uc;
                 y = -1;
                 z = vc;
                 break;
-            // POSITIVE Z
+            // front
             case 4:
                 x = uc;
                 y = vc;
                 z = 1;
                 break;
-            // NEGATIVE Z
+            // back
             case 5:
                 x = -uc;
                 y = vc;
@@ -59604,7 +59604,7 @@ var Inradius = /** @class */ (function (_super) {
         var params = opts.shadow ? {
             color: opts.color,
             emissive: opts.emissive,
-            specular: opts.color,
+            specular: 'grey',
             side: opts.side,
             refractionRatio: 0,
             reflectivity: 1,
@@ -60892,7 +60892,7 @@ var analyse_hdmap_1 = __webpack_require__(/*! ../hdmap/analyse.hdmap */ "./src/p
  * 管理穿越点个数, 数据拉取, 展示策略
  */
 var defaultOpts = {
-    radius: 120,
+    radius: 110,
     lazy: 3000,
     surl: null,
     limit: 3
@@ -60972,7 +60972,7 @@ var Thru = /** @class */ (function (_super) {
                 x: x * 1000,
                 y: y * 1000,
                 z: z * 1000,
-                gap: v < 0.2 ? 200 : 180
+                gap: v < 0.2 ? 190 : 175
             };
         });
     };

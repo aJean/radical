@@ -14,7 +14,7 @@ import Analyse from '../hdmap/analyse.hdmap';
  */
 
 const defaultOpts = {
-    radius: 120,
+    radius: 110,
     lazy: 3000,
     surl: null,
     limit: 3
@@ -108,7 +108,7 @@ export default class Thru extends PubSubAble {
                 x: x * 1000,
                 y: y * 1000,
                 z: z * 1000,
-                gap: v < 0.2 ? 200 : 180
+                gap: v < 0.2 ? 190 : 175
             };
         });
     }

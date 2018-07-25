@@ -43,7 +43,7 @@ export default class Inradius extends Plastic {
         const params: any = opts.shadow ? {
                 color: opts.color,
                 emissive: opts.emissive,
-                specular: opts.color,
+                specular: 'grey',
                 side: opts.side,
                 refractionRatio: 0,
                 reflectivity: 1,
