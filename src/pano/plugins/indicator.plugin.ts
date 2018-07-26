@@ -2,7 +2,6 @@ import {Math as TMath} from 'three';
 import PluggableUI from '../../interface/ui.interface';
 import Util from '../../core/util';
 import Tween from '../animations/tween.animation';
-import Assets from '../../vr/assets.vr';
 
 /**
  * @file 陀螺仪指示器
@@ -11,7 +10,6 @@ import Assets from '../../vr/assets.vr';
 export default class Indicator extends PluggableUI {
     pano: any;
     canvas: any;
-    image: any;
     degree: any;
     theta: any;
     azimuthal = Math.PI;
@@ -29,16 +27,14 @@ export default class Indicator extends PluggableUI {
     init() {
         this.createDom();
         this.bindEvents();
-        this.doDark();
+        this.gradualDark();
     }
 
     createDom() {
         const pano = this.pano;
-        const image = this.image = new Image();
         const element = this.element = Util.createElement(`<div class="pano-indicator"></div>`);
         const canvas = this.canvas = document.createElement('canvas');
 
-        image.src = Assets.indicator;
         // High DPI Canvas
         canvas.width = 102;
         canvas.height = 102;
@@ -60,6 +56,7 @@ export default class Indicator extends PluggableUI {
         this.subscribe(Topic.RENDER.PROCESS, this.update.bind(this));
         this.subscribe(Topic.VR.ENTER, this.hide.bind(this));
         this.subscribe(Topic.VR.EXIT, this.show.bind(this));
+        this.subscribe(Topic.UI.DRAG, this.cancelDark.bind(this));
         this.element.addEventListener('click', this.reset.bind(this));
     }
 
@@ -118,7 +115,6 @@ export default class Indicator extends PluggableUI {
 
         if (!this.animating && theta != this.theta) {
             this.setTheta(theta);
-            this.cancelDark();
         }
 
         if (this.degree != pano.getFov()) {
@@ -127,14 +123,14 @@ export default class Indicator extends PluggableUI {
         }
     }
 
-    doDark() {
+    gradualDark() {
         this.timeId = setTimeout(() => this.setOpacity(0.5), 3000);
     }
 
     cancelDark() {
         clearTimeout(this.timeId);
         this.setOpacity(1);
-        this.doDark();
+        this.gradualDark();
     }
 
     /**
