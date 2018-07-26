@@ -12,6 +12,7 @@ export default class Indicator extends PluggableUI {
     azimuthal = Math.PI;
     polar = Math.PI / 2;
     animating = false;
+    canvas = document.createElement('canvas');
     
     constructor(pano) {
         super();
