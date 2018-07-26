@@ -36,6 +36,10 @@ export default class PluggableUI extends PubSubAble implements IPluggableUI {
         this.container && this.container.removeChild(this.element);
     }
 
+    setOpacity(opacity) {
+        this.element.style.opacity = opacity;
+    }
+
     show() {
         this.element.style.display = 'block';
     }

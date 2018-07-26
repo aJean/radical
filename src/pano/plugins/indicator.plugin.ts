@@ -1,39 +1,98 @@
+import {Math as TMath} from 'three';
 import PluggableUI from '../../interface/ui.interface';
 import Util from '../../core/util';
 import Tween from '../animations/tween.animation';
+import Assets from '../../vr/assets.vr';
 
 /**
- * @file 旋转指示器
+ * @file 陀螺仪指示器
  */
 
 export default class Indicator extends PluggableUI {
     pano: any;
+    canvas: any;
+    image: any;
+    degree: any;
     theta: any;
     azimuthal = Math.PI;
     polar = Math.PI / 2;
     animating = false;
-    canvas = document.createElement('canvas');
+    timeId = 0;
     
     constructor(pano) {
         super();
 
         this.pano = pano;
-        this.subscribe(pano.frozen ? this.Topic.SCENE.READY : this.Topic.SCENE.LOAD, this.createDom.bind(this));
+        this.subscribe(pano.frozen ? this.Topic.SCENE.READY : this.Topic.SCENE.LOAD, this.init.bind(this));
+    }
+
+    init() {
+        this.createDom();
+        this.bindEvents();
+        this.doDark();
     }
 
     createDom() {
         const pano = this.pano;
-        const element: any = this.element = Util.createElement('<div class="pano-indicator"></div>');
+        const image = this.image = new Image();
+        const element = this.element = Util.createElement(`<div class="pano-indicator"></div>`);
+        const canvas = this.canvas = document.createElement('canvas');
+
+        image.src = Assets.indicator;
+        // High DPI Canvas
+        canvas.width = 102;
+        canvas.height = 102;
+        canvas.style.width = '34px';
+        canvas.style.height = '34px';
+        element.appendChild(canvas);
 
         this.setContainer(pano.getRoot());
-        this.setTheta(this.theta = pano.getLook().lng); 
-
-        this.subscribe(this.Topic.RENDER.PROCESS, this.update.bind(this));
-        this.subscribe(this.Topic.VR.ENTER, this.hide.bind(this));
-        this.subscribe(this.Topic.VR.EXIT, this.show.bind(this));
-        element.addEventListener('click', this.reset.bind(this));
+        this.setTheta(this.theta = pano.getLook().lng);
+        this.drawIcon();
     }
 
+    /**
+     * bind after dom create
+     */
+    bindEvents() {
+        const Topic = this.Topic;
+
+        this.subscribe(Topic.RENDER.PROCESS, this.update.bind(this));
+        this.subscribe(Topic.VR.ENTER, this.hide.bind(this));
+        this.subscribe(Topic.VR.EXIT, this.show.bind(this));
+        this.element.addEventListener('click', this.reset.bind(this));
+    }
+
+    /**
+     * 根据 fov degree 绘制 icon
+     */
+    drawIcon() {
+        const canvas = this.canvas;
+        const ctx = canvas.getContext('2d');
+        const rad = this.calcRad();
+
+        ctx.fillStyle = '#fff';
+        ctx.shadowColor = 'rgba(0, 0, 0, .5)';
+        ctx.shadowBlur = 10;
+
+        ctx.clearRect(0, 0, 102, 102);
+        ctx.beginPath();
+        ctx.moveTo(51, 51);
+        ctx.arc(51, 51, 27, -Math.PI / 2 - rad / 2, -Math.PI / 2 + rad / 2, 0);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    /**
+     * pano fov to rad
+     */
+    calcRad() {
+        return TMath.degToRad(this.degree = this.pano.getFov());
+    }
+
+    /**
+     * sphere theta
+     */
     calcTheta(theta) {
         return theta > 0 ? 180 - theta : -(180 + theta);
     }
@@ -45,19 +104,37 @@ export default class Indicator extends PluggableUI {
         this.theta = theta;
         
         const angel = this.calcTheta(theta);
-        Util.styleElement(this.element, {webkitTransform: `rotate(${angel}deg)`});
+        Util.styleElement(this.canvas, {webkitTransform: `rotate(${angel}deg)`});
     }
 
     /**
-     * 更新指示器方位角度
+     * too thread:
+     *  1. draw degree icon
+     *  2. rotate icon
      */
     update() {
         const pano = this.pano;
         const theta = pano.getLook().lng;
 
         if (!this.animating && theta != this.theta) {
-           this.setTheta(theta);
+            this.setTheta(theta);
+            this.cancelDark();
         }
+
+        if (this.degree != pano.getFov()) {
+            this.drawIcon();
+            this.cancelDark();
+        }
+    }
+
+    doDark() {
+        this.timeId = setTimeout(() => this.setOpacity(0.5), 3000);
+    }
+
+    cancelDark() {
+        clearTimeout(this.timeId);
+        this.setOpacity(1);
+        this.doDark();
     }
 
     /**
@@ -69,6 +146,7 @@ export default class Indicator extends PluggableUI {
 
         this.animating = true;
         this.publish(this.Topic.UI.INDICATORSTART, {pano: this.pano});
+        this.cancelDark();
 
         const pano = this.pano;
         const orbit = pano.getControl();
@@ -89,7 +167,7 @@ export default class Indicator extends PluggableUI {
     }
 
     /**
-     * 恢复 control
+     * reset control
      */
     end() {
         this.pano.resetControl();
