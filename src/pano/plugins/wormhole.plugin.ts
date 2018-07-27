@@ -80,14 +80,14 @@ export default class Wormhole extends PubSubAble {
             pos.z += this.direction ? 1 : -1;
 
             // camera lookAt
-            new Tween(lookTarget, pano.ref).to(pos).effect('sineIn', 1400)
+            new Tween(lookTarget, pano.ref).to(pos).effect('cubeInOut', 1500)
                 .start(['x', 'y', 'z']);
 
-            new Tween(camera.position, pano.ref).to(this.pos).effect('sineIn', 1500)
-            .start(['x', 'y', 'z']).complete(() => {
-                this.finish();
-                this.addBackDoor();
-            });
+            new Tween(camera.position, pano.ref).to(this.pos).effect('cubeInOut', 2000)
+                .start(['x', 'y', 'z']).complete(() => {
+                    this.finish();
+                    this.addBackDoor();
+                });
         }
     }
 
