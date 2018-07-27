@@ -14,7 +14,7 @@ module.exports = {
     mode: 'development',
     devtool: 'none',
     optimization: {
-        minimize: false
+        minimize: true
     },
     entry: {
         lib: './src/index.ts'
