@@ -1,4 +1,4 @@
-import {Texture, Quaternion, Euler, Vector3} from 'three';
+import {Texture} from 'three';
 import ResourceLoader from '../loaders/resource.loader';
 import Tween from '../animations/tween.animation';
 import Inradius from '../plastic/inradius.plastic';
@@ -45,16 +45,11 @@ export default class Wormhole extends PubSubAble {
         // pano.enableShadow();
         myLoader.loadTexture(data.simg).then((texture: Texture) => {
             const hole = this.hole = new Inradius({
-                rotate: true, shadow: true, type: 'cloud',
-                position: pos, radius: 100, envMap: this.texture = texture
+                rotate: false, shadow: true, type: 'fresnel',
+                position: pos, radius: 200, envMap: this.texture = texture
             }, pano);
             hole.addBy(pano);
             hole.getPlastic();
-
-            const light = this.light = new Light({
-                target: hole, x: pos.x, y: pos.y, z: pos.z - 200
-            });
-            light.addBy(pano);
         }).catch(e => Log.errorLog(e));
     }
 

@@ -1,7 +1,8 @@
-import { BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending } from 'three';
+import { BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending, UniformsUtils } from 'three';
 import Plastic from '../../interface/plastic.interface';
 import Text from '../plastic/text.plastic';
-import Shader from '../../shader/plastic.shader';
+import PShader from '../../shader/plastic.shader';
+import FShader from '../../shader/fresnel.shader';
 import Util from '../../core/util';
 
 /**
@@ -79,6 +80,12 @@ export default class Inradius extends Plastic {
             case 'glow':
                 this.createGlow(sphere);
                 break;
+            case 'atom':
+                this.createAtomsphere(sphere);
+                break;
+            case 'fresnel':
+                this.createFresnel(sphere);
+                break;
         }
 
         if (opts.text) {
@@ -100,11 +107,11 @@ export default class Inradius extends Plastic {
     }
 
     /**
-     * 创建蒙层
+     * 遮罩
      */
     createMask(sphere) {
         const mask = this.wrap = new Mesh(
-            new SphereGeometry(this.opts.radius, 16, 16),
+            sphere.geometry.clone(),
             new MeshBasicMaterial({
                 color: '#000',
                 transparent: true,
@@ -119,11 +126,11 @@ export default class Inradius extends Plastic {
     }
 
     /**
-     * 创建云层
+     * 云层
      */
     createCloud(sphere) {
         const cloud = this.wrap = new Mesh(
-            new SphereGeometry(this.opts.radius, 16, 16),
+            sphere.geometry.clone(),
             new MeshBasicMaterial({
                 map: new TextureLoader().load(this.opts.cloudimg),
                 transparent: true,
@@ -137,25 +144,71 @@ export default class Inradius extends Plastic {
     }
 
     /**
-     * 创建辉光
+     * 辉光
      */
     createGlow(sphere) {
-        const opts = this.opts;
-        const glowMaterial = new ShaderMaterial({
-            uniforms: { 
-                c: {type: 'f', value: 0.1},
-                p: {type: 'f', value: 1.4},
-                glowColor: {type: 'c', value: new Color('#999')},
-                viewVector: {type: 'v3', value: opts.position}
-            },
-            vertexShader: Shader.GLOW.VTEX,
-            fragmentShader: Shader.GLOW.FRAGMENT,
+        const uniforms = UniformsUtils.clone(PShader.GLOW.UNIFORMS);
+        uniforms.glowColor.value = new Color(0xffff00);
+        uniforms.viewVector.value = this.opts.position;
+
+        const material = new ShaderMaterial({
+            uniforms: uniforms,
+            vertexShader: PShader.GLOW.VTEX,
+            fragmentShader: PShader.GLOW.FRAGMENT,
             blending: AdditiveBlending,
             transparent: true
         });
 
-        const glow = this.wrap = new Mesh(new SphereGeometry(opts.radius, 16, 16), glowMaterial);
+        const glow = this.wrap = new Mesh(sphere.geometry.clone(), material);
+        glow.scale.multiplyScalar(1.5);
+
+        sphere.renderOrder = 9;
+        glow.renderOrder = 10;
         glow.add(sphere);
+    }
+
+    /**
+     * 大气层
+     */
+    createAtomsphere(sphere) {
+        const uniforms = UniformsUtils.clone(PShader.ATMOSPHERE.UNIFORMS);
+        uniforms.glowColor.value = new Color(0xffff00);
+
+        const material = new ShaderMaterial({
+            uniforms: uniforms,
+            vertexShader: PShader.ATMOSPHERE.VTEX,
+            fragmentShader: PShader.ATMOSPHERE.FRAGMENT,
+            blending: AdditiveBlending,
+            transparent: true
+        });
+
+        const atom = this.wrap = new Mesh(sphere.geometry.clone(), material);
+
+        sphere.renderOrder = 9;
+        atom.renderOrder = 10;
+        atom.add(sphere);
+    }
+
+    /**
+     * 菲涅尔
+     */
+    createFresnel(sphere) {
+        const uniforms = UniformsUtils.clone(FShader.uniforms);
+        uniforms.tCube.value = this.pano.skyBox.getMap();
+
+        const material = new ShaderMaterial({
+            uniforms: uniforms,
+            vertexShader: FShader.vertexShader,
+            fragmentShader: FShader.fragmentShader,
+            blending: AdditiveBlending,
+            transparent: true
+        });
+
+        const fresnel = this.wrap = new Mesh(sphere.geometry.clone(), material);
+
+        sphere.renderOrder = 9;
+        fresnel.renderOrder = 10;
+        fresnel.add(sphere);
     }
 
     /**
