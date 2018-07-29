@@ -1,8 +1,9 @@
-import { BackSide, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending, UniformsUtils } from 'three';
+import { BackSide, MultiplyBlending, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending, UniformsUtils } from 'three';
 import Plastic from '../../interface/plastic.interface';
 import Text from '../plastic/text.plastic';
 import PShader from '../../shader/plastic.shader';
 import FShader from '../../shader/fresnel.shader';
+import BShader from '../../shader/blur.shader';
 import Util from '../../core/util';
 
 /**
@@ -14,8 +15,8 @@ const defaultOpts = {
     radius: 2000,
     color: '#fff',
     emissive: '#000',
-    widthSegments: 18,
-    heightSegments: 18,
+    widthSegments: 30,
+    heightSegments: 30,
     opacity: 1,
     cloudimg: '../assets/cloud.png',
     shadow: false
@@ -100,7 +101,7 @@ export default class Inradius extends Plastic {
             this.hide();
         }
 
-        const target = this.wrap || this.plastic;
+        const target = this.getPlastic();
         target.name = opts.name;
         target.instance = this;
         // target.castShadow = opts.shadow;
@@ -115,7 +116,7 @@ export default class Inradius extends Plastic {
             new MeshBasicMaterial({
                 color: '#000',
                 transparent: true,
-                opacity: 0.1,
+                opacity: 0.5,
                 depthTest: false
             })
         );
@@ -147,20 +148,19 @@ export default class Inradius extends Plastic {
      * 辉光
      */
     createGlow(sphere) {
-        const uniforms = UniformsUtils.clone(PShader.GLOW.UNIFORMS);
-        uniforms.glowColor.value = new Color(0xffff00);
+        const uniforms = UniformsUtils.clone(PShader.glow.uniforms);
+        uniforms.glowColor.value = new Color('grey');
         uniforms.viewVector.value = this.opts.position;
 
         const material = new ShaderMaterial({
             uniforms: uniforms,
-            vertexShader: PShader.GLOW.VTEX,
-            fragmentShader: PShader.GLOW.FRAGMENT,
+            vertexShader: PShader.glow.vertex,
+            fragmentShader: PShader.glow.fragment,
             blending: AdditiveBlending,
             transparent: true
         });
 
         const glow = this.wrap = new Mesh(sphere.geometry.clone(), material);
-        glow.scale.multiplyScalar(1.5);
 
         sphere.renderOrder = 9;
         glow.renderOrder = 10;
@@ -171,13 +171,13 @@ export default class Inradius extends Plastic {
      * 大气层
      */
     createAtomsphere(sphere) {
-        const uniforms = UniformsUtils.clone(PShader.ATMOSPHERE.UNIFORMS);
+        const uniforms = UniformsUtils.clone(PShader.atmosphere.uniforms);
         uniforms.glowColor.value = new Color(0xffff00);
 
         const material = new ShaderMaterial({
             uniforms: uniforms,
-            vertexShader: PShader.ATMOSPHERE.VTEX,
-            fragmentShader: PShader.ATMOSPHERE.FRAGMENT,
+            vertexShader: PShader.atmosphere.vertex,
+            fragmentShader: PShader.atmosphere.fragment,
             blending: AdditiveBlending,
             transparent: true
         });
@@ -190,33 +190,57 @@ export default class Inradius extends Plastic {
     }
 
     /**
-     * 菲涅尔
+     * 菲涅尔反射
      */
     createFresnel(sphere) {
+        const opts = this.opts;
         const uniforms = UniformsUtils.clone(FShader.uniforms);
         uniforms.tCube.value = this.pano.skyBox.getMap();
 
         const material = new ShaderMaterial({
             uniforms: uniforms,
-            vertexShader: FShader.vertexShader,
-            fragmentShader: FShader.fragmentShader,
-            blending: AdditiveBlending,
+            vertexShader: FShader.vertex,
+            fragmentShader: FShader.fragment,
+            blending: MultiplyBlending,
             transparent: true
         });
 
-        const fresnel = this.wrap = new Mesh(sphere.geometry.clone(), material);
+        const fresnel: any = this.wrap = new Mesh(
+            new SphereGeometry(opts.radius + 15, opts.widthSegments, opts.heightSegments),
+            material
+        );
 
-        sphere.renderOrder = 9;
-        fresnel.renderOrder = 10;
-        fresnel.add(sphere);
+        const uniforms1 = UniformsUtils.clone(PShader.glow.uniforms);
+        uniforms1.glowColor.value = new Color('#fff');
+        uniforms1.viewVector.value = this.opts.position;
+
+        const material1 = new ShaderMaterial({
+            uniforms: uniforms1,
+            vertexShader: PShader.glow.vertex,
+            fragmentShader: PShader.glow.fragment,
+            blending: MultiplyBlending,
+            transparent: true,
+            depthTest: false
+        });
+
+        const glow = new Mesh(
+            new SphereGeometry(opts.radius + 2, opts.widthSegments, opts.heightSegments),
+            material1
+        );
+
+        sphere.renderOrder = 10;
+        glow.renderOrder = 11
+        fresnel.renderOrder = 9;
+        glow.add(sphere);
+        fresnel.add(glow);
     }
 
     /**
      * 球内文字
      */
     createText(str) {
-        const text = this.text = new Text({fontsize: 32, width: 128, height: 128, weight: 600, 
-            shadow: true, text: str, inverse: false});
+        const text = this.text = new Text({fontsize: 40, width: 256, height: 256, weight: 600, 
+            shadow: true, text: str, inverse: true, order: 20});
         text.addTo(this.getPlastic());
     }
 
@@ -307,7 +331,6 @@ export default class Inradius extends Plastic {
             wrap.geometry.dispose();
             wrap.material.map && wrap.material.map.dispose();
             wrap.material.dispose();
-            delete wrap.data;
             delete wrap.instance;
         }
 

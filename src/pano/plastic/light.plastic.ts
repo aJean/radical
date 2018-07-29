@@ -1,4 +1,4 @@
-import { SpotLight, DirectionalLight, PointLight, CameraHelper } from 'three';
+import { SpotLight, AmbientLight, PointLight, CameraHelper } from 'three';
 import Plastic from '../../interface/plastic.interface';
 
 /**
@@ -6,7 +6,7 @@ import Plastic from '../../interface/plastic.interface';
  */
 
 const defaultOpts = {
-    type: 1,
+    type: 0,
     color: 0xffffff,
     intensity: 1,
     angle: 90,
@@ -26,8 +26,19 @@ export default class Light extends Plastic {
 
     create() {
         const opts = this.opts;
-        const light = this.plastic = opts.type == 1 ? new SpotLight(opts.color, opts.intensity, 0, opts.angle)
-            : new PointLight(opts.color, opts.intensity, 0, 2);
+        let light;
+
+        switch (opts.type) {
+            case 1:
+                light = this.plastic = new SpotLight(opts.color, opts.intensity, 0, opts.angle);
+                break;
+            case 2:
+                light = this.plastic = new PointLight(opts.color, opts.intensity, 0, 2);
+                break;
+            default:
+                light = this.plastic = new AmbientLight(opts.color);
+                break;
+        }
 
         this.setPosition(opts.x, opts.y, opts.z);
         

@@ -41,15 +41,16 @@ export default class Wormhole extends PubSubAble {
         const data = this.data;
         const pano = this.pano;
         const pos = this.pos = Util.calcSphereToWorld(data.lng, data.lat);
+        const light = new Light();
 
+        light.addBy(pano);
         // pano.enableShadow();
         myLoader.loadTexture(data.simg).then((texture: Texture) => {
             const hole = this.hole = new Inradius({
-                rotate: false, shadow: true, type: 'fresnel',
-                position: pos, radius: 200, envMap: this.texture = texture
+                type: 'fresnel', position: pos, radius: 150,
+                envMap: this.texture = texture, text: '测试效果'
             }, pano);
             hole.addBy(pano);
-            hole.getPlastic();
         }).catch(e => Log.errorLog(e));
     }
 
@@ -106,7 +107,6 @@ export default class Wormhole extends PubSubAble {
 
         hole.setMap(this.texture = this.backTexture);
         hole.setPosition(pos.x, pos.y, pos.z);
-        this.light.setPosition(pos.x, pos.y, z);
 
         this.direction = !this.direction;
     }

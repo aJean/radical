@@ -11,7 +11,7 @@ export default {
         tCube: { value: null }
     },
 
-    vertexShader: [
+    vertex: [
         'uniform float mRefractionRatio;',
         'uniform float mFresnelBias;',
         'uniform float mFresnelScale;',
@@ -38,7 +38,7 @@ export default {
         '}'
     ].join('\n'),
 
-    fragmentShader: [
+    fragment: [
         'uniform samplerCube tCube;',
 
         'varying vec3 vReflect;',
