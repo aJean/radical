@@ -34,6 +34,41 @@ export default {
         ].join('\n')
     },
 
+    mask: {
+        uniforms: {
+            color: { value: '#fff' },
+            start: {value: 0.0},
+            end: {value: 0.2},
+            alpha: {value: 1.0}
+        },
+
+        vertex: [
+            'varying vec3 fPosition;',
+            'varying vec3 fNormal;',
+            'void main() {',
+            'fNormal = normalize(normalMatrix * normal);',
+            'vec4 pos = modelViewMatrix * vec4(position, 1.0);',
+            'fPosition = pos.xyz;',
+            'gl_Position = projectionMatrix *  modelViewMatrix * vec4(position, 1.0);',
+            '}'
+        ].join('\n'),
+
+        fragment: [
+            'uniform vec3 color;',
+            'uniform float start;',
+            'uniform float end;',
+            'uniform float alpha;',
+            'varying vec3 fPosition;',
+            'varying vec3 fNormal;',
+            'void main() {',
+            'vec3 normal = normalize(fNormal);',
+            'vec3 eye = normalize(-fPosition.xyz);',
+            'float rim = smoothstep(start, end, 1.0 - dot(normal, eye));',
+            'gl_FragColor = vec4(clamp(rim, 0.0, 1.0) * alpha * color, 0.5);',
+            '}'
+        ].join('\n')
+    },
+
     atmosphere: {
         uniforms: {
             coeficient: { value: 1.2 },

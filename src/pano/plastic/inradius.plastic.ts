@@ -1,4 +1,4 @@
-import { BackSide, MultiplyBlending, MeshBasicMaterial, MeshPhongMaterial, SphereGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending, UniformsUtils } from 'three';
+import { BackSide, MultiplyBlending, MeshBasicMaterial, MeshPhongMaterial, SphereBufferGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending, UniformsUtils } from 'three';
 import Plastic from '../../interface/plastic.interface';
 import Text from '../plastic/text.plastic';
 import PShader from '../../shader/plastic.shader';
@@ -68,7 +68,7 @@ export default class Inradius extends Plastic {
         }
 
         const material = opts.shadow ? new MeshPhongMaterial(params) : new MeshBasicMaterial(params);
-        const sphere: any = this.plastic = new Mesh(new SphereGeometry(opts.radius, opts.widthSegments, 
+        const sphere: any = this.plastic = new Mesh(new SphereBufferGeometry(opts.radius, opts.widthSegments, 
             opts.heightSegments), material);
 
         switch (opts.type) {
@@ -206,7 +206,7 @@ export default class Inradius extends Plastic {
         });
 
         const fresnel: any = this.wrap = new Mesh(
-            new SphereGeometry(opts.radius + 15, opts.widthSegments, opts.heightSegments),
+            new SphereBufferGeometry(opts.radius + 15, opts.widthSegments, opts.heightSegments),
             material
         );
 
@@ -223,9 +223,20 @@ export default class Inradius extends Plastic {
             depthTest: false
         });
 
+        const uniforms2 = UniformsUtils.clone(PShader.mask.uniforms);
+        uniforms2.color.value = new Color('#333');
+
+        const material2 = new ShaderMaterial({
+            uniforms: uniforms2,
+            vertexShader: PShader.mask.vertex,
+            fragmentShader: PShader.mask.fragment,
+            transparent: true,
+            depthTest: false
+        });
+
         const glow = new Mesh(
-            new SphereGeometry(opts.radius + 2, opts.widthSegments, opts.heightSegments),
-            material1
+            new SphereBufferGeometry(opts.radius + 2, opts.widthSegments, opts.heightSegments),
+            material2
         );
 
         sphere.renderOrder = 10;
