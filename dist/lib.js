@@ -59631,9 +59631,6 @@ var Inradius = /** @class */ (function (_super) {
         var material = opts.shadow ? new three_1.MeshPhongMaterial(params) : new three_1.MeshBasicMaterial(params);
         var sphere = this.plastic = new three_1.Mesh(new three_1.SphereBufferGeometry(opts.radius, opts.widthSegments, opts.heightSegments), material);
         switch (opts.type) {
-            case 'mask':
-                this.createMask(sphere);
-                break;
             case 'cloud':
                 this.createCloud(sphere);
                 break;
@@ -59662,20 +59659,6 @@ var Inradius = /** @class */ (function (_super) {
         // target.castShadow = opts.shadow;
     };
     /**
-     * 遮罩
-     */
-    Inradius.prototype.createMask = function (sphere) {
-        var mask = this.wrap = new three_1.Mesh(sphere.geometry.clone(), new three_1.MeshBasicMaterial({
-            color: '#000',
-            transparent: true,
-            opacity: 0.5,
-            depthTest: false
-        }));
-        sphere.renderOrder = 9;
-        mask.renderOrder = 10;
-        mask.add(sphere);
-    };
-    /**
      * 云层
      */
     Inradius.prototype.createCloud = function (sphere) {
@@ -59693,7 +59676,6 @@ var Inradius = /** @class */ (function (_super) {
      */
     Inradius.prototype.createGlow = function (sphere) {
         var uniforms = three_1.UniformsUtils.clone(plastic_shader_1.default.glow.uniforms);
-        uniforms.glowColor.value = new three_1.Color('grey');
         uniforms.viewVector.value = this.opts.position;
         var material = new three_1.ShaderMaterial({
             uniforms: uniforms,
@@ -59712,7 +59694,6 @@ var Inradius = /** @class */ (function (_super) {
      */
     Inradius.prototype.createAtomsphere = function (sphere) {
         var uniforms = three_1.UniformsUtils.clone(plastic_shader_1.default.atmosphere.uniforms);
-        uniforms.glowColor.value = new three_1.Color(0xffff00);
         var material = new three_1.ShaderMaterial({
             uniforms: uniforms,
             vertexShader: plastic_shader_1.default.atmosphere.vertex,
@@ -59741,7 +59722,6 @@ var Inradius = /** @class */ (function (_super) {
         });
         var fresnel = this.wrap = new three_1.Mesh(new three_1.SphereBufferGeometry(opts.radius + 15, opts.widthSegments, opts.heightSegments), material);
         var uniforms1 = three_1.UniformsUtils.clone(plastic_shader_1.default.glow.uniforms);
-        uniforms1.glowColor.value = new three_1.Color('#fff');
         uniforms1.viewVector.value = this.opts.position;
         var material1 = new three_1.ShaderMaterial({
             uniforms: uniforms1,
@@ -59752,11 +59732,12 @@ var Inradius = /** @class */ (function (_super) {
             depthTest: false
         });
         var uniforms2 = three_1.UniformsUtils.clone(plastic_shader_1.default.mask.uniforms);
-        uniforms2.color.value = new three_1.Color('#333');
+        uniforms2.lightPos.value = sphere.position.clone().sub(new three_1.Vector3(0, 0, 1000));
         var material2 = new three_1.ShaderMaterial({
             uniforms: uniforms2,
             vertexShader: plastic_shader_1.default.mask.vertex,
             fragmentShader: plastic_shader_1.default.mask.fragment,
+            blending: three_1.MultiplyBlending,
             transparent: true,
             depthTest: false
         });
@@ -61945,16 +61926,17 @@ exports.default = {
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
+var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /**
  * @file shader effects
  */
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = {
     glow: {
         uniforms: {
             c: { value: 0.1 },
             p: { value: 1.4 },
-            glowColor: { value: null },
+            glowColor: { value: new three_1.Color('grey') },
             viewVector: { value: null }
         },
         vertex: [
@@ -61978,35 +61960,48 @@ exports.default = {
             '}'
         ].join('\n')
     },
+    /**
+     * phone lights mask
+     */
     mask: {
         uniforms: {
-            color: { value: '#fff' },
-            start: { value: 0.0 },
-            end: { value: 0.2 },
-            alpha: { value: 1.0 }
+            color: { value: new three_1.Color('#999') },
+            ambientColor: { value: new three_1.Color('#999') },
+            lightColor: { value: new three_1.Color('#999') },
+            lightPos: { value: new three_1.Vector3(0, 0, 0) },
+            specular: { value: 1.0 }
         },
         vertex: [
-            'varying vec3 fPosition;',
             'varying vec3 fNormal;',
+            'varying vec3 fPosition;',
             'void main() {',
             'fNormal = normalize(normalMatrix * normal);',
             'vec4 pos = modelViewMatrix * vec4(position, 1.0);',
             'fPosition = pos.xyz;',
-            'gl_Position = projectionMatrix *  modelViewMatrix * vec4(position, 1.0);',
+            'gl_Position = projectionMatrix * pos;',
             '}'
         ].join('\n'),
         fragment: [
             'uniform vec3 color;',
-            'uniform float start;',
-            'uniform float end;',
-            'uniform float alpha;',
+            'uniform vec3 ambientColor;',
+            'uniform vec3 lightPos;',
+            'uniform vec3 lightColor;',
+            'uniform float specular;',
             'varying vec3 fPosition;',
             'varying vec3 fNormal;',
             'void main() {',
-            'vec3 normal = normalize(fNormal);',
-            'vec3 eye = normalize(-fPosition.xyz);',
-            'float rim = smoothstep(start, end, 1.0 - dot(normal, eye));',
-            'gl_FragColor = vec4(clamp(rim, 0.0, 1.0) * alpha * color, 0.5);',
+            'vec3 norm = normalize(fNormal);',
+            'vec3 lpos = (viewMatrix * vec4(lightPos, 0.0)).xyz;',
+            'vec3 ldir = normalize(lpos);',
+            'vec3 ld = vec3(max(0.0, dot( norm, ldir))) * lightColor;',
+            'vec3 viewDir = normalize(-fPosition);',
+            'vec3 reflectDir = reflect(-ldir, norm);',
+            'float specf = pow(max(dot(viewDir, reflectDir), 0.0), specular);',
+            'float specularForce = 1.0;',
+            'vec3 spec = specularForce * specf * lightColor;',
+            'vec3 diffuse = clamp(ld, vec3(0.0), vec3(1.0));',
+            'vec3 col = (ambientColor + diffuse + spec) * color;',
+            'gl_FragColor = vec4(col, 1);',
             '}'
         ].join('\n')
     },
@@ -62014,7 +62009,7 @@ exports.default = {
         uniforms: {
             coeficient: { value: 1.2 },
             power: { value: 3 },
-            glowColor: { value: null }
+            glowColor: { value: new three_1.Color('#fff') }
         },
         vertex: [
             'varying vec3 vVertexWorldPosition;',

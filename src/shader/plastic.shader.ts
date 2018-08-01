@@ -1,3 +1,5 @@
+import { Vector3, Color } from 'three';
+
 /**
  * @file shader effects
  */
@@ -7,7 +9,7 @@ export default {
         uniforms: {
             c: { value: 0.1 },
             p: { value: 1.4 },
-            glowColor: { value: null },
+            glowColor: { value: new Color('grey') },
             viewVector: { value: null }
         },
 
@@ -34,37 +36,50 @@ export default {
         ].join('\n')
     },
 
+    /** 
+     * phone lights mask 
+     */
     mask: {
         uniforms: {
-            color: { value: '#fff' },
-            start: {value: 0.0},
-            end: {value: 0.2},
-            alpha: {value: 1.0}
+            color: { value: new Color('#999') },
+            ambientColor: { value: new Color('#999') },
+            lightColor: { value: new Color('#999') },
+            lightPos: { value: new Vector3(0, 0, 0) },
+            specular: { value: 1.0 }
         },
 
         vertex: [
-            'varying vec3 fPosition;',
             'varying vec3 fNormal;',
+            'varying vec3 fPosition;',
             'void main() {',
             'fNormal = normalize(normalMatrix * normal);',
             'vec4 pos = modelViewMatrix * vec4(position, 1.0);',
             'fPosition = pos.xyz;',
-            'gl_Position = projectionMatrix *  modelViewMatrix * vec4(position, 1.0);',
+            'gl_Position = projectionMatrix * pos;',
             '}'
         ].join('\n'),
 
         fragment: [
             'uniform vec3 color;',
-            'uniform float start;',
-            'uniform float end;',
-            'uniform float alpha;',
+            'uniform vec3 ambientColor;',
+            'uniform vec3 lightPos;',
+            'uniform vec3 lightColor;',
+            'uniform float specular;',
             'varying vec3 fPosition;',
             'varying vec3 fNormal;',
             'void main() {',
-            'vec3 normal = normalize(fNormal);',
-            'vec3 eye = normalize(-fPosition.xyz);',
-            'float rim = smoothstep(start, end, 1.0 - dot(normal, eye));',
-            'gl_FragColor = vec4(clamp(rim, 0.0, 1.0) * alpha * color, 0.5);',
+            'vec3 norm = normalize(fNormal);',
+            'vec3 lpos = (viewMatrix * vec4(lightPos, 0.0)).xyz;',
+            'vec3 ldir = normalize(lpos);',
+            'vec3 ld = vec3(max(0.0, dot( norm, ldir))) * lightColor;',
+            'vec3 viewDir = normalize(-fPosition);',
+            'vec3 reflectDir = reflect(-ldir, norm);',
+            'float specf = pow(max(dot(viewDir, reflectDir), 0.0), specular);',
+            'float specularForce = 1.0;',
+            'vec3 spec = specularForce * specf * lightColor;',
+            'vec3 diffuse = clamp(ld, vec3(0.0), vec3(1.0));',
+            'vec3 col = (ambientColor + diffuse + spec) * color;',
+            'gl_FragColor = vec4(col, 1);',
             '}'
         ].join('\n')
     },
@@ -73,7 +88,7 @@ export default {
         uniforms: {
             coeficient: { value: 1.2 },
             power: { value: 3 },
-            glowColor: { value: null }
+            glowColor: { value: new Color('#fff') }
         },
 
         vertex: [

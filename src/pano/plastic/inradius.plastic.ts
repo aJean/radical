@@ -1,4 +1,4 @@
-import { BackSide, MultiplyBlending, MeshBasicMaterial, MeshPhongMaterial, SphereBufferGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending, UniformsUtils } from 'three';
+import { BackSide, MultiplyBlending, MeshBasicMaterial, MeshPhongMaterial, SphereBufferGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending, UniformsUtils, Vector3 } from 'three';
 import Plastic from '../../interface/plastic.interface';
 import Text from '../plastic/text.plastic';
 import PShader from '../../shader/plastic.shader';
@@ -72,9 +72,6 @@ export default class Inradius extends Plastic {
             opts.heightSegments), material);
 
         switch (opts.type) {
-            case 'mask':
-                this.createMask(sphere);
-                break;
             case 'cloud':
                 this.createCloud(sphere);
                 break;
@@ -108,25 +105,6 @@ export default class Inradius extends Plastic {
     }
 
     /**
-     * 遮罩
-     */
-    createMask(sphere) {
-        const mask = this.wrap = new Mesh(
-            sphere.geometry.clone(),
-            new MeshBasicMaterial({
-                color: '#000',
-                transparent: true,
-                opacity: 0.5,
-                depthTest: false
-            })
-        );
-
-        sphere.renderOrder = 9;
-        mask.renderOrder = 10;
-        mask.add(sphere);
-    }
-
-    /**
      * 云层
      */
     createCloud(sphere) {
@@ -149,7 +127,6 @@ export default class Inradius extends Plastic {
      */
     createGlow(sphere) {
         const uniforms = UniformsUtils.clone(PShader.glow.uniforms);
-        uniforms.glowColor.value = new Color('grey');
         uniforms.viewVector.value = this.opts.position;
 
         const material = new ShaderMaterial({
@@ -172,7 +149,6 @@ export default class Inradius extends Plastic {
      */
     createAtomsphere(sphere) {
         const uniforms = UniformsUtils.clone(PShader.atmosphere.uniforms);
-        uniforms.glowColor.value = new Color(0xffff00);
 
         const material = new ShaderMaterial({
             uniforms: uniforms,
@@ -211,7 +187,6 @@ export default class Inradius extends Plastic {
         );
 
         const uniforms1 = UniformsUtils.clone(PShader.glow.uniforms);
-        uniforms1.glowColor.value = new Color('#fff');
         uniforms1.viewVector.value = this.opts.position;
 
         const material1 = new ShaderMaterial({
@@ -224,12 +199,13 @@ export default class Inradius extends Plastic {
         });
 
         const uniforms2 = UniformsUtils.clone(PShader.mask.uniforms);
-        uniforms2.color.value = new Color('#333');
+        uniforms2.lightPos.value = sphere.position.clone().sub(new Vector3(0, 0, 1000));
 
         const material2 = new ShaderMaterial({
             uniforms: uniforms2,
             vertexShader: PShader.mask.vertex,
             fragmentShader: PShader.mask.fragment,
+            blending: MultiplyBlending,
             transparent: true,
             depthTest: false
         });
