@@ -1,4 +1,4 @@
-import {Texture} from 'three';
+import {Texture, Vector3} from 'three';
 import ResourceLoader from '../loaders/resource.loader';
 import Tween from '../animations/tween.animation';
 import Inradius from '../plastic/inradius.plastic';
@@ -102,12 +102,14 @@ export default class Wormhole extends PubSubAble {
      */
     addBackDoor() {
         const hole = this.hole;
+        const plastic = hole.getPlastic();
         const pos = this.pos = Util.calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
         const z = this.direction ? pos.z + 1 : pos.z - 1;
 
         hole.setMap(this.texture = this.backTexture);
         hole.setPosition(pos.x, pos.y, pos.z);
-
+        plastic.rotateY(Math.PI);
+        
         this.direction = !this.direction;
     }
 

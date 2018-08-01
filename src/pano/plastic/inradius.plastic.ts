@@ -185,24 +185,12 @@ export default class Inradius extends Plastic {
             new SphereBufferGeometry(opts.radius + 15, opts.widthSegments, opts.heightSegments),
             material
         );
-
-        const uniforms1 = UniformsUtils.clone(PShader.glow.uniforms);
-        uniforms1.viewVector.value = this.opts.position;
+        // mask
+        const uniforms1 = UniformsUtils.clone(PShader.mask.uniforms);
+        uniforms1.lightPos.value = sphere.position.clone().sub(new Vector3(0, 0, 1000));
 
         const material1 = new ShaderMaterial({
             uniforms: uniforms1,
-            vertexShader: PShader.glow.vertex,
-            fragmentShader: PShader.glow.fragment,
-            blending: MultiplyBlending,
-            transparent: true,
-            depthTest: false
-        });
-
-        const uniforms2 = UniformsUtils.clone(PShader.mask.uniforms);
-        uniforms2.lightPos.value = sphere.position.clone().sub(new Vector3(0, 0, 1000));
-
-        const material2 = new ShaderMaterial({
-            uniforms: uniforms2,
             vertexShader: PShader.mask.vertex,
             fragmentShader: PShader.mask.fragment,
             blending: MultiplyBlending,
@@ -210,16 +198,16 @@ export default class Inradius extends Plastic {
             depthTest: false
         });
 
-        const glow = new Mesh(
+        const mask = new Mesh(
             new SphereBufferGeometry(opts.radius + 2, opts.widthSegments, opts.heightSegments),
-            material2
+            material1
         );
 
         sphere.renderOrder = 10;
-        glow.renderOrder = 11
+        mask.renderOrder = 11
         fresnel.renderOrder = 9;
-        glow.add(sphere);
-        fresnel.add(glow);
+        mask.add(sphere);
+        fresnel.add(mask);
     }
 
     /**

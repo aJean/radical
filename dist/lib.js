@@ -59721,32 +59721,23 @@ var Inradius = /** @class */ (function (_super) {
             transparent: true
         });
         var fresnel = this.wrap = new three_1.Mesh(new three_1.SphereBufferGeometry(opts.radius + 15, opts.widthSegments, opts.heightSegments), material);
-        var uniforms1 = three_1.UniformsUtils.clone(plastic_shader_1.default.glow.uniforms);
-        uniforms1.viewVector.value = this.opts.position;
+        // mask
+        var uniforms1 = three_1.UniformsUtils.clone(plastic_shader_1.default.mask.uniforms);
+        uniforms1.lightPos.value = sphere.position.clone().sub(new three_1.Vector3(0, 0, 1000));
         var material1 = new three_1.ShaderMaterial({
             uniforms: uniforms1,
-            vertexShader: plastic_shader_1.default.glow.vertex,
-            fragmentShader: plastic_shader_1.default.glow.fragment,
-            blending: three_1.MultiplyBlending,
-            transparent: true,
-            depthTest: false
-        });
-        var uniforms2 = three_1.UniformsUtils.clone(plastic_shader_1.default.mask.uniforms);
-        uniforms2.lightPos.value = sphere.position.clone().sub(new three_1.Vector3(0, 0, 1000));
-        var material2 = new three_1.ShaderMaterial({
-            uniforms: uniforms2,
             vertexShader: plastic_shader_1.default.mask.vertex,
             fragmentShader: plastic_shader_1.default.mask.fragment,
             blending: three_1.MultiplyBlending,
             transparent: true,
             depthTest: false
         });
-        var glow = new three_1.Mesh(new three_1.SphereBufferGeometry(opts.radius + 2, opts.widthSegments, opts.heightSegments), material2);
+        var mask = new three_1.Mesh(new three_1.SphereBufferGeometry(opts.radius + 2, opts.widthSegments, opts.heightSegments), material1);
         sphere.renderOrder = 10;
-        glow.renderOrder = 11;
+        mask.renderOrder = 11;
         fresnel.renderOrder = 9;
-        glow.add(sphere);
-        fresnel.add(glow);
+        mask.add(sphere);
+        fresnel.add(mask);
     };
     /**
      * 球内文字
@@ -61390,10 +61381,12 @@ var Wormhole = /** @class */ (function (_super) {
      */
     Wormhole.prototype.addBackDoor = function () {
         var hole = this.hole;
+        var plastic = hole.getPlastic();
         var pos = this.pos = util_1.default.calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
         var z = this.direction ? pos.z + 1 : pos.z - 1;
         hole.setMap(this.texture = this.backTexture);
         hole.setPosition(pos.x, pos.y, pos.z);
+        plastic.rotateY(Math.PI);
         this.direction = !this.direction;
     };
     Wormhole.prototype.dispose = function () {
