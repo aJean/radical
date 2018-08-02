@@ -96,10 +96,6 @@ export default class Media extends PluggableUI {
         inradius.addBy(this.pano);
     }
 
-    getElement() {
-        return this.element;
-    }
-
     update() {
         const webgl = this.pano.webgl;
         const camera = this.camera;        

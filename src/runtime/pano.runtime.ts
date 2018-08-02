@@ -9,6 +9,7 @@ import Wormhole from '../pano/plugins/wormhole.plugin';
 import Thru from '../pano/plugins/thru.plugin';
 import Media from '../pano/plugins/media.plugin';
 import Helper from '../pano/plugins/helper.plugin';
+import Stats from '../pano/plugins/stats.plugin';
 import Pano from '../pano/pano';
 import Log from '../core/log';
 
@@ -150,6 +151,10 @@ abstract class Runtime {
 
             if (source['helper']) {
                 pano.addPlugin(Helper, source['helper']);
+            }
+            // 性能监控
+            if (source['stats']) {
+                pano.addPlugin(Stats, source['stats']);
             }
     
             // add to env queue listeners

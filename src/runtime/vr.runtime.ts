@@ -6,6 +6,7 @@ import Thru from '../pano/plugins/thru.plugin';
 import Info from '../pano/plugins/info.plugin';
 import Indicator from '../pano/plugins/indicator.plugin';
 import Divider from '../vr/divider.vr';
+import Stats from '../pano/plugins/stats.plugin';
 import Timeline from '../pano/animations/timeline.animation';
 import External from '../core/external';
 
@@ -104,6 +105,10 @@ export default abstract class Runtime {
             // webvr ui divider
             if (source['vr']) {
                 vpano.addPlugin(Divider, source['vr']);
+            }
+            // 性能监控
+            if (source['stats']) {
+                vpano.addPlugin(Stats, source['stats']);
             }
             // business plugins
             if (source['plugins']) {

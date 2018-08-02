@@ -60406,15 +60406,24 @@ var Indicator = /** @class */ (function (_super) {
         this.publish(this.Topic.UI.INDICATORSTART, { pano: this.pano });
         this.cancelDark();
         var pano = this.pano;
+        var camera = pano.getCamera();
         var orbit = pano.getControl();
         var azimuthal = orbit.getAzimuthalAngle();
         pano.makeControl(false);
-        new tween_animation_1.default({ polar: orbit.getPolarAngle(), azimuthal: azimuthal }, pano['ref'])
-            .to({ polar: this.polar, azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal) })
+        new tween_animation_1.default({ polar: orbit.getPolarAngle(), azimuthal: azimuthal, fov: camera.fov }, pano['ref'])
+            .to({ polar: this.polar, azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal), fov: pano.opts.fov })
             .effect('sineOut', 500)
-            .start(['polar', 'azimuthal']).process(function (newval, oldval, key) {
-            if (key == 'polar') {
+            .start(['polar', 'azimuthal', 'fov']).process(function (newval, oldval, key) {
+            // recover zoom
+            if (key == 'fov') {
+                camera.fov = newval;
+                camera.updateProjectionMatrix();
+                _this.drawIcon();
+                // recover v
+            }
+            else if (key == 'polar') {
                 orbit.rotateUp(oldval - newval);
+                // recover h
             }
             else {
                 orbit.rotateLeft(oldval - newval);
@@ -60601,9 +60610,6 @@ var Media = /** @class */ (function (_super) {
             radius: 1900
         });
         inradius.addBy(this.pano);
-    };
-    Media.prototype.getElement = function () {
-        return this.element;
     };
     Media.prototype.update = function () {
         var webgl = this.pano.webgl;
@@ -60968,6 +60974,120 @@ var Rotate = /** @class */ (function (_super) {
     return Rotate;
 }(pubsub_interface_1.default));
 exports.default = Rotate;
+
+
+/***/ }),
+
+/***/ "./src/pano/plugins/stats.plugin.ts":
+/*!******************************************!*\
+  !*** ./src/pano/plugins/stats.plugin.ts ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var ui_interface_1 = __webpack_require__(/*! ../../interface/ui.interface */ "./src/interface/ui.interface.ts");
+var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
+var Stats = /** @class */ (function (_super) {
+    __extends(Stats, _super);
+    function Stats(pano, opts) {
+        var _this = _super.call(this) || this;
+        _this.REVISION = 16;
+        _this.beginTime = (performance || Date).now();
+        _this.prevTime = _this.beginTime;
+        _this.frames = 0;
+        _this.pano = pano;
+        _this.subscribe(_this.Topic.SCENE.LOAD, function () { return _this.create(); });
+        return _this;
+    }
+    Stats.prototype.create = function () {
+        var _this = this;
+        var element = this.element = util_1.default.createElement('<div style="position:fixed;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000;"></div>');
+        var panel = this.panel = createPanel('FPS', '#0ff', '#002');
+        element.appendChild(panel.dom);
+        this.pano.getRoot().appendChild(element);
+        this.subscribe(this.Topic.RENDER.PROCESS, function () { return _this.update(); });
+    };
+    Stats.prototype.begin = function () {
+        this.beginTime = (performance || Date).now();
+    };
+    Stats.prototype.end = function () {
+        this.frames++;
+        var time = (performance || Date).now();
+        if (time > this.prevTime + 1000) {
+            this.panel.update((this.frames * 1000) / (time - this.prevTime), 100);
+            this.prevTime = time;
+            this.frames = 0;
+        }
+        return time;
+    };
+    Stats.prototype.update = function () {
+        this.beginTime = this.end();
+    };
+    Stats.prototype.dispose = function () {
+        _super.prototype.dispose.call(this);
+    };
+    return Stats;
+}(ui_interface_1.default));
+exports.default = Stats;
+function createPanel(name, fg, bg) {
+    var min = Infinity;
+    var max = 0;
+    var round = Math.round;
+    var PR = round(window.devicePixelRatio || 1);
+    var WIDTH = 80 * PR;
+    var HEIGHT = 48 * PR;
+    var TEXT_X = 3 * PR;
+    var TEXT_Y = 2 * PR;
+    var GRAPH_X = 3 * PR;
+    var GRAPH_Y = 15 * PR;
+    var GRAPH_WIDTH = 74 * PR;
+    var GRAPH_HEIGHT = 30 * PR;
+    var canvas = util_1.default.createElement("<canvas width=\"" + WIDTH + "\" height=\"" + HEIGHT + "\" style=\"width:80px;hieght:48px;\"></canvas>");
+    var context = canvas.getContext('2d');
+    context.font = 'bold ' + (9 * PR) + 'px Helvetica,Arial,sans-serif';
+    context.textBaseline = 'top';
+    context.fillStyle = bg;
+    context.fillRect(0, 0, WIDTH, HEIGHT);
+    context.fillStyle = fg;
+    context.fillText(name, TEXT_X, TEXT_Y);
+    context.fillRect(GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT);
+    context.fillStyle = bg;
+    context.globalAlpha = 0.9;
+    context.fillRect(GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT);
+    return {
+        dom: canvas,
+        update: function (value, maxValue) {
+            min = Math.min(min, value);
+            max = Math.max(max, value);
+            context.fillStyle = bg;
+            context.globalAlpha = 1;
+            context.fillRect(0, 0, WIDTH, GRAPH_Y);
+            context.fillStyle = fg;
+            context.fillText(round(value) + ' ' + name + ' (' + round(min) + '-' + round(max) + ')', TEXT_X, TEXT_Y);
+            context.drawImage(canvas, GRAPH_X + PR, GRAPH_Y, GRAPH_WIDTH - PR, GRAPH_HEIGHT, GRAPH_X, GRAPH_Y, GRAPH_WIDTH - PR, GRAPH_HEIGHT);
+            context.fillRect(GRAPH_X + GRAPH_WIDTH - PR, GRAPH_Y, PR, GRAPH_HEIGHT);
+            context.fillStyle = bg;
+            context.globalAlpha = 0.9;
+            context.fillRect(GRAPH_X + GRAPH_WIDTH - PR, GRAPH_Y, PR, round((1 - (value / maxValue)) * GRAPH_HEIGHT));
+        }
+    };
+}
 
 
 /***/ }),
@@ -61456,6 +61576,7 @@ var wormhole_plugin_1 = __webpack_require__(/*! ../pano/plugins/wormhole.plugin 
 var thru_plugin_1 = __webpack_require__(/*! ../pano/plugins/thru.plugin */ "./src/pano/plugins/thru.plugin.ts");
 var media_plugin_1 = __webpack_require__(/*! ../pano/plugins/media.plugin */ "./src/pano/plugins/media.plugin.ts");
 var helper_plugin_1 = __webpack_require__(/*! ../pano/plugins/helper.plugin */ "./src/pano/plugins/helper.plugin.ts");
+var stats_plugin_1 = __webpack_require__(/*! ../pano/plugins/stats.plugin */ "./src/pano/plugins/stats.plugin.ts");
 var pano_1 = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
 var log_1 = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
 /**
@@ -61587,6 +61708,10 @@ var Runtime = /** @class */ (function () {
                             if (source['helper']) {
                                 pano.addPlugin(helper_plugin_1.default, source['helper']);
                             }
+                            // 性能监控
+                            if (source['stats']) {
+                                pano.addPlugin(stats_plugin_1.default, source['stats']);
+                            }
                             // add to env queue listeners
                             EnvQueue.add(pano.onResize, pano);
                             // load and render
@@ -61689,6 +61814,7 @@ var thru_plugin_1 = __webpack_require__(/*! ../pano/plugins/thru.plugin */ "./sr
 var info_plugin_1 = __webpack_require__(/*! ../pano/plugins/info.plugin */ "./src/pano/plugins/info.plugin.ts");
 var indicator_plugin_1 = __webpack_require__(/*! ../pano/plugins/indicator.plugin */ "./src/pano/plugins/indicator.plugin.ts");
 var divider_vr_1 = __webpack_require__(/*! ../vr/divider.vr */ "./src/vr/divider.vr.ts");
+var stats_plugin_1 = __webpack_require__(/*! ../pano/plugins/stats.plugin */ "./src/pano/plugins/stats.plugin.ts");
 var timeline_animation_1 = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
 var external_1 = __webpack_require__(/*! ../core/external */ "./src/core/external.ts");
 /**
@@ -61790,6 +61916,10 @@ var Runtime = /** @class */ (function () {
                             // webvr ui divider
                             if (source['vr']) {
                                 vpano_1.addPlugin(divider_vr_1.default, source['vr']);
+                            }
+                            // 性能监控
+                            if (source['stats']) {
+                                vpano_1.addPlugin(stats_plugin_1.default, source['stats']);
                             }
                             // business plugins
                             if (source['plugins']) {

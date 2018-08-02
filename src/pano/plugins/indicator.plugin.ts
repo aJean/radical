@@ -145,16 +145,24 @@ export default class Indicator extends PluggableUI {
         this.cancelDark();
 
         const pano = this.pano;
+        const camera = pano.getCamera();
         const orbit = pano.getControl();
         const azimuthal = orbit.getAzimuthalAngle();
 
         pano.makeControl(false);
-        new Tween({polar: orbit.getPolarAngle(), azimuthal}, pano['ref'])
-            .to({polar: this.polar, azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal)})
+        new Tween({polar: orbit.getPolarAngle(), azimuthal, fov: camera.fov}, pano['ref'])
+            .to({polar: this.polar, azimuthal: (azimuthal > 0 ? this.azimuthal : -this.azimuthal), fov: pano.opts.fov})
             .effect('sineOut', 500)
-            .start(['polar', 'azimuthal']).process((newval, oldval, key) => {
-                if (key == 'polar') {
+            .start(['polar', 'azimuthal', 'fov']).process((newval, oldval, key) => {
+                // recover zoom
+                if (key == 'fov') {
+                    camera.fov = newval;
+                    camera.updateProjectionMatrix();
+                    this.drawIcon();
+                // recover v
+                } else if (key == 'polar') {
                     orbit.rotateUp(oldval - newval);
+                // recover h
                 } else {
                     orbit.rotateLeft(oldval - newval);
                     this.setTheta(newval * 180 / Math.PI);
