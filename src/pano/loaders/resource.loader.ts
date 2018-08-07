@@ -1,7 +1,7 @@
 import {CubeTexture, CubeTextureLoader, CubeRefractionMapping} from 'three';
 import BaseLoader from './base.loader';
-import Util from '../../core/util';
 import Log from '../../core/log';
+import {bxlDecipher, bxlEOF} from './decipher';
 
 /**
  * @file 资源加载器, 支持预览, bxl, image 三种格式
@@ -9,6 +9,9 @@ import Log from '../../core/log';
 
 const cubeLoader = new CubeTextureLoader();
 class ResourceLoader extends BaseLoader {
+    /**
+     * 加载 bxl 格式
+     */
     loadBxl(url) {
         const requests = [this.fetchUrl(url, 'text'), this.fetchCret()];
 
@@ -18,8 +21,12 @@ class ResourceLoader extends BaseLoader {
                 const secretData = list.slice(0, 6);
                 const secretKey = ret[1];
 
-                const key = Util.decode(secretKey[0], 0xf);
-                const EOF = Util.parseEOF(Util.decode(secretKey[1], 0xe));
+                if (!secretKey) {
+                    throw new Error('incorrect cret key');
+                }
+
+                const key = bxlDecipher(secretKey[0], 0xf);
+                const EOF = bxlEOF(bxlDecipher(secretKey[1], 0xe));
 
                 if (!EOF.pass) {
                     throw new Error('incorrect product domian');
@@ -31,12 +38,10 @@ class ResourceLoader extends BaseLoader {
                     const header = ciphertext.substring(0, start);
                     const body = ciphertext.substring(start);
 
-                    return Util.decode(header, key) + body;
+                    return bxlDecipher(header, key) + body;
                 });
                 
-                return new Promise((resolve, reject) => {
-                    cubeLoader.load(base64s, tex => resolve(tex), null, e => reject(e));
-                });
+                return new Promise((resolve, reject) => cubeLoader.load(base64s, tex => resolve(tex), null, e => reject(e)));
             }).catch(e => Log.output(e));
     }
 

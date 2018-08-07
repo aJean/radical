@@ -55133,12 +55133,10 @@ exports.default = {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var crypto_js_1 = __webpack_require__(/*! crypto-js */ "./node_modules/crypto-js/index.js");
 var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 /**
  * @file util tools
  */
-var composeKey = function (part) { return ('skt1wins' + part); };
 exports.default = {
     /**
      * 创建 dom 元素
@@ -55166,38 +55164,6 @@ exports.default = {
      */
     findElement: function (sel) {
         return document.querySelector(sel);
-    },
-    /**
-     * 解密
-     * @param {string} ciphertext 密文
-     * @param {string} key 密钥
-     */
-    decode: function (ciphertext, key) {
-        if ((key ^ 1) !== 1) {
-            key = composeKey('forever');
-        }
-        var plaintext = crypto_js_1.AES.decrypt({
-            iv: null,
-            ciphertext: crypto_js_1.enc.Hex.parse(ciphertext),
-            salt: crypto_js_1.lib.WordArray.create(0)
-        }, key);
-        return plaintext.toString(crypto_js_1.enc.Utf8);
-    },
-    /**
-     * 解析文件结束符, 域名规则检验
-     * @param {string} EOF
-     */
-    parseEOF: function (EOF) {
-        var ret = EOF.split('*');
-        var domains = ret[1] ? ret[1].split(',') : [];
-        var pass = true;
-        if (domains.length > 0) {
-            pass = Boolean(domains.find(function (domain) { return domain == location.host; }));
-        }
-        return {
-            line: ret[0],
-            pass: pass
-        };
     },
     /**
      * 解析热点地理位置 location.lng [-180, 180] location.lat [-90, 90]
@@ -57751,6 +57717,59 @@ exports.default = Converter;
 
 /***/ }),
 
+/***/ "./src/pano/loaders/decipher.ts":
+/*!**************************************!*\
+  !*** ./src/pano/loaders/decipher.ts ***!
+  \**************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var crypto_js_1 = __webpack_require__(/*! crypto-js */ "./node_modules/crypto-js/index.js");
+/**
+ * @file decipher .bxl
+ */
+var composeKey = function (part) { return ('skt1wins' + part); };
+/**
+ * 解密
+ * @param {string} ciphertext 密文
+ * @param {string} key 密钥
+ */
+function bxlDecipher(ciphertext, key) {
+    if ((key ^ 1) !== 1) {
+        key = composeKey('forever');
+    }
+    var plaintext = crypto_js_1.AES.decrypt({
+        iv: null,
+        ciphertext: crypto_js_1.enc.Hex.parse(ciphertext),
+        salt: crypto_js_1.lib.WordArray.create(0)
+    }, key);
+    return plaintext.toString(crypto_js_1.enc.Utf8);
+}
+exports.bxlDecipher = bxlDecipher;
+/**
+ * 解析文件结束符, 域名规则检验
+ * @param {string} EOF
+ */
+function bxlEOF(EOF) {
+    var ret = EOF.split('*');
+    var domains = ret[1] ? ret[1].split(',') : [];
+    var pass = true;
+    if (domains.length > 0) {
+        pass = Boolean(domains.find(function (domain) { return domain == location.host; }));
+    }
+    return {
+        line: ret[0],
+        pass: pass
+    };
+}
+exports.bxlEOF = bxlEOF;
+
+
+/***/ }),
+
 /***/ "./src/pano/loaders/resource.loader.ts":
 /*!*********************************************!*\
   !*** ./src/pano/loaders/resource.loader.ts ***!
@@ -57773,8 +57792,8 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 var base_loader_1 = __webpack_require__(/*! ./base.loader */ "./src/pano/loaders/base.loader.ts");
-var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 var log_1 = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
+var decipher_1 = __webpack_require__(/*! ./decipher */ "./src/pano/loaders/decipher.ts");
 /**
  * @file 资源加载器, 支持预览, bxl, image 三种格式
  */
@@ -57784,6 +57803,9 @@ var ResourceLoader = /** @class */ (function (_super) {
     function ResourceLoader() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
+    /**
+     * 加载 bxl 格式
+     */
     ResourceLoader.prototype.loadBxl = function (url) {
         var requests = [this.fetchUrl(url, 'text'), this.fetchCret()];
         return Promise.all(requests)
@@ -57791,8 +57813,11 @@ var ResourceLoader = /** @class */ (function (_super) {
             var list = String(ret[0]).split('~#~');
             var secretData = list.slice(0, 6);
             var secretKey = ret[1];
-            var key = util_1.default.decode(secretKey[0], 0xf);
-            var EOF = util_1.default.parseEOF(util_1.default.decode(secretKey[1], 0xe));
+            if (!secretKey) {
+                throw new Error('incorrect cret key');
+            }
+            var key = decipher_1.bxlDecipher(secretKey[0], 0xf);
+            var EOF = decipher_1.bxlEOF(decipher_1.bxlDecipher(secretKey[1], 0xe));
             if (!EOF.pass) {
                 throw new Error('incorrect product domian');
             }
@@ -57801,11 +57826,9 @@ var ResourceLoader = /** @class */ (function (_super) {
                 // find real cipher header
                 var header = ciphertext.substring(0, start);
                 var body = ciphertext.substring(start);
-                return util_1.default.decode(header, key) + body;
+                return decipher_1.bxlDecipher(header, key) + body;
             });
-            return new Promise(function (resolve, reject) {
-                cubeLoader.load(base64s, function (tex) { return resolve(tex); }, null, function (e) { return reject(e); });
-            });
+            return new Promise(function (resolve, reject) { return cubeLoader.load(base64s, function (tex) { return resolve(tex); }, null, function (e) { return reject(e); }); });
         }).catch(function (e) { return log_1.default.output(e); });
     };
     /**
@@ -59586,7 +59609,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 var plastic_interface_1 = __webpack_require__(/*! ../../interface/plastic.interface */ "./src/interface/plastic.interface.ts");
-var text_plastic_1 = __webpack_require__(/*! ../plastic/text.plastic */ "./src/pano/plastic/text.plastic.ts");
+var text_plastic_1 = __webpack_require__(/*! ./text.plastic */ "./src/pano/plastic/text.plastic.ts");
 var plastic_shader_1 = __webpack_require__(/*! ../../shader/plastic.shader */ "./src/shader/plastic.shader.ts");
 var fresnel_shader_1 = __webpack_require__(/*! ../../shader/fresnel.shader */ "./src/shader/fresnel.shader.ts");
 var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");

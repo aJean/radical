@@ -1,11 +1,9 @@
-import {AES, enc, lib, mode} from 'crypto-js';
 import {Spherical, Vector3, Raycaster} from 'three';
 
 /**
  * @file util tools
  */
 
-const composeKey = part => ('skt1wins' + part);
 export default {
     /**
      * 创建 dom 元素
@@ -38,43 +36,6 @@ export default {
      */
     findElement(sel) {
         return document.querySelector(sel);
-    },
-
-    /**
-     * 解密
-     * @param {string} ciphertext 密文
-     * @param {string} key 密钥
-     */
-    decode(ciphertext, key) {
-        if ((key ^ 1) !== 1) {
-            key = composeKey('forever');
-        }
-    
-        const plaintext = AES.decrypt({
-            iv: null,
-            ciphertext: enc.Hex.parse(ciphertext),
-            salt: <any>lib.WordArray.create(0)
-        }, key);
-    
-        return plaintext.toString(enc.Utf8);
-    },
-
-    /**
-     * 解析文件结束符, 域名规则检验
-     * @param {string} EOF 
-     */
-    parseEOF(EOF) {
-        const ret = EOF.split('*');
-        const domains = ret[1] ? ret[1].split(',') : [];
-        let pass = true;
-    
-        if (domains.length > 0) {
-            pass = Boolean(domains.find(domain => domain == location.host));
-        }
-        return {
-            line: ret[0],
-            pass: pass
-        }
     },
 
     /**

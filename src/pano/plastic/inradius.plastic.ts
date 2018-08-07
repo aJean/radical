@@ -1,6 +1,6 @@
-import { BackSide, MultiplyBlending, MeshBasicMaterial, MeshPhongMaterial, SphereBufferGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, Color, AdditiveBlending, UniformsUtils, Vector3 } from 'three';
+import { BackSide, MultiplyBlending, MeshBasicMaterial, MeshPhongMaterial, SphereBufferGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, AdditiveBlending, UniformsUtils, Vector3 } from 'three';
 import Plastic from '../../interface/plastic.interface';
-import Text from '../plastic/text.plastic';
+import Text from './text.plastic';
 import PShader from '../../shader/plastic.shader';
 import FShader from '../../shader/fresnel.shader';
 import BShader from '../../shader/blur.shader';

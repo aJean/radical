@@ -15,7 +15,7 @@ polyfill();
 
 // auto render
 const pastLoad = window.onload;
-window.onload = function() {
+window.onload = function () {
     pastLoad && pastLoad.call(this);
 
     const pnodeList = Array.from(document.querySelectorAll('pano'));
@@ -27,11 +27,11 @@ window.onload = function() {
 
     vnodeList.forEach(node => {
         node.getAttribute('auto') && VRuntime.start(node.getAttribute('source'), node);
-    }); 
+    });
 };
 
 export default {
-    startPano(url, el, events?) {
+    startPano(url, el, events ? ) {
         PRuntime.start(url, el, events);
     },
 
@@ -43,7 +43,7 @@ export default {
         PRuntime.releaseInstance(ref);
     },
 
-    startVR(url, el, events?) {
+    startVR(url, el, events ? ) {
         VRuntime.start(url, el, events);
     },
 
