@@ -16,8 +16,12 @@
         <script src="./api.js"></script>
         <script>
             $.ajax({
-                url: `https://image.baidu.com/img/image/quanjing/bxlpanoinfo?sf=1&setid=14757014946023377241`,
+                url: `http://bjyz-newmedia07.epc.baidu.com:8132/openapi/index.php/api/index?query=1&resource_id=5099&tn=wisetpl&dsp=iphone&xrkey=14757014946023377241`,
+                dataType: 'jsonp',
+                jsonp: 'cb',
                 success: function(res) {
+                    const data = res.Result[0].DisplayData.resultData.tplData;
+
                     bxl.startVR({
                         title: 'test bxl transfer',
                         cretPath: '../assets/cret.txt',
@@ -30,13 +34,13 @@
                         },
                         thru: {
                             lazy: 2000,
-                            limit: 2,
-                            surl: 'https://image.baidu.com/img/image/quanjing/bxlpanoinfo?sf=1'
+                            limit: 3,
+                            surl: 'http://bjyz-newmedia07.epc.baidu.com:8132/openapi/index.php/api/index?&query=1&resource_id=5099&tn=wisetpl&dsp=iphone'
                         },
                         animation: {
                             fly: 'fly2'
                         },
-                        sceneGroup: res.data.sceneGroup
+                        sceneGroup: data.sceneGroup
                     }, '#test');
                 }
             });

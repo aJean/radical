@@ -1,8 +1,9 @@
+import createRuntime from './runtime';
 
 /**
  * @file 3d runtime
  */
 
-export default abstract class Runtime {
-    static start(opts) {}
-}
+export default createRuntime('3d', function () {
+
+});

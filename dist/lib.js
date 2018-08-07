@@ -61529,44 +61529,8 @@ exports.default = Wormhole;
 
 "use strict";
 
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var pspool_1 = __webpack_require__(/*! ../core/pspool */ "./src/core/pspool.ts");
-var resource_loader_1 = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+var runtime_1 = __webpack_require__(/*! ./runtime */ "./src/runtime/runtime.ts");
 var timeline_animation_1 = __webpack_require__(/*! ../pano/animations/timeline.animation */ "./src/pano/animations/timeline.animation.ts");
 var info_plugin_1 = __webpack_require__(/*! ../pano/plugins/info.plugin */ "./src/pano/plugins/info.plugin.ts");
 var indicator_plugin_1 = __webpack_require__(/*! ../pano/plugins/indicator.plugin */ "./src/pano/plugins/indicator.plugin.ts");
@@ -61577,194 +61541,53 @@ var thru_plugin_1 = __webpack_require__(/*! ../pano/plugins/thru.plugin */ "./sr
 var media_plugin_1 = __webpack_require__(/*! ../pano/plugins/media.plugin */ "./src/pano/plugins/media.plugin.ts");
 var helper_plugin_1 = __webpack_require__(/*! ../pano/plugins/helper.plugin */ "./src/pano/plugins/helper.plugin.ts");
 var stats_plugin_1 = __webpack_require__(/*! ../pano/plugins/stats.plugin */ "./src/pano/plugins/stats.plugin.ts");
-var pano_1 = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
-var log_1 = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
 /**
- * @file vr pano runtime
+ * @file web pano runtime
  */
-var myLoader = new resource_loader_1.default();
-var EnvQueue = /** @class */ (function () {
-    function EnvQueue() {
+exports.default = runtime_1.default('pano', function (pano, source) {
+    if (source['animation']) {
+        new timeline_animation_1.default().install(source['animation'], pano);
     }
-    EnvQueue.add = function (fn, context) {
-        this.list.push({
-            context: context,
-            fn: fn.bind(context)
-        });
-    };
-    EnvQueue.excute = function () {
-        this.list.forEach(function (item) { return item.fn(); });
-    };
-    EnvQueue.remove = function (context) {
-        var list = this.list;
-        var index = list.find(function (item) { return item.context == context; });
-        list.splice(index, 1);
-    };
-    EnvQueue.len = function () {
-        return this.list.length;
-    };
-    EnvQueue.list = [];
-    return EnvQueue;
-}());
-;
-var Runtime = /** @class */ (function () {
-    function Runtime() {
+    else {
+        pano.noTimeline();
     }
-    /**
-     * 获取全景对象, use after scene-init
-     * @param {string} ref
-     */
-    Runtime.getInstance = function (ref) {
-        return this.instanceMap[ref];
-    };
-    /**
-     * 释放一个全景对象
-     * @param {string} ref dom 引用标识
-     */
-    Runtime.releaseInstance = function (ref) {
-        var pano = this.instanceMap[ref];
-        if (pano) {
-            pano.dispose();
-            EnvQueue.remove(pano);
-        }
-        if (!EnvQueue.len()) {
-            window.removeEventListener(eventType, onEnvResize);
-        }
-    };
-    /**
-     * 创建全景对象
-     * @param {HTMLElement} el root 元素
-     * @param {Object} source
-     */
-    Runtime.createRef = function (el, source) {
-        el = (typeof el == 'string') ? document.querySelector(el) : el;
-        if (!el || !el.parentNode) {
-            el = document.body;
-        }
-        var ref = el.getAttribute('ref') || "pano_" + this.uid++;
-        el.setAttribute('ref', ref);
-        pspool_1.default.createPSContext(ref);
-        var pano = new pano_1.default(el, source);
-        pano['ref'] = ref;
-        return this.instanceMap[ref] = pano;
-    };
-    /**
-     * everytime create new PubSub context
-     */
-    Runtime.start = function (url, el, events) {
-        return __awaiter(this, void 0, void 0, function () {
-            var source, _a, pano, name_1;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        if (!(typeof url === 'string')) return [3 /*break*/, 2];
-                        return [4 /*yield*/, myLoader.fetchUrl(url)];
-                    case 1:
-                        _a = _b.sent();
-                        return [3 /*break*/, 3];
-                    case 2:
-                        _a = url;
-                        _b.label = 3;
-                    case 3:
-                        source = _a;
-                        if (!(source && source['sceneGroup'])) {
-                            return [2 /*return*/, log_1.default.output('load source error')];
-                        }
-                        try {
-                            pano = this.createRef(el, source);
-                            // 用户订阅事件
-                            if (events) {
-                                for (name_1 in events) {
-                                    pano.subscribe(name_1, events[name_1]);
-                                }
-                            }
-                            if (source['animation']) {
-                                new timeline_animation_1.default().install(source['animation'], pano);
-                            }
-                            else {
-                                pano.noTimeline();
-                            }
-                            if (source['thru']) {
-                                pano.addPlugin(thru_plugin_1.default, source['thru']);
-                            }
-                            if (source['rotate']) {
-                                pano.addPlugin(rotate_plugin_1.default, source['rotate']);
-                            }
-                            if (source['multiScene']) {
-                                pano.addPlugin(multiple_plugin_1.default, source['sceneGroup']);
-                            }
-                            if (source['info'] !== false) {
-                                pano.addPlugin(info_plugin_1.default);
-                            }
-                            if (source['indicator'] !== false) {
-                                pano.addPlugin(indicator_plugin_1.default);
-                            }
-                            if (source['wormhole']) {
-                                pano.addPlugin(wormhole_plugin_1.default, source['wormhole']);
-                            }
-                            if (source['media']) {
-                                pano.addPlugin(media_plugin_1.default, source['media']);
-                            }
-                            if (source['helper']) {
-                                pano.addPlugin(helper_plugin_1.default, source['helper']);
-                            }
-                            // 性能监控
-                            if (source['stats']) {
-                                pano.addPlugin(stats_plugin_1.default, source['stats']);
-                            }
-                            // add to env queue listeners
-                            EnvQueue.add(pano.onResize, pano);
-                            // load and render
-                            pano.run();
-                        }
-                        catch (e) {
-                            events && events.nosupport && events.nosupport(e) || console.error(e);
-                        }
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
-    Runtime.uid = 0;
-    Runtime.instanceMap = {};
-    return Runtime;
-}());
-;
-var pastLoad = window.onload;
-window.onload = function () {
-    pastLoad && pastLoad.call(this);
-    var nodeList = document.querySelectorAll('pano');
-    for (var i = 0; i < nodeList.length; i++) {
-        var node = nodeList[i];
-        var auto = node.getAttribute('auto');
-        if (auto) {
-            Runtime.start(node.getAttribute('source'), node);
-        }
+    if (source['thru']) {
+        pano.addPlugin(thru_plugin_1.default, source['thru']);
     }
-};
-var eventType = /webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
-    ? 'orientationchange' : 'resize';
-var onEnvResize = function (event) {
-    clearTimeout(Runtime.timeid);
-    Runtime.timeid = setTimeout(function () {
-        EnvQueue.excute();
-    }, 200);
-};
-window.addEventListener(eventType, onEnvResize);
-window.onbeforeunload = function () {
-    for (var ref in Runtime.instanceMap) {
-        Runtime.instanceMap[ref].dispose();
+    if (source['rotate']) {
+        pano.addPlugin(rotate_plugin_1.default, source['rotate']);
     }
-};
-exports.default = Runtime;
+    if (source['multiScene']) {
+        pano.addPlugin(multiple_plugin_1.default, source['sceneGroup']);
+    }
+    if (source['info'] !== false) {
+        pano.addPlugin(info_plugin_1.default);
+    }
+    if (source['indicator'] !== false) {
+        pano.addPlugin(indicator_plugin_1.default);
+    }
+    if (source['wormhole']) {
+        pano.addPlugin(wormhole_plugin_1.default, source['wormhole']);
+    }
+    if (source['media']) {
+        pano.addPlugin(media_plugin_1.default, source['media']);
+    }
+    if (source['helper']) {
+        pano.addPlugin(helper_plugin_1.default, source['helper']);
+    }
+    // 性能监控
+    if (source['stats']) {
+        pano.addPlugin(stats_plugin_1.default, source['stats']);
+    }
+});
 
 
 /***/ }),
 
-/***/ "./src/runtime/vr.runtime.ts":
-/*!***********************************!*\
-  !*** ./src/runtime/vr.runtime.ts ***!
-  \***********************************/
+/***/ "./src/runtime/runtime.ts":
+/*!********************************!*\
+  !*** ./src/runtime/runtime.ts ***!
+  \********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -61808,8 +61631,155 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var pspool_1 = __webpack_require__(/*! ../core/pspool */ "./src/core/pspool.ts");
 var resource_loader_1 = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
-var log_1 = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+var pano_1 = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
 var pano_vr_1 = __webpack_require__(/*! ../vr/pano.vr */ "./src/vr/pano.vr.ts");
+var log_1 = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+/**
+ * @file create runtime
+ */
+var EnvQueue = /** @class */ (function () {
+    function EnvQueue() {
+        this.list = [];
+    }
+    EnvQueue.prototype.add = function (fn, context) {
+        this.list.push({
+            context: context,
+            fn: fn.bind(context)
+        });
+    };
+    EnvQueue.prototype.excute = function () {
+        this.list.forEach(function (item) { return item.fn(); });
+    };
+    EnvQueue.prototype.remove = function (context) {
+        var list = this.list;
+        var index = list.find(function (item) { return item.context == context; });
+        list.splice(index, 1);
+    };
+    EnvQueue.prototype.len = function () {
+        return this.list.length;
+    };
+    return EnvQueue;
+}());
+;
+var EVENTTYPE = /webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'orientationchange' : 'resize';
+var LOADER = new resource_loader_1.default();
+/**
+ * 创建运行环境
+ * @param {string} mode 模式 vr | pano
+ * @param {Function} register 注册函数
+ */
+function createRuntime(mode, register) {
+    var runtimeId = null;
+    var envQueue = new EnvQueue();
+    var runtime = {
+        uid: 0,
+        instanceMap: {},
+        createRef: function (el, source) {
+            el = (typeof el == 'string') ? document.querySelector(el) : el;
+            if (!el || !el.parentNode) {
+                el = document.body;
+            }
+            var ref = el.getAttribute('ref') || "pano_" + this.uid++;
+            el.setAttribute('ref', ref);
+            // make sure one instance one ps
+            pspool_1.default.createPSContext(ref);
+            var pano = mode == 'vr' ? new pano_vr_1.default(el, source) : new pano_1.default(el, source);
+            pano['ref'] = ref;
+            return this.instanceMap[ref] = pano;
+        },
+        start: function (url, el, events) {
+            return __awaiter(this, void 0, void 0, function () {
+                var source, _a, pano, name_1;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            if (!(typeof url === 'string')) return [3 /*break*/, 2];
+                            return [4 /*yield*/, LOADER.fetchUrl(url)];
+                        case 1:
+                            _a = _b.sent();
+                            return [3 /*break*/, 3];
+                        case 2:
+                            _a = url;
+                            _b.label = 3;
+                        case 3:
+                            source = _a;
+                            if (!(source && source['sceneGroup'])) {
+                                return [2 /*return*/, log_1.default.output('load source error')];
+                            }
+                            try {
+                                pano = this.createRef(el, source);
+                                // 用户订阅事件
+                                if (events) {
+                                    for (name_1 in events) {
+                                        pano.subscribe(name_1, events[name_1]);
+                                    }
+                                }
+                                // plugin register
+                                register.call(null, pano, source);
+                                // add to env queue listeners
+                                envQueue.add(pano.onResize, pano);
+                                // load and render
+                                pano.run();
+                            }
+                            catch (e) {
+                                events && events.nosupport && events.nosupport(e) || log_1.default.output(e);
+                            }
+                            return [2 /*return*/];
+                    }
+                });
+            });
+        },
+        getInstance: function (ref) {
+            return this.instanceMap[ref];
+        },
+        releaseInstance: function (ref) {
+            var pano = this.instanceMap[ref];
+            if (pano) {
+                pano.dispose();
+                envQueue.remove(pano);
+            }
+            if (envQueue.len()) {
+                window.removeEventListener(EVENTTYPE, onEnvResize);
+            }
+        }
+    };
+    var pastLoad = window.onload;
+    window.onload = function () {
+        pastLoad && pastLoad.call(this);
+        var nodeList = document.querySelectorAll('pano');
+        for (var i = 0; i < nodeList.length; i++) {
+            var node = nodeList[i];
+            var auto = node.getAttribute('auto');
+            if (auto) {
+                runtime.start(node.getAttribute('source'), node);
+            }
+        }
+    };
+    var onEnvResize = function (event) {
+        clearTimeout(runtimeId);
+        runtimeId = setTimeout(function () {
+            envQueue.excute();
+        }, 200);
+    };
+    window.addEventListener(EVENTTYPE, onEnvResize);
+    return runtime;
+}
+exports.default = createRuntime;
+
+
+/***/ }),
+
+/***/ "./src/runtime/vr.runtime.ts":
+/*!***********************************!*\
+  !*** ./src/runtime/vr.runtime.ts ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var runtime_1 = __webpack_require__(/*! ./runtime */ "./src/runtime/runtime.ts");
 var thru_plugin_1 = __webpack_require__(/*! ../pano/plugins/thru.plugin */ "./src/pano/plugins/thru.plugin.ts");
 var info_plugin_1 = __webpack_require__(/*! ../pano/plugins/info.plugin */ "./src/pano/plugins/info.plugin.ts");
 var indicator_plugin_1 = __webpack_require__(/*! ../pano/plugins/indicator.plugin */ "./src/pano/plugins/indicator.plugin.ts");
@@ -61820,161 +61790,39 @@ var external_1 = __webpack_require__(/*! ../core/external */ "./src/core/externa
 /**
  * @file wev vr runtime
  */
-var myLoader = new resource_loader_1.default();
-var EnvQueue = /** @class */ (function () {
-    function EnvQueue() {
+exports.default = runtime_1.default('vr', function (vpano, source) {
+    // 开场动画
+    if (source['animation']) {
+        new timeline_animation_1.default().install(source['animation'], vpano);
     }
-    EnvQueue.add = function (fn, context) {
-        this.list.push({
-            context: context,
-            fn: fn.bind(context)
-        });
-    };
-    EnvQueue.excute = function () {
-        this.list.forEach(function (item) { return item.fn(); });
-    };
-    EnvQueue.remove = function (context) {
-        var list = this.list;
-        var index = list.find(function (item) { return item.context == context; });
-        list.splice(index, 1);
-    };
-    EnvQueue.len = function () {
-        return this.list.length;
-    };
-    EnvQueue.list = [];
-    return EnvQueue;
-}());
-;
-var Runtime = /** @class */ (function () {
-    function Runtime() {
+    else {
+        vpano.noTimeline();
     }
-    /**
-     * 创建全景对象
-     * @param {HTMLElement} el root 元素
-     * @param {Object} source
-     */
-    Runtime.createRef = function (el, source) {
-        el = (typeof el == 'string') ? document.querySelector(el) : el;
-        if (!el || !el.parentNode) {
-            el = document.body;
-        }
-        var ref = el.getAttribute('ref') || "vpano_" + this.uid++;
-        el.setAttribute('ref', ref);
-        pspool_1.default.createPSContext(ref);
-        var vpano = new pano_vr_1.default(el, source);
-        vpano['ref'] = ref;
-        return this.instanceMap[ref] = vpano;
-    };
-    Runtime.start = function (url, el, events) {
-        return __awaiter(this, void 0, void 0, function () {
-            var source, _a, vpano_1, name_1;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        if (!(typeof url === 'string')) return [3 /*break*/, 2];
-                        return [4 /*yield*/, myLoader.fetchUrl(url)];
-                    case 1:
-                        _a = _b.sent();
-                        return [3 /*break*/, 3];
-                    case 2:
-                        _a = url;
-                        _b.label = 3;
-                    case 3:
-                        source = _a;
-                        if (!(source && source['sceneGroup'])) {
-                            return [2 /*return*/, log_1.default.output('load source error')];
-                        }
-                        // enable gyro instead of vrcontrol ?
-                        source.pano ? (source.pano.gyro = true) : (source.pano = { gyro: true });
-                        try {
-                            vpano_1 = this.createRef(el, source);
-                            // 用户订阅事件
-                            if (events) {
-                                for (name_1 in events) {
-                                    vpano_1.subscribe(name_1, events[name_1]);
-                                }
-                            }
-                            // 开场动画
-                            if (source['animation']) {
-                                new timeline_animation_1.default().install(source['animation'], vpano_1);
-                            }
-                            else {
-                                vpano_1.noTimeline();
-                            }
-                            // 星际穿越, make sure to be first
-                            if (source['thru']) {
-                                vpano_1.addPlugin(thru_plugin_1.default, source['thru']);
-                            }
-                            // 版权信息
-                            if (source['info'] !== false) {
-                                vpano_1.addPlugin(info_plugin_1.default);
-                            }
-                            // 旋转指示
-                            if (source['indicator'] !== false) {
-                                vpano_1.addPlugin(indicator_plugin_1.default);
-                            }
-                            // webvr ui divider
-                            if (source['vr']) {
-                                vpano_1.addPlugin(divider_vr_1.default, source['vr']);
-                            }
-                            // 性能监控
-                            if (source['stats']) {
-                                vpano_1.addPlugin(stats_plugin_1.default, source['stats']);
-                            }
-                            // business plugins
-                            if (source['plugins']) {
-                                source['plugins'].forEach(function (plugin) { return vpano_1.addPlugin(plugin.class, plugin.opts, external_1.default); });
-                            }
-                            EnvQueue.add(vpano_1.onResize, vpano_1);
-                            vpano_1.run();
-                        }
-                        catch (e) {
-                            events && events.nosupport && events.nosupport(e) || console.error(e);
-                        }
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
-    Runtime.getInstance = function (ref) {
-        return this.instanceMap[ref];
-    };
-    Runtime.releaseInstance = function (ref) {
-        var pano = this.instanceMap[ref];
-        if (pano) {
-            pano.dispose();
-            EnvQueue.remove(pano);
-        }
-        if (!EnvQueue.len()) {
-            window.removeEventListener(eventType, onEnvResize);
-        }
-    };
-    Runtime.uid = 0;
-    Runtime.instanceMap = {};
-    return Runtime;
-}());
-exports.default = Runtime;
-var pastLoad = window.onload;
-window.onload = function () {
-    pastLoad && pastLoad.call(this);
-    var nodeList = document.querySelectorAll('vrpano');
-    for (var i = 0; i < nodeList.length; i++) {
-        var node = nodeList[i];
-        var auto = node.getAttribute('auto');
-        if (auto) {
-            Runtime.start(node.getAttribute('source'), node);
-        }
+    // 星际穿越, make sure to be first
+    if (source['thru']) {
+        vpano.addPlugin(thru_plugin_1.default, source['thru']);
     }
-};
-var eventType = /webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
-    ? 'orientationchange' : 'resize';
-var onEnvResize = function (event) {
-    clearTimeout(Runtime.timeid);
-    Runtime.timeid = setTimeout(function () {
-        EnvQueue.excute();
-    }, 200);
-};
-window.addEventListener(eventType, onEnvResize);
+    // 版权信息
+    if (source['info'] !== false) {
+        vpano.addPlugin(info_plugin_1.default);
+    }
+    // 旋转指示
+    if (source['indicator'] !== false) {
+        vpano.addPlugin(indicator_plugin_1.default);
+    }
+    // webvr ui divider
+    if (source['vr']) {
+        vpano.addPlugin(divider_vr_1.default, source['vr']);
+    }
+    // 性能监控
+    if (source['stats']) {
+        vpano.addPlugin(stats_plugin_1.default, source['stats']);
+    }
+    // business plugins
+    if (source['plugins']) {
+        source['plugins'].forEach(function (plugin) { return vpano.addPlugin(plugin.class, plugin.opts, external_1.default); });
+    }
+});
 
 
 /***/ }),
