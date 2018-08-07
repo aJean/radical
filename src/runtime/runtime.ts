@@ -60,6 +60,7 @@ export default function createRuntime(mode, register) {
             el.setAttribute('ref', ref);
             // make sure one instance one ps
             PSPool.createPSContext(ref);
+            // create pano
             const pano = mode == 'vr' ? new VPano(el, source) : new Pano(el, source);
             pano['ref'] = ref;
             return this.instanceMap[ref] = pano;
@@ -77,9 +78,7 @@ export default function createRuntime(mode, register) {
 
                 // 用户订阅事件
                 if (events) {
-                    for (let name in events) {
-                        pano.subscribe(name, events[name]);
-                    }
+                    Object.keys(events).forEach(name => pano.subscribe(name, events[name]));
                 }
 
                 // plugin register
@@ -109,22 +108,6 @@ export default function createRuntime(mode, register) {
                 window.removeEventListener(EVENTTYPE, onEnvResize);
             }
         }
-    };
-
-    const pastLoad = window.onload;
-    window.onload = function() {
-        pastLoad && pastLoad.call(this);
-
-        const nodeList = document.querySelectorAll('pano');
-
-        for (let i = 0; i < nodeList.length; i++) {
-            const node = nodeList[i];
-            const auto = node.getAttribute('auto');
-
-            if (auto) {
-                runtime.start(node.getAttribute('source'), node);
-            }
-        }  
     };
    
     const onEnvResize = event => {

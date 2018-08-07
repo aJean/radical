@@ -55419,6 +55419,19 @@ var vr_runtime_1 = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtim
  * @file bxl lib
  */
 polyfill_1.default();
+// auto render
+var pastLoad = window.onload;
+window.onload = function () {
+    pastLoad && pastLoad.call(this);
+    var pnodeList = Array.from(document.querySelectorAll('pano'));
+    var vnodeList = Array.from(document.querySelectorAll('vpano'));
+    pnodeList.forEach(function (node) {
+        node.getAttribute('auto') && pano_runtime_1.default.start(node.getAttribute('source'), node);
+    });
+    vnodeList.forEach(function (node) {
+        node.getAttribute('auto') && vr_runtime_1.default.start(node.getAttribute('source'), node);
+    });
+};
 exports.default = {
     startPano: function (url, el, events) {
         pano_runtime_1.default.start(url, el, events);
@@ -55431,6 +55444,9 @@ exports.default = {
     },
     startVR: function (url, el, events) {
         vr_runtime_1.default.start(url, el, events);
+    },
+    getVPano: function (ref) {
+        return vr_runtime_1.default.getInstance(ref);
     },
     disposeVR: function (ref) {
         vr_runtime_1.default.releaseInstance(ref);
@@ -61683,13 +61699,14 @@ function createRuntime(mode, register) {
             el.setAttribute('ref', ref);
             // make sure one instance one ps
             pspool_1.default.createPSContext(ref);
+            // create pano
             var pano = mode == 'vr' ? new pano_vr_1.default(el, source) : new pano_1.default(el, source);
             pano['ref'] = ref;
             return this.instanceMap[ref] = pano;
         },
         start: function (url, el, events) {
             return __awaiter(this, void 0, void 0, function () {
-                var source, _a, pano, name_1;
+                var source, _a, pano_2;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
@@ -61707,19 +61724,17 @@ function createRuntime(mode, register) {
                                 return [2 /*return*/, log_1.default.output('load source error')];
                             }
                             try {
-                                pano = this.createRef(el, source);
+                                pano_2 = this.createRef(el, source);
                                 // 用户订阅事件
                                 if (events) {
-                                    for (name_1 in events) {
-                                        pano.subscribe(name_1, events[name_1]);
-                                    }
+                                    Object.keys(events).forEach(function (name) { return pano_2.subscribe(name, events[name]); });
                                 }
                                 // plugin register
-                                register.call(null, pano, source);
+                                register.call(null, pano_2, source);
                                 // add to env queue listeners
-                                envQueue.add(pano.onResize, pano);
+                                envQueue.add(pano_2.onResize, pano_2);
                                 // load and render
-                                pano.run();
+                                pano_2.run();
                             }
                             catch (e) {
                                 events && events.nosupport && events.nosupport(e) || log_1.default.output(e);
@@ -61740,18 +61755,6 @@ function createRuntime(mode, register) {
             }
             if (envQueue.len()) {
                 window.removeEventListener(EVENTTYPE, onEnvResize);
-            }
-        }
-    };
-    var pastLoad = window.onload;
-    window.onload = function () {
-        pastLoad && pastLoad.call(this);
-        var nodeList = document.querySelectorAll('pano');
-        for (var i = 0; i < nodeList.length; i++) {
-            var node = nodeList[i];
-            var auto = node.getAttribute('auto');
-            if (auto) {
-                runtime.start(node.getAttribute('source'), node);
             }
         }
     };
