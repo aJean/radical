@@ -60910,6 +60910,75 @@ exports.default = Multiple;
 
 /***/ }),
 
+/***/ "./src/pano/plugins/particle.plugin.ts":
+/*!*********************************************!*\
+  !*** ./src/pano/plugins/particle.plugin.ts ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var pubsub_interface_1 = __webpack_require__(/*! ../../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
+var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+var resource_loader_1 = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+/**
+ * @file 粒子渲染插件
+ */
+var myLoader = new resource_loader_1.default();
+var Particle = /** @class */ (function (_super) {
+    __extends(Particle, _super);
+    function Particle(pano, data) {
+        var _this = _super.call(this) || this;
+        _this.data = data;
+        _this.pano = pano;
+        _this.create();
+        return _this;
+    }
+    Particle.prototype.create = function () {
+        var data = this.data;
+        var pos = util_1.default.calcSphereToWorld(data.lng, data.lat);
+        var pano = this.pano;
+        myLoader.loadTexture(data.simg).then(function (texture) {
+            texture.mapping = three_1.CubeRefractionMapping;
+            var geometry = new three_1.SphereGeometry(1000, 40, 40);
+            var material = new three_1.MeshBasicMaterial({
+                envMap: texture,
+                side: three_1.BackSide,
+                transparent: true,
+                depthTest: false
+            });
+            var sphere = new three_1.Mesh(geometry, material);
+            sphere.renderOrder = 2;
+            // sphere.position.copy(pos);
+            pano.addSceneObject(sphere);
+            geometry.uvsNeedUpdate = true;
+            geometry.faceVertexUvs[0].forEach(function (arry, i) {
+                if (i % 2 == 0) {
+                    arry.splice(0, 3);
+                }
+            });
+        });
+    };
+    return Particle;
+}(pubsub_interface_1.default));
+exports.default = Particle;
+
+
+/***/ }),
+
 /***/ "./src/pano/plugins/rotate.plugin.ts":
 /*!*******************************************!*\
   !*** ./src/pano/plugins/rotate.plugin.ts ***!
@@ -61576,6 +61645,7 @@ var indicator_plugin_1 = __webpack_require__(/*! ../pano/plugins/indicator.plugi
 var rotate_plugin_1 = __webpack_require__(/*! ../pano/plugins/rotate.plugin */ "./src/pano/plugins/rotate.plugin.ts");
 var multiple_plugin_1 = __webpack_require__(/*! ../pano/plugins/multiple.plugin */ "./src/pano/plugins/multiple.plugin.ts");
 var wormhole_plugin_1 = __webpack_require__(/*! ../pano/plugins/wormhole.plugin */ "./src/pano/plugins/wormhole.plugin.ts");
+var particle_plugin_1 = __webpack_require__(/*! ../pano/plugins/particle.plugin */ "./src/pano/plugins/particle.plugin.ts");
 var thru_plugin_1 = __webpack_require__(/*! ../pano/plugins/thru.plugin */ "./src/pano/plugins/thru.plugin.ts");
 var media_plugin_1 = __webpack_require__(/*! ../pano/plugins/media.plugin */ "./src/pano/plugins/media.plugin.ts");
 var helper_plugin_1 = __webpack_require__(/*! ../pano/plugins/helper.plugin */ "./src/pano/plugins/helper.plugin.ts");
@@ -61607,6 +61677,9 @@ exports.default = runtime_1.default('pano', function (pano, source) {
     }
     if (source['wormhole']) {
         pano.addPlugin(wormhole_plugin_1.default, source['wormhole']);
+    }
+    if (source['particle']) {
+        pano.addPlugin(particle_plugin_1.default, source['particle']);
     }
     if (source['media']) {
         pano.addPlugin(media_plugin_1.default, source['media']);

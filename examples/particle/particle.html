@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>粒子效果</title>
+        <link rel="stylesheet" href="../../dist/lib.css">
+        <link rel="stylesheet" href="../assets/example.css">
+    </head>
+    <body>
+        <script src="../../dist/lib.js"></script>
+        <div id="test"></div>
+        <script>
+            const json = {
+                title: 'test bxl transfer',
+                cretPath: '../assets/cret.txt',
+                particle: {
+                    lng: 10,
+                    lat: 10,
+                    simg: '../assets/scene7'
+                },
+                sceneGroup: [{
+                    info: {
+                        author: '粒子系统演示'
+                    },
+                    id: '49775931288',
+                    name: '罗浮宫',
+                    bxlPath: '../assets/scene0/scene0.bxl',
+                    imgPath: '../assets/scene0/scene0.jpg',
+                }]
+            };
+
+            bxl.startPano(json, '#test', {
+                'scene-init': function (topic, payload) {
+                    console.log(payload);
+                }
+            });
+        </script>
+    </body>
+</html>

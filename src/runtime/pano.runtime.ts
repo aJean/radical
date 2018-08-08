@@ -5,6 +5,7 @@ import Indicator from '../pano/plugins/indicator.plugin';
 import Rotate from '../pano/plugins/rotate.plugin';
 import Multiple from '../pano/plugins/multiple.plugin';
 import Wormhole from '../pano/plugins/wormhole.plugin';
+import Particle from '../pano/plugins/particle.plugin';
 import Thru from '../pano/plugins/thru.plugin';
 import Media from '../pano/plugins/media.plugin';
 import Helper from '../pano/plugins/helper.plugin';
@@ -43,6 +44,10 @@ export default createRuntime('pano', function (pano, source) {
 
     if (source['wormhole']) {
         pano.addPlugin(Wormhole, source['wormhole']);
+    }
+
+    if (source['particle']) {
+        pano.addPlugin(Particle, source['particle']);
     }
 
     if (source['media']) {
