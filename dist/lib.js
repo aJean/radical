@@ -56200,7 +56200,6 @@ var Tween = /** @class */ (function (_super) {
             log_1.default.errorLog('leak of necessary parameters');
         }
         else {
-            this.startTime = Date.now();
             keys.forEach(function (key) { return _this.record[key] = _this.obj[key]; });
             this.subscribe(this.Topic.RENDER.PROCESS, function () { return _this.animate(); });
         }
@@ -56208,6 +56207,7 @@ var Tween = /** @class */ (function (_super) {
     };
     Tween.prototype.stop = function () {
         _super.prototype.dispose.call(this);
+        this.startTime = 0;
         return this;
     };
     Tween.prototype.effect = function (type, duration) {
@@ -56232,6 +56232,9 @@ var Tween = /** @class */ (function (_super) {
     Tween.prototype.animate = function () {
         var _this = this;
         try {
+            if (!this.startTime) {
+                this.startTime = Date.now();
+            }
             var t_1 = Date.now() - this.startTime;
             var obj_1 = this.obj;
             var target_1 = this.target;
@@ -57845,6 +57848,20 @@ var ResourceLoader = /** @class */ (function (_super) {
         return new Promise(function (resolve, reject) {
             cubeLoader.load(urls, function (tex) { return resolve(tex); }, null, function (e) { return reject(e); });
         }).catch(function (e) { return log_1.default.output(e); });
+    };
+    /**
+     * 加载图片数组
+     */
+    ResourceLoader.prototype.loadImages = function (url, suffix) {
+        var _this = this;
+        if (suffix === void 0) { suffix = ''; }
+        url = url.replace(/\/$/, '');
+        var urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(function (name) { return _this.crosUrl(url + "/mobile_" + name + ".jpg" + suffix); });
+        return Promise.resolve(urls.map(function (url) {
+            var img = new Image();
+            img.src = url;
+            return img;
+        }));
     };
     /**
      * canvas 切分预览图
@@ -60934,6 +60951,7 @@ var pubsub_interface_1 = __webpack_require__(/*! ../../interface/pubsub.interfac
 var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 var resource_loader_1 = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
 var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
+var analyse_hdmap_1 = __webpack_require__(/*! ../hdmap/analyse.hdmap */ "./src/pano/hdmap/analyse.hdmap.ts");
 /**
  * @file 粒子渲染插件
  */
@@ -60942,35 +60960,112 @@ var Particle = /** @class */ (function (_super) {
     __extends(Particle, _super);
     function Particle(pano, data) {
         var _this = _super.call(this) || this;
+        _this._animating = false;
         _this.data = data;
         _this.pano = pano;
         _this.create();
         return _this;
     }
     Particle.prototype.create = function () {
+        var _this = this;
         var data = this.data;
         var pos = util_1.default.calcSphereToWorld(data.lng, data.lat);
         var pano = this.pano;
-        myLoader.loadTexture(data.simg).then(function (texture) {
-            texture.mapping = three_1.CubeRefractionMapping;
-            var geometry = new three_1.SphereGeometry(1000, 40, 40);
-            var material = new three_1.MeshBasicMaterial({
-                envMap: texture,
-                side: three_1.BackSide,
-                transparent: true,
-                depthTest: false
+        var particle = new three_1.Points(new three_1.SphereGeometry(100, 40, 40), new three_1.PointsMaterial({
+            color: 'red',
+            size: 5,
+            transparent: true,
+            depthTest: false
+        }));
+        particle.renderOrder = 2;
+        particle.position.copy(pos);
+        // pano.addSceneObject(particle);
+        myLoader.loadImages(data.simg).then(function (imgs) {
+            // texture.mapping = CubeRefractionMapping;
+            var materials = [];
+            imgs.forEach(function (img) {
+                var t = new three_1.Texture(img);
+                t.needsUpdate = true;
+                materials.push(new three_1.MeshBasicMaterial({
+                    map: t,
+                    side: three_1.BackSide,
+                    transparent: true,
+                    depthTest: false
+                }));
             });
-            var sphere = new three_1.Mesh(geometry, material);
-            sphere.renderOrder = 2;
-            // sphere.position.copy(pos);
+            var geometry = new three_1.BoxGeometry(1000, 1000, 1000, 5, 5, 5);
+            var sphere = _this.sphere = new three_1.Mesh(geometry, materials);
+            geometry.scale(1, 1, 1);
+            sphere.renderOrder = 3;
             pano.addSceneObject(sphere);
-            geometry.uvsNeedUpdate = true;
-            geometry.faceVertexUvs[0].forEach(function (arry, i) {
-                if (i % 2 == 0) {
-                    arry.splice(0, 3);
-                }
-            });
+            document.body.onclick = function () { return _this.detect(); };
         });
+    };
+    /**
+     * 修改 uv 贴图, 三角面
+     */
+    Particle.prototype.uv = function () {
+        // change uv map
+        this.sphere.geometry.uvsNeedUpdate = true;
+        this.sphere.geometry.faceVertexUvs[0].forEach(function (arry, i) {
+            if (i % 2 == 0) {
+                arry.forEach(function (vec) {
+                    vec.x = vec.y = 255;
+                });
+            }
+        });
+    };
+    Particle.prototype.makeArray = function (index, limit) {
+        var arry = [];
+        limit = index + limit;
+        for (var i = index; i < limit; i++) {
+            arry.push(i);
+        }
+        return arry;
+    };
+    Particle.prototype.detect = function () {
+        var _this = this;
+        if (this._animating) {
+            return;
+        }
+        var pano = this.pano;
+        var intersect = util_1.default.intersect({ x: 0, y: 0 }, [pano.skyBox.getPlastic()], pano.getCamera());
+        var facesList = this.facesList = this.makeArray(100, 50);
+        if (intersect) {
+            var point = intersect[0].point;
+            var data = analyse_hdmap_1.default.calcUV(point.x, point.y, point.z);
+            switch (data.index) {
+                case 0:
+                    facesList = facesList.concat(this.makeArray(0, 50));
+                    break;
+                case 1:
+                    facesList = facesList.concat(this.makeArray(50, 50));
+                    break;
+                case 4:
+                    facesList = facesList.concat(this.makeArray(200, 50));
+                    break;
+                case 5:
+                    facesList = facesList.concat(this.makeArray(250, 50));
+                    break;
+            }
+            this.facesList = facesList.concat(this.makeArray(150, 50));
+            this._subtoken = this.subscribe(this.Topic.RENDER.PROCESS, function () { return _this.changeScene(); });
+        }
+    };
+    Particle.prototype.changeScene = function () {
+        var list = this.facesList;
+        var geometry = this.sphere.geometry;
+        if (list && list.length) {
+            var index = list.shift();
+            this._animating = true;
+            geometry.elementsNeedUpdate = true;
+            geometry.faces[index].materialIndex = 10;
+        }
+        else {
+            this.facesList = null;
+            this._animating = false;
+            this.unsubscribe(this._subtoken);
+        }
     };
     return Particle;
 }(pubsub_interface_1.default));

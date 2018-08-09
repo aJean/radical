@@ -174,7 +174,6 @@ export default class Tween extends PubSubAble {
         if (!this.obj || !this.target || !this.fn) {
             Log.errorLog('leak of necessary parameters');
         } else {
-            this.startTime = Date.now();
             keys.forEach(key => this.record[key] = this.obj[key]);
             this.subscribe(this.Topic.RENDER.PROCESS, () => this.animate());
         }
@@ -184,6 +183,7 @@ export default class Tween extends PubSubAble {
 
     stop() {
         super.dispose();
+        this.startTime = 0;
         return this;
     }
 
@@ -213,13 +213,17 @@ export default class Tween extends PubSubAble {
 
     animate() {
         try {
+            if (!this.startTime) {
+                this.startTime = Date.now();
+            }
+
             const t = Date.now() - this.startTime;
             const obj = this.obj;
             const target = this.target;
             const record = this.record;
             const duration = this.duration;
             const fn = this.fn;
-            
+
             if (t < duration) {
                 this.forEach(record, key => {
                     const val = fn(t, record[key], target[key] - record[key], duration);

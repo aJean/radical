@@ -61,6 +61,20 @@ class ResourceLoader extends BaseLoader {
     }
 
     /**
+     * 加载图片数组
+     */
+    loadImages(url, suffix = '') {
+        url = url.replace(/\/$/, '');
+        const urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(name => this.crosUrl(`${url}/mobile_${name}.jpg${suffix}`));
+
+        return Promise.resolve(urls.map(url => {
+            const img = new Image();
+            img.src = url;
+            return img;
+        }));
+    }
+
+    /**
      * canvas 切分预览图
      * @param {string} url 
      */
