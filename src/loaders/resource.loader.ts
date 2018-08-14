@@ -1,18 +1,18 @@
 import {CubeTexture, CubeTextureLoader, CubeRefractionMapping} from 'three';
-import BaseLoader from './base.loader';
-import Log from '../../core/log';
-import {bxlDecipher, bxlEOF} from './decipher';
+import HttpLoader from './http.loader';
+import Log from '../core/log';
+import {rDecipher, rEOF} from './decipher';
 
 /**
- * @file 资源加载器, 支持预览, bxl, image 三种格式
+ * @file 资源加载器, 支持 6 in 1 预览, .r, image 三种格式
  */
 
 const cubeLoader = new CubeTextureLoader();
-class ResourceLoader extends BaseLoader {
+export default class ResourceLoader extends HttpLoader {
     /**
-     * 加载 bxl 格式
+     * 加载 .r 格式
      */
-    loadBxl(url) {
+    loadR(url) {
         const requests = [this.fetchUrl(url, 'text'), this.fetchCret()];
 
         return Promise.all(requests)
@@ -25,8 +25,8 @@ class ResourceLoader extends BaseLoader {
                     throw new Error('incorrect cret key');
                 }
 
-                const key = bxlDecipher(secretKey[0], 0xf);
-                const EOF = bxlEOF(bxlDecipher(secretKey[1], 0xe));
+                const key = rDecipher(secretKey[0], 0xf);
+                const EOF = rEOF(rDecipher(secretKey[1], 0xe));
 
                 if (!EOF.pass) {
                     throw new Error('incorrect product domian');
@@ -38,7 +38,7 @@ class ResourceLoader extends BaseLoader {
                     const header = ciphertext.substring(0, start);
                     const body = ciphertext.substring(start);
 
-                    return bxlDecipher(header, key) + body;
+                    return rDecipher(header, key) + body;
                 });
                 
                 return new Promise((resolve, reject) => cubeLoader.load(base64s, tex => resolve(tex), null, e => reject(e)));
@@ -51,7 +51,7 @@ class ResourceLoader extends BaseLoader {
      * @param {string} url
      * @param {string} suffix 资源后缀
      */
-    loadImage(url, suffix = '') {
+    loadCube(url, suffix = '') {
         url = url.replace(/\/$/, '');
         const urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(name => this.crosUrl(`${url}/mobile_${name}.jpg${suffix}`));
 
@@ -63,7 +63,7 @@ class ResourceLoader extends BaseLoader {
     /**
      * 加载图片数组
      */
-    loadImages(url, suffix = '') {
+    loadArray(url, suffix = '') {
         url = url.replace(/\/$/, '');
         const urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(name => this.crosUrl(`${url}/mobile_${name}.jpg${suffix}`));
 
@@ -88,10 +88,10 @@ class ResourceLoader extends BaseLoader {
      * @param {string} suffix 
      */
     loadTexture(url, suffix?) {
-        if (/\.bxl$/.test(url)) {
-            return this.loadBxl(this.crosUrl(url));
+        if (/\.r$/.test(url)) {
+            return this.loadR(this.crosUrl(url));
         } else {
-            return this.loadImage(url, suffix);
+            return this.loadCube(url, suffix);
         }
     }
 }
@@ -160,5 +160,3 @@ function cutCanvas(url, timeout?) {
         setTimeout(timeout, () => reject('load preview timeout'));
     }).catch(e => Log.output(e));
 }
-
-export default ResourceLoader;

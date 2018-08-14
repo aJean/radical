@@ -1,16 +1,13 @@
+import mockData from './mock';
+
 /**
  * @file resource loader
- * TODO: cache, proxy
+ * TODO: 实现 cache, proxy
  */
 
-const defaultOpts = {
-    proxy: '',
-    useCache: false
-};
-let cret;
-
-export default abstract class BaseLoader {
-    cret: any;    
+const defaultOpts = {proxy: '', useCache: false};
+export default abstract class HttpLoader {
+    static cret: any;    
     cache: any;
     opts: any;
     abstract loadTexture(url: string, type?): any;
@@ -26,7 +23,6 @@ export default abstract class BaseLoader {
     
     /**
      * 跨域 cdn 请求 bug
-     * @param url 
      */
     crosUrl(url) {
         // if (/\.cdn\./.test(url)) {
@@ -36,12 +32,17 @@ export default abstract class BaseLoader {
         return url;
     }
 
+
+    /**
+     * 加载证书, 每个应用只会请求一次
+     */
     loadCret(url) {
-        cret = this.cret;
+        const cret = HttpLoader.cret;
 
         return cret ? cret : (
-            cret = this.fetchUrl(url, 'text')
-                .then(ret => cret = String(ret).replace(/-*[A-Z\s]*-\n?/g, '').split('~#~'))
+            HttpLoader.cret = this.fetchUrl(url, 'text')
+                .then(ret => HttpLoader.cret = String(ret).replace(/-*[A-Z\s]*-\n?/g, '')
+                .split('~#~'))
         );
     }
 
@@ -49,7 +50,7 @@ export default abstract class BaseLoader {
      * 获取证书
      */
     fetchCret() {
-        return cret;
+        return HttpLoader.cret;
     }
 
     /**
@@ -91,14 +92,21 @@ export default abstract class BaseLoader {
         const script = document.createElement('script');
         const head = document.head;
         
-        script.src = url + '&cb=bxlJsonpCb&_=' + Date.now();
+        script.src = url + '&cb=rJsonpCb&_=' + Date.now();
         return new Promise(function (resolve, reject) {
-            window['bxlJsonpCb'] = function(res) {
+            window['rJsonpCb'] = function(res) {
                 resolve(res);
                 head.removeChild(script);
             };
             head.appendChild(script);
         });
+    }
+
+    /**
+     * 模拟数据, 还不完善
+     */
+    fetchMock() {
+        return Promise.resolve(mockData.Result[0].DisplayData.resultData.tplData);
     }
 
     clean() {

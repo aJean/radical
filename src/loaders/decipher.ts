@@ -1,7 +1,7 @@
 import { AES, enc, lib } from 'crypto-js';
 
 /**
- * @file decipher .bxl
+ * @file decipher .r
  */
 
 const composeKey = part => ('skt1wins' + part);
@@ -11,7 +11,7 @@ const composeKey = part => ('skt1wins' + part);
  * @param {string} ciphertext 密文
  * @param {string} key 密钥
  */
-export function bxlDecipher(ciphertext, key) {
+export function rDecipher(ciphertext, key) {
     if ((key ^ 1) !== 1) {
         key = composeKey('forever');
     }
@@ -29,7 +29,7 @@ export function bxlDecipher(ciphertext, key) {
  * 解析文件结束符, 域名规则检验
  * @param {string} EOF 
  */
-export function bxlEOF(EOF) {
+export function rEOF(EOF) {
     const ret = EOF.split('*');
     const domains = ret[1] ? ret[1].split(',') : [];
     let pass = true;

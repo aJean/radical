@@ -2,10 +2,10 @@ import PubSubAble from '../../interface/pubsub.interface';
 import Text from '../plastic/text.plastic';
 import Tween from '../animations/tween.animation';
 import Util from '../../core/util';
-import Loader from '../loaders/resource.loader';
+import Loader from '../../loaders/resource.loader';
 import Inradius from '../plastic/inradius.plastic';
 import Light from '../plastic/light.plastic';
-import Converter from '../loaders/converter';
+import Converter from '../../loaders/converter';
 import Analyse from '../hdmap/analyse.hdmap';
 
 /**
@@ -150,7 +150,7 @@ export default class Thru extends PubSubAble {
             text.draw(name);
             text.setPosition(pos.x, pos.y - pos.gap, pos.z);
             
-            loader.loadImage(item.image).then(texture => hole.setMap(texture));
+            loader.loadCube(item.image).then(texture => hole.setMap(texture));
         });
 
         this.needToShow();
@@ -261,14 +261,13 @@ export default class Thru extends PubSubAble {
                     const sid = data.setId;
 
                     pano.makeInteract(false);
-                    loader.fetchJsonp(`${surl}&xrkey=${sid}&sceneid=${id}`)
-                        .then(res => {
-                            const data = Converter.ResultTransform(res);
+                    // loader.fetchJsonp(`${surl}&xrkey=${sid}&sceneid=${id}`).then(res => Converter.ResultTransform(res))
+                    loader.fetchMock().then(data => {
                             const sceneGroup = data.sceneGroup;
-                            data.sceneid = id;
+                            data.sceneid = '36954560-df8b-4123-a53b-7fc7876209ca';
 
                             if (sceneGroup) {
-                                const scene = sceneGroup.find(item => item.id == id);
+                                const scene = Util.findScene(data);
                                 const ctarget = pano.getLookAtTarget();
                                 const pos = instance.getPosition().clone();
                                 const flag = pos.z > 0;

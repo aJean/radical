@@ -12,7 +12,7 @@
         <script src="../../dist/lib.js"></script>
         <div id="test"></div>
         <script>
-            const json = {
+            r.startPano({
                 title: 'test bxl transfer',
                 cretPath: '../assets/cret.txt',
                 particle: {
@@ -26,12 +26,10 @@
                     },
                     id: '49775931288',
                     name: '罗浮宫',
-                    bxlPath: '../assets/scene0/scene0.bxl',
+                    rPath: '../assets/scene0/scene0.r',
                     imgPath: '../assets/scene0/scene0.jpg',
                 }]
-            };
-
-            bxl.startPano(json, '#test', {
+            }, '#test', {
                 'scene-init': function (topic, payload) {
                     console.log(payload);
                 }

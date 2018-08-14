@@ -6,9 +6,10 @@ import '../styles/vr.style.less';
 import polyfill from './core/polyfill';
 import PRuntime from './runtime/pano.runtime';
 import VRuntime from './runtime/vr.runtime';
+import ResourceLoader from './loaders/resource.loader';
 
 /**
- * @file bxl lib
+ * @file redical enter
  */
 
 polyfill();
@@ -31,6 +32,8 @@ window.onload = function () {
 };
 
 export default {
+    loader: new ResourceLoader(),
+
     startPano(url, el, events ? ) {
         PRuntime.start(url, el, events);
     },

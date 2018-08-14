@@ -18,7 +18,7 @@ export default function (id) {
     const camera = this.camera = new PerspectiveCamera(80, window.innerWidth / window.innerHeight, 1, 1000);
     camera.position.set(0, 0, 600);
     
-    const texture = new TextureLoader().load('../../../bxl-ar/examples/assets/material.gif');
+    const texture = new TextureLoader().load('../../../radical-ar/examples/assets/material.gif');
     const geometry = new PlaneGeometry(300, 300, 1, 1);
     geometry.faceVertexUvs[0][0] = [new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 1)];
     geometry.faceVertexUvs[0][1] = [new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1)];

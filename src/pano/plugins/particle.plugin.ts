@@ -1,6 +1,6 @@
 import PubSubAble from '../../interface/pubsub.interface';
 import {SphereGeometry, MeshBasicMaterial, Mesh, BackSide, Texture, BoxGeometry, Points, PointsMaterial} from 'three';
-import ResourceLoader from '../loaders/resource.loader';
+import ResourceLoader from '../../loaders/resource.loader';
 import Util from '../../core/util';
 import HDAnalyse from '../hdmap/analyse.hdmap';
 
@@ -8,7 +8,7 @@ import HDAnalyse from '../hdmap/analyse.hdmap';
  * @file 粒子渲染插件
  */
 
-const myLoader = new ResourceLoader();
+const loader = new ResourceLoader();
 export default class Particle extends PubSubAble {
     data: any;
     pano: any;
@@ -41,7 +41,7 @@ export default class Particle extends PubSubAble {
         particle.position.copy(pos);
         // pano.addSceneObject(particle);
 
-        myLoader.loadImages(data.simg).then(imgs => {
+        loader.loadArray(data.simg).then(imgs => {
             // texture.mapping = CubeRefractionMapping;
 
             const materials = [];

@@ -1,5 +1,5 @@
 /**
- * @file  bxl middleware
+ * @file radical middleware
  */
 
 function compose(...funcs) {

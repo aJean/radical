@@ -1,7 +1,7 @@
 import {WebGLRenderer, Scene, PerspectiveCamera, PCFSoftShadowMap} from 'three';
 import OrbitControl from './controls/orbit.control';
 import GyroControl from './controls/gyro.control';
-import ResourceLoader from './loaders/resource.loader';
+import ResourceLoader from '../loaders/resource.loader';
 import HDMonitor from './hdmap/monitor.hdmap';
 import Tween from './animations/tween.animation';
 import Transition from './animations/transition.animation';
@@ -10,21 +10,14 @@ import Inradius from './plastic/inradius.plastic';
 import Log from '../core/log';
 import Util from '../core/util';
 import History from '../interface/history.interface';
-import Converter, {SceneData} from './loaders/converter';
+import Converter, {SceneData} from '../loaders/converter';
 
 /**
  * @file 全景渲染 & 历史记录
  */
 
-const defaultOpts = {
-    gyro: false,
-    fov: 100,
-    width: null,
-    height: null,
-    sceneTrans: false
-};
-const myLoader = new ResourceLoader();
-
+const loader = new ResourceLoader();
+const defaultOpts = {gyro: false, fov: 100, width: null, height: null, sceneTrans: false};
 export default class Pano extends History {
     overlays: Overlays;
     source: any;
@@ -126,17 +119,17 @@ export default class Pano extends History {
         const publishdata = {scene: data, pano: this};
         // has pano instance
         this.publishSync(this.Topic.SCENE.CREATE, publishdata);
-        source['cretPath'] && myLoader.loadCret(source['cretPath']);
+        source['cretPath'] && loader.loadCret(source['cretPath']);
 
         try {
-            const img = await myLoader.loadCanvas(data.pimg);
+            const img = await loader.loadCanvas(data.pimg);
             const skyBox = this.skyBox = new Inradius({envMap: img}, this);
 
             skyBox.addBy(this);
             this.publishSync(Topic.SCENE.INIT, publishdata);
             this.render();
             // high source
-            await myLoader.loadTexture(data.simg, data.suffix)
+            await loader.loadTexture(data.simg, data.suffix)
                 .then(texture => {
                     skyBox.setMap(texture);
                     this.publishSync(Topic.SCENE.LOAD, publishdata);
@@ -310,7 +303,7 @@ export default class Pano extends History {
         const newBox = new Inradius({envMap: texture}, this);
 
         if (data) {
-            final = myLoader.loadTexture(data.simg, data.suffix)
+            final = loader.loadTexture(data.simg, data.suffix)
                 .then(texture => data.equal(this.sceneData) && texture);
         }
 
@@ -410,7 +403,7 @@ export default class Pano extends History {
             const setid = data.xrkey;
             const url = this.pluginList[0].opts.surl;
 
-            myLoader.fetchJsonp(`${url}&xrkey=${setid}&sceneid=${id}`)
+            loader.fetchJsonp(`${url}&xrkey=${setid}&sceneid=${id}`)
                 .then(res => {
                     const data = Converter.ResultTransform(res);
                     const scenes = data.sceneGroup;
@@ -522,10 +515,10 @@ export default class Pano extends History {
     }
 
     /**
-     * 为 overlays 补充场景数据
+     * 为 overlays 补充场景数据, 触发 mutiple reset
      */
     supplyOverlayScenes(scenes) {
-        this.publish(this.Topic.SCENE.RESET, {scenes, pano: this});
+        this.publish(this.Topic.SCENE.RESET, {scenes, pano: this, id: this.sceneData.id});
         this.overlays.addScenes(scenes);
     }
 
@@ -563,7 +556,7 @@ export default class Pano extends History {
 
         // preTrans defeates sceneTrans
         if (opts.preTrans) {
-            myLoader.loadCanvas(data.pimg)
+            loader.loadCanvas(data.pimg)
                 .then(texture => {
                     this.resetEnv(data);
                     if (sceneTrans) {
@@ -571,12 +564,12 @@ export default class Pano extends History {
                     } else {
                         this.replaceTexture(texture);
                         // load source img
-                        myLoader.loadTexture(data.simg, data.suffix)
+                        loader.loadTexture(data.simg, data.suffix)
                             .then(texture => data.equal(this.sceneData) && this.replaceSlient(texture));
                     }
                 }).catch(e => Log.output(e));
         } else {
-            myLoader.loadTexture(data.simg, data.suffix)
+            loader.loadTexture(data.simg, data.suffix)
                 .then(texture => {
                     this.resetEnv(data);
                     sceneTrans ? this.replaceAnim(texture, 'fade') : this.replaceTexture(texture);

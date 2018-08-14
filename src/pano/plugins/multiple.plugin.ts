@@ -153,7 +153,7 @@ export default class Multiple extends PluggableUI {
         const outer = this.outer;
         const left = node.offsetLeft;
 
-        outer.scrollLeft = left > 100 ? left - 20 : 0;
+        outer.scrollLeft = left > window.innerWidth / 2 ? left - 20 : 0;
     }
 
     /**

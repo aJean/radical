@@ -37,7 +37,7 @@ export default {
     },
 
     /** 
-     * phone lights mask 
+     * phone's lights mask 
      */
     mask: {
         uniforms: {

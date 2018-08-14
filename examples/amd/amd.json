@@ -7,7 +7,7 @@
         },
         "id": "scene0",
         "name": "罗浮宫",
-        "bxlPath": "../assets/scene5/scene5.bxl",
+        "rPath": "../assets/scene5/scene5.r",
         "imgPath": "../assets/scene5/scene5.jpg",
         "thumbPath": "../assets/scene5/thumb5.jpg"
     }],

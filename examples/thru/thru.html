@@ -18,47 +18,41 @@
             const ret2 = /sceneid=([^&]*)/g.exec(location.search);
             const id = ret2 ? ret2[1] : null;
             
-            const time = Date.now();
-            $.ajax({
-                url: `http://bjyz-newmedia07.epc.baidu.com:8132/openapi/index.php/api/index?query=乌龟&resource_id=5099&tn=wisetpl&dsp=iphone&xrkey=${setid}&sceneid=${id}`,
-                dataType: 'jsonp',
-                jsonp: 'cb',
-                success: function(res) {
-                    const data = res.Result[0].DisplayData.resultData.tplData;
-                    
-                    data.multiScene = true;
-                    data.pano = {
-                        fovTrans: true,
-                        sceneTrans: true,
-                        preTrans: true,
-                        gyro: true,
-                        history: false
-                    };
-                    data.thru = {
-                        lazy: 2000,
-                        limit: 3,
-                        surl: 'http://bjyz-newmedia07.epc.baidu.com:8132/openapi/index.php/api/index?&query=1&resource_id=5099&tn=wisetpl&dsp=iphone'
-                    };
-                    data.animation =  {
-                        fly: 'fly2'
-                    };
-                    // xr location to bxl
-                    data.sceneGroup.forEach(scene => {
-                        if (scene.overlays) {
-                            scene.overlays.forEach(obj => {
-                                obj.location.lng = obj.location.lng - 180;
-                                obj.location.lat = obj.location.lat - 90;
-                            });
-                        }
-                    });
-                    
-                    bxl.startPano(data, '#test', {
-                        nosupport: e => {
-                            alert(e);
-                            return true;
-                        }
-                    });
-                }
+            r.loader.fetchMock().then(data => {
+                console.log(data);
+                
+                data.multiScene = true;
+                data.pano = {
+                    fovTrans: true,
+                    sceneTrans: true,
+                    preTrans: true,
+                    gyro: true,
+                    history: false
+                };
+                data.thru = {
+                    lazy: 2000,
+                    limit: 3,
+                    surl: 'http://bjyz-newmedia07.epc.baidu.com:8132/openapi/index.php/api/index?&query=1&resource_id=5099&tn=wisetpl&dsp=iphone'
+                };
+                data.animation =  {
+                    fly: 'fly2'
+                };
+                // xr location to bxl
+                data.sceneGroup.forEach(scene => {
+                    if (scene.overlays) {
+                        scene.overlays.forEach(obj => {
+                            obj.location.lng = obj.location.lng - 180;
+                            obj.location.lat = obj.location.lat - 90;
+                        });
+                    }
+                });
+                
+                r.startPano(data, '#test', {
+                    nosupport: e => {
+                        alert(e);
+                        return true;
+                    }
+                });
             });
         </script>
     </body>

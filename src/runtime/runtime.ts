@@ -1,5 +1,5 @@
 import PSPool from '../core/pspool';
-import ResourceLoader from '../pano/loaders/resource.loader';
+import ResourceLoader from '../loaders/resource.loader';
 import Pano from '../pano/pano';
 import VPano from '../vr/pano.vr';
 import Log from '../core/log';

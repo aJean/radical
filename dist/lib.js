@@ -4,9 +4,9 @@
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
 	else if(typeof exports === 'object')
-		exports["bxl"] = factory();
+		exports["r"] = factory();
 	else
-		root["bxl"] = factory();
+		root["r"] = factory();
 })(window, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -55381,8 +55381,9 @@ __webpack_require__(/*! ../styles/vr.style.less */ "./styles/vr.style.less");
 var polyfill_1 = __webpack_require__(/*! ./core/polyfill */ "./src/core/polyfill.ts");
 var pano_runtime_1 = __webpack_require__(/*! ./runtime/pano.runtime */ "./src/runtime/pano.runtime.ts");
 var vr_runtime_1 = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
+var resource_loader_1 = __webpack_require__(/*! ./loaders/resource.loader */ "./src/loaders/resource.loader.ts");
 /**
- * @file bxl lib
+ * @file redical enter
  */
 polyfill_1.default();
 // auto render
@@ -55399,6 +55400,7 @@ window.onload = function () {
     });
 };
 exports.default = {
+    loader: new resource_loader_1.default(),
     startPano: function (url, el, events) {
         pano_runtime_1.default.start(url, el, events);
     },
@@ -55447,7 +55449,7 @@ var QS = __webpack_require__(/*! query-string */ "./node_modules/query-string/in
 /**
  * @file simple 历史管理
  */
-var STATE = { bxlhistory: 1 };
+var STATE = { RHISTORY: 1 };
 var SFOPTS = { disableServiceDispatch: true, silent: true };
 var History = /** @class */ (function (_super) {
     __extends(History, _super);
@@ -55777,6 +55779,426 @@ var PluggableUI = /** @class */ (function (_super) {
     return PluggableUI;
 }(pubsub_interface_1.default));
 exports.default = PluggableUI;
+
+
+/***/ }),
+
+/***/ "./src/loaders/converter.ts":
+/*!**********************************!*\
+  !*** ./src/loaders/converter.ts ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * @file data coordinate transform
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var SceneData = /** @class */ (function () {
+    function SceneData(data) {
+        this.id = data.id;
+        this.setId = data.setId;
+        this.pimg = data.imgPath;
+        this.timg = data.thumbPath;
+        this.simg = data.texPath || data.rPath;
+        this.suffix = data.textPathExt;
+        this.fov = data.fov;
+        this.lat = data.lat;
+        this.lng = data.lng;
+        this.info = data.bearInfo || data.info;
+        this.overlays = this.getArrayValue(data.overlays);
+        this.recomList = this.getArrayValue(data.recomList);
+        this.recomPos = this.getArrayValue(data.recomPos);
+    }
+    SceneData.prototype.getArrayValue = function (arry) {
+        return arry && arry.length ? arry : null;
+    };
+    SceneData.prototype.equal = function (data) {
+        return this == data;
+    };
+    return SceneData;
+}());
+exports.SceneData = SceneData;
+var Converter = /** @class */ (function () {
+    function Converter() {
+    }
+    Converter.krpanoTransform = function (location) {
+        location.lng = -location.x;
+        location.lat = -location.y;
+    };
+    Converter.XRTransform = function (location) {
+        location.lng = location.lng - 180;
+        location.lat = location.lat - 90;
+    };
+    Converter.ResultTransform = function (res) {
+        try {
+            return res.Result[0].DisplayData.resultData.tplData;
+        }
+        catch (error) {
+            return null;
+        }
+    };
+    Converter.DataTransform = function (olddata) {
+        return new SceneData(olddata);
+    };
+    Converter.DataFind = function (scenes, id) {
+        var data = scenes.find(function (obj) { return obj.id == id; });
+        return this.DataTransform(data);
+    };
+    return Converter;
+}());
+exports.default = Converter;
+
+
+/***/ }),
+
+/***/ "./src/loaders/decipher.ts":
+/*!*********************************!*\
+  !*** ./src/loaders/decipher.ts ***!
+  \*********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var crypto_js_1 = __webpack_require__(/*! crypto-js */ "./node_modules/crypto-js/index.js");
+/**
+ * @file decipher .r
+ */
+var composeKey = function (part) { return ('skt1wins' + part); };
+/**
+ * 解密
+ * @param {string} ciphertext 密文
+ * @param {string} key 密钥
+ */
+function rDecipher(ciphertext, key) {
+    if ((key ^ 1) !== 1) {
+        key = composeKey('forever');
+    }
+    var plaintext = crypto_js_1.AES.decrypt({
+        iv: null,
+        ciphertext: crypto_js_1.enc.Hex.parse(ciphertext),
+        salt: crypto_js_1.lib.WordArray.create(0)
+    }, key);
+    return plaintext.toString(crypto_js_1.enc.Utf8);
+}
+exports.rDecipher = rDecipher;
+/**
+ * 解析文件结束符, 域名规则检验
+ * @param {string} EOF
+ */
+function rEOF(EOF) {
+    var ret = EOF.split('*');
+    var domains = ret[1] ? ret[1].split(',') : [];
+    var pass = true;
+    if (domains.length > 0) {
+        pass = Boolean(domains.find(function (domain) { return domain == location.host; }));
+    }
+    return {
+        line: ret[0],
+        pass: pass
+    };
+}
+exports.rEOF = rEOF;
+
+
+/***/ }),
+
+/***/ "./src/loaders/http.loader.ts":
+/*!************************************!*\
+  !*** ./src/loaders/http.loader.ts ***!
+  \************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var mock_1 = __webpack_require__(/*! ./mock */ "./src/loaders/mock.ts");
+/**
+ * @file resource loader
+ * TODO: 实现 cache, proxy
+ */
+var defaultOpts = { proxy: '', useCache: false };
+var HttpLoader = /** @class */ (function () {
+    function HttpLoader(opts) {
+        this.cache = {};
+        this.opts = Object.assign({}, defaultOpts, opts);
+    }
+    HttpLoader.prototype.getSafeUrl = function (url) {
+        return "" + this.opts.proxy + decodeURIComponent(url);
+    };
+    /**
+     * 跨域 cdn 请求 bug
+     */
+    HttpLoader.prototype.crosUrl = function (url) {
+        // if (/\.cdn\./.test(url)) {
+        //     url += `?_=${Date.now()}`;
+        // }
+        return url;
+    };
+    /**
+     * 加载证书, 每个应用只会请求一次
+     */
+    HttpLoader.prototype.loadCret = function (url) {
+        var cret = HttpLoader.cret;
+        return cret ? cret : (HttpLoader.cret = this.fetchUrl(url, 'text')
+            .then(function (ret) { return HttpLoader.cret = String(ret).replace(/-*[A-Z\s]*-\n?/g, '')
+            .split('~#~'); }));
+    };
+    /**
+     * 获取证书
+     */
+    HttpLoader.prototype.fetchCret = function () {
+        return HttpLoader.cret;
+    };
+    /**
+     * ajax promise
+     */
+    HttpLoader.prototype.fetchUrl = function (url, type) {
+        var cache = this.opts.cache;
+        var useCache = this.opts.useCache;
+        if (useCache && cache[url]) {
+            return cache[url];
+        }
+        return new Promise(function (resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url);
+            xhr.responseType = type || 'json';
+            // xhr.withCredentials = true;
+            xhr.onload = function () {
+                var ret = xhr.response;
+                if (useCache) {
+                    cache[url] = ret;
+                }
+                resolve(ret);
+            };
+            xhr.onerror = function (e) { return reject(e); };
+            xhr.send();
+        });
+    };
+    /**
+     * openapi 需要 jsonp 方式调用
+     * @param {string} url
+     */
+    HttpLoader.prototype.fetchJsonp = function (url) {
+        var script = document.createElement('script');
+        var head = document.head;
+        script.src = url + '&cb=rJsonpCb&_=' + Date.now();
+        return new Promise(function (resolve, reject) {
+            window['rJsonpCb'] = function (res) {
+                resolve(res);
+                head.removeChild(script);
+            };
+            head.appendChild(script);
+        });
+    };
+    /**
+     * 模拟数据, 还不完善
+     */
+    HttpLoader.prototype.fetchMock = function () {
+        return Promise.resolve(mock_1.default.Result[0].DisplayData.resultData.tplData);
+    };
+    HttpLoader.prototype.clean = function () {
+        this.cache = {};
+    };
+    return HttpLoader;
+}());
+exports.default = HttpLoader;
+
+
+/***/ }),
+
+/***/ "./src/loaders/mock.ts":
+/*!*****************************!*\
+  !*** ./src/loaders/mock.ts ***!
+  \*****************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = { "ResultCode": "0", "QueryID": "331303264", "Result": [{ "ResultURL": "http:\/\/nourl.ubs.baidu.com\/5099", "Weight": "3", "Sort": "1", "SrcID": "5099", "SubResult": [], "SubResNum": "0", "DisplayData": { "StdStg": "5099", "StdStl": "0", "strategy": { "tempName": "unitstatic", "precharge": "0", "ctplOrPhp": "1", "hilightWord": "" }, "resultData": { "tplData": { "xrkey": "14757014946023377241", "srcid": "5099", "sceneid": "null", "xrset": "", "sceneGroup": [{ "id": "0be77ed5-8c6d-47a9-aab8-6ad15929a151", "name": "\u5317\u4eac\u5927\u5b66\u897f\u95e8", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/0be77ed5-8c6d-47a9-aab8-6ad15929a151\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/0be77ed5-8c6d-47a9-aab8-6ad15929a151\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/0be77ed5-8c6d-47a9-aab8-6ad15929a151\/preview.jpg", "setId": "14757014946023377241", "overlays": [{ "id": "0", "type": "dom", "content": "\u5317\u4eac\u5927\u5b66", "actionType": "link", "linkUrl": "https:\/\/m.baidu.com\/s?word=\u5317\u4eac\u5927\u5b66", "location": { "lng": "176.34000", "lat": "94.43000" } }], "recomList": [{ "setId": "8924019812670127391", "sceneName": "\u6b63\u95e8", "setName": "\u4e2d\u56fd\u79d1\u5b66\u9662\u5927\u5b66", "sceneId": "a549e121-7392-46a6-988e-49407769f9bd", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/a549e121-7392-46a6-988e-49407769f9bd\/" }, { "setId": "14013704871522888128", "sceneName": "\u5b66\u9662\u5165\u53e3", "setName": "\u4e2d\u56fd\u6d77\u6d0b\u5927\u5b66", "sceneId": "9ae4acf3-8e52-4b11-a411-3af82c939006", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/9ae4acf3-8e52-4b11-a411-3af82c939006\/" }, { "setId": "3810561114796229742", "sceneName": "\u5317\u4eac\u5de5\u4e1a\u5927\u5b66", "setName": "\u5317\u4eac\u5de5\u4e1a\u5927\u5b66", "sceneId": "bd797206-b74b-41c7-a46a-0cbeb12b74de", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/bd797206-b74b-41c7-a46a-0cbeb12b74de\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "0", "x": "0.2031", "y": "0.6647" }, { "pos": "0", "x": "0.7578", "y": "0.8441" }, { "pos": "5", "x": "0.2344", "y": "0.7427" }] }, { "id": "36954560-df8b-4123-a53b-7fc7876209ca", "name": "\u5317\u4eac\u5927\u5b66\u897f\u95e8\u62f1\u6865", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/36954560-df8b-4123-a53b-7fc7876209ca\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/36954560-df8b-4123-a53b-7fc7876209ca\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/36954560-df8b-4123-a53b-7fc7876209ca\/preview.jpg", "setId": "14757014946023377241", "overlays": [], "recomList": [{ "setId": "10061572842628472407", "sceneName": "\u4eac\u5e08\u5e7f\u573a", "setName": "\u5317\u4eac\u5e08\u8303\u5927\u5b66", "sceneId": "31106c4e-f630-4544-bfa7-594b7cea0e03", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/31106c4e-f630-4544-bfa7-594b7cea0e03\/" }, { "setId": "13567421994269045951", "sceneName": "\u5357\u95e8", "setName": "\u4e2d\u534e\u5973\u5b50\u5b66\u9662", "sceneId": "52cf1bea-1af2-42e4-832e-96a9936f729b", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/52cf1bea-1af2-42e4-832e-96a9936f729b\/" }, { "setId": "10455394762730970214", "sceneName": "\u5317\u4eac\u670d\u88c5\u5b66\u9662\u95e8\u53e3", "setName": "\u5317\u4eac\u670d\u88c5\u5b66\u9662", "sceneId": "a43ee8ac-b85b-4987-8fc1-173eabfc5b3c", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/a43ee8ac-b85b-4987-8fc1-173eabfc5b3c\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "4", "x": "0.3516", "y": "0.7037" }, { "pos": "1", "x": "0.75", "y": "0.8752" }, { "pos": "0", "x": "0.7344", "y": "0.7037" }] }, { "id": "1bb78963-260f-4ea4-8767-2361d594a419", "name": "\u529e\u516c\u697c\u524d\u534e\u8868", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/1bb78963-260f-4ea4-8767-2361d594a419\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/1bb78963-260f-4ea4-8767-2361d594a419\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/1bb78963-260f-4ea4-8767-2361d594a419\/preview.jpg", "setId": "14757014946023377241", "overlays": [], "recomList": [{ "setId": "2534465590896257619", "sceneName": "\u5317\u4eac\u7406\u5de5\u5927\u5b66", "setName": "\u5317\u4eac\u7406\u5de5\u5927\u5b66", "sceneId": "182eb9ae-54ae-4501-aa8d-be9fbbacce7a", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/182eb9ae-54ae-4501-aa8d-be9fbbacce7a\/" }, { "setId": "6780982315912378688", "sceneName": "\u77f3\u6cb3\u5b50\u5927\u5b66\u5317\u533a\u5927\u95e8", "setName": "\u77f3\u6cb3\u5b50\u5927\u5b66", "sceneId": "e44a8865-1113-4843-81a8-837f7cf6f402", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/e44a8865-1113-4843-81a8-837f7cf6f402\/" }, { "setId": "7222389163736657805", "sceneName": "\u4e2d\u592e\u97f3\u4e50\u5b66\u9662\u95e8\u53e3", "setName": "\u4e2d\u592e\u97f3\u4e50\u5b66\u9662", "sceneId": "35f13e71-f451-415a-8447-cfb8ccc5af76", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/35f13e71-f451-415a-8447-cfb8ccc5af76\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "4", "x": "0.3438", "y": "0.7115" }, { "pos": "1", "x": "0.25", "y": "0.7583" }, { "pos": "0", "x": "0.75", "y": "0.7505" }] }, { "id": "a320227c-7bb7-4d64-8d64-5a270a994e48", "name": "\u5317\u4eac\u5927\u5b66\u529e\u516c\u697c", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/a320227c-7bb7-4d64-8d64-5a270a994e48\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/a320227c-7bb7-4d64-8d64-5a270a994e48\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/a320227c-7bb7-4d64-8d64-5a270a994e48\/preview.jpg", "setId": "14757014946023377241", "overlays": [], "recomList": [{ "setId": "10061572842628472407", "sceneName": "\u4eac\u5e08\u5e7f\u573a", "setName": "\u5317\u4eac\u5e08\u8303\u5927\u5b66", "sceneId": "31106c4e-f630-4544-bfa7-594b7cea0e03", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/31106c4e-f630-4544-bfa7-594b7cea0e03\/" }, { "setId": "1354748023415403694", "sceneName": "\u5357\u95e8", "setName": "\u91cd\u5e86\u5927\u5b66", "sceneId": "2d78609c-1c0a-47de-86c2-1e76596bdb78", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/2d78609c-1c0a-47de-86c2-1e76596bdb78\/" }, { "setId": "5276695515839961725", "sceneName": "\u4e0a\u6d77\u4ea4\u901a\u5927\u5b66\u95f5\u884c\u6821\u533a\u5357\u95e8", "setName": "\u4e0a\u6d77\u4ea4\u901a\u5927\u5b66\u95f5\u884c\u6821\u533a", "sceneId": "72ee12e4-38b4-4c7f-a65c-83d8c0138d1e", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/72ee12e4-38b4-4c7f-a65c-83d8c0138d1e\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "5", "x": "0.4141", "y": "0.7115" }, { "pos": "0", "x": "0.25", "y": "0.8674" }, { "pos": "1", "x": "0.5547", "y": "0.7427" }] }, { "id": "b9309038-bd90-49e8-9bba-239a4e8f6914", "name": "\u5317\u4eac\u5927\u5b66\u672a\u540d\u6e56\u77f3\u677f\u6865", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/b9309038-bd90-49e8-9bba-239a4e8f6914\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/b9309038-bd90-49e8-9bba-239a4e8f6914\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/b9309038-bd90-49e8-9bba-239a4e8f6914\/preview.jpg", "setId": "14757014946023377241", "overlays": [{ "id": "0", "type": "dom", "content": "\u672a\u540d\u6e56", "actionType": "link", "linkUrl": "https:\/\/m.baidu.com\/s?word=\u5317\u4eac\u5927\u5b66", "location": { "lng": "-80.86000", "lat": "80.30000" } }], "recomList": [{ "setId": "902506758639698567", "sceneName": "\u5927\u95e8\u53e3", "setName": "\u5317\u4eac\u79d1\u6280\u5927\u5b66", "sceneId": "b38c573b-6262-48c9-aeec-4476458f4374", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/b38c573b-6262-48c9-aeec-4476458f4374\/" }, { "setId": "6780982315912378688", "sceneName": "\u77f3\u6cb3\u5b50\u5927\u5b66\u5317\u533a\u5927\u95e8", "setName": "\u77f3\u6cb3\u5b50\u5927\u5b66", "sceneId": "e44a8865-1113-4843-81a8-837f7cf6f402", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/e44a8865-1113-4843-81a8-837f7cf6f402\/" }, { "setId": "7612622941701308605", "sceneName": "\u5317\u4eac\u4fe1\u606f\u79d1\u6280\u5927\u5b66\u6821\u95e8", "setName": "\u5317\u4eac\u4fe1\u606f\u79d1\u6280\u5927\u5b66", "sceneId": "d06a348f-3bf9-486b-aed7-3738dcd89b23", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/d06a348f-3bf9-486b-aed7-3738dcd89b23\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "4", "x": "0.7578", "y": "0.8752" }, { "pos": "1", "x": "0.7578", "y": "0.7583" }, { "pos": "0", "x": "0.5156", "y": "0.8986" }] }, { "id": "53137942-9a09-4abc-b2b5-13e65fa7d196", "name": "\u5317\u4eac\u5927\u5b66\u672a\u540d\u6e56\u7554", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/53137942-9a09-4abc-b2b5-13e65fa7d196\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/53137942-9a09-4abc-b2b5-13e65fa7d196\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/53137942-9a09-4abc-b2b5-13e65fa7d196\/preview.jpg", "setId": "14757014946023377241", "overlays": [{ "id": "0", "type": "dom", "content": "\u672a\u540d\u6e56", "actionType": "link", "linkUrl": "https:\/\/m.baidu.com\/s?word=\u5317\u4eac\u5927\u5b66", "location": { "lng": "96.93000", "lat": "88.92000" } }], "recomList": [{ "setId": "3524388819228637508", "sceneName": "\u5185\u8499\u53e4\u5927\u5b66\u5357\u95e8\u4e3b\u697c\u96ea\u666f", "setName": "\u5185\u8499\u53e4\u5927\u5b66", "sceneId": "5b2b1f06-65b6-4ff6-b8bf-0e9e0bfec02f", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/5b2b1f06-65b6-4ff6-b8bf-0e9e0bfec02f\/" }, { "setId": "12306653089334672775", "sceneName": "\u534e\u5317\u7535\u529b\u5927\u5b66\u95e8\u53e3", "setName": "\u534e\u5317\u7535\u529b\u5927\u5b66", "sceneId": "6be5dac2-9703-4862-8023-c0d12d1043df", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/6be5dac2-9703-4862-8023-c0d12d1043df\/" }, { "setId": "15951926474790708533", "sceneName": "\u5357\u5f00\u5927\u5b66\u5357\u95e8", "setName": "\u5357\u5f00\u5927\u5b66", "sceneId": "7a3eeb4b-5f89-4b76-8175-f74398520ec1", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/7a3eeb4b-5f89-4b76-8175-f74398520ec1\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "4", "x": "0.2109", "y": "0.6335" }, { "pos": "4", "x": "0.9922", "y": "0.7271" }, { "pos": "5", "x": "0.5781", "y": "0.8285" }] }, { "id": "5f28cd30-9c2c-4dc2-9d02-3fceb8a6f674", "name": "\u5317\u4eac\u5927\u5b66\u91cd\u4fee\u6148\u6d4e\u5bfa", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/5f28cd30-9c2c-4dc2-9d02-3fceb8a6f674\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/5f28cd30-9c2c-4dc2-9d02-3fceb8a6f674\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/5f28cd30-9c2c-4dc2-9d02-3fceb8a6f674\/preview.jpg", "setId": "14757014946023377241", "overlays": [], "recomList": [{ "setId": "12969797221615875129", "sceneName": "\u5b66\u6821\u5927\u95e8", "setName": "\u5317\u4eac\u57ce\u5e02\u5b66\u9662", "sceneId": "92257d40-cedd-4aaa-a7c1-4fcaf073925c", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/92257d40-cedd-4aaa-a7c1-4fcaf073925c\/" }, { "setId": "624743148054904978", "sceneName": "\u5927\u95e8", "setName": "\u5317\u4eac\u4f53\u80b2\u5927\u5b66", "sceneId": "510278db-7870-4f7c-b227-f2af3803a612", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/510278db-7870-4f7c-b227-f2af3803a612\/" }, { "setId": "15481103160317551291", "sceneName": "\u5317\u4eac\u6797\u4e1a\u5927\u5b66", "setName": "\u5317\u4eac\u6797\u4e1a\u5927\u5b66", "sceneId": "034478e1-0843-4dc9-8282-980154a6fda0", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/034478e1-0843-4dc9-8282-980154a6fda0\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "0", "x": "1", "y": "0.8051" }, { "pos": "1", "x": "0.25", "y": "0.6491" }, { "pos": "5", "x": "0.5547", "y": "0.8674" }] }, { "id": "bb7a3a71-fc63-4f1f-b9f1-e6ab678c42ba", "name": "\u65af\u8bfa\u5893", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/bb7a3a71-fc63-4f1f-b9f1-e6ab678c42ba\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/bb7a3a71-fc63-4f1f-b9f1-e6ab678c42ba\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/bb7a3a71-fc63-4f1f-b9f1-e6ab678c42ba\/preview.jpg", "setId": "14757014946023377241", "overlays": [{ "id": "0", "type": "dom", "content": "\u65af\u8bfa\u5893", "actionType": "link", "linkUrl": "https:\/\/m.baidu.com\/s?word=\u5317\u4eac\u5927\u5b66", "location": { "lng": "174.99000", "lat": "80.61000" } }], "recomList": [{ "setId": "14237951454413024847", "sceneName": "\u5927\u95e8", "setName": "\u4e2d\u56fd\u77ff\u4e1a\u5927\u5b66\u5317\u4eac", "sceneId": "319bbf78-ad87-4363-ab1f-811d51aa2edc", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/319bbf78-ad87-4363-ab1f-811d51aa2edc\/" }, { "setId": "2486317596558216009", "sceneName": "\u4e3b\u697c", "setName": "\u5317\u4eac\u822a\u7a7a\u822a\u5929\u5927\u5b66", "sceneId": "3968e9dd-3e89-4472-b2cc-c6c73af93980", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/3968e9dd-3e89-4472-b2cc-c6c73af93980\/" }, { "setId": "7612622941701308605", "sceneName": "\u5317\u4eac\u4fe1\u606f\u79d1\u6280\u5927\u5b66\u6821\u95e8", "setName": "\u5317\u4eac\u4fe1\u606f\u79d1\u6280\u5927\u5b66", "sceneId": "d06a348f-3bf9-486b-aed7-3738dcd89b23", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/d06a348f-3bf9-486b-aed7-3738dcd89b23\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "4", "x": "0.2578", "y": "0.7427" }, { "pos": "1", "x": "0.0391", "y": "0.2827" }, { "pos": "0", "x": "0.4297", "y": "0.3606" }] }, { "id": "48ca175b-aaf8-410d-8e58-09cdebd49b22", "name": "\u672a\u540d\u6e56\u7554\u77f3\u62f1\u6865", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/48ca175b-aaf8-410d-8e58-09cdebd49b22\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/48ca175b-aaf8-410d-8e58-09cdebd49b22\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/48ca175b-aaf8-410d-8e58-09cdebd49b22\/preview.jpg", "setId": "14757014946023377241", "overlays": [{ "id": "0", "type": "dom", "content": "\u672a\u540d\u6e56", "actionType": "link", "linkUrl": "https:\/\/m.baidu.com\/s?word=\u5317\u4eac\u5927\u5b66", "location": { "lng": "176.74000", "lat": "78.57000" } }], "recomList": [{ "setId": "649690320471029692", "sceneName": "\u95e8\u53e3", "setName": "\u4e2d\u56fd\u9752\u5e74\u653f\u6cbb\u5b66\u9662", "sceneId": "0ba019a9-f959-4010-9a5b-b5bbc1e2f4b4", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/0ba019a9-f959-4010-9a5b-b5bbc1e2f4b4\/" }, { "setId": "13839868653643097909", "sceneName": "\u7389\u6cc9", "setName": "\u6d59\u6c5f\u5927\u5b66", "sceneId": "93187278-e486-40a6-be1b-bdd7061a2be0", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/93187278-e486-40a6-be1b-bdd7061a2be0\/" }, { "setId": "13567421994269045951", "sceneName": "\u5357\u95e8", "setName": "\u4e2d\u534e\u5973\u5b50\u5b66\u9662", "sceneId": "52cf1bea-1af2-42e4-832e-96a9936f729b", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/52cf1bea-1af2-42e4-832e-96a9936f729b\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "0", "x": "0.8125", "y": "0.7349" }, { "pos": "4", "x": "0.6484", "y": "0.7271" }, { "pos": "5", "x": "0.4688", "y": "0.8129" }] }, { "id": "8e360672-85ff-4d04-b3b3-49aac4417654", "name": "\u672a\u540d\u6e56\u7554", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/8e360672-85ff-4d04-b3b3-49aac4417654\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/8e360672-85ff-4d04-b3b3-49aac4417654\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/8e360672-85ff-4d04-b3b3-49aac4417654\/preview.jpg", "setId": "14757014946023377241", "overlays": [{ "id": "0", "type": "dom", "content": "\u672a\u540d\u6e56", "actionType": "link", "linkUrl": "https:\/\/m.baidu.com\/s?word=\u5317\u4eac\u5927\u5b66", "location": { "lng": "170.02000", "lat": "80.73000" } }], "recomList": [{ "setId": "8924019812670127391", "sceneName": "\u6b63\u95e8", "setName": "\u4e2d\u56fd\u79d1\u5b66\u9662\u5927\u5b66", "sceneId": "a549e121-7392-46a6-988e-49407769f9bd", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/a549e121-7392-46a6-988e-49407769f9bd\/" }, { "setId": "400365912707120368", "sceneName": "\u9996\u90fd\u5e08\u8303\u5927\u5b66\u6b63\u95e8", "setName": "\u9996\u90fd\u5e08\u8303\u5927\u5b66", "sceneId": "44451d37-5251-4ee2-94b0-a0eaa415c0ae", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/44451d37-5251-4ee2-94b0-a0eaa415c0ae\/" }, { "setId": "649690320471029692", "sceneName": "\u95e8\u53e3", "setName": "\u4e2d\u56fd\u9752\u5e74\u653f\u6cbb\u5b66\u9662", "sceneId": "0ba019a9-f959-4010-9a5b-b5bbc1e2f4b4", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/0ba019a9-f959-4010-9a5b-b5bbc1e2f4b4\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "4", "x": "0.2812", "y": "0.7037" }, { "pos": "1", "x": "0.1484", "y": "0.7193" }, { "pos": "0", "x": "0.7266", "y": "0.6881" }] }, { "id": "467ffd30-3715-494c-bbd1-cfff1fb348a9", "name": "\u672a\u540d\u6e56\u6587\u7269\u4fdd\u62a4\u7891", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/467ffd30-3715-494c-bbd1-cfff1fb348a9\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/467ffd30-3715-494c-bbd1-cfff1fb348a9\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/467ffd30-3715-494c-bbd1-cfff1fb348a9\/preview.jpg", "setId": "14757014946023377241", "overlays": [], "recomList": [{ "setId": "17047236712156433743", "sceneName": "\u9996\u94a2\u5de5\u5b66\u9662\u5357\u95e8", "setName": "\u9996\u94a2\u5de5\u5b66\u9662", "sceneId": "6d39429c-20e8-4fb6-8abf-d4a17a87def0", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/6d39429c-20e8-4fb6-8abf-d4a17a87def0\/" }, { "setId": "12969797221615875129", "sceneName": "\u5b66\u6821\u5927\u95e8", "setName": "\u5317\u4eac\u57ce\u5e02\u5b66\u9662", "sceneId": "92257d40-cedd-4aaa-a7c1-4fcaf073925c", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/92257d40-cedd-4aaa-a7c1-4fcaf073925c\/" }, { "setId": "14013704871522888128", "sceneName": "\u5b66\u9662\u5165\u53e3", "setName": "\u4e2d\u56fd\u6d77\u6d0b\u5927\u5b66", "sceneId": "9ae4acf3-8e52-4b11-a411-3af82c939006", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/9ae4acf3-8e52-4b11-a411-3af82c939006\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "5", "x": "1", "y": "0.7817" }, { "pos": "0", "x": "0.5234", "y": "0.883" }, { "pos": "1", "x": "0.8203", "y": "0.8752" }] }, { "id": "b65e83d6-c3f4-42ba-82d4-b998f8f1a2d9", "name": "\u672a\u540d\u6e56\u7554\u5c0f\u8def", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/b65e83d6-c3f4-42ba-82d4-b998f8f1a2d9\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/b65e83d6-c3f4-42ba-82d4-b998f8f1a2d9\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/b65e83d6-c3f4-42ba-82d4-b998f8f1a2d9\/preview.jpg", "setId": "14757014946023377241", "overlays": [{ "id": "0", "type": "dom", "content": "\u672a\u540d\u6e56", "actionType": "link", "linkUrl": "https:\/\/m.baidu.com\/s?word=\u5317\u4eac\u5927\u5b66", "location": { "lng": "-179.42000", "lat": "81.27000" } }], "recomList": [{ "setId": "2486317596558216009", "sceneName": "\u4e3b\u697c", "setName": "\u5317\u4eac\u822a\u7a7a\u822a\u5929\u5927\u5b66", "sceneId": "3968e9dd-3e89-4472-b2cc-c6c73af93980", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/3968e9dd-3e89-4472-b2cc-c6c73af93980\/" }, { "setId": "9359307571684506743", "sceneName": "\u5927\u95e8\u53e3", "setName": "\u4e2d\u5c71\u5927\u5b66", "sceneId": "ce9598a1-865b-4661-8ef5-22a0e26b0050", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/ce9598a1-865b-4661-8ef5-22a0e26b0050\/" }, { "setId": "7222389163736657805", "sceneName": "\u4e2d\u592e\u97f3\u4e50\u5b66\u9662\u95e8\u53e3", "setName": "\u4e2d\u592e\u97f3\u4e50\u5b66\u9662", "sceneId": "35f13e71-f451-415a-8447-cfb8ccc5af76", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/35f13e71-f451-415a-8447-cfb8ccc5af76\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "4", "x": "0.1484", "y": "0.6725" }, { "pos": "4", "x": "0.9219", "y": "0.7349" }, { "pos": "0", "x": "0.5", "y": "0.7193" }] }, { "id": "a824f291-f3c4-447a-a828-8ed96ea35c65", "name": "\u690d\u6811\u7eaa\u5ff5\u7891\u524d", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/a824f291-f3c4-447a-a828-8ed96ea35c65\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/a824f291-f3c4-447a-a828-8ed96ea35c65\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/a824f291-f3c4-447a-a828-8ed96ea35c65\/preview.jpg", "setId": "14757014946023377241", "overlays": [], "recomList": [{ "setId": "14013704871522888128", "sceneName": "\u5b66\u9662\u5165\u53e3", "setName": "\u4e2d\u56fd\u6d77\u6d0b\u5927\u5b66", "sceneId": "9ae4acf3-8e52-4b11-a411-3af82c939006", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/9ae4acf3-8e52-4b11-a411-3af82c939006\/" }, { "setId": "3524388819228637508", "sceneName": "\u5185\u8499\u53e4\u5927\u5b66\u5357\u95e8\u4e3b\u697c\u96ea\u666f", "setName": "\u5185\u8499\u53e4\u5927\u5b66", "sceneId": "5b2b1f06-65b6-4ff6-b8bf-0e9e0bfec02f", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/5b2b1f06-65b6-4ff6-b8bf-0e9e0bfec02f\/" }, { "setId": "15948192386262486311", "sceneName": "\u5317\u4eac\u90ae\u7535\u5927\u5b66\u4e16\u7eaa\u5b66\u9662", "setName": "\u5317\u4eac\u90ae\u7535\u5927\u5b66\u4e16\u7eaa\u5b66\u9662", "sceneId": "3ba652c4-10dc-4b88-8494-d4956b075c08", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/3ba652c4-10dc-4b88-8494-d4956b075c08\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "4", "x": "0.3828", "y": "0.7193" }, { "pos": "1", "x": "0.25", "y": "0.7505" }, { "pos": "0", "x": "0.5859", "y": "0.7427" }] }, { "id": "0cc60484-10b1-4c77-90ef-bcfe1ffa2aab", "name": "\u690d\u6811\u7eaa\u5ff5\u7891\u796d\u575b1", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/0cc60484-10b1-4c77-90ef-bcfe1ffa2aab\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/0cc60484-10b1-4c77-90ef-bcfe1ffa2aab\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/0cc60484-10b1-4c77-90ef-bcfe1ffa2aab\/preview.jpg", "setId": "14757014946023377241", "overlays": [], "recomList": [{ "setId": "6061565342849547440", "sceneName": "\u8fbd\u5b81\u5927\u5b66\u5927\u95e8", "setName": "\u8fbd\u5b81\u5927\u5b66\u6c88\u5317\u6821\u533a", "sceneId": "634991b4-7f52-4769-a800-7acbde5dd01c", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/634991b4-7f52-4769-a800-7acbde5dd01c\/" }, { "setId": "2486317596558216009", "sceneName": "\u4e3b\u697c", "setName": "\u5317\u4eac\u822a\u7a7a\u822a\u5929\u5927\u5b66", "sceneId": "3968e9dd-3e89-4472-b2cc-c6c73af93980", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/3968e9dd-3e89-4472-b2cc-c6c73af93980\/" }, { "setId": "17047236712156433743", "sceneName": "\u9996\u94a2\u5de5\u5b66\u9662\u5357\u95e8", "setName": "\u9996\u94a2\u5de5\u5b66\u9662", "sceneId": "6d39429c-20e8-4fb6-8abf-d4a17a87def0", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/6d39429c-20e8-4fb6-8abf-d4a17a87def0\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "0", "x": "0.8203", "y": "0.8908" }, { "pos": "1", "x": "0.0859", "y": "0.8129" }, { "pos": "5", "x": "0.9219", "y": "0.7037" }] }, { "id": "73686dea-de51-45eb-8eca-111d0278f6d3", "name": "\u5317\u4eac\u5927\u5b66\u796d\u575b2", "texPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/73686dea-de51-45eb-8eca-111d0278f6d3\/", "thumbPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/73686dea-de51-45eb-8eca-111d0278f6d3\/thumb.jpg", "imgPath": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/73686dea-de51-45eb-8eca-111d0278f6d3\/preview.jpg", "setId": "14757014946023377241", "overlays": [], "recomList": [{ "setId": "6589341115220356341", "sceneName": "\u77f3\u5927\u5168\u666f\u5730\u56fe", "setName": "\u4e2d\u56fd\u77f3\u6cb9\u5927\u5b66\uff08\u5317\u4eac\uff09", "sceneId": "b010607d-35c0-4336-b8da-bde4ab261ee2", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/b010607d-35c0-4336-b8da-bde4ab261ee2\/" }, { "setId": "15272849906636747300", "sceneName": "\u5927\u95e8\u53e3", "setName": "\u5317\u4eac\u5916\u56fd\u8bed\u5927\u5b66", "sceneId": "4822178f-540f-4835-b997-6b9f288ab5b7", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/4822178f-540f-4835-b997-6b9f288ab5b7\/" }, { "setId": "15951926474790708533", "sceneName": "\u5357\u5f00\u5927\u5b66\u5357\u95e8", "setName": "\u5357\u5f00\u5927\u5b66", "sceneId": "7a3eeb4b-5f89-4b76-8175-f74398520ec1", "image": "https:\/\/mms-xr.cdn.bcebos.com\/panorama\/7a3eeb4b-5f89-4b76-8175-f74398520ec1\/" }], "info": { "author": "\u4f5c\u8005:\u7f51\u5c55Expoon", "url": "http:\/\/www.expoon.com", "desc": "" }, "textPathExt": "@w_1024", "recomPos": [{ "pos": "4", "x": "0.0312", "y": "0.7349" }, { "pos": "1", "x": "0.3438", "y": "0.7427" }, { "pos": "0", "x": "0.4609", "y": "0.6725" }] }], "created": [{ "name": "init", "params": { "defaultSceneId": "0be77ed5-8c6d-47a9-aab8-6ad15929a151", "enableAnimation": "0", "enableDevice": "0", "category": "school" } }, { "name": "xzh", "params": { "id": "1584296604012629", "name": "\u7f51\u5c55", "logo": "https:\/\/mms-xr.cdn.bcebos.com\/xrplatform\/bearinfo\/1584296604012629\/logo.png", "infoLink": "" } }, { "name": "xj", "params": [] }, { "name": "vrshow", "params": { "isShow": "1" } }, { "name": "prize", "params": { "isShow": "0" } }, { "name": "ar", "params": { "arkey": "10233257", "artype": "9" } }], "expanded": [{ "name": "recommend", "params": { "tabList": ["\u5317\u4eac\u5927\u5b66"] } }], "data_source": "AE" }, "extData": { "tplt": "unitstatic", "resourceid": "5099" } } }, "RecoverCacheTime": "0" }], "ResultNum": "1" };
+
+
+/***/ }),
+
+/***/ "./src/loaders/resource.loader.ts":
+/*!****************************************!*\
+  !*** ./src/loaders/resource.loader.ts ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+var http_loader_1 = __webpack_require__(/*! ./http.loader */ "./src/loaders/http.loader.ts");
+var log_1 = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
+var decipher_1 = __webpack_require__(/*! ./decipher */ "./src/loaders/decipher.ts");
+/**
+ * @file 资源加载器, 支持 6 in 1 预览, .r, image 三种格式
+ */
+var cubeLoader = new three_1.CubeTextureLoader();
+var ResourceLoader = /** @class */ (function (_super) {
+    __extends(ResourceLoader, _super);
+    function ResourceLoader() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    /**
+     * 加载 .r 格式
+     */
+    ResourceLoader.prototype.loadR = function (url) {
+        var requests = [this.fetchUrl(url, 'text'), this.fetchCret()];
+        return Promise.all(requests)
+            .then(function (ret) {
+            var list = String(ret[0]).split('~#~');
+            var secretData = list.slice(0, 6);
+            var secretKey = ret[1];
+            if (!secretKey) {
+                throw new Error('incorrect cret key');
+            }
+            var key = decipher_1.rDecipher(secretKey[0], 0xf);
+            var EOF = decipher_1.rEOF(decipher_1.rDecipher(secretKey[1], 0xe));
+            if (!EOF.pass) {
+                throw new Error('incorrect product domian');
+            }
+            var base64s = secretData.map(function (ciphertext, i) {
+                var start = EOF.line;
+                // find real cipher header
+                var header = ciphertext.substring(0, start);
+                var body = ciphertext.substring(start);
+                return decipher_1.rDecipher(header, key) + body;
+            });
+            return new Promise(function (resolve, reject) { return cubeLoader.load(base64s, function (tex) { return resolve(tex); }, null, function (e) { return reject(e); }); });
+        }).catch(function (e) { return log_1.default.output(e); });
+    };
+    /**
+     * 加载 6 张复合顺序和命名的图
+     * attach order: right -> left -> up -> down -> front -> back
+     * @param {string} url
+     * @param {string} suffix 资源后缀
+     */
+    ResourceLoader.prototype.loadCube = function (url, suffix) {
+        var _this = this;
+        if (suffix === void 0) { suffix = ''; }
+        url = url.replace(/\/$/, '');
+        var urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(function (name) { return _this.crosUrl(url + "/mobile_" + name + ".jpg" + suffix); });
+        return new Promise(function (resolve, reject) {
+            cubeLoader.load(urls, function (tex) { return resolve(tex); }, null, function (e) { return reject(e); });
+        }).catch(function (e) { return log_1.default.output(e); });
+    };
+    /**
+     * 加载图片数组
+     */
+    ResourceLoader.prototype.loadArray = function (url, suffix) {
+        var _this = this;
+        if (suffix === void 0) { suffix = ''; }
+        url = url.replace(/\/$/, '');
+        var urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(function (name) { return _this.crosUrl(url + "/mobile_" + name + ".jpg" + suffix); });
+        return Promise.resolve(urls.map(function (url) {
+            var img = new Image();
+            img.src = url;
+            return img;
+        }));
+    };
+    /**
+     * canvas 切分预览图
+     * @param {string} url
+     */
+    ResourceLoader.prototype.loadCanvas = function (url) {
+        return cutCanvas(this.crosUrl(url));
+    };
+    /**
+     * 多种方式加载贴图
+     * @param {string} url
+     * @param {string} suffix
+     */
+    ResourceLoader.prototype.loadTexture = function (url, suffix) {
+        if (/\.r$/.test(url)) {
+            return this.loadR(this.crosUrl(url));
+        }
+        else {
+            return this.loadCube(url, suffix);
+        }
+    };
+    return ResourceLoader;
+}(http_loader_1.default));
+exports.default = ResourceLoader;
+/**
+ * 加载预览图, canvas cut
+ */
+function cutCanvas(url, timeout) {
+    timeout = timeout || 100000;
+    return new Promise(function (resolve, reject) {
+        var texture = new three_1.CubeTexture();
+        var image = new Image();
+        image.crossOrigin = 'anonymous';
+        var count = 0;
+        image.onload = function () {
+            var canvas;
+            var context;
+            var tileWidth = image.width;
+            for (var i = 0; i < 6; i++) {
+                canvas = document.createElement('canvas');
+                context = canvas.getContext('2d');
+                canvas.height = tileWidth;
+                canvas.width = tileWidth;
+                context.drawImage(image, 0, tileWidth * i, tileWidth, tileWidth, 0, 0, tileWidth, tileWidth);
+                var subImage = new Image();
+                subImage.src = canvas.toDataURL('image/jpeg');
+                subImage['idx'] = i;
+                subImage.onload = function () {
+                    count++;
+                    switch (this['idx']) {
+                        case 0: // left
+                            texture.images[1] = this;
+                            break;
+                        case 1: // front
+                            texture.images[4] = this;
+                            break;
+                        case 2: // right
+                            texture.images[0] = this;
+                            break;
+                        case 3: // back
+                            texture.images[5] = this;
+                            break;
+                        case 4: // up
+                            texture.images[2] = this;
+                            break;
+                        case 5: // down
+                            texture.images[3] = this;
+                            break;
+                    }
+                    if (count === 6) {
+                        texture.mapping = three_1.CubeRefractionMapping;
+                        texture.needsUpdate = true;
+                        resolve(texture);
+                    }
+                };
+            }
+            ;
+        };
+        image.onerror = function () { return reject('load preview error'); };
+        image.src = url;
+        setTimeout(timeout, function () { return reject('load preview timeout'); });
+    }).catch(function (e) { return log_1.default.output(e); });
+}
 
 
 /***/ }),
@@ -57550,405 +57972,6 @@ exports.default = HDStore;
 
 /***/ }),
 
-/***/ "./src/pano/loaders/base.loader.ts":
-/*!*****************************************!*\
-  !*** ./src/pano/loaders/base.loader.ts ***!
-  \*****************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/**
- * @file resource loader
- * TODO: cache, proxy
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-var defaultOpts = {
-    proxy: '',
-    useCache: false
-};
-var cret;
-var BaseLoader = /** @class */ (function () {
-    function BaseLoader(opts) {
-        this.cache = {};
-        this.opts = Object.assign({}, defaultOpts, opts);
-    }
-    BaseLoader.prototype.getSafeUrl = function (url) {
-        return "" + this.opts.proxy + decodeURIComponent(url);
-    };
-    /**
-     * 跨域 cdn 请求 bug
-     * @param url
-     */
-    BaseLoader.prototype.crosUrl = function (url) {
-        // if (/\.cdn\./.test(url)) {
-        //     url += `?_=${Date.now()}`;
-        // }
-        return url;
-    };
-    BaseLoader.prototype.loadCret = function (url) {
-        cret = this.cret;
-        return cret ? cret : (cret = this.fetchUrl(url, 'text')
-            .then(function (ret) { return cret = String(ret).replace(/-*[A-Z\s]*-\n?/g, '').split('~#~'); }));
-    };
-    /**
-     * 获取证书
-     */
-    BaseLoader.prototype.fetchCret = function () {
-        return cret;
-    };
-    /**
-     * ajax promise
-     */
-    BaseLoader.prototype.fetchUrl = function (url, type) {
-        var cache = this.opts.cache;
-        var useCache = this.opts.useCache;
-        if (useCache && cache[url]) {
-            return cache[url];
-        }
-        return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', url);
-            xhr.responseType = type || 'json';
-            // xhr.withCredentials = true;
-            xhr.onload = function () {
-                var ret = xhr.response;
-                if (useCache) {
-                    cache[url] = ret;
-                }
-                resolve(ret);
-            };
-            xhr.onerror = function (e) { return reject(e); };
-            xhr.send();
-        });
-    };
-    /**
-     * openapi 需要 jsonp 方式调用
-     * @param {string} url
-     */
-    BaseLoader.prototype.fetchJsonp = function (url) {
-        var script = document.createElement('script');
-        var head = document.head;
-        script.src = url + '&cb=bxlJsonpCb&_=' + Date.now();
-        return new Promise(function (resolve, reject) {
-            window['bxlJsonpCb'] = function (res) {
-                resolve(res);
-                head.removeChild(script);
-            };
-            head.appendChild(script);
-        });
-    };
-    BaseLoader.prototype.clean = function () {
-        this.cache = {};
-    };
-    return BaseLoader;
-}());
-exports.default = BaseLoader;
-
-
-/***/ }),
-
-/***/ "./src/pano/loaders/converter.ts":
-/*!***************************************!*\
-  !*** ./src/pano/loaders/converter.ts ***!
-  \***************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/**
- * @file data coordinate transform
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-var SceneData = /** @class */ (function () {
-    function SceneData(data) {
-        this.id = data.id;
-        this.setId = data.setId;
-        this.pimg = data.imgPath;
-        this.timg = data.thumbPath;
-        this.simg = data.texPath || data.bxlPath;
-        this.suffix = data.textPathExt;
-        this.fov = data.fov;
-        this.lat = data.lat;
-        this.lng = data.lng;
-        this.info = data.bearInfo || data.info;
-        this.overlays = this.getArrayValue(data.overlays);
-        this.recomList = this.getArrayValue(data.recomList);
-        this.recomPos = this.getArrayValue(data.recomPos);
-    }
-    SceneData.prototype.getArrayValue = function (arry) {
-        return arry && arry.length ? arry : null;
-    };
-    SceneData.prototype.equal = function (data) {
-        return this == data;
-    };
-    return SceneData;
-}());
-exports.SceneData = SceneData;
-var Converter = /** @class */ (function () {
-    function Converter() {
-    }
-    Converter.krpanoTransform = function (location) {
-        location.lng = -location.x;
-        location.lat = -location.y;
-    };
-    Converter.XRTransform = function (location) {
-        location.lng = location.lng - 180;
-        location.lat = location.lat - 90;
-    };
-    Converter.ResultTransform = function (res) {
-        try {
-            return res.Result[0].DisplayData.resultData.tplData;
-        }
-        catch (error) {
-            return null;
-        }
-    };
-    Converter.DataTransform = function (olddata) {
-        return new SceneData(olddata);
-    };
-    Converter.DataFind = function (scenes, id) {
-        var data = scenes.find(function (obj) { return obj.id == id; });
-        return this.DataTransform(data);
-    };
-    return Converter;
-}());
-exports.default = Converter;
-
-
-/***/ }),
-
-/***/ "./src/pano/loaders/decipher.ts":
-/*!**************************************!*\
-  !*** ./src/pano/loaders/decipher.ts ***!
-  \**************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var crypto_js_1 = __webpack_require__(/*! crypto-js */ "./node_modules/crypto-js/index.js");
-/**
- * @file decipher .bxl
- */
-var composeKey = function (part) { return ('skt1wins' + part); };
-/**
- * 解密
- * @param {string} ciphertext 密文
- * @param {string} key 密钥
- */
-function bxlDecipher(ciphertext, key) {
-    if ((key ^ 1) !== 1) {
-        key = composeKey('forever');
-    }
-    var plaintext = crypto_js_1.AES.decrypt({
-        iv: null,
-        ciphertext: crypto_js_1.enc.Hex.parse(ciphertext),
-        salt: crypto_js_1.lib.WordArray.create(0)
-    }, key);
-    return plaintext.toString(crypto_js_1.enc.Utf8);
-}
-exports.bxlDecipher = bxlDecipher;
-/**
- * 解析文件结束符, 域名规则检验
- * @param {string} EOF
- */
-function bxlEOF(EOF) {
-    var ret = EOF.split('*');
-    var domains = ret[1] ? ret[1].split(',') : [];
-    var pass = true;
-    if (domains.length > 0) {
-        pass = Boolean(domains.find(function (domain) { return domain == location.host; }));
-    }
-    return {
-        line: ret[0],
-        pass: pass
-    };
-}
-exports.bxlEOF = bxlEOF;
-
-
-/***/ }),
-
-/***/ "./src/pano/loaders/resource.loader.ts":
-/*!*********************************************!*\
-  !*** ./src/pano/loaders/resource.loader.ts ***!
-  \*********************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-var base_loader_1 = __webpack_require__(/*! ./base.loader */ "./src/pano/loaders/base.loader.ts");
-var log_1 = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
-var decipher_1 = __webpack_require__(/*! ./decipher */ "./src/pano/loaders/decipher.ts");
-/**
- * @file 资源加载器, 支持预览, bxl, image 三种格式
- */
-var cubeLoader = new three_1.CubeTextureLoader();
-var ResourceLoader = /** @class */ (function (_super) {
-    __extends(ResourceLoader, _super);
-    function ResourceLoader() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    /**
-     * 加载 bxl 格式
-     */
-    ResourceLoader.prototype.loadBxl = function (url) {
-        var requests = [this.fetchUrl(url, 'text'), this.fetchCret()];
-        return Promise.all(requests)
-            .then(function (ret) {
-            var list = String(ret[0]).split('~#~');
-            var secretData = list.slice(0, 6);
-            var secretKey = ret[1];
-            if (!secretKey) {
-                throw new Error('incorrect cret key');
-            }
-            var key = decipher_1.bxlDecipher(secretKey[0], 0xf);
-            var EOF = decipher_1.bxlEOF(decipher_1.bxlDecipher(secretKey[1], 0xe));
-            if (!EOF.pass) {
-                throw new Error('incorrect product domian');
-            }
-            var base64s = secretData.map(function (ciphertext, i) {
-                var start = EOF.line;
-                // find real cipher header
-                var header = ciphertext.substring(0, start);
-                var body = ciphertext.substring(start);
-                return decipher_1.bxlDecipher(header, key) + body;
-            });
-            return new Promise(function (resolve, reject) { return cubeLoader.load(base64s, function (tex) { return resolve(tex); }, null, function (e) { return reject(e); }); });
-        }).catch(function (e) { return log_1.default.output(e); });
-    };
-    /**
-     * 加载 6 张复合顺序和命名的图
-     * attach order: right -> left -> up -> down -> front -> back
-     * @param {string} url
-     * @param {string} suffix 资源后缀
-     */
-    ResourceLoader.prototype.loadImage = function (url, suffix) {
-        var _this = this;
-        if (suffix === void 0) { suffix = ''; }
-        url = url.replace(/\/$/, '');
-        var urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(function (name) { return _this.crosUrl(url + "/mobile_" + name + ".jpg" + suffix); });
-        return new Promise(function (resolve, reject) {
-            cubeLoader.load(urls, function (tex) { return resolve(tex); }, null, function (e) { return reject(e); });
-        }).catch(function (e) { return log_1.default.output(e); });
-    };
-    /**
-     * 加载图片数组
-     */
-    ResourceLoader.prototype.loadImages = function (url, suffix) {
-        var _this = this;
-        if (suffix === void 0) { suffix = ''; }
-        url = url.replace(/\/$/, '');
-        var urls = ['r', 'l', 'u', 'd', 'f', 'b'].map(function (name) { return _this.crosUrl(url + "/mobile_" + name + ".jpg" + suffix); });
-        return Promise.resolve(urls.map(function (url) {
-            var img = new Image();
-            img.src = url;
-            return img;
-        }));
-    };
-    /**
-     * canvas 切分预览图
-     * @param {string} url
-     */
-    ResourceLoader.prototype.loadCanvas = function (url) {
-        return cutCanvas(this.crosUrl(url));
-    };
-    /**
-     * 多种方式加载贴图
-     * @param {string} url
-     * @param {string} suffix
-     */
-    ResourceLoader.prototype.loadTexture = function (url, suffix) {
-        if (/\.bxl$/.test(url)) {
-            return this.loadBxl(this.crosUrl(url));
-        }
-        else {
-            return this.loadImage(url, suffix);
-        }
-    };
-    return ResourceLoader;
-}(base_loader_1.default));
-/**
- * 加载预览图, canvas cut
- */
-function cutCanvas(url, timeout) {
-    timeout = timeout || 100000;
-    return new Promise(function (resolve, reject) {
-        var texture = new three_1.CubeTexture();
-        var image = new Image();
-        image.crossOrigin = 'anonymous';
-        var count = 0;
-        image.onload = function () {
-            var canvas;
-            var context;
-            var tileWidth = image.width;
-            for (var i = 0; i < 6; i++) {
-                canvas = document.createElement('canvas');
-                context = canvas.getContext('2d');
-                canvas.height = tileWidth;
-                canvas.width = tileWidth;
-                context.drawImage(image, 0, tileWidth * i, tileWidth, tileWidth, 0, 0, tileWidth, tileWidth);
-                var subImage = new Image();
-                subImage.src = canvas.toDataURL('image/jpeg');
-                subImage['idx'] = i;
-                subImage.onload = function () {
-                    count++;
-                    switch (this['idx']) {
-                        case 0: // left
-                            texture.images[1] = this;
-                            break;
-                        case 1: // front
-                            texture.images[4] = this;
-                            break;
-                        case 2: // right
-                            texture.images[0] = this;
-                            break;
-                        case 3: // back
-                            texture.images[5] = this;
-                            break;
-                        case 4: // up
-                            texture.images[2] = this;
-                            break;
-                        case 5: // down
-                            texture.images[3] = this;
-                            break;
-                    }
-                    if (count === 6) {
-                        texture.mapping = three_1.CubeRefractionMapping;
-                        texture.needsUpdate = true;
-                        resolve(texture);
-                    }
-                };
-            }
-            ;
-        };
-        image.onerror = function () { return reject('load preview error'); };
-        image.src = url;
-        setTimeout(timeout, function () { return reject('load preview timeout'); });
-    }).catch(function (e) { return log_1.default.output(e); });
-}
-exports.default = ResourceLoader;
-
-
-/***/ }),
-
 /***/ "./src/pano/overlays/dom.overlay.ts":
 /*!******************************************!*\
   !*** ./src/pano/overlays/dom.overlay.ts ***!
@@ -58750,7 +58773,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 var orbit_control_1 = __webpack_require__(/*! ./controls/orbit.control */ "./src/pano/controls/orbit.control.ts");
 var gyro_control_1 = __webpack_require__(/*! ./controls/gyro.control */ "./src/pano/controls/gyro.control.ts");
-var resource_loader_1 = __webpack_require__(/*! ./loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+var resource_loader_1 = __webpack_require__(/*! ../loaders/resource.loader */ "./src/loaders/resource.loader.ts");
 var monitor_hdmap_1 = __webpack_require__(/*! ./hdmap/monitor.hdmap */ "./src/pano/hdmap/monitor.hdmap.ts");
 var tween_animation_1 = __webpack_require__(/*! ./animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 var transition_animation_1 = __webpack_require__(/*! ./animations/transition.animation */ "./src/pano/animations/transition.animation.ts");
@@ -58759,18 +58782,12 @@ var inradius_plastic_1 = __webpack_require__(/*! ./plastic/inradius.plastic */ "
 var log_1 = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
 var util_1 = __webpack_require__(/*! ../core/util */ "./src/core/util.ts");
 var history_interface_1 = __webpack_require__(/*! ../interface/history.interface */ "./src/interface/history.interface.ts");
-var converter_1 = __webpack_require__(/*! ./loaders/converter */ "./src/pano/loaders/converter.ts");
+var converter_1 = __webpack_require__(/*! ../loaders/converter */ "./src/loaders/converter.ts");
 /**
  * @file 全景渲染 & 历史记录
  */
-var defaultOpts = {
-    gyro: false,
-    fov: 100,
-    width: null,
-    height: null,
-    sceneTrans: false
-};
-var myLoader = new resource_loader_1.default();
+var loader = new resource_loader_1.default();
+var defaultOpts = { gyro: false, fov: 100, width: null, height: null, sceneTrans: false };
 var Pano = /** @class */ (function (_super) {
     __extends(Pano, _super);
     function Pano(el, source) {
@@ -58864,11 +58881,11 @@ var Pano = /** @class */ (function (_super) {
                         publishdata = { scene: data, pano: this };
                         // has pano instance
                         this.publishSync(this.Topic.SCENE.CREATE, publishdata);
-                        source['cretPath'] && myLoader.loadCret(source['cretPath']);
+                        source['cretPath'] && loader.loadCret(source['cretPath']);
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 4, , 5]);
-                        return [4 /*yield*/, myLoader.loadCanvas(data.pimg)];
+                        return [4 /*yield*/, loader.loadCanvas(data.pimg)];
                     case 2:
                         img = _a.sent();
                         skyBox_1 = this.skyBox = new inradius_plastic_1.default({ envMap: img }, this);
@@ -58876,7 +58893,7 @@ var Pano = /** @class */ (function (_super) {
                         this.publishSync(Topic.SCENE.INIT, publishdata);
                         this.render();
                         // high source
-                        return [4 /*yield*/, myLoader.loadTexture(data.simg, data.suffix)
+                        return [4 /*yield*/, loader.loadTexture(data.simg, data.suffix)
                                 .then(function (texture) {
                                 skyBox_1.setMap(texture);
                                 _this.publishSync(Topic.SCENE.LOAD, publishdata);
@@ -59038,7 +59055,7 @@ var Pano = /** @class */ (function (_super) {
         var skyBox = this.skyBox;
         var newBox = new inradius_plastic_1.default({ envMap: texture }, this);
         if (data) {
-            final = myLoader.loadTexture(data.simg, data.suffix)
+            final = loader.loadTexture(data.simg, data.suffix)
                 .then(function (texture) { return data.equal(_this.sceneData) && texture; });
         }
         return transition_animation_1.default[effect](skyBox, newBox, this).then(function () {
@@ -59121,7 +59138,7 @@ var Pano = /** @class */ (function (_super) {
             var id_1 = data.sceneid;
             var setid = data.xrkey;
             var url_1 = this.pluginList[0].opts.surl;
-            myLoader.fetchJsonp(url_1 + "&xrkey=" + setid + "&sceneid=" + id_1)
+            loader.fetchJsonp(url_1 + "&xrkey=" + setid + "&sceneid=" + id_1)
                 .then(function (res) {
                 var data = converter_1.default.ResultTransform(res);
                 var scenes = data.sceneGroup;
@@ -59217,10 +59234,10 @@ var Pano = /** @class */ (function (_super) {
         this.overlays.delete(data);
     };
     /**
-     * 为 overlays 补充场景数据
+     * 为 overlays 补充场景数据, 触发 mutiple reset
      */
     Pano.prototype.supplyOverlayScenes = function (scenes) {
-        this.publish(this.Topic.SCENE.RESET, { scenes: scenes, pano: this });
+        this.publish(this.Topic.SCENE.RESET, { scenes: scenes, pano: this, id: this.sceneData.id });
         this.overlays.addScenes(scenes);
     };
     /**
@@ -59254,7 +59271,7 @@ var Pano = /** @class */ (function (_super) {
         this.replaceState(data = converter_1.default.DataTransform(data));
         // preTrans defeates sceneTrans
         if (opts.preTrans) {
-            myLoader.loadCanvas(data.pimg)
+            loader.loadCanvas(data.pimg)
                 .then(function (texture) {
                 _this.resetEnv(data);
                 if (sceneTrans) {
@@ -59263,13 +59280,13 @@ var Pano = /** @class */ (function (_super) {
                 else {
                     _this.replaceTexture(texture);
                     // load source img
-                    myLoader.loadTexture(data.simg, data.suffix)
+                    loader.loadTexture(data.simg, data.suffix)
                         .then(function (texture) { return data.equal(_this.sceneData) && _this.replaceSlient(texture); });
                 }
             }).catch(function (e) { return log_1.default.output(e); });
         }
         else {
-            myLoader.loadTexture(data.simg, data.suffix)
+            loader.loadTexture(data.simg, data.suffix)
                 .then(function (texture) {
                 _this.resetEnv(data);
                 sceneTrans ? _this.replaceAnim(texture, 'fade') : _this.replaceTexture(texture);
@@ -60892,7 +60909,7 @@ var Multiple = /** @class */ (function (_super) {
     Multiple.prototype.setScrollLeft = function (node) {
         var outer = this.outer;
         var left = node.offsetLeft;
-        outer.scrollLeft = left > 100 ? left - 20 : 0;
+        outer.scrollLeft = left > window.innerWidth / 2 ? left - 20 : 0;
     };
     /**
      * 设置选中场景
@@ -60949,13 +60966,13 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var pubsub_interface_1 = __webpack_require__(/*! ../../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
 var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-var resource_loader_1 = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+var resource_loader_1 = __webpack_require__(/*! ../../loaders/resource.loader */ "./src/loaders/resource.loader.ts");
 var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 var analyse_hdmap_1 = __webpack_require__(/*! ../hdmap/analyse.hdmap */ "./src/pano/hdmap/analyse.hdmap.ts");
 /**
  * @file 粒子渲染插件
  */
-var myLoader = new resource_loader_1.default();
+var loader = new resource_loader_1.default();
 var Particle = /** @class */ (function (_super) {
     __extends(Particle, _super);
     function Particle(pano, data) {
@@ -60980,7 +60997,7 @@ var Particle = /** @class */ (function (_super) {
         particle.renderOrder = 2;
         particle.position.copy(pos);
         // pano.addSceneObject(particle);
-        myLoader.loadImages(data.simg).then(function (imgs) {
+        loader.loadArray(data.simg).then(function (imgs) {
             // texture.mapping = CubeRefractionMapping;
             var materials = [];
             imgs.forEach(function (img) {
@@ -61319,10 +61336,9 @@ var pubsub_interface_1 = __webpack_require__(/*! ../../interface/pubsub.interfac
 var text_plastic_1 = __webpack_require__(/*! ../plastic/text.plastic */ "./src/pano/plastic/text.plastic.ts");
 var tween_animation_1 = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
-var resource_loader_1 = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+var resource_loader_1 = __webpack_require__(/*! ../../loaders/resource.loader */ "./src/loaders/resource.loader.ts");
 var inradius_plastic_1 = __webpack_require__(/*! ../plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
 var light_plastic_1 = __webpack_require__(/*! ../plastic/light.plastic */ "./src/pano/plastic/light.plastic.ts");
-var converter_1 = __webpack_require__(/*! ../loaders/converter */ "./src/pano/loaders/converter.ts");
 var analyse_hdmap_1 = __webpack_require__(/*! ../hdmap/analyse.hdmap */ "./src/pano/hdmap/analyse.hdmap.ts");
 /**
  * @file 星际穿越 plugin
@@ -61444,7 +61460,7 @@ var Thru = /** @class */ (function (_super) {
             hole.setPosition(pos.x, pos.y, pos.z);
             text.draw(name);
             text.setPosition(pos.x, pos.y - pos.gap, pos.z);
-            loader.loadImage(item.image).then(function (texture) { return hole.setMap(texture); });
+            loader.loadCube(item.image).then(function (texture) { return hole.setMap(texture); });
         });
         this.needToShow();
     };
@@ -61536,16 +61552,15 @@ var Thru = /** @class */ (function (_super) {
                 var instance_1 = obj.instance;
                 var data = instance_1.getData();
                 if (data) {
-                    var id_1 = data.sceneId;
+                    var id = data.sceneId;
                     var sid = data.setId;
                     pano.makeInteract(false);
-                    loader.fetchJsonp(surl + "&xrkey=" + sid + "&sceneid=" + id_1)
-                        .then(function (res) {
-                        var data = converter_1.default.ResultTransform(res);
+                    // loader.fetchJsonp(`${surl}&xrkey=${sid}&sceneid=${id}`).then(res => Converter.ResultTransform(res))
+                    loader.fetchMock().then(function (data) {
                         var sceneGroup = data.sceneGroup;
-                        data.sceneid = id_1;
+                        data.sceneid = '36954560-df8b-4123-a53b-7fc7876209ca';
                         if (sceneGroup) {
-                            var scene_1 = sceneGroup.find(function (item) { return item.id == id_1; });
+                            var scene_1 = util_1.default.findScene(data);
                             var ctarget_1 = pano.getLookAtTarget();
                             var pos_1 = instance_1.getPosition().clone();
                             var flag_1 = pos_1.z > 0;
@@ -61622,7 +61637,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var resource_loader_1 = __webpack_require__(/*! ../loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+var resource_loader_1 = __webpack_require__(/*! ../../loaders/resource.loader */ "./src/loaders/resource.loader.ts");
 var tween_animation_1 = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 var inradius_plastic_1 = __webpack_require__(/*! ../plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
 var light_plastic_1 = __webpack_require__(/*! ../plastic/light.plastic */ "./src/pano/plastic/light.plastic.ts");
@@ -61634,7 +61649,7 @@ var pubsub_interface_1 = __webpack_require__(/*! ../../interface/pubsub.interfac
  * 在全景天空盒中, 相机指向 (0, 0, 1), 即右手坐标系 z 轴正方向
  * 在盒内实际上看的是反向贴图, 穿梭后要将相机恢复
  */
-var myLoader = new resource_loader_1.default();
+var loader = new resource_loader_1.default();
 var Wormhole = /** @class */ (function (_super) {
     __extends(Wormhole, _super);
     function Wormhole(pano, data) {
@@ -61654,7 +61669,7 @@ var Wormhole = /** @class */ (function (_super) {
         var light = new light_plastic_1.default();
         light.addBy(pano);
         // pano.enableShadow();
-        myLoader.loadTexture(data.simg).then(function (texture) {
+        loader.loadTexture(data.simg).then(function (texture) {
             var hole = _this.hole = new inradius_plastic_1.default({
                 type: 'fresnel', position: pos, radius: 150,
                 envMap: _this.texture = texture, text: '测试效果'
@@ -61837,7 +61852,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var pspool_1 = __webpack_require__(/*! ../core/pspool */ "./src/core/pspool.ts");
-var resource_loader_1 = __webpack_require__(/*! ../pano/loaders/resource.loader */ "./src/pano/loaders/resource.loader.ts");
+var resource_loader_1 = __webpack_require__(/*! ../loaders/resource.loader */ "./src/loaders/resource.loader.ts");
 var pano_1 = __webpack_require__(/*! ../pano/pano */ "./src/pano/pano.ts");
 var pano_vr_1 = __webpack_require__(/*! ../vr/pano.vr */ "./src/vr/pano.vr.ts");
 var log_1 = __webpack_require__(/*! ../core/log */ "./src/core/log.ts");
@@ -62126,7 +62141,7 @@ exports.default = {
         ].join('\n')
     },
     /**
-     * phone lights mask
+     * phone's lights mask
      */
     mask: {
         uniforms: {

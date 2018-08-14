@@ -8,7 +8,7 @@
         "id": "scene3",
         "name": "博物馆",
         "fov": 100,
-        "bxlPath": "../assets/scene8/images.bxl",
+        "rPath": "../assets/scene8/images.r",
         "imgPath": "../assets/scene8/scene8.jpg",
         "thumbPath": "../assets/scene8/thumb8.jpg",
         "overlays": [{

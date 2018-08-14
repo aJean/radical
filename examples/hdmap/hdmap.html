@@ -12,7 +12,7 @@
         <div id="test"></div>
         <script src="../../dist/lib.js"></script>
         <script>
-            const json = {
+            r.startPano({
                 title: 'test bxl transfer',
                 cretPath: '../assets/cret.txt',
                 helper: true,
@@ -27,9 +27,7 @@
                     imgPath: '../assets/hdmap/preview.jpg',
                     thumbPath: '../assets/hdmap/thumb.jpg'
                 }]
-            };
-            
-            bxl.startPano(json, '#test');
+            }, '#test');
         </script>
     </body>
 </html>

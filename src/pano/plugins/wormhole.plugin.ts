@@ -1,5 +1,5 @@
-import {Texture, Vector3} from 'three';
-import ResourceLoader from '../loaders/resource.loader';
+import {Texture} from 'three';
+import ResourceLoader from '../../loaders/resource.loader';
 import Tween from '../animations/tween.animation';
 import Inradius from '../plastic/inradius.plastic';
 import Light from '../plastic/light.plastic';
@@ -14,7 +14,7 @@ import PubSubAble from '../../interface/pubsub.interface';
  * 在盒内实际上看的是反向贴图, 穿梭后要将相机恢复
  */
 
-const myLoader = new ResourceLoader();
+const loader = new ResourceLoader();
 export default class Wormhole extends PubSubAble {
     pano: any;
     onDetect: Function;
@@ -45,7 +45,7 @@ export default class Wormhole extends PubSubAble {
 
         light.addBy(pano);
         // pano.enableShadow();
-        myLoader.loadTexture(data.simg).then((texture: Texture) => {
+        loader.loadTexture(data.simg).then((texture: Texture) => {
             const hole = this.hole = new Inradius({
                 type: 'fresnel', position: pos, radius: 150,
                 envMap: this.texture = texture, text: '测试效果'

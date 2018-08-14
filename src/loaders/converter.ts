@@ -23,7 +23,7 @@ export class SceneData {
         this.setId = data.setId;
         this.pimg = data.imgPath;
         this.timg = data.thumbPath;
-        this.simg = data.texPath || data.bxlPath;
+        this.simg = data.texPath || data.rPath;
         this.suffix = data.textPathExt;
         this.fov = data.fov;
         this.lat = data.lat;

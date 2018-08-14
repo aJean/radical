@@ -1,5 +1,5 @@
 import {Scene, Mesh, SphereGeometry, MeshBasicMaterial, CubeReflectionMapping, PerspectiveCamera, Vector3} from 'three';
-import ResourceLoader from '../loaders/resource.loader';
+import ResourceLoader from '../../loaders/resource.loader';
 import Log from '../../core/log';
 import Util from '../../core/util';
 import Plastic from '../../interface/plastic.interface';
@@ -8,7 +8,7 @@ import Plastic from '../../interface/plastic.interface';
  * @file 悬浮球
  */
 
-const myLoader = new ResourceLoader();
+const loader = new ResourceLoader();
 export default class Suspend extends Plastic {
     scene: any;
     camera: any;
@@ -35,7 +35,7 @@ export default class Suspend extends Plastic {
         camera.position.set(0, 0, 1000);
         const pos = Util.calcSphereToWorld(opts.lng, opts.lat);
         
-        myLoader.loadTexture(opts.bxlPath || opts.texPath).then((texture: any) => {
+        loader.loadTexture(opts.rPath || opts.texPath).then((texture: any) => {
             texture.mapping = CubeReflectionMapping;
             const sphere = this.sphere = new Mesh(new SphereGeometry(200, 48, 24),
                 new MeshBasicMaterial({envMap: texture}));
@@ -44,7 +44,7 @@ export default class Suspend extends Plastic {
             this.pano.webgl.autoClear = false;
         }).catch(e => Log.errorLog(e));
 
-        this.toscene = {bxlPath: opts.bxlPath, texPath: opts.texPath};
+        this.toscene = {rPath: opts.rPath, texPath: opts.texPath};
     }
 
     update() {
