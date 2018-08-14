@@ -25,11 +25,7 @@ export default abstract class HttpLoader {
      * 跨域 cdn 请求 bug
      */
     crosUrl(url) {
-        // if (/\.cdn\./.test(url)) {
-        //     url += `?_=${Date.now()}`;
-        // }
-        
-        return url;
+        return url || /\.cdn\./.test(url);
     }
 
 

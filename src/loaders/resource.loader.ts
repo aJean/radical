@@ -79,7 +79,7 @@ export default class ResourceLoader extends HttpLoader {
      * @param {string} url 
      */
     loadCanvas(url) {
-        return cutCanvas(this.crosUrl(url)); 
+        return cutByCanvas(this.crosUrl(url)); 
     }
 
     /**
@@ -88,44 +88,35 @@ export default class ResourceLoader extends HttpLoader {
      * @param {string} suffix 
      */
     loadTexture(url, suffix?) {
-        if (/\.r$/.test(url)) {
-            return this.loadR(this.crosUrl(url));
-        } else {
-            return this.loadCube(url, suffix);
-        }
+        return /\.r$/.test(url) ? this.loadR(this.crosUrl(url)) : this.loadCube(url, suffix);
     }
 }
 
 /**
  * 加载预览图, canvas cut
  */
-function cutCanvas(url, timeout?) {
-    timeout = timeout || 100000;
-
+function cutByCanvas(url, timeout?) {
     return new Promise((resolve, reject) => {
         const texture = new CubeTexture();
-        const image = new Image();
-        image.crossOrigin = 'anonymous';
+        const preview = new Image();
+        preview.crossOrigin = 'anonymous';
 
         let count = 0;
-        image.onload = () => {
-            let canvas;
-            let context;
-            const tileWidth = image.width;
+        preview.onload = () => {
+            const size = preview.width;
 
-            for (var i = 0; i < 6; i++) {
-                canvas = document.createElement('canvas');
-                context = canvas.getContext('2d');
-                canvas.height = tileWidth;
-                canvas.width = tileWidth;
-                context.drawImage(image, 0, tileWidth * i, tileWidth, tileWidth, 0, 0, tileWidth, tileWidth);
+            for (let i = 0; i < 6; i++) {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                const img = new Image();
+
+                canvas.height = size;
+                canvas.width = size;
+                context.drawImage(preview, 0, size * i, size, size, 0, 0, size, size);
                 
-                var subImage = new Image();
-                subImage.src = canvas.toDataURL('image/jpeg');
-                subImage['idx'] = i;
-                subImage.onload = function () {
-                    count++;
-                    switch (this['idx']) {
+                img['index'] = i;
+                img.onload = function () {
+                    switch (this['index']) {
                         case 0: // left
                             texture.images[1] = this;
                             break;
@@ -146,17 +137,17 @@ function cutCanvas(url, timeout?) {
                             break;
                     }
 
-                    if (count === 6) {
-                        texture.mapping = CubeRefractionMapping;
+                    if (++count === 6) {
                         texture.needsUpdate = true;
                         resolve(texture);
                     }
                 };
+                img.src = canvas.toDataURL('image/jpeg');
             };
         };
         
-        image.onerror = () => reject('load preview error');
-        image.src = url;
-        setTimeout(timeout, () => reject('load preview timeout'));
+        preview.onerror = () => reject('load preview error');
+        preview.src = url;
+        setTimeout(timeout || 100000, () => reject('load preview timeout'));
     }).catch(e => Log.output(e));
 }

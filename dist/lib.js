@@ -55935,10 +55935,7 @@ var HttpLoader = /** @class */ (function () {
      * 跨域 cdn 请求 bug
      */
     HttpLoader.prototype.crosUrl = function (url) {
-        // if (/\.cdn\./.test(url)) {
-        //     url += `?_=${Date.now()}`;
-        // }
-        return url;
+        return url || /\.cdn\./.test(url);
     };
     /**
      * 加载证书, 每个应用只会请求一次
@@ -56122,7 +56119,7 @@ var ResourceLoader = /** @class */ (function (_super) {
      * @param {string} url
      */
     ResourceLoader.prototype.loadCanvas = function (url) {
-        return cutCanvas(this.crosUrl(url));
+        return cutByCanvas(this.crosUrl(url));
     };
     /**
      * 多种方式加载贴图
@@ -56130,12 +56127,7 @@ var ResourceLoader = /** @class */ (function (_super) {
      * @param {string} suffix
      */
     ResourceLoader.prototype.loadTexture = function (url, suffix) {
-        if (/\.r$/.test(url)) {
-            return this.loadR(this.crosUrl(url));
-        }
-        else {
-            return this.loadCube(url, suffix);
-        }
+        return /\.r$/.test(url) ? this.loadR(this.crosUrl(url)) : this.loadCube(url, suffix);
     };
     return ResourceLoader;
 }(http_loader_1.default));
@@ -56143,29 +56135,24 @@ exports.default = ResourceLoader;
 /**
  * 加载预览图, canvas cut
  */
-function cutCanvas(url, timeout) {
-    timeout = timeout || 100000;
+function cutByCanvas(url, timeout) {
     return new Promise(function (resolve, reject) {
         var texture = new three_1.CubeTexture();
-        var image = new Image();
-        image.crossOrigin = 'anonymous';
+        var preview = new Image();
+        preview.crossOrigin = 'anonymous';
         var count = 0;
-        image.onload = function () {
-            var canvas;
-            var context;
-            var tileWidth = image.width;
+        preview.onload = function () {
+            var size = preview.width;
             for (var i = 0; i < 6; i++) {
-                canvas = document.createElement('canvas');
-                context = canvas.getContext('2d');
-                canvas.height = tileWidth;
-                canvas.width = tileWidth;
-                context.drawImage(image, 0, tileWidth * i, tileWidth, tileWidth, 0, 0, tileWidth, tileWidth);
-                var subImage = new Image();
-                subImage.src = canvas.toDataURL('image/jpeg');
-                subImage['idx'] = i;
-                subImage.onload = function () {
-                    count++;
-                    switch (this['idx']) {
+                var canvas = document.createElement('canvas');
+                var context = canvas.getContext('2d');
+                var img = new Image();
+                canvas.height = size;
+                canvas.width = size;
+                context.drawImage(preview, 0, size * i, size, size, 0, 0, size, size);
+                img['index'] = i;
+                img.onload = function () {
+                    switch (this['index']) {
                         case 0: // left
                             texture.images[1] = this;
                             break;
@@ -56185,18 +56172,18 @@ function cutCanvas(url, timeout) {
                             texture.images[3] = this;
                             break;
                     }
-                    if (count === 6) {
-                        texture.mapping = three_1.CubeRefractionMapping;
+                    if (++count === 6) {
                         texture.needsUpdate = true;
                         resolve(texture);
                     }
                 };
+                img.src = canvas.toDataURL('image/jpeg');
             }
             ;
         };
-        image.onerror = function () { return reject('load preview error'); };
-        image.src = url;
-        setTimeout(timeout, function () { return reject('load preview timeout'); });
+        preview.onerror = function () { return reject('load preview error'); };
+        preview.src = url;
+        setTimeout(timeout || 100000, function () { return reject('load preview timeout'); });
     }).catch(function (e) { return log_1.default.output(e); });
 }
 
