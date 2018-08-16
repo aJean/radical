@@ -9,7 +9,12 @@
         <link rel="stylesheet" href="../assets/example.css">
     </head>
     <body>
-        <pano source="./simple.json" auto="true"></pano>
+        <pano source="./simple.json" auto="true" context="window" e-scene-init="onInit"></pano>
         <script src="../../dist/lib.js"></script>
+        <script>
+            function onInit(topic) {
+                console.log(topic);
+            }
+        </script>
     </body>
 </html>
