@@ -1,9 +1,10 @@
+// lib.css
 import '../styles/pano.style.less';
 import '../styles/multiple.style.less';
 import '../styles/overlays.style.less';
 import '../styles/ui.style.less';
 import '../styles/vr.style.less';
-
+// lib.js
 import polyfill from './core/polyfill';
 import PRuntime from './runtime/pano.runtime';
 import VRuntime from './runtime/vr.runtime';
