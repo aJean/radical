@@ -17,7 +17,8 @@ module.exports = {
         minimize: false
     },
     entry: {
-        lib: './src/index.ts'
+        lib: './src/index.ts',
+        test: './src/test.ts'
     },
     output: {
         filename: '[name].js',
