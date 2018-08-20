@@ -68053,7 +68053,7 @@ var Inradius = /** @class */ (function (_super) {
         var fresnel = this.wrap = new three_1.Mesh(new three_1.SphereBufferGeometry(opts.radius + 15, opts.widthSegments, opts.heightSegments), material);
         // mask
         var uniforms1 = three_1.UniformsUtils.clone(plastic_shader_1.default.mask.uniforms);
-        uniforms1.lightPos.value = sphere.position.clone().sub(new three_1.Vector3(0, 0, 1000));
+        uniforms1.lightPos.value = sphere.position.clone().sub(new three_1.Vector3(0, 0, 100));
         var material1 = new three_1.ShaderMaterial({
             uniforms: uniforms1,
             vertexShader: plastic_shader_1.default.mask.vertex,
@@ -70403,7 +70403,6 @@ exports.default = {
     mask: {
         uniforms: {
             color: { value: new three_1.Color('#999') },
-            ambientColor: { value: new three_1.Color('#999') },
             lightColor: { value: new three_1.Color('#999') },
             lightPos: { value: new three_1.Vector3(0, 0, 0) },
             specular: { value: 1.0 }
@@ -70412,7 +70411,7 @@ exports.default = {
             'varying vec3 fNormal;',
             'varying vec3 fPosition;',
             'void main() {',
-            'fNormal = normalize(normalMatrix * normal);',
+            'fNormal = normalMatrix * normal;',
             'vec4 pos = modelViewMatrix * vec4(position, 1.0);',
             'fPosition = pos.xyz;',
             'gl_Position = projectionMatrix * pos;',
@@ -70420,24 +70419,24 @@ exports.default = {
         ].join('\n'),
         fragment: [
             'uniform vec3 color;',
-            'uniform vec3 ambientColor;',
             'uniform vec3 lightPos;',
             'uniform vec3 lightColor;',
             'uniform float specular;',
             'varying vec3 fPosition;',
             'varying vec3 fNormal;',
             'void main() {',
+            'vec3 ambient = lightColor;',
             'vec3 norm = normalize(fNormal);',
             'vec3 lpos = (viewMatrix * vec4(lightPos, 0.0)).xyz;',
             'vec3 ldir = normalize(lpos);',
-            'vec3 ld = vec3(max(0.0, dot( norm, ldir))) * lightColor;',
+            'vec3 ld = vec3(max(0.0, dot(norm, ldir))) * lightColor;',
             'vec3 viewDir = normalize(-fPosition);',
             'vec3 reflectDir = reflect(-ldir, norm);',
             'float specf = pow(max(dot(viewDir, reflectDir), 0.0), specular);',
             'float specularForce = 1.0;',
             'vec3 spec = specularForce * specf * lightColor;',
             'vec3 diffuse = clamp(ld, vec3(0.0), vec3(1.0));',
-            'vec3 col = (ambientColor + diffuse + spec) * color;',
+            'vec3 col = (ambient + diffuse + spec) * color;',
             'gl_FragColor = vec4(col, 1);',
             '}'
         ].join('\n')

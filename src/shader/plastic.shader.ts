@@ -42,7 +42,6 @@ export default {
     mask: {
         uniforms: {
             color: { value: new Color('#999') },
-            ambientColor: { value: new Color('#999') },
             lightColor: { value: new Color('#999') },
             lightPos: { value: new Vector3(0, 0, 0) },
             specular: { value: 1.0 }
@@ -52,7 +51,7 @@ export default {
             'varying vec3 fNormal;',
             'varying vec3 fPosition;',
             'void main() {',
-            'fNormal = normalize(normalMatrix * normal);',
+            'fNormal = normalMatrix * normal;',
             'vec4 pos = modelViewMatrix * vec4(position, 1.0);',
             'fPosition = pos.xyz;',
             'gl_Position = projectionMatrix * pos;',
@@ -61,24 +60,24 @@ export default {
 
         fragment: [
             'uniform vec3 color;',
-            'uniform vec3 ambientColor;',
             'uniform vec3 lightPos;',
             'uniform vec3 lightColor;',
             'uniform float specular;',
             'varying vec3 fPosition;',
             'varying vec3 fNormal;',
             'void main() {',
+            'vec3 ambient = lightColor;',
             'vec3 norm = normalize(fNormal);',
             'vec3 lpos = (viewMatrix * vec4(lightPos, 0.0)).xyz;',
             'vec3 ldir = normalize(lpos);',
-            'vec3 ld = vec3(max(0.0, dot( norm, ldir))) * lightColor;',
+            'vec3 ld = vec3(max(0.0, dot(norm, ldir))) * lightColor;',
             'vec3 viewDir = normalize(-fPosition);',
             'vec3 reflectDir = reflect(-ldir, norm);',
             'float specf = pow(max(dot(viewDir, reflectDir), 0.0), specular);',
             'float specularForce = 1.0;',
             'vec3 spec = specularForce * specf * lightColor;',
             'vec3 diffuse = clamp(ld, vec3(0.0), vec3(1.0));',
-            'vec3 col = (ambientColor + diffuse + spec) * color;',
+            'vec3 col = (ambient + diffuse + spec) * color;',
             'gl_FragColor = vec4(col, 1);',
             '}'
         ].join('\n')

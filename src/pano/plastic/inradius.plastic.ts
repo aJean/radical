@@ -187,7 +187,7 @@ export default class Inradius extends Plastic {
         );
         // mask
         const uniforms1 = UniformsUtils.clone(PShader.mask.uniforms);
-        uniforms1.lightPos.value = sphere.position.clone().sub(new Vector3(0, 0, 1000));
+        uniforms1.lightPos.value = sphere.position.clone().sub(new Vector3(0, 0, 100));
 
         const material1 = new ShaderMaterial({
             uniforms: uniforms1,
