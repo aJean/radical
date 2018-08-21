@@ -46,17 +46,32 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
 /******/ 		}
 /******/ 	};
 /******/
 /******/ 	// define __esModule on exports
 /******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
 /******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -63907,6 +63922,10 @@ var Plastic = /** @class */ (function (_super) {
     Plastic.prototype.hide = function () {
         this.getPlastic().visible = false;
     };
+    Plastic.prototype.isMount = function () {
+        var target = this.getPlastic();
+        return target.parent && target.visible;
+    };
     /**
      * 子类必须调用 super.dispose()
      */
@@ -67901,13 +67920,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 var plastic_interface_1 = __webpack_require__(/*! ../../interface/plastic.interface */ "./src/interface/plastic.interface.ts");
 var text_plastic_1 = __webpack_require__(/*! ./text.plastic */ "./src/pano/plastic/text.plastic.ts");
-var plastic_shader_1 = __webpack_require__(/*! ../../shader/plastic.shader */ "./src/shader/plastic.shader.ts");
-var fresnel_shader_1 = __webpack_require__(/*! ../../shader/fresnel.shader */ "./src/shader/fresnel.shader.ts");
+var plastic_shader_1 = __webpack_require__(/*! ../shader/plastic.shader */ "./src/pano/shader/plastic.shader.ts");
+var fresnel_shader_1 = __webpack_require__(/*! ../shader/fresnel.shader */ "./src/pano/shader/fresnel.shader.ts");
 var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 /**
  * @file 内切球, 作为穿越球使用时要提升 renderOrder = 10
  */
 var defaultOpts = {
+    name: 'inradius',
     side: three_1.BackSide,
     radius: 2000,
     color: '#fff',
@@ -68384,6 +68404,93 @@ var Point = /** @class */ (function (_super) {
     return Point;
 }(plastic_interface_1.default));
 exports.default = Point;
+
+
+/***/ }),
+
+/***/ "./src/pano/plastic/suspend.plastic.ts":
+/*!*********************************************!*\
+  !*** ./src/pano/plastic/suspend.plastic.ts ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+var plastic_shader_1 = __webpack_require__(/*! ../shader/plastic.shader */ "./src/pano/shader/plastic.shader.ts");
+var plastic_interface_1 = __webpack_require__(/*! ../../interface/plastic.interface */ "./src/interface/plastic.interface.ts");
+/**
+ * @file 悬浮球
+ */
+var defaultOpts = {
+    name: 'suspend',
+    radius: 200,
+    widthSegments: 24,
+    heightSegments: 24,
+    map: null
+};
+var Suspend = /** @class */ (function (_super) {
+    __extends(Suspend, _super);
+    function Suspend(opts, pano) {
+        var _this = _super.call(this) || this;
+        _this.pano = pano;
+        _this.opts = Object.assign({}, defaultOpts, opts);
+        _this.create();
+        _this.subscribe(_this.Topic.RENDER.PROCESS, _this.update.bind(_this));
+        return _this;
+    }
+    Suspend.prototype.create = function () {
+        var opts = this.opts;
+        var scene = this.scene = new three_1.Scene();
+        this.camera = this.pano.getCamera().clone();
+        var uniforms = three_1.UniformsUtils.clone(plastic_shader_1.default.reflection.uniforms);
+        uniforms.tCube.value = opts.map;
+        var sphere = this.plastic = new three_1.Mesh(new three_1.SphereGeometry(opts.radius, opts.widthSegments, opts.heightSegments), new three_1.ShaderMaterial({
+            uniforms: uniforms,
+            vertexShader: plastic_shader_1.default.reflection.vertex,
+            fragmentShader: plastic_shader_1.default.reflection.fragment,
+            transparent: true,
+            depthTest: false
+        }));
+        sphere.name = opts.name;
+        sphere.renderOrder = 2;
+        scene.add(sphere);
+        this.pano.webgl.autoClear = false;
+    };
+    Suspend.prototype.update = function () {
+        var pano = this.pano;
+        var camera = this.camera;
+        if (this.plastic) {
+            var pcamera = pano.getCamera();
+            var vector = new three_1.Vector3();
+            pcamera.getWorldDirection(vector);
+            vector.x *= 1000;
+            vector.y *= 1000;
+            vector.z *= 1000;
+            camera.position.copy(vector);
+            camera.lookAt(this.plastic.position);
+        }
+        pano.webgl.render(this.scene, camera);
+    };
+    Suspend.prototype.dispose = function () {
+        _super.prototype.dispose.call(this);
+        this.pano.webgl.autoClear = true;
+    };
+    return Suspend;
+}(plastic_interface_1.default));
+exports.default = Suspend;
 
 
 /***/ }),
@@ -69245,6 +69352,7 @@ var Particle = /** @class */ (function (_super) {
         var data = this.data;
         var pos = util_1.default.calcSphereToWorld(data.lng, data.lat);
         var pano = this.pano;
+        // particle sphere
         var particle = new three_1.Points(new three_1.SphereGeometry(100, 40, 40), new three_1.PointsMaterial({
             color: 'red',
             size: 5,
@@ -69897,10 +70005,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var resource_loader_1 = __webpack_require__(/*! ../../loaders/resource.loader */ "./src/loaders/resource.loader.ts");
 var tween_animation_1 = __webpack_require__(/*! ../animations/tween.animation */ "./src/pano/animations/tween.animation.ts");
 var inradius_plastic_1 = __webpack_require__(/*! ../plastic/inradius.plastic */ "./src/pano/plastic/inradius.plastic.ts");
-var light_plastic_1 = __webpack_require__(/*! ../plastic/light.plastic */ "./src/pano/plastic/light.plastic.ts");
 var log_1 = __webpack_require__(/*! ../../core/log */ "./src/core/log.ts");
 var util_1 = __webpack_require__(/*! ../../core/util */ "./src/core/util.ts");
 var pubsub_interface_1 = __webpack_require__(/*! ../../interface/pubsub.interface */ "./src/interface/pubsub.interface.ts");
+var suspend_plastic_1 = __webpack_require__(/*! ../plastic/suspend.plastic */ "./src/pano/plastic/suspend.plastic.ts");
 /**
  * @file wormhole space through effection
  * 在全景天空盒中, 相机指向 (0, 0, 1), 即右手坐标系 z 轴正方向
@@ -69914,8 +70022,7 @@ var Wormhole = /** @class */ (function (_super) {
         _this.direction = true;
         _this.data = data;
         _this.pano = pano;
-        _this.onDetect = function (evt) { return _this.detect(evt); };
-        _this.bindEvents();
+        _this.subscribe(_this.Topic.SCENE.LOAD, function () { return _this.create(); });
         return _this;
     }
     Wormhole.prototype.create = function () {
@@ -69923,8 +70030,6 @@ var Wormhole = /** @class */ (function (_super) {
         var data = this.data;
         var pano = this.pano;
         var pos = this.pos = util_1.default.calcSphereToWorld(data.lng, data.lat);
-        var light = new light_plastic_1.default();
-        light.addBy(pano);
         // pano.enableShadow();
         loader.loadTexture(data.simg).then(function (texture) {
             var hole = _this.hole = new inradius_plastic_1.default({
@@ -69932,22 +70037,17 @@ var Wormhole = /** @class */ (function (_super) {
                 envMap: _this.texture = texture, text: '测试效果'
             }, pano);
             hole.addBy(pano);
+            _this.judgeid = _this.pano.overlays.addJudgeFunc(_this.detect.bind(_this));
         }).catch(function (e) { return log_1.default.errorLog(e); });
+        var suspend = new suspend_plastic_1.default({ map: pano.skyBox.getMap() }, pano);
     };
-    Wormhole.prototype.bindEvents = function () {
+    Wormhole.prototype.detect = function (pos) {
         var _this = this;
-        this.subscribe(this.Topic.SCENE.LOAD, function () { return _this.create(); });
-        this.pano.getCanvas().addEventListener('click', this.onDetect);
-    };
-    Wormhole.prototype.detect = function (evt) {
-        var _this = this;
+        if (!this.hole.isMount()) {
+            return;
+        }
         var pano = this.pano;
         var camera = pano.getCamera();
-        var size = pano.getSize();
-        var pos = {
-            x: (evt.clientX / size.width) * 2 - 1,
-            y: -(evt.clientY / size.height) * 2 + 1
-        };
         var intersects = util_1.default.intersect(pos, [this.hole.plastic], camera);
         if (intersects) {
             var lookTarget = pano.getLookAtTarget();
@@ -69985,12 +70085,221 @@ var Wormhole = /** @class */ (function (_super) {
         this.direction = !this.direction;
     };
     Wormhole.prototype.dispose = function () {
-        this.pano.getCanvas().removeEventListener('click', this.onDetect);
         _super.prototype.dispose.call(this);
+        this.pano.overlays.reMoveJudgeFunc(this.judgeid);
     };
     return Wormhole;
 }(pubsub_interface_1.default));
 exports.default = Wormhole;
+
+
+/***/ }),
+
+/***/ "./src/pano/shader/fresnel.shader.ts":
+/*!*******************************************!*\
+  !*** ./src/pano/shader/fresnel.shader.ts ***!
+  \*******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * @file 菲涅尔反射
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = {
+    uniforms: {
+        mRefractionRatio: { value: 1.02 },
+        mFresnelBias: { value: 0.1 },
+        mFresnelPower: { value: 2.0 },
+        mFresnelScale: { value: 1.0 },
+        tCube: { value: null }
+    },
+    vertex: [
+        'uniform float mRefractionRatio;',
+        'uniform float mFresnelBias;',
+        'uniform float mFresnelScale;',
+        'uniform float mFresnelPower;',
+        'varying vec3 vReflect;',
+        'varying vec3 vRefract[3];',
+        'varying float vReflectionFactor;',
+        'void main() {',
+        'vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );',
+        'vec4 worldPosition = modelMatrix * vec4( position, 1.0 );',
+        'vec3 worldNormal = normalize( mat3( modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz ) * normal );',
+        'vec3 I = worldPosition.xyz - cameraPosition;',
+        'vReflect = reflect( I, worldNormal );',
+        'vRefract[0] = refract( normalize( I ), worldNormal, mRefractionRatio );',
+        'vRefract[1] = refract( normalize( I ), worldNormal, mRefractionRatio * 0.99 );',
+        'vRefract[2] = refract( normalize( I ), worldNormal, mRefractionRatio * 0.98 );',
+        'vReflectionFactor = mFresnelBias + mFresnelScale * pow( 1.0 + dot( normalize( I ), worldNormal ), mFresnelPower );',
+        'gl_Position = projectionMatrix * mvPosition;',
+        '}'
+    ].join('\n'),
+    fragment: [
+        'uniform samplerCube tCube;',
+        'varying vec3 vReflect;',
+        'varying vec3 vRefract[3];',
+        'varying float vReflectionFactor;',
+        'void main() {',
+        'vec4 reflectedColor = textureCube( tCube, vec3( -vReflect.x, vReflect.yz ) );',
+        'vec4 refractedColor = vec4( 1.0 );',
+        'refractedColor.r = textureCube( tCube, vec3( -vRefract[0].x, vRefract[0].yz ) ).r;',
+        'refractedColor.g = textureCube( tCube, vec3( -vRefract[1].x, vRefract[1].yz ) ).g;',
+        'refractedColor.b = textureCube( tCube, vec3( -vRefract[2].x, vRefract[2].yz ) ).b;',
+        'gl_FragColor = mix( refractedColor, reflectedColor, clamp( vReflectionFactor, 0.0, 1.0 ) );',
+        '}'
+    ].join('\n')
+};
+
+
+/***/ }),
+
+/***/ "./src/pano/shader/plastic.shader.ts":
+/*!*******************************************!*\
+  !*** ./src/pano/shader/plastic.shader.ts ***!
+  \*******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/**
+ * @file shader effects
+ */
+exports.default = {
+    glow: {
+        uniforms: {
+            c: { value: 0.1 },
+            p: { value: 1.4 },
+            glowColor: { value: new three_1.Color('grey') },
+            viewVector: { value: null }
+        },
+        vertex: [
+            'uniform vec3 viewVector;',
+            'uniform float c;',
+            'uniform float p;',
+            'varying float intensity;',
+            'void main() {',
+            'vec3 vNormal = normalize( normalMatrix * normal );',
+            'vec3 vNormel = normalize( normalMatrix * viewVector );',
+            'intensity = pow( c - dot(vNormal, vNormel), p );',
+            'gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );',
+            '}'
+        ].join('\n'),
+        fragment: [
+            'uniform vec3 glowColor;',
+            'varying float intensity;',
+            'void main() {',
+            'vec3 glow = glowColor * intensity;',
+            'gl_FragColor = vec4( glow, 1.0 );',
+            '}'
+        ].join('\n')
+    },
+    /**
+     * phone's lights mask
+     */
+    mask: {
+        uniforms: {
+            color: { value: new three_1.Color('#999') },
+            lightColor: { value: new three_1.Color('#999') },
+            lightPos: { value: new three_1.Vector3(0, 0, 0) },
+            specular: { value: 1.0 }
+        },
+        vertex: [
+            'varying vec3 fNormal;',
+            'varying vec3 fPosition;',
+            'void main() {',
+            'fNormal = normalMatrix * normal;',
+            'vec4 pos = modelViewMatrix * vec4(position, 1.0);',
+            'fPosition = pos.xyz;',
+            'gl_Position = projectionMatrix * pos;',
+            '}'
+        ].join('\n'),
+        fragment: [
+            'uniform vec3 color;',
+            'uniform vec3 lightPos;',
+            'uniform vec3 lightColor;',
+            'uniform float specular;',
+            'varying vec3 fPosition;',
+            'varying vec3 fNormal;',
+            'void main() {',
+            'vec3 ambient = lightColor;',
+            'vec3 norm = normalize(fNormal);',
+            'vec3 lpos = (viewMatrix * vec4(lightPos, 0.0)).xyz;',
+            'vec3 ldir = normalize(lpos);',
+            'vec3 ld = vec3(max(0.0, dot(norm, ldir))) * lightColor;',
+            'vec3 viewDir = normalize(-fPosition);',
+            'vec3 reflectDir = reflect(-ldir, norm);',
+            'float specf = pow(max(dot(viewDir, reflectDir), 0.0), specular);',
+            'float specularForce = 1.0;',
+            'vec3 spec = specularForce * specf * lightColor;',
+            'vec3 diffuse = clamp(ld, vec3(0.0), vec3(1.0));',
+            'vec3 col = (ambient + diffuse + spec) * color;',
+            'gl_FragColor = vec4(col, 1);',
+            '}'
+        ].join('\n')
+    },
+    atmosphere: {
+        uniforms: {
+            coeficient: { value: 1.2 },
+            power: { value: 3 },
+            glowColor: { value: new three_1.Color('#fff') }
+        },
+        vertex: [
+            'varying vec3 vVertexWorldPosition;',
+            'varying vec3 vVertexNormal;',
+            'void main() {',
+            'vVertexNormal = normalize(normalMatrix * normal);',
+            'vVertexWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;',
+            'gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+            '}'
+        ].join('\n'),
+        fragment: [
+            'uniform vec3 glowColor;',
+            'uniform float coeficient;',
+            'uniform float power;',
+            'varying vec3 vVertexNormal;',
+            'varying vec3 vVertexWorldPosition;',
+            'void main() {',
+            'vec3 worldCameraToVertex = vVertexWorldPosition - cameraPosition;',
+            'vec3 viewCameraToVertex = (viewMatrix * vec4(worldCameraToVertex, 0.0)).xyz;',
+            'viewCameraToVertex = normalize(viewCameraToVertex);',
+            'float intensity = pow(coeficient + dot(vVertexNormal, viewCameraToVertex), power);',
+            'gl_FragColor = vec4(glowColor, intensity);',
+            '}'
+        ].join('\n')
+    },
+    reflection: {
+        uniforms: {
+            ratio: { value: 1.0 },
+            tCube: null
+        },
+        vertex: [
+            'varying vec3 vReflect;',
+            'void main() {',
+            'vec3 worldPosition = (modelMatrix * vec4( position, 1.0)).xyz;',
+            'vec3 cameraToVertex = normalize(worldPosition - cameraPosition);',
+            'vec3 worldNormal = normalize(mat3(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz) * normal);',
+            'vReflect = reflect(cameraToVertex, worldNormal);',
+            'gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+            '}'
+        ].join('\n'),
+        fragment: [
+            'varying vec3 vReflect;',
+            'uniform float ratio;',
+            'uniform samplerCube tCube;',
+            'void main() {',
+            'vec4 cubeColor = textureCube(tCube, vec3(ratio * vReflect.x, vReflect.yz));',
+            'cubeColor.w = 1.0;',
+            'gl_FragColor = cubeColor;',
+            '}'
+        ].join('\n')
+    }
+};
 
 
 /***/ }),
@@ -70289,238 +70598,6 @@ exports.default = runtime_1.default('vr', function (vpano, source) {
         source['plugins'].forEach(function (plugin) { return vpano.addPlugin(plugin.class, plugin.opts, external_1.default); });
     }
 });
-
-
-/***/ }),
-
-/***/ "./src/shader/fresnel.shader.ts":
-/*!**************************************!*\
-  !*** ./src/shader/fresnel.shader.ts ***!
-  \**************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/**
- * @file 菲涅尔反射
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = {
-    uniforms: {
-        mRefractionRatio: { value: 1.02 },
-        mFresnelBias: { value: 0.1 },
-        mFresnelPower: { value: 2.0 },
-        mFresnelScale: { value: 1.0 },
-        tCube: { value: null }
-    },
-    vertex: [
-        'uniform float mRefractionRatio;',
-        'uniform float mFresnelBias;',
-        'uniform float mFresnelScale;',
-        'uniform float mFresnelPower;',
-        'varying vec3 vReflect;',
-        'varying vec3 vRefract[3];',
-        'varying float vReflectionFactor;',
-        'void main() {',
-        'vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );',
-        'vec4 worldPosition = modelMatrix * vec4( position, 1.0 );',
-        'vec3 worldNormal = normalize( mat3( modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz ) * normal );',
-        'vec3 I = worldPosition.xyz - cameraPosition;',
-        'vReflect = reflect( I, worldNormal );',
-        'vRefract[0] = refract( normalize( I ), worldNormal, mRefractionRatio );',
-        'vRefract[1] = refract( normalize( I ), worldNormal, mRefractionRatio * 0.99 );',
-        'vRefract[2] = refract( normalize( I ), worldNormal, mRefractionRatio * 0.98 );',
-        'vReflectionFactor = mFresnelBias + mFresnelScale * pow( 1.0 + dot( normalize( I ), worldNormal ), mFresnelPower );',
-        'gl_Position = projectionMatrix * mvPosition;',
-        '}'
-    ].join('\n'),
-    fragment: [
-        'uniform samplerCube tCube;',
-        'varying vec3 vReflect;',
-        'varying vec3 vRefract[3];',
-        'varying float vReflectionFactor;',
-        'void main() {',
-        'vec4 reflectedColor = textureCube( tCube, vec3( -vReflect.x, vReflect.yz ) );',
-        'vec4 refractedColor = vec4( 1.0 );',
-        'refractedColor.r = textureCube( tCube, vec3( -vRefract[0].x, vRefract[0].yz ) ).r;',
-        'refractedColor.g = textureCube( tCube, vec3( -vRefract[1].x, vRefract[1].yz ) ).g;',
-        'refractedColor.b = textureCube( tCube, vec3( -vRefract[2].x, vRefract[2].yz ) ).b;',
-        'gl_FragColor = mix( refractedColor, reflectedColor, clamp( vReflectionFactor, 0.0, 1.0 ) );',
-        '}'
-    ].join('\n')
-};
-
-
-/***/ }),
-
-/***/ "./src/shader/plastic.shader.ts":
-/*!**************************************!*\
-  !*** ./src/shader/plastic.shader.ts ***!
-  \**************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/**
- * @file shader effects
- */
-exports.default = {
-    glow: {
-        uniforms: {
-            c: { value: 0.1 },
-            p: { value: 1.4 },
-            glowColor: { value: new three_1.Color('grey') },
-            viewVector: { value: null }
-        },
-        vertex: [
-            'uniform vec3 viewVector;',
-            'uniform float c;',
-            'uniform float p;',
-            'varying float intensity;',
-            'void main() {',
-            'vec3 vNormal = normalize( normalMatrix * normal );',
-            'vec3 vNormel = normalize( normalMatrix * viewVector );',
-            'intensity = pow( c - dot(vNormal, vNormel), p );',
-            'gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );',
-            '}'
-        ].join('\n'),
-        fragment: [
-            'uniform vec3 glowColor;',
-            'varying float intensity;',
-            'void main() {',
-            'vec3 glow = glowColor * intensity;',
-            'gl_FragColor = vec4( glow, 1.0 );',
-            '}'
-        ].join('\n')
-    },
-    /**
-     * phone's lights mask
-     */
-    mask: {
-        uniforms: {
-            color: { value: new three_1.Color('#999') },
-            lightColor: { value: new three_1.Color('#999') },
-            lightPos: { value: new three_1.Vector3(0, 0, 0) },
-            specular: { value: 1.0 }
-        },
-        vertex: [
-            'varying vec3 fNormal;',
-            'varying vec3 fPosition;',
-            'void main() {',
-            'fNormal = normalMatrix * normal;',
-            'vec4 pos = modelViewMatrix * vec4(position, 1.0);',
-            'fPosition = pos.xyz;',
-            'gl_Position = projectionMatrix * pos;',
-            '}'
-        ].join('\n'),
-        fragment: [
-            'uniform vec3 color;',
-            'uniform vec3 lightPos;',
-            'uniform vec3 lightColor;',
-            'uniform float specular;',
-            'varying vec3 fPosition;',
-            'varying vec3 fNormal;',
-            'void main() {',
-            'vec3 ambient = lightColor;',
-            'vec3 norm = normalize(fNormal);',
-            'vec3 lpos = (viewMatrix * vec4(lightPos, 0.0)).xyz;',
-            'vec3 ldir = normalize(lpos);',
-            'vec3 ld = vec3(max(0.0, dot(norm, ldir))) * lightColor;',
-            'vec3 viewDir = normalize(-fPosition);',
-            'vec3 reflectDir = reflect(-ldir, norm);',
-            'float specf = pow(max(dot(viewDir, reflectDir), 0.0), specular);',
-            'float specularForce = 1.0;',
-            'vec3 spec = specularForce * specf * lightColor;',
-            'vec3 diffuse = clamp(ld, vec3(0.0), vec3(1.0));',
-            'vec3 col = (ambient + diffuse + spec) * color;',
-            'gl_FragColor = vec4(col, 1);',
-            '}'
-        ].join('\n')
-    },
-    atmosphere: {
-        uniforms: {
-            coeficient: { value: 1.2 },
-            power: { value: 3 },
-            glowColor: { value: new three_1.Color('#fff') }
-        },
-        vertex: [
-            'varying vec3 vVertexWorldPosition;',
-            'varying vec3 vVertexNormal;',
-            'void main() {',
-            'vVertexNormal = normalize(normalMatrix * normal);',
-            'vVertexWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;',
-            'gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
-            '}'
-        ].join('\n'),
-        fragment: [
-            'uniform vec3 glowColor;',
-            'uniform float coeficient;',
-            'uniform float power;',
-            'varying vec3 vVertexNormal;',
-            'varying vec3 vVertexWorldPosition;',
-            'void main() {',
-            'vec3 worldCameraToVertex = vVertexWorldPosition - cameraPosition;',
-            'vec3 viewCameraToVertex = (viewMatrix * vec4(worldCameraToVertex, 0.0)).xyz;',
-            'viewCameraToVertex = normalize(viewCameraToVertex);',
-            'float intensity = pow(coeficient + dot(vVertexNormal, viewCameraToVertex), power);',
-            'gl_FragColor = vec4(glowColor, intensity);',
-            '}'
-        ].join('\n')
-    },
-    // hdr
-    tone: {
-        uniforms: {
-            tDiffuse: { value: null },
-            averageLuminance: { value: 1.0 },
-            luminanceMap: { value: null },
-            maxLuminance: { value: 16.0 },
-            minLuminance: { value: 0.01 },
-            middleGrey: { value: 0.6 }
-        },
-        vertex: [
-            'varying vec2 vUv;',
-            'void main() {',
-            'vUv = uv;',
-            'gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );',
-            '}'
-        ].join('\n'),
-        fragment: [
-            '#include <common>',
-            'uniform sampler2D tDiffuse;',
-            'varying vec2 vUv;',
-            'uniform float middleGrey;',
-            'uniform float minLuminance;',
-            'uniform float maxLuminance;',
-            '#ifdef ADAPTED_LUMINANCE',
-            'uniform sampler2D luminanceMap;',
-            '#else',
-            'uniform float averageLuminance;',
-            '#endif',
-            'vec3 ToneMap( vec3 vColor ) {',
-            '#ifdef ADAPTED_LUMINANCE',
-            // Get the calculated average luminance
-            'float fLumAvg = texture2D(luminanceMap, vec2(0.5, 0.5)).r;',
-            '#else',
-            'float fLumAvg = averageLuminance;',
-            '#endif',
-            // Calculate the luminance of the current pixel
-            'float fLumPixel = linearToRelativeLuminance( vColor );',
-            // Apply the modified operator (Eq. 4)
-            'float fLumScaled = (fLumPixel * middleGrey) / max( minLuminance, fLumAvg );',
-            'float fLumCompressed = (fLumScaled * (1.0 + (fLumScaled / (maxLuminance * maxLuminance)))) / (1.0 + fLumScaled);',
-            'return fLumCompressed * vColor;',
-            '}',
-            'void main() {',
-            'vec4 texel = texture2D( tDiffuse, vUv );',
-            'gl_FragColor = vec4( ToneMap( texel.xyz ), texel.w );',
-            '}'
-        ].join("\n")
-    }
-};
 
 
 /***/ }),

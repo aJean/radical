@@ -1,9 +1,8 @@
 import { BackSide, MultiplyBlending, MeshBasicMaterial, MeshPhongMaterial, SphereBufferGeometry, Mesh, CubeRefractionMapping, TextureLoader, ShaderMaterial, AdditiveBlending, UniformsUtils, Vector3 } from 'three';
 import Plastic from '../../interface/plastic.interface';
 import Text from './text.plastic';
-import PShader from '../../shader/plastic.shader';
-import FShader from '../../shader/fresnel.shader';
-import BShader from '../../shader/blur.shader';
+import PShader from '../shader/plastic.shader';
+import FShader from '../shader/fresnel.shader';
 import Util from '../../core/util';
 
 /**
@@ -11,6 +10,7 @@ import Util from '../../core/util';
  */
 
 const defaultOpts = {
+    name: 'inradius',
     side: BackSide,
     radius: 2000,
     color: '#fff',

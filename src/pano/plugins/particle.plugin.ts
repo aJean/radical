@@ -31,6 +31,7 @@ export default class Particle extends PubSubAble {
         const pos = Util.calcSphereToWorld(data.lng, data.lat);
         const pano = this.pano;
 
+        // particle sphere
         const particle = new Points(new SphereGeometry(100, 40, 40), new PointsMaterial({
             color: 'red',
             size: 5,

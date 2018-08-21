@@ -68,6 +68,11 @@ export default abstract class Plastic extends PubSubAble {
         this.getPlastic().visible = false;
     }
 
+    isMount() {
+        const target = this.getPlastic();
+        return target.parent && target.visible;
+    }
+
     /**
      * 子类必须调用 super.dispose()
      */

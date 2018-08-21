@@ -115,59 +115,33 @@ export default {
             '}'
         ].join('\n')
     },
-    // hdr
-    tone: {
+
+    reflection: {
         uniforms: {
-            tDiffuse: { value: null },
-            averageLuminance: { value: 1.0 },
-            luminanceMap: { value: null },
-            maxLuminance: { value: 16.0 },
-            minLuminance: { value: 0.01 },
-            middleGrey: { value: 0.6 }
+            ratio: {value: 1.0},
+            tCube: null
         },
 
         vertex: [
-            'varying vec2 vUv;',
+            'varying vec3 vReflect;',
             'void main() {',
-            'vUv = uv;',
-            'gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );',
+            'vec3 worldPosition = (modelMatrix * vec4( position, 1.0)).xyz;',
+            'vec3 cameraToVertex = normalize(worldPosition - cameraPosition);',
+            'vec3 worldNormal = normalize(mat3(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz) * normal);',
+            'vReflect = reflect(cameraToVertex, worldNormal);',
+            'gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
             '}'
         ].join('\n'),
 
         fragment: [
-            '#include <common>',
-            'uniform sampler2D tDiffuse;',
-            'varying vec2 vUv;',
-
-            'uniform float middleGrey;',
-            'uniform float minLuminance;',
-            'uniform float maxLuminance;',
-            '#ifdef ADAPTED_LUMINANCE',
-            'uniform sampler2D luminanceMap;',
-            '#else',
-            'uniform float averageLuminance;',
-            '#endif',
-
-            'vec3 ToneMap( vec3 vColor ) {',
-            '#ifdef ADAPTED_LUMINANCE',
-            // Get the calculated average luminance
-            'float fLumAvg = texture2D(luminanceMap, vec2(0.5, 0.5)).r;',
-            '#else',
-            'float fLumAvg = averageLuminance;',
-            '#endif',
-            // Calculate the luminance of the current pixel
-            'float fLumPixel = linearToRelativeLuminance( vColor );',
-            // Apply the modified operator (Eq. 4)
-            'float fLumScaled = (fLumPixel * middleGrey) / max( minLuminance, fLumAvg );',
-
-            'float fLumCompressed = (fLumScaled * (1.0 + (fLumScaled / (maxLuminance * maxLuminance)))) / (1.0 + fLumScaled);',
-            'return fLumCompressed * vColor;',
-            '}',
-
+            'varying vec3 vReflect;',
+            'uniform float ratio;',
+            'uniform samplerCube tCube;',
             'void main() {',
-            'vec4 texel = texture2D( tDiffuse, vUv );',
-            'gl_FragColor = vec4( ToneMap( texel.xyz ), texel.w );',
+            'vec4 cubeColor = textureCube(tCube, vec3(ratio * vReflect.x, vReflect.yz));',
+            'cubeColor.w = 1.0;',
+            'gl_FragColor = cubeColor;',
             '}'
-        ].join("\n")
+        ].join('\n')
     }
 }

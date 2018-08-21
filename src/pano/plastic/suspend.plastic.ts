@@ -1,96 +1,77 @@
-import {Scene, Mesh, SphereGeometry, MeshBasicMaterial, CubeReflectionMapping, PerspectiveCamera, Vector3} from 'three';
-import ResourceLoader from '../../loaders/resource.loader';
-import Log from '../../core/log';
-import Util from '../../core/util';
+import {Scene, Mesh, SphereGeometry, ShaderMaterial, UniformsUtils, Vector3} from 'three';
+import PShader from '../shader/plastic.shader';
 import Plastic from '../../interface/plastic.interface';
 
 /**
  * @file 悬浮球
  */
 
-const loader = new ResourceLoader();
+const defaultOpts = {
+    name: 'suspend',
+    radius: 200,
+    widthSegments: 24,
+    heightSegments: 24,
+    map: null
+};
 export default class Suspend extends Plastic {
-    scene: any;
     camera: any;
-    sphere: any;
-    toscene: any;
-    subtoken: any;
+    scene: any;
 
     constructor(opts, pano) {
         super();
         
         this.pano = pano;
-        this.opts = Object.assign({}, opts);
-        this.onThrough = this.onThrough.bind(this);
+        this.opts = Object.assign({}, defaultOpts, opts);
         this.create();
-
-        this.subscribe(this.Topic.RENDER.PROCESS, () => this.update());
-        pano.getCanvas().addEventListener('click', this.onThrough);
+        this.subscribe(this.Topic.RENDER.PROCESS, this.update.bind(this));
     }
 
     create() {
         const opts = this.opts;
         const scene = this.scene = new Scene();
-        const camera = this.camera = new PerspectiveCamera(110, window.innerWidth / window.innerHeight, 1, 10000);
-        camera.position.set(0, 0, 1000);
-        const pos = Util.calcSphereToWorld(opts.lng, opts.lat);
+        this.camera = this.pano.getCamera().clone();
         
-        loader.loadTexture(opts.rPath || opts.texPath).then((texture: any) => {
-            texture.mapping = CubeReflectionMapping;
-            const sphere = this.sphere = new Mesh(new SphereGeometry(200, 48, 24),
-                new MeshBasicMaterial({envMap: texture}));
+        const uniforms = UniformsUtils.clone(PShader.reflection.uniforms);
+        uniforms.tCube.value = opts.map;
 
-            scene.add(sphere);
-            this.pano.webgl.autoClear = false;
-        }).catch(e => Log.errorLog(e));
+        const sphere = this.plastic = new Mesh(new SphereGeometry(opts.radius, opts.widthSegments, opts.heightSegments), 
+            new ShaderMaterial({
+                uniforms: uniforms,
+                vertexShader: PShader.reflection.vertex,
+                fragmentShader: PShader.reflection.fragment,
+                transparent: true,
+                depthTest: false
+            }));
+        
+        sphere.name = opts.name;
+        sphere.renderOrder = 2;
 
-        this.toscene = {rPath: opts.rPath, texPath: opts.texPath};
+        scene.add(sphere);
+        this.pano.webgl.autoClear = false;
     }
 
     update() {
-        const webgl = this.pano.webgl;
-        const camera = this.camera;        
+        const pano = this.pano;
+        const camera = this.camera;
         
-        if (this.sphere) {
-            const pcamera = this.pano.getCamera();
+        if (this.plastic) {
+            const pcamera = pano.getCamera();
             const vector = new Vector3();
+
             pcamera.getWorldDirection(vector);
             vector.x *= 1000;
             vector.y *= 1000;
             vector.z *= 1000;
 
             camera.position.copy(vector);
-            camera.lookAt(this.sphere.position);
+            camera.lookAt(this.plastic.position);
         }
 
-        webgl.render(this.scene, camera);
-    }
-
-    onThrough(e) {
-        const sphere = this.sphere;
-        const pano = this.pano;
-        const camera = this.camera;
-        const size = pano.getSize();
-        const pos = {
-            x: (e.clientX / size.width) * 2 - 1,
-            y: -(e.clientY / size.height) * 2 + 1
-        };
-
-        const ret = Util.intersect(pos, [this.sphere], camera);
-
-        if (ret) {
-            const data = this.toscene;
-            this.toscene = pano.sceneData;
-            pano.enterNext(data);
-            sphere.material.envMap = pano.skyBox.getMap();
-        }
+        pano.webgl.render(this.scene, camera);
     }
 
     dispose() {
         super.dispose();
-        
-        const pano = this.pano;
-        pano.webgl.autoClear = true;
-        pano.getCanvas().removeEventListener('click', this.onThrough);
+        this.pano.webgl.autoClear = true;
     }
 }

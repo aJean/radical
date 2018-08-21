@@ -2,11 +2,10 @@ import {Texture} from 'three';
 import ResourceLoader from '../../loaders/resource.loader';
 import Tween from '../animations/tween.animation';
 import Inradius from '../plastic/inradius.plastic';
-import Light from '../plastic/light.plastic';
-import Shadow from '../plastic/shadow.plastic';
 import Log from '../../core/log';
 import Util from '../../core/util';
 import PubSubAble from '../../interface/pubsub.interface';
+import Suspend from '../plastic/suspend.plastic';
 
 /**
  * @file wormhole space through effection
@@ -17,14 +16,12 @@ import PubSubAble from '../../interface/pubsub.interface';
 const loader = new ResourceLoader();
 export default class Wormhole extends PubSubAble {
     pano: any;
-    onDetect: Function;
+    judgeid: any;
     data: any;
     pos: any;
     texture: any;
     backTexture: any;
     hole: Inradius;
-    light: Light;
-    shadow: Shadow;
     direction = true;
 
     constructor(pano, data) {
@@ -33,17 +30,14 @@ export default class Wormhole extends PubSubAble {
         this.data = data;
         this.pano = pano;
 
-        this.onDetect = evt => this.detect(evt);
-        this.bindEvents();
+        this.subscribe(this.Topic.SCENE.LOAD, () => this.create());
     }
 
     create() {
         const data = this.data;
         const pano = this.pano;
         const pos = this.pos = Util.calcSphereToWorld(data.lng, data.lat);
-        const light = new Light();
 
-        light.addBy(pano);
         // pano.enableShadow();
         loader.loadTexture(data.simg).then((texture: Texture) => {
             const hole = this.hole = new Inradius({
@@ -51,22 +45,20 @@ export default class Wormhole extends PubSubAble {
                 envMap: this.texture = texture, text: '测试效果'
             }, pano);
             hole.addBy(pano);
+
+            this.judgeid = this.pano.overlays.addJudgeFunc(this.detect.bind(this));
         }).catch(e => Log.errorLog(e));
+
+        const suspend = new Suspend({map: pano.skyBox.getMap()}, pano);
     }
 
-    bindEvents() {
-        this.subscribe(this.Topic.SCENE.LOAD, () => this.create());
-        this.pano.getCanvas().addEventListener('click', this.onDetect);
-    }
+    detect(pos) {
+        if (!this.hole.isMount()) {
+            return;
+        }
 
-    detect(evt) {
         const pano = this.pano;
         const camera = pano.getCamera();
-        const size = pano.getSize();
-        const pos = {
-            x: (evt.clientX / size.width) * 2 - 1,
-            y: -(evt.clientY / size.height) * 2 + 1
-        };
         const intersects = Util.intersect(pos, [this.hole.plastic], camera);
 
         if (intersects) {
@@ -114,7 +106,7 @@ export default class Wormhole extends PubSubAble {
     }
 
     dispose() {
-        this.pano.getCanvas().removeEventListener('click', this.onDetect);
         super.dispose();
+        this.pano.overlays.reMoveJudgeFunc(this.judgeid);
     }
 }
