@@ -70078,7 +70078,6 @@ var Wormhole = /** @class */ (function (_super) {
         var hole = this.hole;
         var plastic = hole.getPlastic();
         var pos = this.pos = util_1.default.calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
-        var z = this.direction ? pos.z + 1 : pos.z - 1;
         hole.setMap(this.texture = this.backTexture);
         hole.setPosition(pos.x, pos.y, pos.z);
         plastic.rotateY(Math.PI);

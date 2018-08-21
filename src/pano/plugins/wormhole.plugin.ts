@@ -96,7 +96,6 @@ export default class Wormhole extends PubSubAble {
         const hole = this.hole;
         const plastic = hole.getPlastic();
         const pos = this.pos = Util.calcSphereToWorld(this.direction ? 180 : this.data.lng, 0);
-        const z = this.direction ? pos.z + 1 : pos.z - 1;
 
         hole.setMap(this.texture = this.backTexture);
         hole.setPosition(pos.x, pos.y, pos.z);
