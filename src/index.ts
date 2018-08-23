@@ -11,6 +11,8 @@ import VRuntime from './runtime/vr.runtime';
 import ResourceLoader from './loaders/resource.loader';
 import Rsyntx from './compiler/rsyntax';
 
+import gl from './compiler/gl';
+
 /**
  * @file redical enter
  */
@@ -61,5 +63,7 @@ export default {
 
     disposeVR(ref: string) {
         VRuntime.releaseInstance(ref);
-    }
+    },
+
+    gl
 }

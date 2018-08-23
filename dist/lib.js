@@ -62891,6 +62891,75 @@ function LensFlare() {
 
 /***/ }),
 
+/***/ "./src/compiler/gl.ts":
+/*!****************************!*\
+  !*** ./src/compiler/gl.ts ***!
+  \****************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * create webgl context
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var vshaderSource = ['attribute vec4 a_position;', 'void main() {', 'gl_Position = a_position;', '}'].join('');
+var fshaderSource = ['void main() {', 'gl_FragColor = vec4(1, 0, 0.5, 1);', '}'].join('');
+function createShader(gl, type, source) {
+    var shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        return shader;
+    }
+    console.log(gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+}
+function createProgram(gl, vshader, fshader) {
+    var program = gl.createProgram();
+    gl.attachShader(program, vshader);
+    gl.attachShader(program, fshader);
+    gl.linkProgram(program);
+    if (gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        return program;
+    }
+    console.log(gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+}
+function creaeGl(opts) {
+    var canvas = document.createElement("canvas");
+    var gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+    canvas.width = opts.width;
+    canvas.height = opts.height;
+    canvas.style.cssText = 'position:absolute;left:20px;top:20px;border:1px solid #e3f67b;';
+    document.body.appendChild(canvas);
+    if (!gl) {
+        return console.log('Unable to initialize WebGL');
+    }
+    var vshader = createShader(gl, gl.VERTEX_SHADER, vshaderSource);
+    var fshader = createShader(gl, gl.FRAGMENT_SHADER, fshaderSource);
+    var program = createProgram(gl, vshader, fshader);
+    var position = gl.getAttribLocation(program, "a_position");
+    var buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 0, 0.5, 0.7, 0]), gl.STATIC_DRAW);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(program);
+    gl.enableVertexAttribArray(position);
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    var picBuf = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 4);
+    gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, picBuf);
+    console.log(picBuf);
+}
+exports.default = { creaeGl: creaeGl };
+
+
+/***/ }),
+
 /***/ "./src/compiler/rsyntax.ts":
 /*!*********************************!*\
   !*** ./src/compiler/rsyntax.ts ***!
@@ -63665,6 +63734,7 @@ var pano_runtime_1 = __webpack_require__(/*! ./runtime/pano.runtime */ "./src/ru
 var vr_runtime_1 = __webpack_require__(/*! ./runtime/vr.runtime */ "./src/runtime/vr.runtime.ts");
 var resource_loader_1 = __webpack_require__(/*! ./loaders/resource.loader */ "./src/loaders/resource.loader.ts");
 var rsyntax_1 = __webpack_require__(/*! ./compiler/rsyntax */ "./src/compiler/rsyntax.ts");
+var gl_1 = __webpack_require__(/*! ./compiler/gl */ "./src/compiler/gl.ts");
 /**
  * @file redical enter
  */
@@ -63703,7 +63773,8 @@ exports.default = {
     },
     disposeVR: function (ref) {
         vr_runtime_1.default.releaseInstance(ref);
-    }
+    },
+    gl: gl_1.default
 };
 
 
