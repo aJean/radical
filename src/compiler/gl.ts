@@ -45,8 +45,6 @@ function creaeGl(opts) {
         return console.log('Unable to initialize WebGL');
     }
 
-
-
     const vshader = createShader(gl, gl.VERTEX_SHADER, vshaderSource);
     const fshader = createShader(gl, gl.FRAGMENT_SHADER, fshaderSource);
     const program = createProgram(gl, vshader, fshader);
