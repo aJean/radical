@@ -4,9 +4,9 @@
     "sceneGroup": [{
         "id": "scene0",
         "name": "罗浮宫",
-        "rPath": "../assets/scene0/scene0.r",
-        "imgPath": "../assets/scene0/scene0.jpg",
-        "thumbPath": "../assets/scene0/thumb0.jpg",
+        "rPath": "../assets/scene9/scene9.r",
+        "imgPath": "../assets/scene9/scene9.jpg",
+        "thumbPath": "../assets/scene9/thumb0.jpg",
         "info": {
             "author": "绵阳谊君舞蹈",
             "logo": "../assets/logo.png"
