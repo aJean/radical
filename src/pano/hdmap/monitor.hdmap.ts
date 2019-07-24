@@ -75,6 +75,7 @@ export default class HDMonitor extends PubSubAble {
         const fw = data.fw;
         const fh = data.fh;
 
+        // 通知 webgl renderer 这一帧要更新纹理缓存
         texture.needsUpdate = true;
 
         if (!texture.replaceCanvas) {
