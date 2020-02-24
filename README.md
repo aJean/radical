@@ -5,7 +5,11 @@
 操作 - 数据 - view
 
 #### 开发架构
-引擎 - 渲染 - 应用 - runtime
+底层 - 渲染服务层 - 应用层 - 运行时
+
+#### requestAnimationFrame
+帧驱动模式，基于 raf 渲染绘制
+生命周期基于 oo 与 raf 建立
 
 #### radical standard
 
