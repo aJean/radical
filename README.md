@@ -7,9 +7,13 @@
 #### 开发架构
 底层 - 渲染服务层 - 应用层 - 运行时
 
-#### requestAnimationFrame
-帧驱动模式，基于 raf 渲染绘制
-生命周期基于 oo 与 raf 建立
+#### 帧驱动
+基于 questAnimationFrame 渲染绘制模式
+生命周期基于 oo、loader 与 raf 建立
+
+#### 扩展方式
+- 组件： ui 界面扩展
+- 插件： 渲染、动画、3d 功能扩展
 
 #### radical standard
 
