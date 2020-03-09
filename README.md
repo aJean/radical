@@ -1,5 +1,5 @@
 ### radical 设计
-一体式 webxr 渲染框架
+webgl 渲染框架，提供新交互体验
 
 #### 逻辑架构
 操作 - 数据 - view
@@ -26,5 +26,4 @@ requestAnimationFrame - webgl render - 资源分层加载渲染
 基于 questAnimationFrame 渲染绘制模式
 生命周期基于 oo、loader 与 raf 建立
 
-#### radical standard
 ![](https://raw.githubusercontent.com/aJean/radical/master/frame.png)
