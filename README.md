@@ -25,5 +25,3 @@ requestAnimationFrame - webgl render - 资源分层加载渲染
 #### 帧驱动
 基于 questAnimationFrame 渲染绘制模式
 生命周期基于 oo、loader 与 raf 建立
-
-![](https://raw.githubusercontent.com/aJean/radical/master/frame.png)
