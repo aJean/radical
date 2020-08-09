@@ -9,7 +9,7 @@ webgl 渲染框架，提供新交互体验
 操作 - 数据 - view
 
 #### 开发架构
-- 基础层：threejs、glmatrix、tensorflow、webrtc
+- 基础层：threejs、glmatrix、tensorflow、artoolkit、webrtc
 - 服务层：全景、vr、场景插件
 - 应用层：应用模型、ui 组件、监控、统计
 - 运行时：dsl compiler、资源加载器
