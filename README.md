@@ -32,6 +32,8 @@ cli 工具、编辑标注工具、图形处理工具、图片审核修复工具
 基于 questAnimationFrame 渲染绘制模式
 生命周期基于 oo、loader 与 raf 建立
 
+#### dsl
+custom html tag - parser5 - js api
 
 ### 面临问题
 - 如何从 web 转向 webgl 开发，建立知识模型和知识储备
