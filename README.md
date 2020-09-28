@@ -41,3 +41,9 @@ custom html tag - parser5 - js api
 - 怎样打通产研流程
 - 如何衡量产出，产品维度、技术维度
 - 如何利用其他部门的能力
+
+#### 选型
+- aframe 偏业务框架，基于 threejs
+- babylon 学习路线不平缓
+- twgl、regl 封装度低，偏底层 api
+- threejs 社区活跃、文档成熟、面向对象、有基础 api 也有上层模型
